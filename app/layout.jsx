@@ -14,8 +14,17 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "Dire Marketplace | Digital Curator Edition",
-  description: "Find Trusted Workers in Dire Dawa",
+  title: "DireSkill | Find Verified Workers in Dire Dawa",
+  description: "Hire Fayda-verified electricians, plumbers and more in Dire Dawa. Fast, safe, and contract-backed.",
+  manifest: "/manifest.json",
+};
+
+export const viewport = {
+  themeColor: "#000000",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({ children }) {
@@ -26,8 +35,13 @@ export default function RootLayout({ children }) {
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"
         />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="DireSkill" />
+        <link rel="manifest" href="/manifest.json" />
       </head>
-      <body className="bg-background text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen flex flex-col">
+      <body className="bg-black text-white font-body selection:bg-white selection:text-black min-h-screen flex flex-col">
         {children}
       </body>
     </html>

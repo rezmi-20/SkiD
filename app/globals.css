@@ -1,70 +1,77 @@
 @import "tailwindcss";
 
 @theme {
-  --color-secondary-container: #6f00be;
-  --color-secondary-fixed: #e5c6ff;
-  --color-on-surface-variant: #adaaaa;
-  --color-primary: #ccff00;
-  --color-on-secondary-fixed-variant: #7511c3;
-  --color-inverse-on-surface: #565554;
-  --color-on-primary: #000000;
-  --color-on-background: #ffffff;
-  --color-error: #ff7351;
-  --color-surface-container-highest: #262626;
-  --color-tertiary-container: #e0e6ee;
-  --color-outline-variant: #494847;
-  --color-background: #000000;
-  --color-on-secondary-fixed: #4f0089;
-  --color-on-tertiary-fixed: #3b4248;
-  --color-surface-container-high: #121212;
-  --color-on-secondary-container: #e9cdff;
-  --color-on-error-container: #ffd2c8;
-  --color-surface-dim: #0e0e0e;
-  --color-secondary-dim: #9c48ea;
-  --color-on-error: #450900;
-  --color-on-secondary: #33005b;
-  --color-surface-tint: #ccff00;
-  --color-tertiary: #eef4fc;
-  --color-primary-fixed-dim: #beee00;
-  --color-primary-dim: #beee00;
-  --color-secondary-fixed-dim: #dbb4ff;
-  --color-error-container: #b92902;
-  --color-inverse-surface: #fcf8f8;
-  --color-tertiary-fixed-dim: #d2d8e0;
-  --color-on-primary-fixed: #3a4a00;
-  --color-on-tertiary: #565c63;
-  --color-surface-bright: #2c2c2c;
-  --color-surface-container: #1a1919;
-  --color-primary-fixed: #ccff00;
-  --color-tertiary-dim: #d2d8e0;
-  --color-surface-container-low: #131313;
-  --color-surface-container-lowest: #000000;
-  --color-inverse-primary: #516700;
-  --color-on-primary-fixed-variant: #526900;
-  --color-surface-variant: #262626;
-  --color-on-primary-container: #4a5e00;
-  --color-error-dim: #d53d18;
-  --color-primary-container: #ccff00;
-  --color-on-surface: #ffffff;
-  --color-outline: #777575;
-  --color-secondary: #c180ff;
-  --color-on-tertiary-container: #4e545b;
-  --color-surface: #000000;
-  --color-on-tertiary-fixed-variant: #585e65;
-  --color-tertiary-fixed: #e0e6ee;
-
+  --color-primary: var(--primary-accent);
+  --color-background: var(--bg-page);
+  --color-surface: var(--surface-glass);
+  --color-border: var(--border-glass);
+  --color-text-high: var(--text-high);
+  --color-text-med: var(--text-med);
+  --color-brand-accent: var(--brand-logo);
+  
   --radius-DEFAULT: 1rem;
-  --radius-lg: 2rem;
-  --radius-xl: 3rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: 2rem;
   --radius-full: 9999px;
 
-  --font-headline: var(--font-manrope), "Manrope", sans-serif;
+  --font-headline: var(--font-inter), "Inter", sans-serif;
   --font-body: var(--font-inter), "Inter", sans-serif;
   --font-label: var(--font-inter), "Inter", sans-serif;
 }
 
+@layer base {
+  body {
+    overflow-x: hidden;
+  }
+
+  /* ── GRAYSCALE (Legacy) ── */
+  :root, [data-theme='grayscale'] {
+    --bg-page: #0e0e0e;
+    --text-high: #ffffff;
+    --text-med: #adaaaa;
+    --primary-accent: #f3ffca;
+    --surface-glass: rgba(32, 31, 31, 0.6);
+    --border-glass: rgba(73, 72, 71, 0.3);
+    --brand-logo: #f3ffca;
+    --selection-bg: #f3ffca;
+    --selection-text: #516700;
+    --img-grayscale: 100%;
+  }
+
+  /* ── BENTO NOIR (Dark) ── */
+  [data-theme='dark'] {
+    --bg-page: #000000;
+    --text-high: #ffffff;
+    --text-med: #adaaaa;
+    --primary-accent: #ccff00;
+    --surface-glass: rgba(18, 18, 18, 0.6);
+    --border-glass: rgba(255, 255, 255, 0.1);
+    --brand-logo: #ccff00;
+    --selection-bg: #ccff00;
+    --selection-text: #000000;
+    --img-grayscale: 0%;
+  }
+
+  /* ── BENTO LUMIERE (Light) — Linear/Stripe inspired editorial ── */
+  [data-theme='light'] {
+    --bg-page: #FFFFF0;
+    --text-high: #111827;
+    --text-med: #6b7280;
+    --primary-accent: #7ef23e;
+    --surface-glass: #ffffff;
+    --border-glass: rgba(0, 0, 0, 0.08);
+    --brand-logo: #4a7c00;
+    --selection-bg: #cafd00;
+    --selection-text: #2d4600;
+    --img-grayscale: 0%;
+  }
+}
+
 .material-symbols-outlined {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+.theme-img {
+    filter: grayscale(var(--img-grayscale));
 }
 .glass-panel {
     background: rgba(18, 18, 18, 0.4);
@@ -86,4 +93,136 @@
 }
 .editorial-shadow {
     text-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+@keyframes marquee {
+    0% { transform: translateX(0%); }
+    100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+    animation: marquee 60s linear infinite;
+    display: flex;
+    width: max-content;
+}
+
+.pause-marquee:hover .animate-marquee {
+    animation-play-state: paused;
+}
+
+/* Premium Grain Texture */
+.grain-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.05;
+    background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+    filter: brightness(100%) contrast(150%);
+}
+
+/* ═══════════════════════════════════════════
+   LIGHT MODE — Premium Editorial Overrides
+   Inspired by: Linear, Stripe, Vercel
+   Zero blur. Zero glass. Full clarity.
+   ═══════════════════════════════════════════ */
+
+[data-theme='light'] .grain-overlay { opacity: 0 !important; }
+
+[data-theme='light'] * {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+[data-theme='light'] .light-hide { display: none !important; }
+
+/* Hero overlays: dark scrim replaces white wash so photo is vivid */
+[data-theme='light'] .hero-overlay-r {
+    background: linear-gradient(to right, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.2) 55%, transparent 100%) !important;
+}
+[data-theme='light'] .hero-overlay-t {
+    background: linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 55%) !important;
+}
+
+/* Nav: warm ivory colour, crisp border */
+[data-theme='light'] nav {
+    background: rgba(255, 255, 240, 0.96) !important;
+    border-bottom-color: rgba(0, 0, 0, 0.09) !important;
+}
+
+/* Search bar inner rows: solid light grey so inputs are visible on white */
+[data-theme='light'] .light-input-row {
+    background-color: #f0efec !important;
+    border-color: rgba(0, 0, 0, 0.10) !important;
+}
+
+/* Floating benefit cards: pure white on warm bg = natural card depth */
+[data-theme='light'] .animate-float {
+    background: #ffffff !important;
+    border-color: rgba(0,0,0,0.07) !important;
+    box-shadow: 0 2px 24px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04) !important;
+}
+
+/* Separation section: see-through overlay so photo is visible */
+[data-theme='light'] .section-overlay {
+    background-color: rgba(255, 255, 240, 0.48) !important;
+}
+
+/* Text gradient: rich near-black */
+[data-theme='light'] .text-gradient {
+    background: linear-gradient(to bottom right, #111827 0%, #374151 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Hero LEFT text: sits on dark scrim — force white so it's readable */
+[data-theme='light'] .hero-text,
+[data-theme='light'] .hero-text h1,
+[data-theme='light'] .hero-text p,
+[data-theme='light'] .hero-text span {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+[data-theme='light'] .hero-text .text-gradient {
+    background: linear-gradient(to bottom right, #ffffff 30%, rgba(255,255,255,0.75) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent !important;
+}
+
+/* Benefits feature cards — proper hover on light bg */
+[data-theme='light'] .hover\:bg-white\/10:hover {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Nav pill (desktop nav links container) */
+[data-theme='light'] .bg-surface {
+    background-color: #ffffff;
+}
+[data-theme='light'] .hover\:bg-white\/10:hover {
+    background-color: rgba(0,0,0,0.05) !important;
+}
+
+/* Text gradient: rich near-black */
+[data-theme='light'] .text-gradient {
+    background: linear-gradient(to bottom right, #111827 0%, #374151 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.text-gradient {
+    background: linear-gradient(to bottom right, var(--text-high) 30%, var(--text-med) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+::selection {
+    background-color: var(--selection-bg);
+    color: var(--selection-text);
+}
+
+* {
+    transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease;
 }
