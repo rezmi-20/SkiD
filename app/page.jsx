@@ -58,27 +58,24 @@ export default function Home() {
           <a href="#about" className="px-6 h-9 flex items-center hover:bg-white/10 hover:text-text-high transition-all rounded-xl text-xs font-bold uppercase tracking-widest text-text-med">About</a>
         </div>
  
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-end gap-2 md:gap-4 flex-wrap sm:flex-nowrap">
           <button 
             onClick={toggleTheme}
-            className="hidden md:flex items-center justify-center w-10 h-10 rounded-xl bg-surface border border-border hover:bg-white/10 transition-all text-text-high group"
+            className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-xl bg-surface border border-border hover:bg-white/10 transition-all text-text-high group shrink-0"
             title="Toggle Theme"
           >
-            <span className="material-symbols-outlined text-xl group-hover:rotate-12 transition-transform">
+            <span className="material-symbols-outlined text-lg md:text-xl group-hover:rotate-12 transition-transform">
               {theme === 'theme-img' ? 'contrast' : theme === 'dark' ? 'dark_mode' : 'light_mode'}
             </span>
           </button>
           
-          <div className="hidden md:flex items-center gap-4 mr-4">
-            <button className="text-text-med hover:text-text-high text-[10px] font-black uppercase tracking-widest transition-colors">EN</button>
+          <div className="flex items-center gap-1.5 md:gap-4 mr-0 md:mr-4 shrink-0">
+            <button className="text-text-med hover:text-text-high text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-colors">EN</button>
             <div className="h-3 w-px bg-border"></div>
-            <button className="text-text-med hover:text-text-high text-[10px] font-black uppercase tracking-widest transition-colors">አማ</button>
+            <button className="text-text-med hover:text-text-high text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-colors">አማ</button>
           </div>
-          <button className="hidden sm:flex h-10 px-6 items-center rounded-xl text-text-med text-xs font-black uppercase tracking-widest border border-border hover:bg-surface transition-all">Login</button>
-          <button className="hidden md:block bg-primary text-black px-6 md:px-8 h-10 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-primary/80 active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,255,255,0.2)]">Join</button>
-          <button className="hidden text-text-high p-2">
-            <span className="material-symbols-outlined">menu</span>
-          </button>
+          <button className="flex h-8 md:h-10 px-3 md:px-6 items-center rounded-xl text-text-med text-[10px] md:text-xs font-black uppercase tracking-widest border border-border hover:bg-surface transition-all whitespace-nowrap shrink-0">Login</button>
+          <button className="flex bg-primary text-black px-4 md:px-8 h-8 md:h-10 items-center justify-center rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest hover:bg-primary/80 active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,255,255,0.2)] whitespace-nowrap shrink-0">Join</button>
         </div>
       </nav>
 
@@ -104,7 +101,7 @@ export default function Home() {
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.9 }}
-              className="hero-text flex flex-col items-start text-left"
+              className="hero-text flex flex-col items-center text-center lg:items-start lg:text-left"
             >
               <span className="text-text-med text-xs md:text-sm font-bold uppercase tracking-[0.3em] mb-4 md:mb-6">Dire Dawa's Trusted Platform</span>
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter text-text-high mb-5 md:mb-8 leading-[1.0] text-gradient">
@@ -686,28 +683,6 @@ export default function Home() {
           </div>
         </div>
       </footer>
-
-      {/* ── PWA BOTTOM NAV ── */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-[100] bg-surface/90 backdrop-blur-2xl border-t border-border shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
-        <div className="flex justify-around items-center px-4 pt-3 pb-6">
-          <a href="#" className="flex flex-col items-center gap-1 text-text-med hover:text-text-high transition-colors active:scale-95">
-            <span className="material-symbols-outlined text-[22px]">home</span>
-            <span className="text-[10px] font-black tracking-wider uppercase">Home</span>
-          </a>
-          <a href="#how-it-works" className="flex flex-col items-center gap-1 text-text-med hover:text-text-high transition-colors active:scale-95">
-            <span className="material-symbols-outlined text-[22px]">account_tree</span>
-            <span className="text-[10px] font-black tracking-wider uppercase">Process</span>
-          </a>
-          <a href="#categories" className="flex flex-col items-center gap-1 text-text-med hover:text-text-high transition-colors active:scale-95">
-            <span className="material-symbols-outlined text-[22px]">grid_view</span>
-            <span className="text-[10px] font-black tracking-wider uppercase">Services</span>
-          </a>
-          <a href="#about" className="flex flex-col items-center gap-1 text-text-med hover:text-text-high transition-colors active:scale-95">
-            <span className="material-symbols-outlined text-[22px]">info</span>
-            <span className="text-[10px] font-black tracking-wider uppercase">About</span>
-          </a>
-        </div>
-      </nav>
     </div>
   );
 }
