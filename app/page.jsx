@@ -11,7 +11,7 @@ export default async function HomePage({ searchParams }) {
 
   // If session exists, force redirect
   if (session?.user) {
-    const role = (session.user as { role?: string }).role;
+    const role = session.user.role;
     if (role === "admin") redirect("/admin/dashboard");
     if (role === "worker") redirect("/worker/dashboard");
     if (role === "client") redirect("/client/dashboard");
@@ -29,7 +29,7 @@ export default async function HomePage({ searchParams }) {
         <p>Database URL Status: {process.env.DATABASE_URL ? "CONFIGURED" : "MISSING"}</p>
         <p>Auth Secret Status: {process.env.AUTH_SECRET ? "CONFIGURED" : "MISSING"}</p>
         <hr className="my-4 border-gray-800" />
-        <p>Role in Session: {(session?.user as any)?.role || "N/A"}</p>
+        <p>Role in Session: {session?.user?.role || "N/A"}</p>
         <a href="/" className="mt-6 inline-block bg-white text-black px-4 py-2 rounded">Back to Landing</a>
       </div>
     );
