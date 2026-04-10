@@ -19,12 +19,23 @@ export default async function ClientDashboardPage() {
           </h1>
           <p className="text-on-surface-variant text-lg">Manage your active service requests and workers.</p>
         </div>
-        <a 
-          href="/search" 
-          className="bg-primary text-on-primary px-8 py-3.5 rounded-2xl font-headline font-bold tracking-tight active:scale-95 transition-all shadow-xl shadow-primary/20"
-        >
-          Find a Worker
-        </a>
+        <div className="flex items-center gap-4">
+          <form action={async () => {
+             "use server";
+             const { signOut } = await import("@/lib/auth");
+             await signOut({ redirectTo: "/login" });
+          }}>
+            <button className="px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-on-surface-variant hover:bg-white/5 transition-all">
+               Sign Out
+            </button>
+          </form>
+          <a 
+            href="/search" 
+            className="bg-primary text-on-primary px-8 py-3.5 rounded-2xl font-headline font-bold tracking-tight active:scale-95 transition-all shadow-xl shadow-primary/20"
+          >
+            Find a Worker
+          </a>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

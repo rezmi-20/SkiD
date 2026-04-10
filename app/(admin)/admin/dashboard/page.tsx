@@ -16,9 +16,20 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="space-y-10">
-      <header>
-        <h1 className="text-4xl font-headline font-black text-on-surface tracking-tighter mb-2">Platform Administration</h1>
-        <p className="text-on-surface-variant">High-level overview of the Dire Marketplace ecosystem.</p>
+      <header className="flex justify-between items-start">
+        <div>
+          <h1 className="text-4xl font-headline font-black text-on-surface tracking-tighter mb-2">Platform Administration</h1>
+          <p className="text-on-surface-variant">High-level overview of the Dire Marketplace ecosystem.</p>
+        </div>
+        <form action={async () => {
+             "use server";
+             const { signOut } = await import("@/lib/auth");
+             await signOut({ redirectTo: "/login" });
+        }}>
+          <button className="px-6 py-2.5 rounded-full border border-white/10 text-[10px] font-black uppercase tracking-widest text-on-surface-variant hover:bg-white/5 transition-all">
+             Sign Out
+          </button>
+        </form>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

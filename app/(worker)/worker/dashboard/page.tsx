@@ -43,7 +43,16 @@ export default async function WorkerDashboardPage() {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-4 items-center">
+             <form action={async () => {
+               "use server";
+               const { signOut } = await import("@/lib/auth");
+               await signOut({ redirectTo: "/login" });
+             }}>
+               <button className="px-8 h-14 flex items-center bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-red-500 transition-all">
+                  Terminate Session
+               </button>
+             </form>
              <a href="/worker/profile" className="px-8 h-14 flex items-center bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-white/10 transition-all">
                 Profile Index
              </a>
