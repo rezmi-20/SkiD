@@ -1,42 +1,32 @@
-# Implementation Plan — Logout Flow & Live Connectivity
+# Implementation Plan — Post-Login Redirect Fix
 
-We have confirmed two independent issues:
-1. **Live Site**: The `DATABASE_URL` is definitively missing from the Vercel project environment.
-2. **Logout Issue**: The new "Precision Suite" dashboards are currently missing a "Sign Out" button, which is why your session persists locally.
+Currently, after a successful login, the application redirects users to the landing page (`/`). This requires the middleware to "catch" the request and redirect them again to their dashboard, which can sometimes fail or feel slow. 
+
+We will update the login logic to determine the user's role and redirect them to the correct dashboard immediately.
 
 ## Proposed Changes
 
-### 1. Add Logout Functionality
-We will add a "Sign Out" button to the header of all dashboards. Since these are Server Components, we will use a small form that triggers the NextAuth `signOut` action from `@/lib/auth`.
+### 1. Update Login Logic
+We will modify the login form submission to fetch the session information immediately after success and perform a role-based redirect.
 
-#### [MODIFY] [worker/dashboard/page.tsx](app/(worker)/worker/dashboard/page.tsx)
-- Add a "Sign Out" button next to "Profile Index".
-
-#### [MODIFY] [client/dashboard/page.tsx](app/(client)/client/dashboard/page.tsx)
-- Add a "Sign Out" button to the top-right header area.
-
-#### [MODIFY] [admin/dashboard/page.tsx](app/(admin)/admin/dashboard/page.tsx)
-- Add a "Sign Out" button to the platform administration header.
+#### [MODIFY] [login/page.tsx](app/(auth)/login/page.tsx)
+- After `signIn` succeeds, call `getSession()` to retrieve the user's role.
+- Use a switch/if-else block to redirect to `/worker/dashboard`, `/client/dashboard`, or `/admin/dashboard`.
+- Fallback to `/` only if no role is found.
 
 ---
 
-### 2. Live Site Connectivity (Action Required)
-Your diagnostic route confirmed: `has_db_url: false`. 
+### 2. Verify Proxy Middleware
+We will ensure that the `proxy.ts` (middleware) is not accidentally allowing logged-in users to remain on the landing page if they manually navigate there.
 
-**Resolution Steps for Vercel**:
-1. Sign in to your [Vercel Dashboard](https://vercel.com).
-2. Select the **'SkiD'** project.
-3. Go to **Settings** → **Environment Variables**.
-4. **Add Key**: `DATABASE_URL`
-5. **Add Value**: Paste your Neon connection string (the one ending in `?sslmode=require`).
-6. **Save**.
-7. **Critical**: Go to the **Deployments** tab, click the three dots on the latest deployment, and select **Redeploy**. Environment variables are only picked up during a build.
+#### [CHECK] [proxy.ts](proxy.ts)
+- Confirm the role matching logic is robust (e.g., handling potential case sensitivity or undefined roles).
 
 ---
 
 ## Verification Plan
 
 ### Manual Verification
-1. I will push the "Sign Out" buttons.
-2. You will click "Sign Out" locally to verify it returns you to the login screen.
-3. You will verify the live site connection after following the Vercel steps provided above.
+1. Log in as a **Worker** and verify you arrive at `/worker/dashboard`.
+2. Log in as a **Client** and verify you arrive at `/client/dashboard`.
+3. Verify that trying to go back to `/login` while logged in sends you back to your dashboard.

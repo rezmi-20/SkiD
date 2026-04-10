@@ -32,7 +32,20 @@ export default function LoginPage() {
       if (result?.error) {
         setError("The credentials you provided are incorrect.");
       } else {
-        window.location.href = "/";
+        // Fetch session to determine role-based redirect
+        const { getSession } = await import("next-auth/react");
+        const session = await getSession();
+        const role = (session?.user as any)?.role;
+
+        if (role === "admin") {
+          window.location.href = "/admin/dashboard";
+        } else if (role === "worker") {
+          window.location.href = "/worker/dashboard";
+        } else if (role === "client") {
+          window.location.href = "/client/dashboard";
+        } else {
+          window.location.href = "/";
+        }
       }
     } catch (err) {
       setError("An unexpected error occurred. Please try again later.");
