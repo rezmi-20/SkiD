@@ -30,7 +30,7 @@ export default async function ClientDashboardPage() {
             </button>
           </form>
           <a 
-            href="/search" 
+            href="/client/search" 
             className="bg-primary text-on-primary px-8 py-3.5 rounded-2xl font-headline font-bold tracking-tight active:scale-95 transition-all shadow-xl shadow-primary/20"
           >
             Find a Worker

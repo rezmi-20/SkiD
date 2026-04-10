@@ -42,7 +42,7 @@ export default function LoginPage() {
         } else if (role === "worker") {
           window.location.href = "/worker/dashboard";
         } else if (role === "client") {
-          window.location.href = "/client/dashboard";
+          window.location.href = "/client/search";
         } else {
           window.location.href = "/";
         }

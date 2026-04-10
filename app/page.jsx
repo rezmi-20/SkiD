@@ -14,7 +14,7 @@ export default async function HomePage({ searchParams }) {
     const role = session.user.role;
     if (role === "admin") redirect("/admin/dashboard");
     if (role === "worker") redirect("/worker/dashboard");
-    if (role === "client") redirect("/client/dashboard");
+    if (role === "client") redirect("/client/search");
   }
 
   // DIAGNOSTIC DATA
