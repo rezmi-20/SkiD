@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
-export default auth((req) => {
+export const proxy = auth((req) => {
   const { pathname } = req.nextUrl;
   const role = (req.auth?.user as { role?: string } | undefined)?.role;
   const isLoggedIn = !!req.auth;
