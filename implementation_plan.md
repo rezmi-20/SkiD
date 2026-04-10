@@ -1,22 +1,36 @@
-# Implementation Plan — Middleware & Redirect Stability
+# Implementation Plan — Root Redirect Fix (Server-Side)
 
-We are resolving the issue where logged-in users are sometimes bounced back to the landing page instead of their dashboard.
+The middleware-based redirect (`proxy.ts`) appears to be bypassed or ignored by Vercel for the root path (`/`). To resolve this "loop" once and for all, we will move the redirect logic directly into the root page as a Server Component.
 
 ## Proposed Changes
 
-### 1. Refactored Middleware (proxy.ts)
-I have updated `proxy.ts` to:
-- Correctly identify and protect role-specific areas.
-- Fix a logical bug where unauthorized access caused a redirect loop.
-- Ensure any visit to `/` by a logged-in user immediately forces a redirect to their respective dashboard.
+### 1. Revert Middleware Convention
+We will rename `proxy.ts` back to `middleware.ts`. While there was a deprecation warning, NextAuth v5 still expects the standard filename.
 
-### 2. Login Page Redirection
-I have already implemented a role-check in `login/page.tsx` that attempts to send you to the dashboard as soon as the sign-in is successful.
+#### [RENAME] `proxy.ts` -> `middleware.ts`
+- Restore the `export default auth(...)` convention.
+
+---
+
+### 2. Implement Server-Side Redirect on Root
+We will convert the main landing page into a Server Component that checks for a session *before* rendering the landing page content.
+
+#### [NEW] [LandingPage.jsx](app/LandingPage.jsx)
+- Move all the current logic and UI from `app/page.jsx` into this new client component.
+
+#### [MODIFY] [page.jsx](app/page.jsx)
+- Convert this to a **Server Component**.
+- Import `auth` from `@/lib/auth`.
+- If a session exists, perform a server-side `redirect()` to the user's respective dashboard.
+- If no session exists, render `<LandingPage />`.
 
 ---
 
 ## Verification Plan
 
+### Automated Tests
+1. Run `npm run build` locally to ensure no conflicts with the new Server/Client split.
+
 ### Manual Verification
-1. **Login**: Perform a fresh login and verify you hit the dashboard.
-2. **Back Navigation**: Try to manually go to `your-site.com/` while logged in; it should instantly send you back to your dashboard.
+1. Login locally and verify you are redirected to the dashboard.
+2. Visit the live site and verify that even if you manually type the landing page URL, you are shifted back to your workspace.

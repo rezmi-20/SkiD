@@ -1,14 +1,14 @@
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
-export const proxy = auth((req) => {
+export default auth((req) => {
   const { pathname } = req.nextUrl;
   const isLoggedIn = !!req.auth;
   const user = req.auth?.user as { role?: string } | undefined;
   const role = user?.role;
 
   // 1. Define Paths
-  const publicPaths = ["/", "/login", "/register", "/api/diag/db"];
+  const publicPaths = ["/", "/login", "/register"];
   const isPublic = publicPaths.some(
     (p) => pathname === p || pathname.startsWith("/register/")
   );
@@ -20,18 +20,14 @@ export const proxy = auth((req) => {
 
   // 3. Logged In Logic
   if (isLoggedIn) {
-    // A. Prevent logged-in users from seeing the Landing Page or Auth Pages
-    if (pathname === "/" || pathname === "/login" || pathname.startsWith("/register/")) {
+    // A. Prevent logged-in users from seeing Auth Pages
+    if (pathname === "/login" || pathname.startsWith("/register/")) {
       if (role === "admin") return NextResponse.redirect(new URL("/admin/dashboard", req.url));
       if (role === "worker") return NextResponse.redirect(new URL("/worker/dashboard", req.url));
       if (role === "client") return NextResponse.redirect(new URL("/client/dashboard", req.url));
-      
-      // If role is somehow missing, logout or send back to /?
-      return NextResponse.next();
     }
 
     // B. Role-Based Area Protection
-    // Redirect if trying to access another role's area
     const isWorkerArea = pathname.startsWith("/worker");
     const isClientArea = pathname.startsWith("/client");
     const isAdminArea = pathname.startsWith("/admin");
