@@ -61,7 +61,7 @@ export default async function AdminDashboardPage() {
             <div className="bg-surface-container-high rounded-3xl border border-white/5 overflow-hidden">
                 {unverifiedWorkers.length > 0 ? (
                     <div className="divide-y divide-white/5">
-                        {unverifiedWorkers.map((w) => (
+                        {unverifiedWorkers.map((w: any) => (
                             <div key={w.user_id} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors">
                                 <div>
                                     <p className="font-bold text-on-surface">{w.full_name}</p>

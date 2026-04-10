@@ -85,7 +85,7 @@ export default async function WorkerDashboardPage() {
                  <div className="text-[10px] font-black text-gray-400 dark:text-gray-600 uppercase tracking-[0.3em] text-center">Active Requests</div>
                  <div className="flex justify-center">
                     <div className="w-32 h-32 rounded-full border border-gray-100 dark:border-white/10 flex items-center justify-center relative bg-white dark:bg-[#000000] shadow-sm">
-                       <span className="text-5xl font-black">{jobRows.filter(j => j.status === 'active').length}</span>
+                       <span className="text-5xl font-black">{jobRows.filter((j: any) => j.status === 'active').length}</span>
                     </div>
                  </div>
               </div>
@@ -127,7 +127,7 @@ export default async function WorkerDashboardPage() {
             </div>
           ) : jobRows.length > 0 ? (
             <div className="space-y-4">
-              {jobRows.map((job) => (
+              {jobRows.map((job: any) => (
                 <div key={job.id} className="p-10 bg-gray-50 dark:bg-[#050505] rounded-[2.5rem] border border-gray-100 dark:border-white/5 flex flex-col md:flex-row justify-between items-center group hover:border-black dark:hover:border-white transition-all duration-500">
                   <div className="space-y-3 mb-8 md:mb-0">
                     <h3 className="text-3xl font-black tracking-tightest group-hover:text-blue-600 transition-colors">{job.title}</h3>

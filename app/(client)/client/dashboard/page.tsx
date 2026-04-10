@@ -30,11 +30,11 @@ export default async function ClientDashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-surface-container-high p-8 rounded-3xl border border-white/5 space-y-2">
           <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Active Jobs</p>
-          <p className="text-4xl font-headline font-black text-on-surface">{jobRows.filter(j => j.status === 'active').length}</p>
+          <p className="text-4xl font-headline font-black text-on-surface">{jobRows.filter((j: any) => j.status === 'active').length}</p>
         </div>
         <div className="bg-surface-container-high p-8 rounded-3xl border border-white/5 space-y-2">
           <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Pending Requests</p>
-          <p className="text-4xl font-headline font-black text-on-surface">{jobRows.filter(j => j.status === 'pending').length}</p>
+          <p className="text-4xl font-headline font-black text-on-surface">{jobRows.filter((j: any) => j.status === 'pending').length}</p>
         </div>
         <div className="bg-surface-container-high p-8 rounded-3xl border border-white/5 space-y-2">
           <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Total Spent</p>
@@ -46,7 +46,7 @@ export default async function ClientDashboardPage() {
         <h2 className="text-2xl font-headline font-black text-on-surface tracking-tight">Recent Activity</h2>
         {jobRows.length > 0 ? (
           <div className="space-y-4">
-            {jobRows.map((job) => (
+            {jobRows.map((job: any) => (
               <div key={job.id} className="bg-surface-container p-6 rounded-2xl border border-white/5 flex justify-between items-center group hover:bg-surface-container-high transition-all">
                 <div>
                   <h3 className="text-lg font-bold text-on-surface">{job.title}</h3>
