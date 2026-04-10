@@ -1,0 +1,6 @@
+- [x] Create seed-admin.ts script
+- [x] Run seeding script and verify admin creation
+- [x] Create lib/actions/admin.ts (toggleWorkerVerification server action)
+- [x] Create app/(admin)/admin/verify/[id]/page.tsx (Review Page)
+- [x] Refine Admin Dashboard UI stats
+- [x] Final verification of end-to-end admin flow

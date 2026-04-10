@@ -1,36 +1,50 @@
-# Implementation Plan — Root Redirect Fix (Server-Side)
+# Implementation Plan — Admin Setup & Verification Flow
 
-The middleware-based redirect (`proxy.ts`) appears to be bypassed or ignored by Vercel for the root path (`/`). To resolve this "loop" once and for all, we will move the redirect logic directly into the root page as a Server Component.
+We will implement a secure method for creating the System Admin account and build out the "Verification" feature in the Admin Dashboard, allowing you to approve workers after reviewing their Fayda Documents.
 
 ## Proposed Changes
 
-### 1. Revert Middleware Convention
-We will rename `proxy.ts` back to `middleware.ts`. While there was a deprecation warning, NextAuth v5 still expects the standard filename.
+### 1. Admin Seeding (One-Time Setup)
+We will create a script that you can run to securely insert the initial admin account into the database. This script will hash the password and set the `role` to `admin`.
 
-#### [RENAME] `proxy.ts` -> `middleware.ts`
-- Restore the `export default auth(...)` convention.
+#### [NEW] [seed-admin.ts](scripts/seed-admin.ts)
+- A standalone TypeScript script using `@neondatabase/serverless` and `bcryptjs`.
+- Configured to insert `admin@dire-skill.com` with a hashed version of `admin123`.
+- Uses `ON CONFLICT (email) DO NOTHING` to prevent duplicates.
 
 ---
 
-### 2. Implement Server-Side Redirect on Root
-We will convert the main landing page into a Server Component that checks for a session *before* rendering the landing page content.
+### 2. Worker Verification Logic
+We will implement the backend and frontend for the admin to approve workers.
 
-#### [NEW] [LandingPage.jsx](app/LandingPage.jsx)
-- Move all the current logic and UI from `app/page.jsx` into this new client component.
+#### [NEW] [admin.ts](lib/actions/admin.ts)
+- A Server Action to update the `is_verified` status in the `worker_profiles` table.
+- Restricted to users with the `admin` role.
 
-#### [MODIFY] [page.jsx](app/page.jsx)
-- Convert this to a **Server Component**.
-- Import `auth` from `@/lib/auth`.
-- If a session exists, perform a server-side `redirect()` to the user's respective dashboard.
-- If no session exists, render `<LandingPage />`.
+#### [NEW] [verify/[id]/page.tsx](app/(admin)/admin/verify/[id]/page.tsx)
+- A detailed review page accessible only by admins.
+- Fetches the worker's data (Full Name, Phone, Email) and their Fayda Document (Image/Base64).
+- Provides an **"Approve Worker"** button that triggers the Server Action.
+- Once approved, the worker is redirected back to the dashboard.
+
+---
+
+### 3. Dashboard Updates
+We will refine the main Admin Dashboard to show real-time stats and linked verification requests.
+
+#### [MODIFY] [page.tsx](app/(admin)/admin/dashboard/page.tsx)
+- Ensure the "Review Document" links correctly point to the new verification page.
 
 ---
 
 ## Verification Plan
 
 ### Automated Tests
-1. Run `npm run build` locally to ensure no conflicts with the new Server/Client split.
+1. Run the seed script: `npx tsx scripts/seed-admin.ts`.
+2. Verify the login flow with the new admin credentials.
 
 ### Manual Verification
-1. Login locally and verify you are redirected to the dashboard.
-2. Visit the live site and verify that even if you manually type the landing page URL, you are shifted back to your workspace.
+1. Log in as **Admin**.
+2. Navigate to the dashboard and see the list of unverified workers.
+3. Click "Review Document" for a worker.
+4. Click "Approve" and verify the worker's status is updated to "Certified" in the dashboard.
