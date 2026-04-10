@@ -1,5 +1,6 @@
 import { Manrope, Inter } from "next/font/google";
 import "./globals.css";
+import Providers from "@/components/Providers";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -42,7 +43,7 @@ export default function RootLayout({ children }) {
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body className="bg-black text-white font-body selection:bg-white selection:text-black min-h-screen flex flex-col">
-        {children}
+        <Providers>{children}</Providers>
         <script
           dangerouslySetInnerHTML={{
             __html: `

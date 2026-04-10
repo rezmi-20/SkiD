@@ -9,7 +9,10 @@ export default function Home() {
   useEffect(() => {
     setMounted(true);
     const saved = localStorage.getItem('direskill-theme');
-    if (saved) setTheme(saved);
+    if (saved) {
+      setTheme(saved);
+      document.documentElement.setAttribute('data-theme', saved);
+    }
   }, []);
 
   useEffect(() => {
@@ -24,6 +27,8 @@ export default function Home() {
     const next = modes[(modes.indexOf(theme) + 1) % modes.length];
     setTheme(next);
   };
+
+  if (!mounted) return <div className="min-h-screen bg-background" />;
 
   const fadeUpAnim = {
     initial: { opacity: 0, y: 30 },
@@ -46,7 +51,7 @@ export default function Home() {
       {/* ── NAVBAR ── */}
       <nav className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-4 md:py-5 bg-background/60 border-b border-border/10 backdrop-blur-2xl">
         <div className="flex items-center gap-3 text-xl md:text-2xl font-black text-text-high tracking-tighter">
-          <div className="w-3 h-3 rounded-full bg-primary shadow-[0_0_15px_var(--primary-accent)]"></div>
+
           DIRESKILL
         </div>
  
@@ -74,8 +79,8 @@ export default function Home() {
             <div className="h-3 w-px bg-border"></div>
             <button className="text-text-med hover:text-text-high text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-colors">አማ</button>
           </div>
-          <button className="flex h-8 md:h-10 px-3 md:px-6 items-center rounded-xl text-text-med text-[10px] md:text-xs font-black uppercase tracking-widest border border-border hover:bg-surface transition-all whitespace-nowrap shrink-0">Login</button>
-          <button className="flex bg-primary text-black px-4 md:px-8 h-8 md:h-10 items-center justify-center rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest hover:bg-primary/80 active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,255,255,0.2)] whitespace-nowrap shrink-0">Join</button>
+          <a href="/login" className="flex h-8 md:h-10 px-3 md:px-6 items-center rounded-xl text-text-med text-[10px] md:text-xs font-black uppercase tracking-widest border border-border hover:bg-surface transition-all whitespace-nowrap shrink-0">Login</a>
+          <a href="/register/client" className="flex bg-primary text-black px-4 md:px-8 h-8 md:h-10 items-center justify-center rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest hover:bg-primary/80 active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,255,255,0.2)] whitespace-nowrap shrink-0">Join</a>
         </div>
       </nav>
 
@@ -196,13 +201,13 @@ export default function Home() {
 
               {/* CTAs */}
               <div className="flex flex-col sm:flex-row gap-3">
-                <button className="flex-1 bg-primary text-black px-6 py-4 rounded-2xl font-black tracking-wide hover:bg-primary/80 active:scale-95 transition-all flex items-center justify-center gap-2 text-sm md:text-base">
+                <a href="/register/client" className="flex-1 bg-primary text-black px-6 py-4 rounded-2xl font-black tracking-wide hover:bg-primary/80 active:scale-95 transition-all flex items-center justify-center gap-2 text-sm md:text-base">
                   Find a Worker Now
                   <span className="material-symbols-outlined text-xl">arrow_forward</span>
-                </button>
-                <button className="flex-1 bg-surface border border-border hover:bg-black/5 text-text-high px-6 py-4 rounded-2xl font-bold tracking-wide transition-all text-center text-sm md:text-base">
+                </a>
+                <a href="/register/worker" className="flex-1 bg-surface border border-border hover:bg-black/5 text-text-high px-6 py-4 rounded-2xl font-bold tracking-wide transition-all text-center text-sm md:text-base">
                   Join as a Skilled Worker
-                </button>
+                </a>
               </div>
             </motion.div>
 
@@ -322,8 +327,9 @@ export default function Home() {
                 <h2 className="text-3xl md:text-5xl lg:text-6xl font-black text-text-high mb-3 md:mb-4 tracking-tight">Popular Service Categories</h2>
                 <p className="text-base md:text-xl text-text-med">Explore our most requested expert categories.</p>
               </div>
-              <button className="text-text-high hover:text-text-med transition-colors flex items-center gap-2 font-black text-base border-b-2 border-primary pb-0.5 shrink-0">
-                View all <span className="material-symbols-outlined">arrow_forward</span>
+              <button className="group flex items-center gap-2 bg-surface border border-border/50 px-5 py-2.5 rounded-full text-text-high font-black text-xs md:text-sm tracking-wide hover:border-primary hover:bg-primary/5 transition-all shrink-0">
+                View all 
+                <span className="material-symbols-outlined text-base md:text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
               </button>
             </div>
 
@@ -596,9 +602,9 @@ export default function Home() {
               <h3 className="relative z-10 text-2xl md:text-4xl font-black text-white mb-4 tracking-tight">I am looking for a professional</h3>
               <p className="relative z-10 text-base md:text-xl mb-10 text-white/80 leading-relaxed max-w-md">Hire verified experts with digital contracts and guaranteed satisfaction.</p>
               
-              <button className="relative z-10 bg-primary text-black px-10 py-5 rounded-2xl font-black text-base md:text-lg hover:bg-primary/80 active:scale-95 transition-all shadow-[0_10px_30px_rgba(204,255,0,0.2)]">
+              <a href="/register/client" className="relative z-10 bg-primary text-black px-10 py-5 rounded-2xl font-black text-base md:text-lg hover:bg-primary/80 active:scale-95 transition-all shadow-[0_10px_30px_rgba(204,255,0,0.2)]">
                 Start Hiring
-              </button>
+              </a>
             </motion.div>
 
             <motion.div 
@@ -616,9 +622,9 @@ export default function Home() {
               <h3 className="text-2xl md:text-4xl font-black text-text-high mb-4 tracking-tight">I am a skilled professional</h3>
               <p className="text-base md:text-xl mb-10 text-text-med leading-relaxed max-w-md">Join the elite network of Fayda-verified experts and grow your business.</p>
               
-              <button className="bg-primary text-black px-10 py-5 rounded-2xl font-black text-base md:text-lg hover:bg-primary/80 active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,255,255,0.1)]">
+              <a href="/register/worker" className="bg-primary text-black px-10 py-5 rounded-2xl font-black text-base md:text-lg hover:bg-primary/80 active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,255,255,0.1)]">
                 Join as Member
-              </button>
+              </a>
             </motion.div>
           </div>
         </section>
@@ -633,7 +639,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-12 mb-20">
           <div className="flex flex-col gap-6 max-w-sm">
             <div className="text-2xl font-black text-text-high tracking-tighter flex items-center gap-2.5">
-              <div className="w-4 h-4 rounded-full bg-primary shadow-[0_0_15px_var(--primary-accent)]"></div>
+
               DIRESKILL
             </div>
             <p className="text-text-med text-sm md:text-base leading-relaxed">
