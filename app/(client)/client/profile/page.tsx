@@ -1,8 +1,10 @@
 "use client";
 
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 
 export default function ProfilePage() {
+  const { data: session } = useSession();
+
   return (
     <div className="max-w-md mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col items-center justify-center text-center space-y-6 bg-surface-container-low p-10 rounded-[2.5rem] border border-white/5 shadow-2xl">
@@ -15,7 +17,12 @@ export default function ProfilePage() {
         
         <div className="space-y-1">
           <h1 className="text-3xl font-headline font-black text-on-surface tracking-tighter">Your Identity</h1>
-          <p className="text-on-surface-variant text-sm font-medium">Digital ID Index: 8829-DIRE</p>
+          <p className="text-on-surface-variant text-sm font-medium">
+             {session?.user?.email || "Loading..."}
+          </p>
+          <p className="text-on-surface-variant/50 text-[10px] font-black uppercase tracking-widest mt-2 block">
+             Digital ID: 8829-DIRE
+          </p>
         </div>
       </div>
 
@@ -36,14 +43,17 @@ export default function ProfilePage() {
               </div>
               <span className="material-symbols-outlined text-on-surface-variant text-sm">chevron_right</span>
            </button>
-           <button 
-             onClick={() => signOut({ callbackUrl: "/login" })}
-             className="w-full px-8 py-6 flex items-center gap-4 hover:bg-red-500/5 transition-all group border-t border-white/5"
-           >
-              <span className="material-symbols-outlined text-red-500/50 group-hover:text-red-500 transition-colors">logout</span>
-              <span className="text-sm font-black uppercase tracking-widest text-red-500">Sign Out of Marketplace</span>
-           </button>
         </div>
+      </div>
+
+      <div className="pt-4">
+        <button 
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="w-full flex justify-center items-center gap-3 bg-red-500 hover:bg-red-600 text-white text-[12px] font-black uppercase tracking-widest py-5 rounded-[2rem] transition-colors active:scale-95 shadow-[0_10px_30px_rgba(239,68,68,0.15)]"
+        >
+            <span className="material-symbols-outlined text-[18px]">logout</span>
+            Sign Out
+        </button>
       </div>
     </div>
   );

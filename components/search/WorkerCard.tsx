@@ -17,7 +17,7 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
       <div className="absolute top-0 right-0 w-24 h-24 bg-primary/2 rounded-full blur-[40px] -translate-y-1/2 translate-x-1/2 pointer-events-none group-hover:bg-primary/5 transition-colors" />
 
       <div className="flex flex-row items-center sm:items-start gap-3.5 sm:gap-6 mb-4 sm:mb-6">
-        <div className="relative w-16 h-16 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 shadow-xl shrink-0">
+        <div className="relative w-16 h-16 sm:w-24 sm:h-24 rounded-full overflow-hidden border border-white/10 shadow-xl shrink-0">
           <img
             src={worker.photo}
             alt={worker.name}
@@ -33,25 +33,30 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
         </div>
 
         <div className="flex-1 min-w-0 flex flex-col justify-center">
-          <div className="flex justify-between items-start mb-0.5 gap-2">
-            <h3 className="text-base md:text-xl font-headline font-black text-on-surface tracking-tighter leading-tight truncate">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-1 sm:mb-0.5 gap-1.5 sm:gap-2">
+            <h3 className="text-lg md:text-xl font-headline font-black text-on-surface tracking-tighter leading-tight truncate">
               {worker.name}
             </h3>
-            <div className="flex items-center gap-1 bg-white/5 px-1.5 py-0.5 rounded-lg border border-white/5 shrink-0">
-              <span className="material-symbols-outlined text-[10px] md:text-xs text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
-                star
-              </span>
-              <span className="text-[9px] md:text-[10px] font-black text-on-surface tracking-tighter">
-                {worker.rating}
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-lg border border-white/5 shrink-0">
+                <span className="material-symbols-outlined text-[10px] md:text-xs text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  star
+                </span>
+                <span className="text-[10px] font-black text-on-surface tracking-tighter">
+                  {worker.rating}
+                </span>
+              </div>
+              <span className="text-[9px] md:text-[10px] font-bold text-on-surface-variant tracking-tighter">
+                ({worker.reviews} reviews)
               </span>
             </div>
           </div>
           
-          <p className="text-[8px] md:text-[10px] font-black text-primary uppercase tracking-[0.15em] mb-1 sm:mb-2">
+          <p className="text-[9px] md:text-[10px] font-black text-primary uppercase tracking-[0.15em] mb-1 sm:mb-2">
             {worker.skill}
           </p>
 
-          <div className="flex items-center gap-3 text-on-surface-variant text-[8px] md:text-[10px] font-bold uppercase tracking-widest">
+          <div className="flex items-center gap-3 text-on-surface-variant text-[9px] md:text-[10px] font-bold uppercase tracking-widest mt-1">
             <div className="flex items-center gap-1">
               <span className="material-symbols-outlined text-[12px]">location_on</span>
               <span className="truncate">{worker.distance} KM · {worker.district}</span>
@@ -76,12 +81,12 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
       </div>
 
       <div className="grid grid-cols-2 gap-2 sm:gap-3">
-        <button className="flex items-center justify-center gap-2 bg-surface-container-high hover:bg-white/5 border border-white/5 text-on-surface text-[9px] md:text-[10px] font-black uppercase tracking-widest py-3 sm:py-3.5 rounded-xl sm:rounded-2xl transition-all active:scale-95">
+        <button className="flex items-center justify-center gap-2 bg-surface-container-high hover:bg-white/5 border border-white/5 text-on-surface text-[9px] md:text-[10px] font-black uppercase tracking-widest py-4 sm:py-3.5 rounded-xl sm:rounded-2xl transition-all active:scale-95">
           <span className="material-symbols-outlined text-[14px]">chat_bubble</span>
           Message
         </button>
-        <button className="flex items-center justify-center gap-2 bg-white text-black text-[9px] md:text-[10px] font-black uppercase tracking-widest py-3 sm:py-3.5 rounded-xl sm:rounded-2xl hover:bg-white/90 active:scale-95 transition-all shadow-[0_10px_20px_rgba(255,255,255,0.05)]">
-          Profile
+        <button className="flex items-center justify-center gap-2 bg-white text-black text-[9px] md:text-[10px] font-black uppercase tracking-widest py-4 sm:py-3.5 rounded-xl sm:rounded-2xl hover:bg-white/90 active:scale-95 transition-all shadow-[0_10px_20px_rgba(255,255,255,0.05)]">
+          View Profile
         </button>
       </div>
     </motion.div>

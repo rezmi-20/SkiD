@@ -22,4 +22,5 @@ export interface SearchFilters {
   category: string;
   minRating: number;
   maxDistance: number;
+  sortBy: "Nearest" | "Highest Rated" | "Most Reviewed" | "";
 }
