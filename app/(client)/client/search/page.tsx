@@ -148,10 +148,12 @@ export default function SearchPage() {
     <div className="min-h-screen bg-surface p-6 pb-24 md:pb-10">
       <div className="max-w-7xl mx-auto space-y-10">
         <header>
-          <h1 className="text-5xl md:text-6xl font-headline font-black text-on-surface tracking-tighter mb-4">
+        <header className="space-y-2">
+          <h1 className="text-3xl md:text-6xl font-headline font-black text-on-surface tracking-tighter">
             Discover <span className="text-primary italic">Professionals</span>
           </h1>
-          <p className="text-on-surface-variant text-sm font-medium">Find skilled workers near your location in Dire Dawa.</p>
+          <p className="text-on-surface-variant text-[12px] md:text-sm font-medium">Find skilled workers near your location in Dire Dawa.</p>
+        </header>
         </header>
 
         <SearchFilters 
