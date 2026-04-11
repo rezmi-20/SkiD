@@ -23,22 +23,22 @@ export default async function WorkerDashboardPage() {
       {/* Precision Frame Overlay */}
       <div className="fixed inset-0 pointer-events-none border-[12px] border-white dark:border-[#000000] z-[100] hidden md:block" />
 
-      <main className="max-w-7xl mx-auto px-8 py-12 md:py-20 space-y-20 relative">
+      <main className="max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-20 space-y-12 md:space-y-20 relative">
         
         {/* Dynamic Header */}
-        <header className="flex flex-col md:flex-row md:items-end justify-between gap-12 border-b border-gray-100 dark:border-white/5 pb-16">
-          <div className="space-y-6">
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 md:gap-12 border-b border-gray-100 dark:border-white/5 pb-10 md:pb-16">
+          <div className="space-y-4 md:space-y-6">
             <div className="flex items-center gap-4">
-              <h1 className="text-5xl md:text-8xl font-black tracking-tightest leading-none">
+              <h1 className="text-4xl md:text-8xl font-black tracking-tightest leading-none">
                 {fullName.split(' ')[0]}<span className="text-blue-600">.</span>
               </h1>
               {isVerified && (
-                <div className="w-10 h-10 bg-blue-50 dark:bg-blue-600/10 border border-blue-100 dark:border-blue-600/20 rounded-xl flex items-center justify-center">
-                   <span className="material-symbols-outlined text-blue-600 text-[20px] font-black">verified</span>
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-50 dark:bg-blue-600/10 border border-blue-100 dark:border-blue-600/20 rounded-xl flex items-center justify-center">
+                   <span className="material-symbols-outlined text-blue-600 text-[16px] md:text-[20px] font-black">verified</span>
                 </div>
               )}
             </div>
-            <p className="text-gray-400 dark:text-gray-500 text-xl font-medium max-w-xl leading-relaxed">
+            <p className="text-gray-400 dark:text-gray-500 text-sm md:text-xl font-medium max-w-xl leading-relaxed">
               Professional identity status in <span className="text-black dark:text-white underline underline-offset-8 decoration-gray-200 dark:decoration-white/10">{worker?.district || "Dire Dawa"}</span>. Indexed for district economy.
             </p>
           </div>

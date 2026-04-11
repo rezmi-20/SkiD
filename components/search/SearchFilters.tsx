@@ -21,26 +21,26 @@ export default function SearchFilters({
   resultsCount,
 }: SearchFiltersProps) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 md:space-y-8">
       {/* Search & View Toggle */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
         <div className="relative flex-1 max-w-2xl group">
-          <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">
+          <span className="material-symbols-outlined absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-on-surface-variant/40 group-focus-within:text-primary transition-colors text-lg md:text-xl">
             search
           </span>
           <input
             type="text"
-            placeholder="Search by skill or name..."
+            placeholder="Search professionals..."
             value={filters.query}
             onChange={(e) => setFilters({ ...filters, query: e.target.value })}
-            className="w-full bg-surface-container-low border border-white/5 rounded-2xl py-4 pl-14 pr-6 text-on-surface font-medium placeholder:text-on-surface-variant/40 focus:outline-none focus:border-primary/30 transition-all"
+            className="w-full bg-surface-container-low border border-white/5 rounded-2xl py-3 md:py-4 pl-12 md:pl-14 pr-6 text-on-surface font-medium placeholder:text-on-surface-variant/30 focus:outline-none focus:border-primary/20 transition-all text-sm md:text-base"
           />
         </div>
 
-        <div className="flex bg-surface-container-low border border-white/5 p-1.5 rounded-2xl shrink-0">
+        <div className="flex bg-surface-container-low border border-white/5 p-1 rounded-xl md:p-1.5 md:rounded-2xl shrink-0">
           <button
             onClick={() => setViewMode("list")}
-            className={`flex items-center gap-2 px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-6 py-2 rounded-lg md:rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${
               viewMode === "list" ? "bg-white text-black shadow-xl" : "text-on-surface-variant hover:text-on-surface"
             }`}
           >
@@ -49,7 +49,7 @@ export default function SearchFilters({
           </button>
           <button
             onClick={() => setViewMode("map")}
-            className={`flex items-center gap-2 px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-6 py-2 rounded-lg md:rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${
               viewMode === "map" ? "bg-white text-black shadow-xl" : "text-on-surface-variant hover:text-on-surface"
             }`}
           >
@@ -60,7 +60,7 @@ export default function SearchFilters({
       </div>
 
       {/* Category Chips and Stats */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 overflow-hidden">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 md:gap-6 overflow-hidden">
         <div className="flex gap-2.5 overflow-x-auto pb-4 sm:pb-0 scrollbar-hide no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
           {CATEGORIES.map((cat) => (
             <button

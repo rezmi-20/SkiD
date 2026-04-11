@@ -15,7 +15,19 @@ export default function LoginPage() {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    // Redirect if already authenticated
+    const checkSession = async () => {
+      const { getSession } = await import("next-auth/react");
+      const session = await getSession();
+      if (session) {
+        const role = (session.user as any)?.role;
+        if (role === "client") router.replace("/client/search");
+        else if (role === "worker") router.replace("/worker/dashboard");
+        else if (role === "admin") router.replace("/admin/dashboard");
+      }
+    };
+    checkSession();
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

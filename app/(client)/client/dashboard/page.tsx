@@ -14,10 +14,10 @@ export default async function ClientDashboardPage() {
     <div className="max-w-6xl mx-auto space-y-10">
       <header className="flex justify-between items-end">
         <div>
-          <h1 className="text-5xl font-headline font-black text-on-surface tracking-tighter">
+          <h1 className="text-3xl md:text-5xl font-headline font-black text-on-surface tracking-tighter">
             Marhaba, <span className="text-primary italic">{fullName}</span>
           </h1>
-          <p className="text-on-surface-variant text-lg">Manage your active service requests and workers.</p>
+          <p className="text-on-surface-variant text-sm md:text-lg">Manage your active service requests and workers.</p>
         </div>
         <div className="flex items-center gap-4">
           <form action={async () => {

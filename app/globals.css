@@ -175,6 +175,7 @@
 [data-theme='light'] .text-gradient {
     background: linear-gradient(to bottom right, #111827 0%, #374151 100%);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -189,6 +190,7 @@
 [data-theme='light'] .hero-text .text-gradient {
     background: linear-gradient(to bottom right, #ffffff 30%, rgba(255,255,255,0.75) 100%);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent !important;
 }
 
@@ -209,12 +211,14 @@
 [data-theme='light'] .text-gradient {
     background: linear-gradient(to bottom right, #111827 0%, #374151 100%);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .text-gradient {
     background: linear-gradient(to bottom right, var(--text-high) 30%, var(--text-med) 100%);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -225,4 +229,31 @@
 
 * {
     transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease;
+}
+
+/* ── PWA & Mobile Optimization ── */
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none; /* Prevent pull-to-refresh in PWA */
+}
+
+/* Ensure images don't break flex layouts on narrow screens */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Hide scrollbars for a cleaner app feel while keeping scroll functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

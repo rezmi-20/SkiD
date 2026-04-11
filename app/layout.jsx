@@ -48,16 +48,17 @@ export default function RootLayout({ children }) {
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
+                const register = () => {
                   navigator.serviceWorker.register('/sw.js').then(
-                    function(registration) {
-                      console.log('Service Worker registration successful');
-                    },
-                    function(err) {
-                      console.log('Service Worker registration failed: ', err);
-                    }
+                    (reg) => console.log('SW registered'),
+                    (err) => console.log('SW failed', err)
                   );
-                });
+                };
+                if (document.readyState === 'complete') {
+                  register();
+                } else {
+                  window.addEventListener('load', register);
+                }
               }
             `,
           }}

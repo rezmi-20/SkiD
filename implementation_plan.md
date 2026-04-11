@@ -1,56 +1,45 @@
-# Implementation Plan — Search Workers Page
+# Implementation Plan — Mobile PWA Overhaul ("App-First" UI)
 
-We will build the core discovery experience for clients, allowing them to find skilled workers in Dire Dawa through a high-contrast, performant interface featuring smart filters and a map-integrated view.
+We will completely redesign the mobile experience to move away from "web-like" patterns and adopt a "native-app" aesthetic and functionality.
 
 ## Proposed Changes
 
-### 1. Dependencies
-We need to install the map libraries required for the Map View.
-- `leaflet`: The core mapping engine.
-- `react-leaflet`: React wrapper for Leaflet.
-- `@types/leaflet`: TypeScript definitions.
+### 1. Header & Navigation (True Mobile Shell)
+#### [MODIFY] [AppShell.tsx](components/ui/AppShell.tsx)
+- **Hide Top Bar**: Completely remove the `Desktop Navigation` bar for screens smaller than `md`.
+- **Top Brand Mark**: Add a very subtle logo on the top left of the *content* area, not a sticky bar.
+- **Main Bottom Nav**: Ensure it is strictly `fixed bottom-0` and anchored to `pb-safe`.
 
 ---
 
-### 2. Search Page Components
-We will break the page into focused components to maintain the "Precision Suite" aesthetics.
-
-#### [NEW] [WorkerCard.tsx](components/search/WorkerCard.tsx)
-- Premium card design with hairline borders and sharp typography.
-- Displays worker name, rating (★), review count, and distance.
-- Includes a "Verified" badge for Fayda-approved profiles.
-
-#### [NEW] [SearchFilters.tsx](components/search/SearchFilters.tsx)
-- Category chips (Plumber, Electrician, etc.).
-- Rating and Distance sliders/toggles.
-- View switcher (List ↔ Map).
-
-#### [NEW] [MapComponent.tsx](components/search/MapComponent.tsx)
-- A Leaflet map centered on Dire Dawa.
-- Dynamically imported (using `next/dynamic`) to avoid SSR issues.
-- Displays worker markers; clicking a marker shows a preview popup.
+### 2. Worker Cards (Mobile Stack)
+#### [MODIFY] [WorkerCard.tsx](components/search/WorkerCard.tsx)
+- **Responsive Layout**: On mobile, stack the content where necessary to avoid name truncation ("Ahme...").
+- **Compact Badges**: Reduce the size of the verification badge and star ratings for mobile.
+- **Touch Targets**: Optimize the "Message" and "Profile" buttons to be full-width on mobile for easier thumb access.
 
 ---
 
-### 3. Main Search Page
-#### [NEW] [search/page.tsx](app/(client)/client/search/page.tsx)
-- The main entry point for clients.
-- Manages search state (query, filters).
-- Provides mock data for early testing and hooks up the List and Map views.
+### 3. Functional Logout
+#### [MODIFY] [Profile Page](app/(client)/client/profile/page.tsx)
+- **Primary Logout Button**: Add a large, high-contrast "Sign Out" button at the bottom of the profile section.
+- **Session Info**: Display the logged-in email clearly.
 
 ---
 
-## Technical Details: Geolocation
-- For the initial version, we will use mock coordinates for Dire Dawa neighborhoods (Kezira, Gende Korem, Megala).
-- We will implement a basic Haversine distance calculation to show "Distance from you."
+### 4. Search & Filters (Information Density)
+#### [MODIFY] [SearchFilters.tsx](components/search/SearchFilters.tsx)
+- **Slim Search**: Reduce the height of the search bar on mobile.
+- **Category Refinement**: Reduce vertical padding between categories and result counts.
+
+---
 
 ## Verification Plan
 
 ### Automated Tests
-1. Run `npm run build` to verify Leaflet dynamic imports and SSR safety.
+- `npm run build` to ensure no environment regressions.
 
 ### Manual Verification
-1. **Search**: Type "Plumber" and verify the list filters correctly.
-2. **View Toggle**: Switch between List and Map views smoothly.
-3. **Map Interaction**: Click a marker on the map and verify the worker's info appears.
-4. **Filters**: Adjust the rating filter and verify only high-rated workers remain.
+- Use Chrome DevTools to simulate **iPhone SE** (smallest screen) and **Pixel 7**.
+- Verify that **Sign Out** redirects back to `/login` smoothly.
+- Ensure the bottom nav doesn't cover the "Message" buttons on the last worker card.

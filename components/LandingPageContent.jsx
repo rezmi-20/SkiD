@@ -2,7 +2,10 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
-export default function Home() {
+export default function Home({ userRole }) {
+  const workspacePath = userRole === "admin" ? "/admin/dashboard" : 
+                        userRole === "worker" ? "/worker/dashboard" : 
+                        "/client/search";
   const [theme, setTheme] = useState('theme-img');
   const [mounted, setMounted] = useState(false);
 
@@ -79,8 +82,16 @@ export default function Home() {
             <div className="h-3 w-px bg-border"></div>
             <button className="text-text-med hover:text-text-high text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-colors">አማ</button>
           </div>
-          <a href="/login" className="flex h-8 md:h-10 px-3 md:px-6 items-center rounded-xl text-text-med text-[10px] md:text-xs font-black uppercase tracking-widest border border-border hover:bg-surface transition-all whitespace-nowrap shrink-0">Login</a>
-          <a href="/register/client" className="flex bg-primary text-black px-4 md:px-8 h-8 md:h-10 items-center justify-center rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest hover:bg-primary/80 active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,255,255,0.2)] whitespace-nowrap shrink-0">Join</a>
+          {userRole ? (
+            <a href={workspacePath} className="flex bg-primary text-black px-6 md:px-8 h-8 md:h-10 items-center justify-center rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest hover:bg-primary/80 active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,255,255,0.2)] whitespace-nowrap shrink-0">
+              Workspace
+            </a>
+          ) : (
+            <>
+              <a href="/login" className="flex h-8 md:h-10 px-3 md:px-6 items-center rounded-xl text-text-med text-[10px] md:text-xs font-black uppercase tracking-widest border border-border hover:bg-surface transition-all whitespace-nowrap shrink-0">Login</a>
+              <a href="/register/client" className="flex bg-primary text-black px-4 md:px-8 h-8 md:h-10 items-center justify-center rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest hover:bg-primary/80 active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,255,255,0.2)] whitespace-nowrap shrink-0">Join</a>
+            </>
+          )}
         </div>
       </nav>
 
@@ -201,13 +212,15 @@ export default function Home() {
 
               {/* CTAs */}
               <div className="flex flex-col sm:flex-row gap-3">
-                <a href="/register/client" className="flex-1 bg-primary text-black px-6 py-4 rounded-2xl font-black tracking-wide hover:bg-primary/80 active:scale-95 transition-all flex items-center justify-center gap-2 text-sm md:text-base">
-                  Find a Worker Now
+                <a href={userRole ? workspacePath : "/register/client"} className="flex-1 bg-primary text-black px-6 py-4 rounded-2xl font-black tracking-wide hover:bg-primary/80 active:scale-95 transition-all flex items-center justify-center gap-2 text-sm md:text-base">
+                  {userRole ? "Enter Workspace" : "Find a Worker Now"}
                   <span className="material-symbols-outlined text-xl">arrow_forward</span>
                 </a>
-                <a href="/register/worker" className="flex-1 bg-surface border border-border hover:bg-black/5 text-text-high px-6 py-4 rounded-2xl font-bold tracking-wide transition-all text-center text-sm md:text-base">
-                  Join as a Skilled Worker
-                </a>
+                {!userRole && (
+                  <a href="/register/worker" className="flex-1 bg-surface border border-border hover:bg-black/5 text-text-high px-6 py-4 rounded-2xl font-bold tracking-wide transition-all text-center text-sm md:text-base">
+                    Join as a Skilled Worker
+                  </a>
+                )}
               </div>
             </motion.div>
 
