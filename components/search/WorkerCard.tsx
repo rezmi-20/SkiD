@@ -85,6 +85,5 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
         </button>
       </div>
     </motion.div>
-    </motion.div>
   );
 }
