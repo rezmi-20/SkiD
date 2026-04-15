@@ -1,33 +1,25 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useTheme } from "next-themes";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function Home({ userRole }) {
   const workspacePath = userRole === "admin" ? "/admin/dashboard" : 
                         userRole === "worker" ? "/worker/dashboard" : 
                         "/client/search";
-  const [theme, setTheme] = useState('theme-img');
+  const { theme, setTheme } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    const saved = localStorage.getItem('direskill-theme');
-    if (saved) {
-      setTheme(saved);
-      document.documentElement.setAttribute('data-theme', saved);
-    }
   }, []);
 
-  useEffect(() => {
-    if (mounted) {
-      localStorage.setItem('direskill-theme', theme);
-      document.documentElement.setAttribute('data-theme', theme);
-    }
-  }, [theme, mounted]);
-
   const toggleTheme = () => {
-    const modes = ['theme-img', 'dark', 'light'];
-    const next = modes[(modes.indexOf(theme) + 1) % modes.length];
+    const modes = ['grayscale', 'dark', 'light'];
+    const currentTheme = theme || 'grayscale';
+    const next = modes[(modes.indexOf(currentTheme) + 1) % modes.length];
     setTheme(next);
   };
 
@@ -59,37 +51,41 @@ export default function Home({ userRole }) {
         </div>
  
         {/* Desktop nav */}
-        <div className="hidden lg:flex items-center bg-surface backdrop-blur-2xl border border-border rounded-2xl h-11 px-1">
-          <a href="#" className="px-6 h-9 flex items-center hover:bg-white/10 hover:text-text-high transition-all rounded-xl text-xs font-bold uppercase tracking-widest text-text-med">Home</a>
-          <a href="#how-it-works" className="px-6 h-9 flex items-center hover:bg-white/10 hover:text-text-high transition-all rounded-xl text-xs font-bold uppercase tracking-widest text-text-med">Process</a>
-          <a href="#categories" className="px-6 h-9 flex items-center hover:bg-white/10 hover:text-text-high transition-all rounded-xl text-xs font-bold uppercase tracking-widest text-text-med">Services</a>
-          <a href="#about" className="px-6 h-9 flex items-center hover:bg-white/10 hover:text-text-high transition-all rounded-xl text-xs font-bold uppercase tracking-widest text-text-med">About</a>
+        <div className="hidden lg:flex items-center bg-surface backdrop-blur-2xl border border-border rounded-2xl h-11 px-1 text-text-high">
+          <a href="#" className="px-6 h-9 flex items-center hover:bg-black/5 transition-all rounded-xl text-xs font-bold uppercase tracking-widest text-text-med hover:text-text-high">{t("nav.home")}</a>
+          <a href="#how-it-works" className="px-6 h-9 flex items-center hover:bg-black/5 transition-all rounded-xl text-xs font-bold uppercase tracking-widest text-text-med hover:text-text-high">{t("nav.process")}</a>
+          <a href="#categories" className="px-6 h-9 flex items-center hover:bg-black/5 transition-all rounded-xl text-xs font-bold uppercase tracking-widest text-text-med hover:text-text-high">{t("nav.services")}</a>
+          <a href="#about" className="px-6 h-9 flex items-center hover:bg-black/5 transition-all rounded-xl text-xs font-bold uppercase tracking-widest text-text-med hover:text-text-high">{t("nav.about")}</a>
         </div>
  
         <div className="flex items-center justify-end gap-2 md:gap-4 flex-wrap sm:flex-nowrap">
           <button 
             onClick={toggleTheme}
-            className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-xl bg-surface border border-border hover:bg-white/10 transition-all text-text-high group shrink-0"
+            className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-xl bg-surface border border-border hover:bg-black/5 transition-all text-text-high group shrink-0"
             title="Toggle Theme"
           >
             <span className="material-symbols-outlined text-lg md:text-xl group-hover:rotate-12 transition-transform">
-              {theme === 'theme-img' ? 'contrast' : theme === 'dark' ? 'dark_mode' : 'light_mode'}
+              {theme === 'grayscale' ? 'contrast' : theme === 'dark' ? 'dark_mode' : 'light_mode'}
             </span>
           </button>
           
-          <div className="flex items-center gap-1.5 md:gap-4 mr-0 md:mr-4 shrink-0">
-            <button className="text-text-med hover:text-text-high text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-colors">EN</button>
+          <div className="flex items-center gap-1.5 md:gap-4 mr-0 md:mr-4 shrink-0 bg-surface border border-border rounded-xl p-1 px-2 md:py-1">
+            <button
+               onClick={() => setLanguage('en')}
+               className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-colors px-2 py-1 rounded-md ${language === 'en' ? 'bg-primary text-black' : 'text-text-med hover:text-text-high'}`}>EN</button>
             <div className="h-3 w-px bg-border"></div>
-            <button className="text-text-med hover:text-text-high text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-colors">አማ</button>
+            <button 
+               onClick={() => setLanguage('am')}
+               className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-colors px-2 py-1 rounded-md ${language === 'am' ? 'bg-primary text-black' : 'text-text-med hover:text-text-high'}`}>አማ</button>
           </div>
           {userRole ? (
             <a href={workspacePath} className="flex bg-primary text-black px-6 md:px-8 h-8 md:h-10 items-center justify-center rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest hover:bg-primary/80 active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,255,255,0.2)] whitespace-nowrap shrink-0">
-              Workspace
+              {t("common.workspace")}
             </a>
           ) : (
             <>
-              <a href="/login" className="flex h-8 md:h-10 px-3 md:px-6 items-center rounded-xl text-text-med text-[10px] md:text-xs font-black uppercase tracking-widest border border-border hover:bg-surface transition-all whitespace-nowrap shrink-0">Login</a>
-              <a href="/register/client" className="flex bg-primary text-black px-4 md:px-8 h-8 md:h-10 items-center justify-center rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest hover:bg-primary/80 active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,255,255,0.2)] whitespace-nowrap shrink-0">Join</a>
+              <a href="/login" className="flex h-8 md:h-10 px-3 md:px-6 items-center rounded-xl text-text-med hover:text-text-high text-[10px] md:text-xs font-black uppercase tracking-widest border border-border hover:bg-surface transition-all whitespace-nowrap shrink-0">{t("common.login")}</a>
+              <a href="/register/client" className="flex bg-primary text-black px-4 md:px-8 h-8 md:h-10 items-center justify-center rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest hover:bg-primary/80 active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,255,255,0.2)] whitespace-nowrap shrink-0">{t("common.join")}</a>
             </>
           )}
         </div>

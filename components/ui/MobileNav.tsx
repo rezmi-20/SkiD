@@ -3,35 +3,38 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
+import { useLanguage } from "@/context/LanguageContext";
+import { TranslationKey } from "@/lib/translations";
 
 interface NavItem {
-  label: string;
+  key: TranslationKey;
   icon: string;
   href: string;
 }
 
 const CLIENT_NAV: NavItem[] = [
-  { label: "Discover", icon: "search", href: "/client/search" },
-  { label: "My Jobs", icon: "work_outline", href: "/client/dashboard" },
-  { label: "Chat", icon: "chat_bubble", href: "/client/messages" },
-  { label: "Profile", icon: "person", href: "/client/profile" },
+  { key: "nav.discover", icon: "search", href: "/client/search" },
+  { key: "nav.myjobs", icon: "work_outline", href: "/client/dashboard" },
+  { key: "nav.chat", icon: "chat_bubble", href: "/client/messages" },
+  { key: "nav.profile", icon: "person", href: "/client/profile" },
 ];
 
 const WORKER_NAV: NavItem[] = [
-  { label: "Dashboard", icon: "dashboard", href: "/worker/dashboard" },
-  { label: "My Gigs", icon: "handyman", href: "/worker/gigs" },
-  { label: "Earnings", icon: "payments", href: "/worker/earnings" },
-  { label: "Profile", icon: "person", href: "/worker/profile" },
+  { key: "nav.dashboard", icon: "dashboard", href: "/worker/dashboard" },
+  { key: "nav.mygigs", icon: "handyman", href: "/worker/gigs" },
+  { key: "nav.earnings", icon: "payments", href: "/worker/earnings" },
+  { key: "nav.profile", icon: "person", href: "/worker/profile" },
 ];
 
 export default function MobileNav({ role }: { role: "client" | "worker" }) {
   const pathname = usePathname();
   const navItems = role === "client" ? CLIENT_NAV : WORKER_NAV;
+  const { t } = useLanguage();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
-      {/* Frosted Glass Background */}
-      <div className="absolute inset-0 bg-surface-container-high/80 backdrop-blur-2xl border-t border-white/5" />
+      {/* Background */}
+      <div className="absolute inset-0 bg-surface-container-high/90 border-t border-white/5" />
       
       {/* Navigation Tabs */}
       <div className="relative max-w-md mx-auto px-6 h-20 flex items-center justify-between pb-safe">
@@ -60,7 +63,7 @@ export default function MobileNav({ role }: { role: "client" | "worker" }) {
                 )}
               </div>
               <span className={`text-[9px] font-black uppercase tracking-widest ${isActive ? 'text-primary opacity-100' : 'text-on-surface-variant/40 opacity-0'} transition-all`}>
-                {item.label}
+                {t(item.key)}
               </span>
             </Link>
           );

@@ -30,7 +30,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`dark ${manrope.variable} ${inter.variable}`}>
+    <html lang="en" className={`${manrope.variable} ${inter.variable}`} suppressHydrationWarning>
       <head>
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
@@ -42,7 +42,7 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-title" content="DireSkill" />
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body className="bg-black text-white font-body selection:bg-white selection:text-black min-h-screen flex flex-col">
+      <body className="bg-background text-text-high font-body min-h-screen flex flex-col" suppressHydrationWarning>
         <Providers>{children}</Providers>
         <script
           dangerouslySetInnerHTML={{

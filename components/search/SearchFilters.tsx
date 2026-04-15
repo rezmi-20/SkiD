@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ViewMode, SearchFilters as FilterType } from "./types";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface SearchFiltersProps {
   filters: FilterType;
@@ -20,6 +21,8 @@ export default function SearchFilters({
   setViewMode,
   resultsCount,
 }: SearchFiltersProps) {
+  const { t } = useLanguage();
+
   return (
     <div className="space-y-3 md:space-y-6">
       {/* Search & View Toggle */}
@@ -29,7 +32,7 @@ export default function SearchFilters({
             search
           </span>
           <input
-            placeholder="Search by skill (plumber, electrician...)"
+            placeholder={t("search.placeholder")}
             value={filters.query}
             onChange={(e) => setFilters({ ...filters, query: e.target.value })}
             className="w-full bg-surface-container-low border border-white/5 rounded-2xl py-2.5 md:py-4 pl-12 md:pl-14 pr-6 text-on-surface font-medium placeholder:text-on-surface-variant/30 focus:outline-none focus:border-primary/20 transition-all text-[13px] md:text-base"
@@ -40,20 +43,20 @@ export default function SearchFilters({
           <button
             onClick={() => setViewMode("list")}
             className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-6 py-2 rounded-lg md:rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${
-              viewMode === "list" ? "bg-white text-black shadow-xl" : "text-on-surface-variant hover:text-on-surface"
+              viewMode === "list" ? "bg-primary text-black shadow-xl" : "text-on-surface-variant hover:text-on-surface"
             }`}
           >
             <span className="material-symbols-outlined text-sm">view_list</span>
-            List
+            {t("search.view.list")}
           </button>
           <button
             onClick={() => setViewMode("map")}
             className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-6 py-2 rounded-lg md:rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${
-              viewMode === "map" ? "bg-white text-black shadow-xl" : "text-on-surface-variant hover:text-on-surface"
+              viewMode === "map" ? "bg-primary text-black shadow-xl" : "text-on-surface-variant hover:text-on-surface"
             }`}
           >
             <span className="material-symbols-outlined text-sm">map</span>
-            Map
+            {t("search.view.map")}
           </button>
         </div>
       </div>
@@ -78,12 +81,12 @@ export default function SearchFilters({
         
         <div className="flex items-center gap-4 shrink-0">
             <span className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant/40">
-                Showing {resultsCount} workers near you
+                {t("search.showing").replace("{count}", resultsCount.toString())}
             </span>
             <div className="h-4 w-px bg-white/5 hidden sm:block" />
             <button className="hidden sm:flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-on-surface hover:text-primary transition-colors">
                 <span className="material-symbols-outlined text-sm">tune</span>
-                Filter
+                {t("search.filter")}
             </button>
         </div>
       </div>
@@ -91,7 +94,7 @@ export default function SearchFilters({
       {/* Advanced Filters (Rating, Distance, Sort) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-6 pt-2 border-t border-white/5">
         <label className="flex flex-col gap-1.5">
-          <span className="text-[9px] font-black uppercase tracking-widest text-on-surface-variant/60 ml-2">Min Rating</span>
+          <span className="text-[9px] font-black uppercase tracking-widest text-on-surface-variant/60 ml-2">{t("search.minRating")}</span>
           <select 
             value={filters.minRating}
             onChange={(e) => setFilters({ ...filters, minRating: Number(e.target.value) })}
@@ -104,7 +107,7 @@ export default function SearchFilters({
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-[9px] font-black uppercase tracking-widest text-on-surface-variant/60 ml-2">Distance</span>
+          <span className="text-[9px] font-black uppercase tracking-widest text-on-surface-variant/60 ml-2">{t("search.distance")}</span>
           <select 
             value={filters.maxDistance}
             onChange={(e) => setFilters({ ...filters, maxDistance: Number(e.target.value) })}
@@ -118,7 +121,7 @@ export default function SearchFilters({
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-[9px] font-black uppercase tracking-widest text-on-surface-variant/60 ml-2">Sort By</span>
+          <span className="text-[9px] font-black uppercase tracking-widest text-on-surface-variant/60 ml-2">{t("search.sortBy")}</span>
           <select 
             value={filters.sortBy}
             onChange={(e) => setFilters({ ...filters, sortBy: e.target.value as any })}

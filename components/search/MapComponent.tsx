@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Worker } from "./types";
+import { useTheme } from "next-themes";
 
 // Fix for default Leaflet icons in Next.js
 const fixLeafletIcons = () => {
@@ -46,6 +47,7 @@ const userLocationIcon = () => L.divIcon({
 
 export default function MapComponent({ workers }: MapComponentProps) {
   const [isMounted, setIsMounted] = useState(false);
+  const { theme } = useTheme();
 
   useEffect(() => {
     fixLeafletIcons();
@@ -55,6 +57,11 @@ export default function MapComponent({ workers }: MapComponentProps) {
   if (!isMounted) return <div className="h-full w-full bg-surface-container-low animate-pulse rounded-3xl" />;
 
   const center: [number, number] = [9.5915, 41.8661]; // Sabian Area, Dire Dawa
+  
+  const isLight = theme === 'light';
+  const tileUrl = isLight 
+    ? "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+    : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 
   return (
     <div className="h-[calc(100vh-280px)] w-full rounded-[2rem] overflow-hidden border border-white/5 shadow-2xl">
@@ -62,11 +69,11 @@ export default function MapComponent({ workers }: MapComponentProps) {
         center={center}
         zoom={14}
         scrollWheelZoom={true}
-        style={{ height: "100%", width: "100%", background: "#1a1a1a" }}
+        style={{ height: "100%", width: "100%", background: isLight ? "#f8f9fa" : "#1a1a1a" }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          url={tileUrl}
         />
         
         {/* User Location Dot */}
@@ -111,22 +118,22 @@ export default function MapComponent({ workers }: MapComponentProps) {
 
       <style jsx global>{`
         .leaflet-container {
-          background: #111 !important;
+          background: var(--bg-page) !important;
         }
         .leaflet-popup-content-wrapper {
-          background: #1C1C1C !important;
-          color: white !important;
+          background: var(--surface-glass) !important;
+          color: var(--text-high) !important;
           border-radius: 1rem !important;
-          border: 1px solid rgba(255,255,255,0.05);
-          box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+          border: 1px solid var(--border-glass);
+          box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         }
         .leaflet-popup-tip {
-          background: #1C1C1C !important;
+          background: var(--surface-glass) !important;
         }
         .leaflet-bar a {
-           background-color: #1C1C1C !important;
-           color: white !important;
-           border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+           background-color: var(--surface-glass) !important;
+           color: var(--text-high) !important;
+           border-bottom: 1px solid var(--border-glass) !important;
         }
       `}</style>
     </div>

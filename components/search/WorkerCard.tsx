@@ -2,15 +2,18 @@
 
 import { motion } from "framer-motion";
 import { Worker } from "./types";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface WorkerCardProps {
   worker: Worker;
 }
 
 export default function WorkerCard({ worker }: WorkerCardProps) {
+  const { t } = useLanguage();
+
   return (
     <motion.div
-      whileHover={{ y: -4, borderColor: "rgba(255, 255, 255, 0.15)" }}
+      whileHover={{ y: -4, borderColor: "rgba(128,128,128,0.2)" }}
       className="group relative bg-surface-container-low rounded-[1.5rem] border border-white/5 p-3.5 md:p-6 transition-all duration-300 shadow-2xl overflow-hidden"
     >
       {/* Background Accent */}
@@ -47,7 +50,7 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
                 </span>
               </div>
               <span className="text-[9px] md:text-[10px] font-bold text-on-surface-variant tracking-tighter">
-                ({worker.reviews} reviews)
+                ({worker.reviews} {t("worker.reviews")})
               </span>
             </div>
           </div>
@@ -65,7 +68,7 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
         </div>
       </div>
 
-      {/* Tags section - Hidden on extra small mobile to save space */}
+      {/* Tags section */}
       <div className="hidden sm:flex flex-wrap gap-1.5 mb-6">
         {worker.skills?.slice(0, 2).map((s) => (
           <span
@@ -81,12 +84,12 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
       </div>
 
       <div className="grid grid-cols-2 gap-2 sm:gap-3">
-        <button className="flex items-center justify-center gap-2 bg-surface-container-high hover:bg-white/5 border border-white/5 text-on-surface text-[9px] md:text-[10px] font-black uppercase tracking-widest py-4 sm:py-3.5 rounded-xl sm:rounded-2xl transition-all active:scale-95">
+        <button className="flex items-center justify-center gap-2 bg-surface-container-high hover:bg-black/5 border border-white/5 text-on-surface text-[9px] md:text-[10px] font-black uppercase tracking-widest py-4 sm:py-3.5 rounded-xl sm:rounded-2xl transition-all active:scale-95">
           <span className="material-symbols-outlined text-[14px]">chat_bubble</span>
-          Message
+          {t("worker.message")}
         </button>
-        <button className="flex items-center justify-center gap-2 bg-white text-black text-[9px] md:text-[10px] font-black uppercase tracking-widest py-4 sm:py-3.5 rounded-xl sm:rounded-2xl hover:bg-white/90 active:scale-95 transition-all shadow-[0_10px_20px_rgba(255,255,255,0.05)]">
-          View Profile
+        <button className="flex items-center justify-center gap-2 bg-primary text-black text-[9px] md:text-[10px] font-black uppercase tracking-widest py-4 sm:py-3.5 rounded-xl sm:rounded-2xl hover:bg-primary/80 active:scale-95 transition-all shadow-[0_10px_20px_rgba(0,0,0,0.1)]">
+          {t("worker.viewProfile")}
         </button>
       </div>
     </motion.div>

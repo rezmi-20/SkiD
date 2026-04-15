@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import WorkerCard from "@/components/search/WorkerCard";
 import SearchFilters from "@/components/search/SearchFilters";
 import { Worker, ViewMode, SearchFilters as FilterType } from "@/components/search/types";
+import { useLanguage } from "@/context/LanguageContext";
 
 // Dynamically import Map with no SSR
 const MapComponent = dynamic(() => import("@/components/search/MapComponent"), { 
@@ -197,6 +198,7 @@ const MOCK_WORKERS: Worker[] = [
 ];
 
 export default function SearchPage() {
+  const { t } = useLanguage();
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [filters, setFilters] = useState<FilterType>({
     query: "",
@@ -228,13 +230,11 @@ export default function SearchPage() {
   return (
     <div className="min-h-screen bg-surface p-6 pb-24 md:pb-10">
       <div className="max-w-7xl mx-auto space-y-10">
-        <header>
         <header className="space-y-2">
           <h1 className="text-3xl md:text-6xl font-headline font-black text-on-surface tracking-tighter">
-            Find Skilled Workers <span className="text-primary italic">Near You</span>
+            {t("search.title")} <span className="text-primary italic">{t("search.title.highlight")}</span>
           </h1>
-          <p className="text-on-surface-variant text-[12px] md:text-sm font-medium">Find skilled workers near your location in Dire Dawa.</p>
-        </header>
+          <p className="text-on-surface-variant text-[12px] md:text-sm font-medium">{t("search.subtitle")}</p>
         </header>
 
         <SearchFilters 
@@ -261,7 +261,7 @@ export default function SearchPage() {
               ) : (
                 <div className="col-span-full py-20 text-center space-y-4">
                   <span className="material-symbols-outlined text-6xl text-white/5">search_off</span>
-                  <p className="text-on-surface-variant font-medium">No workers match your current filters.</p>
+                  <p className="text-on-surface-variant font-medium">{t("search.noResults")}</p>
                 </div>
               )}
             </motion.div>

@@ -126,134 +126,158 @@
 
 /* ═══════════════════════════════════════════
    LIGHT MODE — Premium Editorial Overrides
-   Inspired by: Linear, Stripe, Vercel
-   Zero blur. Zero glass. Full clarity.
+   Covers hardcoded dark Tailwind patterns
    ═══════════════════════════════════════════ */
 
 [data-theme='light'] .grain-overlay { opacity: 0 !important; }
 
 [data-theme='light'] * {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
-[data-theme='light'] .light-hide { display: none !important; }
+/* ── Backgrounds ── */
+[data-theme='light'] .bg-\[#0e0e0e\],
+[data-theme='light'] .bg-\[#111111\],
+[data-theme='light'] .bg-\[#1C1C1C\],
+[data-theme='light'] .bg-black\/50,
+[data-theme='light'] .bg-black\/40,
+[data-theme='light'] .bg-black\/30,
+[data-theme='light'] .bg-black\/20,
+[data-theme='light'] .bg-black\/10,
+[data-theme='light'] .bg-white\/5,
+[data-theme='light'] .bg-white\/10 {
+  background-color: rgba(0,0,0,0.04) !important;
+}
 
-/* Hero overlays: dark scrim replaces white wash so photo is vivid */
+[data-theme='light'] .bg-surface,
+[data-theme='light'] .bg-surface-container-low,
+[data-theme='light'] .bg-surface-container-high,
+[data-theme='light'] .bg-surface-container,
+[data-theme='light'] .bg-surface-variant {
+  background-color: #ffffff !important;
+}
+
+[data-theme='light'] .bg-background { background-color: var(--bg-page) !important; }
+
+/* ── Borders ── */
+[data-theme='light'] .border-white\/5,
+[data-theme='light'] .border-white\/10,
+[data-theme='light'] .border-white\/20 {
+  border-color: rgba(0,0,0,0.08) !important;
+}
+
+/* ── Text ── */
+[data-theme='light'] .text-white { color: #111827 !important; }
+[data-theme='light'] .text-on-surface { color: #111827 !important; }
+[data-theme='light'] .text-on-surface-variant { color: #6b7280 !important; }
+[data-theme='light'] .text-text-high { color: #111827 !important; }
+[data-theme='light'] .text-text-med { color: #6b7280 !important; }
+
+/* ── Icon & hover states ── */
+[data-theme='light'] .hover\:bg-white\/10:hover,
+[data-theme='light'] .hover\:bg-white\/5:hover {
+  background-color: rgba(0,0,0,0.05) !important;
+}
+
+[data-theme='light'] .hover\:bg-black\/5:hover {
+  background-color: rgba(0,0,0,0.05) !important;
+}
+
+/* ── Nav bar ── */
+[data-theme='light'] nav {
+  background: rgba(255, 255, 240, 0.97) !important;
+  border-bottom-color: rgba(0, 0, 0, 0.09) !important;
+}
+
+/* ── Inputs & Selects ── */
+[data-theme='light'] input,
+[data-theme='light'] select {
+  background-color: #f5f4f0 !important;
+  color: #111827 !important;
+  border-color: rgba(0,0,0,0.1) !important;
+}
+
+[data-theme='light'] input::placeholder {
+  color: #9ca3af !important;
+}
+
+/* ── Cards (any rounded panels with dark bg) ── */
+[data-theme='light'] .rounded-2xl,
+[data-theme='light'] .rounded-3xl,
+[data-theme='light'] .rounded-xl {
+  --tw-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+}
+
+/* ── Hero overlays: dark scrim so photo is vivid ── */
 [data-theme='light'] .hero-overlay-r {
-    background: linear-gradient(to right, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.2) 55%, transparent 100%) !important;
+  background: linear-gradient(to right, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.2) 55%, transparent 100%) !important;
 }
 [data-theme='light'] .hero-overlay-t {
-    background: linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 55%) !important;
+  background: linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 55%) !important;
 }
 
-/* Nav: warm ivory colour, crisp border */
-[data-theme='light'] nav {
-    background: rgba(255, 255, 240, 0.96) !important;
-    border-bottom-color: rgba(0, 0, 0, 0.09) !important;
-}
-
-/* Search bar inner rows: solid light grey so inputs are visible on white */
-[data-theme='light'] .light-input-row {
-    background-color: #f0efec !important;
-    border-color: rgba(0, 0, 0, 0.10) !important;
-}
-
-/* Floating benefit cards: pure white on warm bg = natural card depth */
-[data-theme='light'] .animate-float {
-    background: #ffffff !important;
-    border-color: rgba(0,0,0,0.07) !important;
-    box-shadow: 0 2px 24px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04) !important;
-}
-
-/* Separation section: see-through overlay so photo is visible */
-[data-theme='light'] .section-overlay {
-    background-color: rgba(255, 255, 240, 0.48) !important;
-}
-
-/* Text gradient: rich near-black */
-[data-theme='light'] .text-gradient {
-    background: linear-gradient(to bottom right, #111827 0%, #374151 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-/* Hero LEFT text: sits on dark scrim — force white so it's readable */
+/* ── Hero LEFT text: force white on dark scrim ── */
 [data-theme='light'] .hero-text,
 [data-theme='light'] .hero-text h1,
 [data-theme='light'] .hero-text p,
-[data-theme='light'] .hero-text span {
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
-}
+[data-theme='light'] .hero-text span { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
 [data-theme='light'] .hero-text .text-gradient {
-    background: linear-gradient(to bottom right, #ffffff 30%, rgba(255,255,255,0.75) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent !important;
+  background: linear-gradient(to bottom right, #ffffff 30%, rgba(255,255,255,0.75) 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent !important;
 }
 
-/* Benefits feature cards — proper hover on light bg */
-[data-theme='light'] .hover\:bg-white\/10:hover {
-    background-color: rgba(0, 0, 0, 0.04) !important;
+/* ── Section overlay ── */
+[data-theme='light'] .section-overlay { background-color: rgba(255, 255, 240, 0.48) !important; }
+
+/* ── Floating benefit cards ── */
+[data-theme='light'] .animate-float {
+  background: #ffffff !important;
+  border-color: rgba(0,0,0,0.07) !important;
+  box-shadow: 0 2px 24px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04) !important;
 }
 
-/* Nav pill (desktop nav links container) */
-[data-theme='light'] .bg-surface {
-    background-color: #ffffff;
-}
-[data-theme='light'] .hover\:bg-white\/10:hover {
-    background-color: rgba(0,0,0,0.05) !important;
-}
-
-/* Text gradient: rich near-black */
+/* ── Text gradient ── */
 [data-theme='light'] .text-gradient {
-    background: linear-gradient(to bottom right, #111827 0%, #374151 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+  background: linear-gradient(to bottom right, #111827 0%, #374151 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+/* ── Separators ── */
+[data-theme='light'] .h-px.bg-white\/5,
+[data-theme='light'] .w-px.bg-white\/5 {
+  background-color: rgba(0,0,0,0.1) !important;
+}
+
+/* ── Worker card & popup ── */
+[data-theme='light'] .leaflet-popup-content-wrapper {
+  background: #ffffff !important;
+  color: #111827 !important;
+  border: 1px solid rgba(0,0,0,0.08) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+}
+[data-theme='light'] .leaflet-popup-tip { background: #ffffff !important; }
+[data-theme='light'] .leaflet-bar a {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  border-bottom: 1px solid rgba(0,0,0,0.08) !important;
 }
 
 .text-gradient {
-    background: linear-gradient(to bottom right, var(--text-high) 30%, var(--text-med) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+  background: linear-gradient(to bottom right, var(--text-high) 30%, var(--text-med) 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
 }
 
-::selection {
-    background-color: var(--selection-bg);
-    color: var(--selection-text);
-}
+::selection { background-color: var(--selection-bg); color: var(--selection-text); }
 
-* {
-    transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease;
-}
+* { transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease; }
 
-/* ── PWA & Mobile Optimization ── */
+/* ── PWA & Mobile ── */
 @layer utilities {
-  .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
 }
 
-body {
-  -webkit-tap-highlight-color: transparent;
-  overscroll-behavior-y: none; /* Prevent pull-to-refresh in PWA */
-}
-
-/* Ensure images don't break flex layouts on narrow screens */
-img {
-  max-width: 100%;
-  height: auto;
-}
-
-/* Hide scrollbars for a cleaner app feel while keeping scroll functionality */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
+body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+img { max-width: 100%; height: auto; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
