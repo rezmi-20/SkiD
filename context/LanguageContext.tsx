@@ -15,6 +15,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<Language>('en');
 
   useEffect(() => {
+    console.debug("[DIREDAWA-DIAG] LanguageProvider mounting");
     const savedLanguage = localStorage.getItem('direskill-lang') as Language;
     if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'am')) {
       setLanguageState(savedLanguage);

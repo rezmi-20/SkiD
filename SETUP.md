@@ -18,6 +18,7 @@
 | Global language (EN / Amharic) | ✅ Done |
 | Chapa payment integration | 🔧 In Progress |
 | Real-time messaging | 🔧 In Progress |
+| Stability & Hydration Fixes | ✅ Active |
 
 **GitHub:** https://github.com/rezmi-20/SkiD  
 **Branch:** `main`
@@ -233,8 +234,9 @@ SklD/
 │   └── index.ts                ← Shared global types (e.g., Session user augmentation)
 │
 ├── public/
-│   ├── manifest.json           ← PWA manifest
-│   └── sw.js                   ← Service worker
+│   ├── site.webmanifest        ← PWA manifest (Renamed from .json to bypass blockers)
+│   ├── noise.svg               ← Local grain texture (Local to bypass ad-blockers)
+│   └── sw.js                   ← Service worker (Auto-unregisters on localhost)
 │
 ├── .env.local                  ← ⚠️ NOT in git. Create manually (see Section 5)
 ├── next.config.js
@@ -356,14 +358,36 @@ export default function MyComponent() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   
-  if (!mounted) return null; // Prevents hydration mismatch
-  // ...render
-}
-```
+### ❌ Ad Blocker / Hydration Hang
+**Symptoms:** Page stays on "Initializing..." or a black screen endlessly.
+**Cause:** Ad blockers often block `manifest.json` or external textures (e.g., Unsplash/Vercel assets) that React is waiting for during hydration.
+**Fixes:**
+1. We localized `noise.svg` and renamed the manifest to `site.webmanifest` to bypass typical filters.
+2. Added a 4s fallback in `LandingPageContent.jsx` to force the app to mount even if a resource is blocked.
+3. **If still stuck:** Toggling off your ad blocker for localhost will instantly resolve it.
+
+### ❌ `useSession` must be wrapped in a `SessionProvider`
+**Cause:** `LocationProvider` or other contexts tried to access the session before `SessionProvider` was initialized.
+**Golden Rule:** Always ensure `SessionProvider` is at the very top of the nesting in `Providers.tsx`.
+
+### ❌ Background Image Overlapping Content
+**Fix:** Ensure the Hero section has `overflow-hidden`. Already implemented in `LandingPageContent.jsx`.
 
 ---
 
-## 11. Development Commands
+## 11. Project Continuity — Pulling to a New Device
+
+To continue development on another device:
+
+1. **Clone & Install**:
+   ```bash
+   git clone https://github.com/rezmi-20/SkiD.git
+   cd SkiD
+   npm install --legacy-peer-deps
+   ```
+2. **Recreate `.env.local`**: Use the values in **Section 5**.
+3. **Confirm Manifest**: Ensure your browser dev tools show `site.webmanifest` loading instead of `manifest.json`.
+4. **Clean Start**: If you see old cached versions, go to **Application > Storage > Clear site data** in Chrome DevTools.
 
 ```bash
 npm run dev          # Start dev server (localhost:3000)

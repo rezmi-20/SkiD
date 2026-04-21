@@ -45,9 +45,12 @@ const userLocationIcon = () => L.divIcon({
   iconAnchor: [10, 10],
 });
 
+import { useLocation, DEFAULT_CENTER } from "@/context/LocationContext";
+
 export default function MapComponent({ workers }: MapComponentProps) {
   const [isMounted, setIsMounted] = useState(false);
   const { theme } = useTheme();
+  const { location } = useLocation();
 
   useEffect(() => {
     fixLeafletIcons();
@@ -56,7 +59,9 @@ export default function MapComponent({ workers }: MapComponentProps) {
 
   if (!isMounted) return <div className="h-full w-full bg-surface-container-low animate-pulse rounded-3xl" />;
 
-  const center: [number, number] = [9.5915, 41.8661]; // Sabian Area, Dire Dawa
+  const center: [number, number] = location 
+    ? [location.lat, location.lng] 
+    : [DEFAULT_CENTER.lat, DEFAULT_CENTER.lng];
   
   const isLight = theme === 'light';
   const tileUrl = isLight 

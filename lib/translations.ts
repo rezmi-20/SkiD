@@ -41,6 +41,10 @@ export const translations = {
     "worker.message": "Message",
     "worker.viewProfile": "View Profile",
     "worker.verified": "Verified",
+    "worker.updateLocation": "Update Work Location",
+    "worker.locating": "Locating...",
+    "worker.locationUpdated": "Location Updated",
+    "app.initializing": "Initializing DireSkill...",
   },
   am: {
     "nav.home": "ዋና ገፅ",
@@ -84,6 +88,10 @@ export const translations = {
     "worker.message": "መልዕክት",
     "worker.viewProfile": "ፕሮፋይል ይመልከቱ",
     "worker.verified": "የተረጋገጠ",
+    "worker.updateLocation": "የስራ ቦታ ያዘምኑ",
+    "worker.locating": "በመፈለግ ላይ...",
+    "worker.locationUpdated": "ቦታ ተዘምኗል",
+    "app.initializing": "DireSkill በመነሳት ላይ...",
   }
 };
 

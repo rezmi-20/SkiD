@@ -17,7 +17,7 @@ const inter = Inter({
 export const metadata = {
   title: "DireSkill | Find Verified Workers in Dire Dawa",
   description: "Hire Fayda-verified electricians, plumbers and more in Dire Dawa. Fast, safe, and contract-backed.",
-  manifest: "/manifest.json",
+  manifest: "/site.webmanifest",
 };
 
 export const viewport = {
@@ -28,6 +28,8 @@ export const viewport = {
   userScalable: false,
 };
 
+import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${manrope.variable} ${inter.variable}`} suppressHydrationWarning>
@@ -36,33 +38,10 @@ export default function RootLayout({ children }) {
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"
         />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="DireSkill" />
-        <link rel="manifest" href="/manifest.json" />
       </head>
       <body className="bg-background text-text-high font-body min-h-screen flex flex-col" suppressHydrationWarning>
         <Providers>{children}</Providers>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                const register = () => {
-                  navigator.serviceWorker.register('/sw.js').then(
-                    (reg) => console.log('SW registered'),
-                    (err) => console.log('SW failed', err)
-                  );
-                };
-                if (document.readyState === 'complete') {
-                  register();
-                } else {
-                  window.addEventListener('load', register);
-                }
-              }
-            `,
-          }}
-        />
+        <ServiceWorkerRegistration />
       </body>
     </html>
   );

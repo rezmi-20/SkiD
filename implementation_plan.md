@@ -12,6 +12,18 @@ We will completely redesign the mobile experience to move away from "web-like" p
 
 ---
 
+### 1. Fix: CSS Build Error & Blank Screen
+#### [MODIFY] [globals.css](app/globals.css)
+- **Fix Build Error**: Rewrite selectors targeting arbitrary Tailwind classes (e.g., `.bg-[#0e0e0e]`) to use attribute selectors or proper escaping to satisfy the Next.js 16/Turbopack CSS parser.
+- **Theme Mappings**: Ensure `@theme` block is fully compatible with Tailwind v4.
+
+#### [MODIFY] [LandingPageContent.jsx](components/LandingPageContent.jsx)
+- Remove the full-screen `!mounted` conditional if possible, or replace it with a more transparent transition.
+- Ensure all custom theme variables are correctly referenced to avoid CSS crashes.
+- Fix potential hydration mismatches in the theme toggle and language switch.
+
+---
+
 ### 2. Worker Cards (Mobile Stack)
 #### [MODIFY] [WorkerCard.tsx](components/search/WorkerCard.tsx)
 - **Responsive Layout**: On mobile, stack the content where necessary to avoid name truncation ("Ahme...").

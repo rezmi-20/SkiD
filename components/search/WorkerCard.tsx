@@ -36,8 +36,8 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
         </div>
 
         <div className="flex-1 min-w-0 flex flex-col justify-center">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-1 sm:mb-0.5 gap-1.5 sm:gap-2">
-            <h3 className="text-lg md:text-xl font-headline font-black text-on-surface tracking-tighter leading-tight truncate">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-1 sm:mb-0.5 gap-1 sm:gap-2">
+            <h3 className="text-base sm:text-lg md:text-xl font-headline font-black text-on-surface tracking-tighter leading-tight break-words">
               {worker.name}
             </h3>
             <div className="flex items-center gap-2">
@@ -49,7 +49,7 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
                   {worker.rating}
                 </span>
               </div>
-              <span className="text-[9px] md:text-[10px] font-bold text-on-surface-variant tracking-tighter">
+              <span className="text-[9px] md:text-[10px] font-bold text-on-surface-variant tracking-tighter shrink-0">
                 ({worker.reviews} {t("worker.reviews")})
               </span>
             </div>
@@ -60,8 +60,8 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
           </p>
 
           <div className="flex items-center gap-3 text-on-surface-variant text-[9px] md:text-[10px] font-bold uppercase tracking-widest mt-1">
-            <div className="flex items-center gap-1">
-              <span className="material-symbols-outlined text-[12px]">location_on</span>
+            <div className="flex items-center gap-1 overflow-hidden">
+              <span className="material-symbols-outlined text-[12px] shrink-0">location_on</span>
               <span className="truncate">{worker.distance} KM · {worker.district}</span>
             </div>
           </div>

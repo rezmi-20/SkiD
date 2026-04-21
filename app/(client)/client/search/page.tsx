@@ -197,35 +197,71 @@ const MOCK_WORKERS: Worker[] = [
   }
 ];
 
+import { useLocation } from "@/context/LocationContext";
+import { useEffect } from "react";
+
 export default function SearchPage() {
   const { t } = useLanguage();
+  const { location, loading: locLoading } = useLocation();
+  const [workers, setWorkers] = useState<Worker[]>([]);
+  const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [filters, setFilters] = useState<FilterType>({
     query: "",
     category: "",
     minRating: 0,
-    maxDistance: 100, // Effectively Any initially
+    maxDistance: 100,
     sortBy: "Nearest",
   });
 
-  const filteredWorkers = useMemo(() => {
-    return MOCK_WORKERS.filter((worker) => {
-      const matchQuery = worker.name.toLowerCase().includes(filters.query.toLowerCase()) || 
-                         worker.skill.toLowerCase().includes(filters.query.toLowerCase()) ||
-                         worker.skills?.some(s => s.toLowerCase().includes(filters.query.toLowerCase()));
-      
-      const matchCategory = !filters.category || worker.category === filters.category;
-      const matchRating = worker.rating >= filters.minRating;
-      const matchDistance = worker.distance <= filters.maxDistance;
+  useEffect(() => {
+    const fetchWorkers = async () => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({
+          skill: filters.category || filters.query,
+          minRating: filters.minRating.toString(),
+          maxDistance: filters.maxDistance.toString(),
+        });
 
-      return matchQuery && matchCategory && matchRating && matchDistance;
-    }).sort((a, b) => {
-      if (filters.sortBy === "Nearest") return a.distance - b.distance;
-      if (filters.sortBy === "Highest Rated") return b.rating - a.rating;
-      if (filters.sortBy === "Most Reviewed") return b.reviews - a.reviews;
-      return 0;
-    });
-  }, [filters]);
+        if (location) {
+          params.append("lat", location.lat.toString());
+          params.append("lng", location.lng.toString());
+        }
+
+        const res = await fetch(`/api/workers?${params.toString()}`);
+        const data = await res.json();
+        
+        if (data.workers) {
+          // Map DB fields to component expects if different
+          const mapped: Worker[] = data.workers.map((w: any) => ({
+            id: w.id,
+            name: w.full_name,
+            skill: Array.isArray(w.skills) ? w.skills[0] || "Professional" : "Professional",
+            category: Array.isArray(w.skills) ? w.skills[0] || "" : "",
+            rating: Number(w.avg_rating),
+            reviews: Number(w.total_ratings),
+            distance: w.distance ? Number(w.distance).toFixed(1) : "0.0",
+            lat: Number(w.latitude),
+            lng: Number(w.longitude),
+            photo: w.avatar_url || "https://images.unsplash.com/photo-1540560485459-c219e9939392?auto=format&fit=crop&w=400&q=80",
+            isVerified: w.is_verified,
+            district: "Dire Dawa", // Simple fallback or use DB district
+            skills: w.skills
+          }));
+          setWorkers(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to fetch workers", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWorkers();
+  }, [filters, location]);
+
+  const filteredWorkers = workers; // Logic moved to backend
 
   return (
     <div className="min-h-screen bg-surface p-6 pb-24 md:pb-10">

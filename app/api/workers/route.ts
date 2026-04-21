@@ -6,8 +6,11 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const skill = searchParams.get("skill");
-    const lat = searchParams.get("lat");
-    const lng = searchParams.get("lng");
+    const userLat = parseFloat(searchParams.get("lat") || "");
+    const userLng = parseFloat(searchParams.get("lng") || "");
+    const maxDist = parseFloat(searchParams.get("maxDistance") || "100");
+
+    const hasCoords = !isNaN(userLat) && !isNaN(userLng);
 
     let query = `
       SELECT
@@ -23,6 +26,21 @@ export async function GET(req: NextRequest) {
         wp.is_verified,
         COALESCE(AVG(r.score), 0) AS avg_rating,
         COUNT(r.id) AS total_ratings
+    `;
+
+    if (hasCoords) {
+      query += `, (
+        111.111 * DEGREES(ACOS(LEAST(1.0, COS(RADIANS(${userLat}))
+         * COS(RADIANS(wp.latitude))
+         * COS(RADIANS(wp.longitude) - RADIANS(${userLng}))
+         + SIN(RADIANS(${userLat}))
+         * SIN(RADIANS(wp.latitude)))))
+      ) AS distance`;
+    } else {
+      query += `, 0 AS distance`;
+    }
+
+    query += `
       FROM users u
       JOIN worker_profiles wp ON u.id = wp.user_id
       LEFT JOIN ratings r ON u.id = r.rated_id
@@ -36,8 +54,23 @@ export async function GET(req: NextRequest) {
       query += ` AND $${params.length} = ANY(wp.skills)`;
     }
 
-    query += ` GROUP BY u.id, wp.full_name, wp.bio, wp.skills, wp.latitude, wp.longitude, wp.hourly_rate, wp.avatar_url, wp.is_verified`;
-    query += ` ORDER BY avg_rating DESC LIMIT 50`;
+    if (hasCoords && maxDist < 100) {
+      query += ` AND (
+        111.111 * DEGREES(ACOS(LEAST(1.0, COS(RADIANS(${userLat}))
+         * COS(RADIANS(wp.latitude))
+         * COS(RADIANS(wp.longitude) - RADIANS(${userLng}))
+         + SIN(RADIANS(${userLat}))
+         * SIN(RADIANS(wp.latitude)))))
+      ) <= ${maxDist}`;
+    }
+
+    query += ` GROUP BY u.id, wp.full_name, wp.bio, wp.skills, wp.latitude, wp.longitude, wp.hourly_rate, wp.avatar_url, wp.is_verified, wp.latitude, wp.longitude`;
+    
+    if (hasCoords) {
+      query += ` ORDER BY distance ASC, avg_rating DESC LIMIT 50`;
+    } else {
+      query += ` ORDER BY avg_rating DESC LIMIT 50`;
+    }
 
     const workers = await sql(query, params);
 

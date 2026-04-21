@@ -13,8 +13,33 @@ export default function Home({ userRole }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // Standard mount
     setMounted(true);
+    
+    // Hardened mount fallback (Guaranteed execution)
+    const frameId = requestAnimationFrame(() => {
+        setMounted(true);
+    });
+
+    // Safety fallback for hydration hangs
+    const timer = setTimeout(() => {
+        console.warn("[DIREDAWA-DIAG] LandingPageContent safety fallback triggered");
+        setMounted(true);
+    }, 4000);
+
+    return () => {
+        cancelAnimationFrame(frameId);
+        clearTimeout(timer);
+    };
   }, []);
+
+  const [showEmergency, setShowEmergency] = useState(false);
+  useEffect(() => {
+      const timer = setTimeout(() => {
+          if (!mounted) setShowEmergency(true);
+      }, 7000);
+      return () => clearTimeout(timer);
+  }, [mounted]);
 
   const toggleTheme = () => {
     const modes = ['grayscale', 'dark', 'light'];
@@ -23,7 +48,24 @@ export default function Home({ userRole }) {
     setTheme(next);
   };
 
-  if (!mounted) return <div className="min-h-screen bg-background" />;
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 transition-colors duration-700">
+        <div className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+        <div className="text-primary text-[10px] font-black uppercase tracking-[0.3em] opacity-50">
+          Initializing DireSkill...
+        </div>
+        {showEmergency && (
+            <button 
+                onClick={() => setMounted(true)}
+                className="mt-8 px-6 py-2 bg-white/5 border border-white/10 rounded-full text-[10px] uppercase font-bold text-white/40 hover:text-white/80 transition-all"
+            >
+                Loading taking too long? Click here.
+            </button>
+        )}
+      </div>
+    );
+  }
 
   const fadeUpAnim = {
     initial: { opacity: 0, y: 30 },
@@ -94,7 +136,7 @@ export default function Home({ userRole }) {
       <main className="overflow-hidden">
 
         {/* ── HERO ── */}
-        <section className="relative w-full min-h-screen flex items-center px-4 md:px-8 lg:px-16">
+        <section className="relative w-full min-h-screen flex items-center px-4 md:px-8 lg:px-16 overflow-hidden">
           {/* Background — person at PC, more visible */}
           <div className="absolute inset-0 z-0 bg-background">
             <img

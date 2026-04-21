@@ -64,6 +64,8 @@ export const clientProfiles = pgTable("client_profiles", {
     .references(() => users.id, { onDelete: "cascade" }),
   fullName: varchar("full_name", { length: 255 }).notNull(),
   avatarUrl: text("avatar_url"),
+  latitude: doublePrecision("latitude"),
+  longitude: doublePrecision("longitude"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

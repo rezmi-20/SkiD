@@ -1,8 +1,21 @@
 "use client";
 
+import { useLocation } from "@/context/LocationContext";
+import { useState } from "react";
 import { signOut } from "next-auth/react";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function WorkerProfilePage() {
+  const { t } = useLanguage();
+  const { refreshLocation, loading: locLoading } = useLocation();
+  const [justUpdated, setJustUpdated] = useState(false);
+
+  const handleUpdateLocation = () => {
+    refreshLocation();
+    setJustUpdated(true);
+    setTimeout(() => setJustUpdated(false), 3000);
+  };
+
   return (
     <div className="max-w-md mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col items-center justify-center text-center space-y-6 bg-[#050505] p-10 rounded-[2.5rem] border border-white/5 shadow-2xl">
@@ -22,6 +35,21 @@ export default function WorkerProfilePage() {
       <div className="space-y-4">
         <div className="text-[10px] font-black uppercase tracking-[0.3em] text-on-surface-variant/40 px-6">Professional Controls</div>
         <div className="bg-[#050505] rounded-[2rem] border border-white/5 overflow-hidden shadow-xl">
+           <button 
+             onClick={handleUpdateLocation}
+             disabled={locLoading}
+             className="w-full px-8 py-5 flex items-center justify-between hover:bg-white/5 transition-all group border-b border-white/5"
+           >
+              <div className="flex items-center gap-4">
+                <span className={`material-symbols-outlined transition-colors ${justUpdated ? 'text-green-500' : 'text-on-surface-variant group-hover:text-blue-500'}`}>
+                  {locLoading ? 'sync' : justUpdated ? 'check_circle' : 'location_on'}
+                </span>
+                <span className={`text-sm font-bold ${justUpdated ? 'text-green-500' : ''}`}>
+                  {locLoading ? t("worker.locating") : justUpdated ? t("worker.locationUpdated") : t("worker.updateLocation")}
+                </span>
+              </div>
+              {!locLoading && !justUpdated && <span className="material-symbols-outlined text-on-surface-variant text-sm">chevron_right</span>}
+           </button>
            <button className="w-full px-8 py-5 flex items-center justify-between hover:bg-white/5 transition-all group">
               <div className="flex items-center gap-4">
                 <span className="material-symbols-outlined text-on-surface-variant group-hover:text-blue-500 transition-colors">verified_user</span>

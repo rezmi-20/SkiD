@@ -120,7 +120,7 @@
     pointer-events: none;
     z-index: 9999;
     opacity: 0.05;
-    background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+    background-image: url("/noise.svg");
     filter: brightness(100%) contrast(150%);
 }
 
@@ -137,19 +137,6 @@
 }
 
 /* ── Backgrounds ── */
-[data-theme='light'] .bg-\[#0e0e0e\],
-[data-theme='light'] .bg-\[#111111\],
-[data-theme='light'] .bg-\[#1C1C1C\],
-[data-theme='light'] .bg-black\/50,
-[data-theme='light'] .bg-black\/40,
-[data-theme='light'] .bg-black\/30,
-[data-theme='light'] .bg-black\/20,
-[data-theme='light'] .bg-black\/10,
-[data-theme='light'] .bg-white\/5,
-[data-theme='light'] .bg-white\/10 {
-  background-color: rgba(0,0,0,0.04) !important;
-}
-
 [data-theme='light'] .bg-surface,
 [data-theme='light'] .bg-surface-container-low,
 [data-theme='light'] .bg-surface-container-high,
