@@ -11,7 +11,7 @@ import { useLanguage } from "@/context/LanguageContext";
 // Dynamically import Map with no SSR
 const MapComponent = dynamic(() => import("@/components/search/MapComponent"), { 
     ssr: false,
-    loading: () => <div className="h-[calc(100vh-280px)] w-full bg-surface-container-low animate-pulse rounded-[2rem]" />
+    loading: () => <div className="h-[calc(100vh-280px)] w-full bg-zinc-900 animate-pulse rounded-[2rem]" />
 });
 
 const MOCK_WORKERS: Worker[] = [
@@ -264,13 +264,13 @@ export default function SearchPage() {
   const filteredWorkers = workers; // Logic moved to backend
 
   return (
-    <div className="min-h-screen bg-surface p-6 pb-24 md:pb-10">
+    <div className="min-h-[100dvh] bg-background text-text-high p-6 pb-24 md:pb-10">
       <div className="max-w-7xl mx-auto space-y-10">
         <header className="space-y-2">
-          <h1 className="text-3xl md:text-6xl font-headline font-black text-on-surface tracking-tighter">
-            {t("search.title")} <span className="text-primary italic">{t("search.title.highlight")}</span>
+          <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-text-high uppercase">
+            {t("search.title")} <span className="text-green-400 italic">{t("search.title.highlight")}</span>
           </h1>
-          <p className="text-on-surface-variant text-[12px] md:text-sm font-medium">{t("search.subtitle")}</p>
+          <p className="text-text-med text-sm font-medium">{t("search.subtitle")}</p>
         </header>
 
         <SearchFilters 
@@ -296,8 +296,13 @@ export default function SearchPage() {
                 ))
               ) : (
                 <div className="col-span-full py-20 text-center space-y-4">
-                  <span className="material-symbols-outlined text-6xl text-white/5">search_off</span>
-                  <p className="text-on-surface-variant font-medium">{t("search.noResults")}</p>
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-800 mx-auto">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    <line x1="11" y1="8" x2="11" y2="14"></line>
+                    <line x1="8" y1="11" x2="14" y2="11"></line>
+                  </svg>
+                  <p className="text-zinc-500 font-medium">{t("search.noResults")}</p>
                 </div>
               )}
             </motion.div>
@@ -314,13 +319,6 @@ export default function SearchPage() {
         </AnimatePresence>
       </div>
 
-      {/* Floating Action for PWA feel */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-surface-container-high/80 backdrop-blur-2xl border border-white/5 px-8 py-4 rounded-full shadow-2xl md:hidden flex items-center gap-10">
-          <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
-          <span className="material-symbols-outlined text-on-surface-variant">search</span>
-          <span className="material-symbols-outlined text-on-surface-variant">chat_bubble</span>
-          <span className="material-symbols-outlined text-on-surface-variant">person</span>
-      </div>
     </div>
   );
 }

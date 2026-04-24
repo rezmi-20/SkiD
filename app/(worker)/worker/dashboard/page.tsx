@@ -17,144 +17,158 @@ export default async function WorkerDashboardPage() {
   const isVerified = worker?.is_verified || false;
 
   return (
-    <div className="min-h-screen bg-background text-text-high font-body selection:bg-primary/30 transition-colors duration-500">
-
-      <main className="max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-16 space-y-10 relative">
-        
-        {/* Header */}
-        <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-border pb-10">
-          <div className="space-y-3">
-            <div className="flex items-center gap-4">
-              <h1 className="text-4xl md:text-7xl font-headline font-black tracking-tighter leading-none text-text-high">
-                {fullName.split(' ')[0]}<span className="text-primary">.</span>
-              </h1>
-              {isVerified && (
-                <div className="w-8 h-8 md:w-10 md:h-10 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center">
-                   <span className="material-symbols-outlined text-primary text-[16px] md:text-[20px]">verified</span>
-                </div>
-              )}
-            </div>
-            <p className="text-text-med text-sm md:text-lg font-medium max-w-xl leading-relaxed">
-              Professional in <span className="text-text-high underline underline-offset-4 decoration-border">{worker?.district || "Dire Dawa"}</span>. Indexed for district economy.
-            </p>
+    <div className="max-w-7xl mx-auto space-y-12 text-white pb-24 md:pb-10">
+      
+      {/* Header Section */}
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 border-b border-white/5 pb-10">
+        <div className="space-y-3">
+          <div className="flex items-center gap-4">
+             <h1 className="text-4xl md:text-8xl font-black tracking-tighter leading-none">
+               {fullName.split(' ')[0]}<span className="text-green-400">.</span>
+             </h1>
+             {isVerified && (
+               <div className="w-10 h-10 md:w-12 md:h-12 bg-green-400 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(74,222,128,0.2)]">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+               </div>
+             )}
           </div>
-
-          <div className="flex flex-wrap gap-3 items-center">
-             <form action={async () => {
-               "use server";
-               const { signOut } = await import("@/lib/auth");
-               await signOut({ redirectTo: "/login" });
-             }}>
-               <button className="px-6 h-11 flex items-center bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest text-red-500 transition-all">
-                  Sign Out
-               </button>
-             </form>
-             <a href="/worker/profile" className="px-6 h-11 flex items-center bg-surface border border-border rounded-xl text-[10px] font-black uppercase tracking-widest text-text-med hover:text-text-high hover:bg-black/5 transition-all">
-                Profile
-             </a>
-             <a 
-               href={isVerified ? "/worker/jobs" : "#"} 
-               className={`px-8 h-11 flex items-center rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
-                 isVerified 
-                   ? "bg-primary text-black hover:bg-primary/80 shadow-lg" 
-                   : "bg-surface text-text-med cursor-not-allowed border border-border opacity-50"
-               }`}
-             >
-               Browse Requests
-               {!isVerified && <span className="material-symbols-outlined ml-2 text-[16px]">lock</span>}
-             </a>
-          </div>
-        </header>
-
-        {/* Analytics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-           <div className="col-span-1 md:col-span-2 p-8 md:p-12 bg-surface border border-border rounded-3xl space-y-8 group hover:border-primary/20 transition-all duration-500">
-              <div className="flex justify-between items-start">
-                 <div className="text-[10px] font-black text-text-med uppercase tracking-[0.3em]">Revenue Ledger</div>
-                 <span className="material-symbols-outlined text-border text-5xl group-hover:text-primary/20 transition-colors">account_balance</span>
-              </div>
-              <div className="space-y-2">
-                 <div className="text-5xl md:text-7xl font-headline font-black tracking-tighter text-text-high">
-                    0<span className="text-border">.00</span>
-                 </div>
-                 <div className="text-xs font-black text-primary uppercase tracking-widest">Escrowed — ETB</div>
-              </div>
-              <div className="pt-6 border-t border-border flex gap-8">
-                 <div className="text-[9px] font-black uppercase tracking-widest text-text-med">Ready: 0.00</div>
-                 <div className="text-[9px] font-black uppercase tracking-widest text-text-med">Pending Audit: 0.00</div>
-              </div>
-           </div>
-
-           <div className="p-8 bg-surface border border-border rounded-3xl flex flex-col justify-between hover:bg-black/5 transition-all">
-              <div className="space-y-6">
-                 <div className="text-[10px] font-black text-text-med uppercase tracking-[0.3em] text-center">Active Requests</div>
-                 <div className="flex justify-center">
-                    <div className="w-28 h-28 rounded-full border border-border flex items-center justify-center bg-background">
-                       <span className="text-5xl font-headline font-black text-text-high">{jobRows.filter((j: any) => j.status === 'active').length}</span>
-                    </div>
-                 </div>
-              </div>
-              <div className="text-[10px] font-black text-center text-primary uppercase tracking-[0.2em] pt-6">Synchronization Active</div>
-           </div>
+          <p className="text-zinc-500 text-sm md:text-lg font-medium max-w-xl leading-relaxed">
+            Professional in <span className="text-white underline underline-offset-8 decoration-green-400/30">{worker?.district || "Dire Dawa"}</span>. Indexed for district economy.
+          </p>
         </div>
 
-        {/* Pending Verification Banner */}
-        {!isVerified && (
-          <section className="bg-primary/5 border border-primary/10 p-8 md:p-12 rounded-3xl flex flex-col lg:flex-row items-center gap-8">
-             <div className="w-16 h-16 bg-surface rounded-2xl flex items-center justify-center border border-primary/20 shadow-xl shrink-0">
-                <span className="material-symbols-outlined text-primary text-3xl">pending_actions</span>
-             </div>
-             <div className="flex-1 space-y-3 text-center lg:text-left">
-                <h3 className="text-2xl font-headline font-black tracking-tighter uppercase text-text-high">Profile Authentication Pending</h3>
-                <p className="text-text-med text-base font-medium leading-relaxed max-w-3xl">
-                   Your professional indexing is in the standard queue. Your profile is restricted from district-wide job synchronization until Fayda manual audit is complete.
-                </p>
-             </div>
-             <button className="h-11 px-8 bg-primary text-black rounded-xl font-black text-[10px] uppercase tracking-widest opacity-50 pointer-events-none">
-                In Review
-             </button>
-          </section>
-        )}
+        <div className="flex flex-wrap gap-3 items-center w-full md:w-auto">
+           <a 
+             href={isVerified ? "/worker/jobs" : "#"} 
+             className={`flex-1 md:flex-none px-8 h-12 flex items-center justify-center rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all ${
+               isVerified 
+                 ? "bg-green-400 text-black hover:bg-green-300 shadow-xl shadow-green-400/10" 
+                 : "bg-zinc-900 text-zinc-600 cursor-not-allowed border border-white/5 opacity-50"
+             }`}
+           >
+             Browse Requests
+             {!isVerified && (
+               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="ml-2">
+                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+               </svg>
+             )}
+           </a>
+           <a href="/worker/profile" className="px-6 h-12 flex items-center bg-zinc-900 border border-white/5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all">
+              Profile
+           </a>
+        </div>
+      </header>
 
-        {/* District Requests */}
-        <section className="space-y-8">
-          <div className="flex items-center gap-6">
-            <h2 className="text-2xl md:text-3xl font-headline font-black tracking-tighter uppercase text-text-high">District Requests</h2>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-
-          {!isVerified ? (
-            <div className="py-20 bg-surface rounded-3xl border border-dashed border-border flex flex-col items-center justify-center gap-6 group">
-               <div className="w-14 h-14 bg-background rounded-full flex items-center justify-center border border-border">
-                  <span className="material-symbols-outlined text-text-med text-2xl group-hover:text-primary/40 transition-colors">lock</span>
+      {/* Analytics Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+         <div className="lg:col-span-2 p-8 md:p-12 bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-[2.5rem] space-y-8 group hover:border-green-400/30 transition-all duration-500">
+            <div className="flex justify-between items-start">
+               <div className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em]">Revenue Ledger</div>
+               <div className="w-12 h-12 bg-zinc-900 rounded-2xl flex items-center justify-center border border-white/5 group-hover:bg-green-400/10 group-hover:border-green-400/20 transition-all">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 group-hover:text-green-400 transition-colors">
+                    <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                    <line x1="2" y1="10" x2="22" y2="10"></line>
+                  </svg>
                </div>
-               <p className="text-text-med font-medium text-center uppercase text-[10px] tracking-[0.2em]">Locked — Awaiting Identity Indexing</p>
             </div>
-          ) : jobRows.length > 0 ? (
-            <div className="space-y-4">
-              {jobRows.map((job: any) => (
-                <div key={job.id} className="p-8 bg-surface rounded-3xl border border-border flex flex-col md:flex-row justify-between items-center group hover:border-primary/20 transition-all duration-500">
-                  <div className="space-y-2 mb-6 md:mb-0">
-                    <h3 className="text-2xl font-headline font-black tracking-tighter group-hover:text-primary transition-colors">{job.title}</h3>
-                    <p className="text-text-med font-medium">{job.description?.substring(0, 100)}...</p>
+            <div className="space-y-2">
+               <div className="text-6xl md:text-8xl font-black tracking-tighter text-white">
+                  0<span className="text-zinc-800">.00</span>
+               </div>
+               <div className="text-xs font-black text-green-400 uppercase tracking-widest flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
+                  Escrowed — ETB
+               </div>
+            </div>
+            <div className="pt-8 border-t border-white/5 flex flex-wrap gap-8">
+               <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Available: <span className="text-white">0.00</span></div>
+               <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Pending Audit: <span className="text-white">0.00</span></div>
+            </div>
+         </div>
+
+         <div className="p-8 md:p-10 bg-zinc-900 border border-white/5 rounded-[2.5rem] flex flex-col justify-between hover:bg-zinc-800/50 transition-all group">
+            <div className="space-y-8">
+               <div className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em] text-center">Active Requests</div>
+               <div className="flex justify-center">
+                  <div className="w-32 h-32 rounded-full border-4 border-zinc-800 flex items-center justify-center bg-zinc-950 shadow-[0_0_40px_rgba(0,0,0,0.5)] group-hover:border-green-400/20 transition-all">
+                     <span className="text-6xl font-black text-white group-hover:text-green-400 transition-colors">{jobRows.filter((j: any) => j.status === 'active').length}</span>
                   </div>
-                  <div className="flex items-center gap-6 w-full md:w-auto">
-                    <div className="text-[9px] font-black uppercase tracking-widest text-text-med">Status: {job.status}</div>
-                    <a href={`/worker/jobs/${job.id}`} className="w-12 h-12 bg-primary text-black rounded-xl flex items-center justify-center group-hover:translate-x-2 transition-all">
-                       <span className="material-symbols-outlined font-black text-sm">arrow_forward_ios</span>
-                    </a>
-                  </div>
-                </div>
-              ))}
+               </div>
             </div>
-          ) : (
-            <div className="py-20 bg-surface rounded-3xl border border-dashed border-border flex flex-col items-center justify-center gap-4">
-               <span className="material-symbols-outlined text-5xl text-border">inventory_2</span>
-               <p className="text-text-med font-black uppercase text-[10px] tracking-[0.2em]">District Archive Empty</p>
-            </div>
-          )}
+            <div className="text-[10px] font-black text-center text-green-400/40 uppercase tracking-[0.2em] pt-8">Synchronization Active</div>
+         </div>
+      </div>
+
+      {/* Pending Verification Banner */}
+      {!isVerified && (
+        <section className="bg-green-400/5 border border-green-400/10 p-8 md:p-12 rounded-[2.5rem] flex flex-col lg:flex-row items-center gap-10">
+           <div className="w-20 h-20 bg-zinc-900 rounded-3xl flex items-center justify-center border border-green-400/20 shadow-2xl shrink-0">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-400">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+           </div>
+           <div className="flex-1 space-y-4 text-center lg:text-left">
+              <h3 className="text-2xl md:text-3xl font-black tracking-tighter uppercase">Authentication Pending</h3>
+              <p className="text-zinc-500 text-base md:text-lg font-medium leading-relaxed max-w-3xl">
+                 Your professional indexing is in the standard queue. Your profile is restricted from district-wide job synchronization until Fayda manual audit is complete.
+              </p>
+           </div>
+           <div className="h-12 px-10 bg-zinc-800 text-zinc-500 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center border border-white/5">
+              In Review
+           </div>
         </section>
-      </main>
+      )}
+
+      {/* District Requests */}
+      <section className="space-y-10">
+        <div className="flex items-center gap-8">
+          <h2 className="text-2xl md:text-4xl font-black tracking-tighter uppercase">District Requests</h2>
+          <div className="h-px flex-1 bg-zinc-800/50" />
+        </div>
+
+        {!isVerified ? (
+          <div className="py-24 bg-zinc-900/30 rounded-[3rem] border border-dashed border-white/5 flex flex-col items-center justify-center gap-6 group hover:border-green-400/20 transition-all">
+             <div className="w-16 h-16 bg-zinc-900 rounded-2xl flex items-center justify-center border border-white/5">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-zinc-700">
+                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                   <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+             </div>
+             <p className="text-zinc-600 font-bold uppercase text-[11px] tracking-[0.3em]">Locked — Awaiting Identity Indexing</p>
+          </div>
+        ) : jobRows.length > 0 ? (
+          <div className="grid grid-cols-1 gap-4">
+            {jobRows.map((job: any) => (
+              <div key={job.id} className="p-8 bg-zinc-900 border border-white/5 rounded-[2.5rem] flex flex-col md:flex-row justify-between items-center group hover:bg-zinc-800/50 transition-all duration-500">
+                <div className="space-y-2 mb-8 md:mb-0">
+                  <h3 className="text-2xl font-black tracking-tighter group-hover:text-green-400 transition-colors">{job.title}</h3>
+                  <p className="text-zinc-500 font-medium max-w-2xl">{job.description?.substring(0, 120)}...</p>
+                </div>
+                <div className="flex items-center gap-8 w-full md:w-auto">
+                  <div className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Status: <span className="text-green-400">{job.status}</span></div>
+                  <a href={`/worker/jobs/${job.id}`} className="w-14 h-14 bg-zinc-800 text-white rounded-2xl flex items-center justify-center group-hover:bg-green-400 group-hover:text-black group-hover:translate-x-2 transition-all shadow-xl">
+                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                     </svg>
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="py-24 bg-zinc-900/30 rounded-[3rem] border border-dashed border-white/5 flex flex-col items-center justify-center gap-6">
+             <div className="w-16 h-16 bg-zinc-900 rounded-2xl flex items-center justify-center border border-white/5">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-zinc-700">
+                   <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+             </div>
+             <p className="text-zinc-600 font-bold uppercase text-[11px] tracking-[0.3em]">District Archive Empty</p>
+          </div>
+        )}
+      </section>
     </div>
   );
 }

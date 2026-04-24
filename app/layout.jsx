@@ -21,7 +21,7 @@ export const metadata = {
 };
 
 export const viewport = {
-  themeColor: "#000000",
+  themeColor: "#09090b",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -34,9 +34,22 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${manrope.variable} ${inter.variable}`} suppressHydrationWarning>
       <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-          rel="stylesheet"
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var d = document.documentElement;
+                  var t = localStorage.getItem('theme');
+                  if (t) {
+                    d.setAttribute('data-theme', t);
+                  } else {
+                    d.setAttribute('data-theme', 'grayscale');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
         />
       </head>
       <body className="bg-background text-text-high font-body min-h-screen flex flex-col" suppressHydrationWarning>

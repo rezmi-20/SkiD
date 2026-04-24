@@ -24,45 +24,45 @@
     overflow-x: hidden;
   }
 
-  /* ── GRAYSCALE (Legacy) ── */
+  /* ── GRAYSCALE (Default) ── */
   :root, [data-theme='grayscale'] {
-    --bg-page: #0e0e0e;
+    --bg-page: #09090b;
     --text-high: #ffffff;
-    --text-med: #adaaaa;
-    --primary-accent: #f3ffca;
-    --surface-glass: rgba(32, 31, 31, 0.6);
-    --border-glass: rgba(73, 72, 71, 0.3);
-    --brand-logo: #f3ffca;
-    --selection-bg: #f3ffca;
-    --selection-text: #516700;
-    --img-grayscale: 100%;
+    --text-med: #a1a1aa;
+    --primary-accent: #4ade80;
+    --surface-glass: rgba(18, 18, 18, 0.8);
+    --border-glass: rgba(255, 255, 255, 0.05);
+    --brand-logo: #4ade80;
+    --selection-bg: rgba(74, 222, 128, 0.3);
+    --selection-text: #ffffff;
+    --img-grayscale: 0%;
   }
 
   /* ── BENTO NOIR (Dark) ── */
   [data-theme='dark'] {
     --bg-page: #000000;
     --text-high: #ffffff;
-    --text-med: #adaaaa;
-    --primary-accent: #ccff00;
-    --surface-glass: rgba(18, 18, 18, 0.6);
+    --text-med: #a1a1aa;
+    --primary-accent: #4ade80;
+    --surface-glass: rgba(9, 9, 11, 0.9);
     --border-glass: rgba(255, 255, 255, 0.1);
-    --brand-logo: #ccff00;
-    --selection-bg: #ccff00;
+    --brand-logo: #4ade80;
+    --selection-bg: #4ade80;
     --selection-text: #000000;
     --img-grayscale: 0%;
   }
 
-  /* ── BENTO LUMIERE (Light) — Linear/Stripe inspired editorial ── */
+  /* ── BENTO LUMIERE (Light) ── */
   [data-theme='light'] {
-    --bg-page: #FFFFF0;
-    --text-high: #111827;
-    --text-med: #6b7280;
-    --primary-accent: #7ef23e;
-    --surface-glass: #ffffff;
+    --bg-page: #ffffff;
+    --text-high: #09090b;
+    --text-med: #71717a;
+    --primary-accent: #22c55e;
+    --surface-glass: #f4f4f5;
     --border-glass: rgba(0, 0, 0, 0.08);
-    --brand-logo: #4a7c00;
-    --selection-bg: #cafd00;
-    --selection-text: #2d4600;
+    --brand-logo: #16a34a;
+    --selection-bg: #4ade80;
+    --selection-text: #ffffff;
     --img-grayscale: 0%;
   }
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 
 export default function ClientRegisterPage() {
   const [formData, setFormData] = useState({
@@ -49,132 +50,195 @@ export default function ClientRegisterPage() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#000000] text-black dark:text-white flex flex-col font-inter transition-colors duration-500">
+    <div className="min-h-[100dvh] w-full flex bg-[#09090b] text-white font-inter overflow-x-hidden selection:bg-green-400/30">
       
-      {/* Precision Navigation */}
-      <nav className="p-8 flex justify-between items-center bg-white dark:bg-[#000000] sticky top-0 z-50">
-        <div className="flex items-center gap-3 group cursor-pointer" onClick={() => router.push("/")}>
-          <div className="w-8 h-8 bg-black dark:bg-white flex items-center justify-center rounded-lg transition-transform duration-500 group-hover:rotate-12">
-             <span className="material-symbols-outlined text-[18px] text-white dark:text-black font-black">group_add</span>
-          </div>
-          <span className="text-[10px] font-black uppercase tracking-[0.4em]">Client Onboarding</span>
+      {/* Desktop Art / Branding Side (Left) */}
+      <div className="hidden lg:flex w-1/2 relative bg-[#09090b] border-r border-zinc-800/50 overflow-hidden items-center justify-center p-12">
+        
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2000&auto=format&fit=crop" 
+            alt="Office Background" 
+            className="w-full h-full object-cover opacity-60"
+          />
+          <div className="absolute inset-0 bg-[#09090b]/40"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#09090b] via-transparent to-[#09090b]/30"></div>
         </div>
-        <div className="flex items-center gap-6">
-           <a href="/login" className="text-xs font-bold text-gray-400 hover:text-black dark:hover:text-white transition-colors">Sign In</a>
-           <div className="h-4 w-px bg-gray-100 dark:bg-white/5" />
-           <span className="text-[10px] font-black uppercase tracking-widest text-gray-300 dark:text-white/10 italic">Dire System</span>
-        </div>
-      </nav>
 
-      <main className="flex-1 flex flex-col items-center justify-center px-8 py-12 md:py-24">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-[450px] space-y-12"
-        >
-          <header className="space-y-4">
-             <h1 className="text-5xl font-black tracking-tightest leading-tight">Start Hiring.</h1>
-             <p className="text-gray-500 dark:text-gray-400 font-medium leading-relaxed text-lg">
-                Create a high-trust client profile to engage with verified professionals in Dire Dawa.
-             </p>
-          </header>
+        {/* Subtle Ambient Green Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-green-500/15 blur-[120px] pointer-events-none rounded-full z-0 mix-blend-screen" />
+        
+        <div className="absolute top-12 left-12 flex items-center gap-3 z-20">
+          <div className="w-12 h-12 bg-white flex items-center justify-center rounded-2xl shadow-lg shadow-white/5">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-[#09090b]">
+              <path d="M 11 2 C 3 2 1 10 1 15 L 7 15 C 7 11 9 8 11 8 Z" />
+              <path d="M 13 22 C 21 22 23 14 23 9 L 17 9 C 17 13 15 16 13 16 Z" />
+            </svg>
+          </div>
+          <span className="text-2xl font-bold tracking-tight text-white">Dire<span className="text-green-400">Skill</span></span>
+        </div>
+
+        <div className="relative z-10 flex flex-col items-center text-center">
+          <div className="w-24 h-24 bg-white/5 border border-white/10 flex items-center justify-center rounded-3xl backdrop-blur-xl mb-8 shadow-2xl">
+             <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" className="text-green-400">
+              <path d="M 17 21 l -5 -4 l -5 4 V 5 a 2 2 0 0 1 2 -2 h 6 a 2 2 0 0 1 2 2 z" />
+            </svg>
+          </div>
+          <h2 className="text-5xl font-bold tracking-tight text-white mb-6 leading-tight">
+            Start <br/><span className="text-green-400">Hiring</span>
+          </h2>
+          <p className="text-zinc-400 text-lg max-w-md mx-auto leading-relaxed">
+            Create a high-trust client profile to engage with verified professionals in Dire Dawa.
+          </p>
+        </div>
+        
+        <div className="absolute bottom-12 left-12 flex items-center gap-4 text-sm font-medium text-zinc-500">
+          <Link href="#" className="hover:text-green-400 transition-colors">Privacy Policy</Link>
+          <span>&bull;</span>
+          <Link href="#" className="hover:text-green-400 transition-colors">Terms of Service</Link>
+        </div>
+      </div>
+
+      {/* Form Side (Right on Desktop, Full on Mobile) */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center relative min-h-[100dvh]">
+        
+        {/* Mobile Ambient Glow */}
+        <div className="lg:hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-green-500/10 blur-[150px] pointer-events-none rounded-full" />
+
+        <div className="w-full max-w-[420px] px-6 py-12 z-10 flex flex-col min-h-[100dvh] items-center justify-center relative">
+          
+          {/* Header Section */}
+          <div className="flex flex-col items-center mb-8 space-y-5 w-full">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-14 h-14 bg-white flex items-center justify-center rounded-2xl shadow-lg shadow-white/5">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" className="text-[#09090b]">
+                  <path d="M 11 2 C 3 2 1 10 1 15 L 7 15 C 7 11 9 8 11 8 Z" />
+                  <path d="M 13 22 C 21 22 23 14 23 9 L 17 9 C 17 13 15 16 13 16 Z" />
+                </svg>
+              </div>
+              <span className="text-[28px] font-bold tracking-tight text-white">Dire<span className="text-green-400">Skill</span></span>
+            </div>
+            
+            <div className="text-center space-y-1.5">
+              <h1 className="text-[28px] font-bold tracking-tight text-white flex items-center justify-center gap-2">
+                Create Account <span>✨</span>
+              </h1>
+              <p className="text-zinc-500 text-[15px] font-medium">
+                Client Registration
+              </p>
+            </div>
+          </div>
 
           <AnimatePresence mode="wait">
             {error && (
               <motion.div 
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0 }}
-                className="bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 text-red-600 dark:text-red-400 p-5 rounded-xl text-xs font-semibold"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl text-sm font-semibold flex items-center gap-3 mb-6 w-full"
               >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                  <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
                 {error}
               </motion.div>
             )}
           </AnimatePresence>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div className="space-y-2">
-              <label className="text-[9px] font-black uppercase tracking-[0.25em] text-gray-400 dark:text-gray-500 ml-1">Identity Display Name</label>
-              <input
-                type="text"
-                required
-                value={formData.fullName}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                className="w-full h-14 px-5 bg-gray-50 dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 transition-all outline-none font-medium"
-                placeholder="Personal or Business Name"
-              />
+          <form onSubmit={handleSubmit} className="space-y-4 w-full">
+            {/* Display Name Input */}
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-medium text-zinc-300 ml-1">Display Name</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  required
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  className="w-full h-[52px] px-4 bg-zinc-900 border border-zinc-700 rounded-2xl focus:border-green-400/80 focus:ring-1 focus:ring-green-400/80 outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white shadow-sm"
+                  placeholder="Personal or Business Name"
+                />
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-               <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase tracking-[0.25em] text-gray-400 dark:text-gray-500 ml-1">Email Identifier</label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full h-14 px-5 bg-gray-50 dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 transition-all outline-none font-medium"
-                    placeholder="name@email.com"
-                  />
-               </div>
-               <div className="space-y-2">
-                  <label className="text-[9px] font-black uppercase tracking-[0.25em] text-gray-400 dark:text-gray-500 ml-1">Direct Phone</label>
-                  <input
-                    type="tel"
-                    required
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full h-14 px-5 bg-gray-50 dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 transition-all outline-none font-medium"
-                    placeholder="+251..."
-                  />
-               </div>
+            {/* Email Input */}
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-medium text-zinc-300 ml-1">Email</label>
+              <div className="relative">
+                <input
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full h-[52px] px-4 bg-zinc-900 border border-zinc-700 rounded-2xl focus:border-green-400/80 focus:ring-1 focus:ring-green-400/80 outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white shadow-sm"
+                  placeholder="name@email.com"
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[9px] font-black uppercase tracking-[0.25em] text-gray-400 dark:text-gray-500 ml-1">Account Safety Key</label>
-              <input
-                type="password"
-                required
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full h-14 px-5 bg-gray-50 dark:bg-[#111111] border border-gray-200 dark:border-white/10 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 transition-all outline-none font-medium"
-                placeholder="Create Password (Min 6 characters)"
-              />
+            {/* Phone Input */}
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-medium text-zinc-300 ml-1">Phone Number</label>
+              <div className="relative">
+                <input
+                  type="tel"
+                  required
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full h-[52px] px-4 bg-zinc-900 border border-zinc-700 rounded-2xl focus:border-green-400/80 focus:ring-1 focus:ring-green-400/80 outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white shadow-sm"
+                  placeholder="+251..."
+                />
+              </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full h-14 bg-black dark:bg-white text-white dark:text-black rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all disabled:opacity-50 shadow-lg shadow-black/10 dark:shadow-white/5 flex items-center justify-center gap-3"
-            >
-              {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white/30 dark:border-black/30 border-t-white dark:border-t-black rounded-full animate-spin" />
-              ) : (
-                <>
-                  Register Archive
-                  <span className="material-symbols-outlined text-[18px] font-black">add_circle</span>
-                </>
-              )}
-            </button>
+            {/* Password Input */}
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-medium text-zinc-300 ml-1">Password</label>
+              <div className="relative">
+                <input
+                  type="password"
+                  required
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full h-[52px] px-4 bg-zinc-900 border border-zinc-700 rounded-2xl focus:border-green-400/80 focus:ring-1 focus:ring-green-400/80 outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white shadow-sm"
+                  placeholder="Min 6 characters"
+                />
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <div className="pt-4">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full h-[52px] bg-green-400 hover:bg-green-500 text-black rounded-full font-bold text-[15px] active:scale-[0.98] transition-all disabled:opacity-70 shadow-[0_0_20px_-5px_rgba(74,222,128,0.4)] flex items-center justify-center gap-2"
+              >
+                {isLoading ? (
+                  <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                ) : (
+                  "Create Client Account"
+                )}
+              </button>
+            </div>
           </form>
 
-          <div className="pt-12 border-t border-gray-100 dark:border-white/10 text-center space-y-6">
-             <div className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] leading-relaxed">
-                By joining, you agree to the Dire Marketplace terms for high-trust digital contracts and escrow protocols.
-             </div>
-             <div>
-                <a href="/register/worker" className="text-[9px] font-black text-blue-600 uppercase tracking-widest hover:underline underline-offset-8 decoration-blue-500/50">
-                   Switch to Worker Onboarding instead
-                </a>
-             </div>
+          {/* Switch to Worker */}
+          <div className="mt-8 pt-6 border-t border-zinc-800/80 w-full text-center">
+            <Link href="/register/worker" className="text-[13px] font-bold text-green-400 hover:text-green-300 transition-colors tracking-wide">
+              Switch to Worker Onboarding instead &rarr;
+            </Link>
           </div>
-        </motion.div>
-      </main>
 
-      {/* Decorative Text Component */}
-      <div className="fixed bottom-10 right-10 font-black text-[10vw] text-gray-50 dark:text-white/[0.01] pointer-events-none select-none tracking-tightest leading-none">
-        0C
+          {/* Footer */}
+          <p className="text-center text-[13px] text-zinc-400 font-medium mt-auto pt-10 pb-6 w-full">
+            Already have an account?{" "}
+            <Link href="/login" className="text-green-400 font-bold hover:text-green-300 transition-colors">
+              Sign In
+            </Link>
+          </p>
+
+        </div>
       </div>
     </div>
   );
