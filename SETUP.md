@@ -421,4 +421,4 @@ npx drizzle-kit studio # Open Drizzle Studio (visual DB explorer)
 
 ---
 
-*Last updated: 2026-04-15 — after global theme + language implementation*
+*Last updated: 2026-04-21 — after global theme + language implementation*
