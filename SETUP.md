@@ -250,33 +250,38 @@ SklD/
 ## 8. Design System
 
 ### Theme System
-The app uses **3 themes** controlled by `next-themes` with `attribute="data-theme"`:
+The app uses **3 themes** controlled by `next-themes` with `attribute="data-theme"`. The **Grayscale (Premium)** mode is the default and recommended experience.
 
 | Theme | Key | Description |
 |---|---|---|
-| Grayscale | `grayscale` | Default. Dark near-black, cream primary accent |
-| Dark | `dark` | Pure black, neon green primary |
-| Light | `light` | Warm ivory background, green primary |
+| Grayscale (Premium) | `grayscale` | **Default**. Charcoal backgrounds (`#09090b`), Neon-Green accents (`#4ade80`). |
+| Bento Noir (Dark) | `dark` | Deepest black (`#000000`), consistent green accents. |
+| Bento Lumiere (Light) | `light` | Warm ivory background, high-contrast text. |
 
 **CSS Variables** (defined in `globals.css`):
 ```css
---bg-page        /* page background */
---text-high      /* primary text */
---text-med       /* secondary text */
---primary-accent /* brand color (maps to Tailwind 'primary') */
---surface-glass  /* card/panel backgrounds */
---border-glass   /* border color */
+--bg-page        /* Main page background */
+--text-high      /* Primary high-contrast text */
+--text-med       /* Secondary muted text */
+--primary-accent /* Brand accent (Neon-Green) */
+--surface-glass  /* Semi-transparent panel background */
+--border-glass   /* Subtle border/separator color */
 ```
 
 **Tailwind mappings** (in `@theme` block of `globals.css`):
-```
-bg-background → --bg-page
-bg-surface    → --surface-glass
-border-border → --border-glass
+bg-background  → --bg-page
+bg-surface     → --surface-glass
+border-border  → --border-glass
 text-text-high → --text-high
 text-text-med  → --text-med
 text-primary   → --primary-accent
 ```
+
+### Iconography Strategy
+⚠️ **IMPORTANT:** Do NOT use icon fonts (Material Symbols, FontAwesome) or external icon libraries.
+- Use **Inline SVGs** exclusively.
+- Icons should be defined directly in the component or imported from a local SVG file.
+- This ensures zero layout shifts (CLS), perfect offline reliability in the PWA, and absolute control over "Neon-Green" glow effects.
 
 > ⚠️ **Never use hardcoded dark Tailwind classes** like `bg-black/50`, `border-white/5`, `text-white` in new components. Always use the semantic tokens above so all 3 themes work.
 
@@ -358,6 +363,11 @@ export default function MyComponent() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   
+### ❌ White Screen / Hydration Hang (SOLVED)
+**Symptoms:** Page stays white or flashes white endlessly on mobile devices.
+**Cause:** `next-themes` applies the theme after hydration, which can cause a flash of unstyled content or a "white-out" if the default CSS doesn't match the system preference immediately.
+**Fix:** We implemented an **Early Theme Injection Script** in the `<head>` of `layout.jsx`. This script reads the `localStorage` and applies the `data-theme` attribute **before** React even starts, ensuring the Charcoal background is rendered instantly.
+
 ### ❌ Ad Blocker / Hydration Hang
 **Symptoms:** Page stays on "Initializing..." or a black screen endlessly.
 **Cause:** Ad blockers often block `manifest.json` or external textures (e.g., Unsplash/Vercel assets) that React is waiting for during hydration.
