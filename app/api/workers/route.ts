@@ -11,6 +11,7 @@ export async function GET(req: NextRequest) {
     const maxDist = parseFloat(searchParams.get("maxDistance") || "100");
 
     const hasCoords = !isNaN(userLat) && !isNaN(userLng);
+    const params: (string | number)[] = [];
     
     console.log("[WORKERS_GET] Params:", { skill, userLat, userLng, maxDist, hasCoords });
 
@@ -31,11 +32,14 @@ export async function GET(req: NextRequest) {
     `;
 
     if (hasCoords) {
+      params.push(userLat, userLng);
+      const latIdx = params.length - 1;
+      const lngIdx = params.length;
       query += `, (
-        111.111 * DEGREES(ACOS(LEAST(1.0, COS(RADIANS(${userLat}))
+        111.111 * DEGREES(ACOS(LEAST(1.0, COS(RADIANS($${latIdx}))
          * COS(RADIANS(wp.latitude))
-         * COS(RADIANS(wp.longitude) - RADIANS(${userLng}))
-         + SIN(RADIANS(${userLat}))
+         * COS(RADIANS(wp.longitude) - RADIANS($${lngIdx}))
+         + SIN(RADIANS($${latIdx}))
          * SIN(RADIANS(wp.latitude)))))
       ) AS distance`;
     } else {
@@ -49,8 +53,6 @@ export async function GET(req: NextRequest) {
       WHERE u.role = 'worker'
     `;
 
-    const params: (string | number)[] = [];
-
     // Case-insensitive skill matching
     if (skill && skill.trim() !== "") {
       params.push(skill.toLowerCase());
@@ -60,21 +62,23 @@ export async function GET(req: NextRequest) {
       )`;
     }
 
-    // Distance filter - only apply if worker HAS coordinates
-    // If worker has NO coordinates, they are only hidden if maxDist is very small (< 100)
+    // Distance filter
     if (hasCoords && maxDist < 100) {
+      // Re-use the lat/lng params
+      const latIdx = 1;
+      const lngIdx = 2;
       query += ` AND (
         wp.latitude IS NULL OR (
-          111.111 * DEGREES(ACOS(LEAST(1.0, COS(RADIANS(${userLat}))
+          111.111 * DEGREES(ACOS(LEAST(1.0, COS(RADIANS($${latIdx}))
            * COS(RADIANS(wp.latitude))
-           * COS(RADIANS(wp.longitude) - RADIANS(${userLng}))
-           + SIN(RADIANS(${userLat}))
+           * COS(RADIANS(wp.longitude) - RADIANS($${lngIdx}))
+           + SIN(RADIANS($${latIdx}))
            * SIN(RADIANS(wp.latitude)))))
         ) <= ${maxDist}
       )`;
     }
 
-    query += ` GROUP BY u.id, wp.full_name, wp.bio, wp.skills, wp.latitude, wp.longitude, wp.hourly_rate, wp.avatar_url, wp.is_verified`;
+    query += ` GROUP BY u.id, u.email, wp.full_name, wp.bio, wp.skills, wp.latitude, wp.longitude, wp.hourly_rate, wp.avatar_url, wp.is_verified`;
     
     if (hasCoords) {
       query += ` ORDER BY distance ASC NULLS LAST, avg_rating DESC LIMIT 50`;
@@ -88,6 +92,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ workers });
   } catch (error) {
     console.error("[WORKERS_GET_ERROR]", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error", details: error instanceof Error ? error.message : "Unknown error" }, { status: 500 });
   }
 }

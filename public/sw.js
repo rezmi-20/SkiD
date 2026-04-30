@@ -31,10 +31,15 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Required by Chrome for PWA installability
+  // Only intercept GET requests for assets/pages
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
     caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
+      return response || fetch(event.request).catch(() => {
+        // Return a generic error if offline and not in cache
+        return new Response('Network error occurred', { status: 408 });
+      });
     })
   );
 });
