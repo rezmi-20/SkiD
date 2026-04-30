@@ -54,7 +54,7 @@ export default function RootLayout({ children }) {
       </head>
       <body className="bg-background text-text-high font-body min-h-screen flex flex-col" suppressHydrationWarning>
         <Providers>{children}</Providers>
-        <ServiceWorkerRegistration />
+        {/* <ServiceWorkerRegistration /> */}
       </body>
     </html>
   );

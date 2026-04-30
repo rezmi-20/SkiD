@@ -5,9 +5,9 @@ export default function Hero({ userRole, t }) {
   const wp = userRole === "worker" ? "/worker/dashboard" : userRole === "admin" ? "/admin/dashboard" : "/client/search";
 
   const workers = [
-    { name: "Samuel T.", skill: "Electrician", rating: 4.9, image: "/worker_profile_1_electrician_1777407356903.png" },
+    { name: "Samuel T.", skill: "Electrician", rating: 4.9, image: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&q=80&w=400" },
     { name: "Lydia K.", skill: "Painter", rating: 4.8, image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400" },
-    { name: "Dawit M.", skill: "Plumber", rating: 5.0, image: "/worker_profile_2_plumber_1777407389080.png" },
+    { name: "Dawit M.", skill: "Plumber", rating: 5.0, image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&q=80&w=400" },
   ];
 
   return (
