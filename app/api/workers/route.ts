@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
       FROM users u
       JOIN worker_profiles wp ON u.id = wp.user_id
       LEFT JOIN ratings r ON u.id = r.rated_id
-      WHERE u.role = 'worker' AND wp.is_verified = true
+      WHERE u.role = 'worker'
     `;
 
     const params: (string | number)[] = [];

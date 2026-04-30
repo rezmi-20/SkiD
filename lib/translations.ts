@@ -45,6 +45,33 @@ export const translations = {
     "worker.locating": "Locating...",
     "worker.locationUpdated": "Location Updated",
     "app.initializing": "Initializing DireSkill...",
+
+    "categories.electrician": "Electrician",
+    "categories.plumber": "Plumber",
+    "categories.painter": "Painter",
+    "categories.satellite": "Satellite",
+    "categories.cleaning": "Cleaning",
+    "categories.carpenter": "Carpenter",
+
+    "process.step1.title": "Search",
+    "process.step1.desc": "Find experts based on skill, rating, and district proximity.",
+    "process.step2.title": "Connect",
+    "process.step2.desc": "Chat directly with professionals and discuss your requirements.",
+    "process.step3.title": "Confirm",
+    "process.step3.desc": "Secure the job with a digital contract and complete payment easily.",
+    "process.step4.title": "Complete",
+    "process.step4.desc": "Complete work, pay securely via Chapa, and rate each other.",
+
+    "categories.house_finishing": "House Finishing",
+    "categories.satellite_dish": "Satellite Dish",
+    "categories.other": "Other",
+
+    "hero.headline": "Find Verified Skilled Workers in Dire Dawa",
+    "hero.headline.highlight": "Fast, Safe & Contract-Backed",
+    "hero.subheadline": "No more unreliable posters. No more verbal disputes. Get Fayda-verified professionals with digital contracts and real ratings.",
+    "hero.search.neighborhood": "Neighborhood",
+    "hero.cta.find": "Find a Worker Now",
+    "hero.cta.join": "Join as a Skilled Worker",
   },
   am: {
     "nav.home": "ዋና ገፅ",
@@ -92,6 +119,32 @@ export const translations = {
     "worker.locating": "በመፈለግ ላይ...",
     "worker.locationUpdated": "ቦታ ተዘምኗል",
     "app.initializing": "DireSkill በመነሳት ላይ...",
+
+    "categories.electrician": "ኤሌክትሪሺያን",
+    "categories.plumber": "የቧንቧ ሰራተኛ",
+    "categories.painter": "ቀለም ቀቢ",
+    "categories.satellite": "ሳተላይት ተከላ",
+    "categories.cleaning": "ጽዳት",
+    "categories.carpenter": "አናፂ",
+    "categories.house_finishing": "የቤት አጨራረስ",
+    "categories.satellite_dish": "ሳተላይት ዲሽ ተከላ",
+    "categories.other": "ሌላ",
+
+    "process.step1.title": "ፈልግ",
+    "process.step1.desc": "በባለሙያዎች ክህሎት፣ ደረጃ እና ሰፈር መሰረት ይፈልጉ።",
+    "process.step2.title": "ተገናኝ",
+    "process.step2.desc": "ከባለሙያዎች ጋር በቀጥታ ይነጋገሩ እና ፍላጎቶችዎን ያብራሩ።",
+    "process.step3.title": "አረጋግጥ",
+    "process.step3.desc": "ስራውን በዲጂታል ኮንትራት ያረጋግጡ እና ክፍያውን በቀላሉ ያጠናቅቁ።",
+    "process.step4.title": "አጠናቅ",
+    "process.step4.desc": "ስራውን ያጠናቅቁ፣ በChapa ደህንነቱ በተጠበቀ ሁኔታ ይክፈሉ እና ደረጃ ይስጡ።",
+
+    "hero.headline": "በድሬዳዋ ውስጥ የተረጋገጡ ባለሙያዎችን ያግኙ",
+    "hero.headline.highlight": "ፈጣን፣ አስተማማኝ እና በውል የታጀበ",
+    "hero.subheadline": "አስተማማኝ ያልሆኑ ማስታወቂያዎች ይቁሙ። የቃል አለመግባባቶች ይቁሙ። በፋይዳ የተረጋገጡ ባለሙያዎችን በዲጂታል ውል ያግኙ።",
+    "hero.search.neighborhood": "ሰፈር",
+    "hero.cta.find": "ባለሙያ አሁን ያግኙ",
+    "hero.cta.join": "እንደ ባለሙያ ይመዝገቡ",
   }
 };
 

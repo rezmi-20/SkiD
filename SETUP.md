@@ -16,8 +16,8 @@
 | Admin verification panel | ✅ Done |
 | Global theme (light/dark/grayscale) | ✅ Done |
 | Global language (EN / Amharic) | ✅ Done |
-| Chapa payment integration | 🔧 In Progress |
-| Real-time messaging | 🔧 In Progress |
+| PWA Support (Offline/Install) | ✅ Active (Fixed sw.js paths) |
+| High-Fidelity Landing & Search | ✅ Done (Bento layouts) |
 | Stability & Hydration Fixes | ✅ Active |
 
 **GitHub:** https://github.com/rezmi-20/SkiD  
@@ -380,8 +380,18 @@ export default function MyComponent() {
 **Cause:** `LocationProvider` or other contexts tried to access the session before `SessionProvider` was initialized.
 **Golden Rule:** Always ensure `SessionProvider` is at the very top of the nesting in `Providers.tsx`.
 
-### ❌ Background Image Overlapping Content
-**Fix:** Ensure the Hero section has `overflow-hidden`. Already implemented in `LandingPageContent.jsx`.
+### ❌ Geolocation Search — Not Showing Profiles
+**Symptoms:** Newly registered workers don't show up in search results.
+**Cause:** Search results were filtered to only show `is_verified = true` workers.
+**Fix:** We relaxed the filter to show all workers. New workers now show up immediately.
+
+### ❌ Chrome Mobile White Screen
+**Symptoms:** Page stays white on mobile browsers.
+**Cause:** Often caused by hydration crashes or ad-blockers blocking critical assets (like `manifest.json`).
+**Fixes:**
+1. **IP Whitelisting:** Added `10.*` IP range to `ServiceWorkerRegistration` to prevent SW interference during local cross-device testing.
+2. **Path Correction:** Fixed `sw.js` trying to cache a non-existent `manifest.json` (renamed to `site.webmanifest`).
+3. **AppShell Centering:** Removed strict `max-w-7xl` centering that left large empty spaces on wide screens.
 
 ---
 
@@ -431,4 +441,4 @@ npx drizzle-kit studio # Open Drizzle Studio (visual DB explorer)
 
 ---
 
-*Last updated: 2026-04-21 — after global theme + language implementation*
+*Last updated: 2026-04-30 — after full-width search & PWA stability fixes*

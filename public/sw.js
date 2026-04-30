@@ -1,7 +1,7 @@
 const CACHE_NAME = 'direskill-v1';
 const ASSETS_TO_CACHE = [
   '/',
-  '/manifest.json',
+  '/site.webmanifest',
   '/icon-192.svg',
   '/icon-512.svg',
 ];

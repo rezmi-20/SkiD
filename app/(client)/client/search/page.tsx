@@ -233,7 +233,6 @@ export default function SearchPage() {
         const data = await res.json();
         
         if (data.workers) {
-          // Map DB fields to component expects if different
           const mapped: Worker[] = data.workers.map((w: any) => ({
             id: w.id,
             name: w.full_name,
@@ -246,7 +245,7 @@ export default function SearchPage() {
             lng: Number(w.longitude),
             photo: w.avatar_url || "https://images.unsplash.com/photo-1540560485459-c219e9939392?auto=format&fit=crop&w=400&q=80",
             isVerified: w.is_verified,
-            district: "Dire Dawa", // Simple fallback or use DB district
+            district: "Dire Dawa",
             skills: w.skills
           }));
           setWorkers(mapped);
@@ -261,64 +260,114 @@ export default function SearchPage() {
     fetchWorkers();
   }, [filters, location]);
 
-  const filteredWorkers = workers; // Logic moved to backend
-
   return (
-    <div className="min-h-[100dvh] bg-background text-text-high p-6 pb-24 md:pb-10">
-      <div className="max-w-7xl mx-auto space-y-10">
-        <header className="space-y-2">
-          <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-text-high uppercase">
-            {t("search.title")} <span className="text-green-400 italic">{t("search.title.highlight")}</span>
-          </h1>
-          <p className="text-text-med text-sm font-medium">{t("search.subtitle")}</p>
-        </header>
+    <div className="min-h-screen bg-[#09090b] text-white">
+      {/* ── TOP SEARCH BAR AREA ── */}
+      <div className="w-full bg-[#0c0c0e] border-b border-white/5 pt-28 pb-12 px-6">
+        <div className="max-w-[95%] mx-auto space-y-8">
+           {/* Big Search Bar */}
+           <div className="relative max-w-6xl group">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-green-400 transition-colors">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input 
+                type="text"
+                placeholder="Search workers by name or skill..."
+                value={filters.query}
+                onChange={(e) => setFilters({ ...filters, query: e.target.value })}
+                className="w-full h-16 bg-white/5 border border-white/10 rounded-full pl-16 pr-8 text-lg font-bold text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-400/30 transition-all shadow-2xl"
+              />
+           </div>
 
-        <SearchFilters 
-          filters={filters} 
-          setFilters={setFilters} 
-          viewMode={viewMode}
-          setViewMode={setViewMode}
-          resultsCount={filteredWorkers.length}
-        />
-
-        <AnimatePresence mode="wait">
-          {viewMode === "list" ? (
-            <motion.div
-              key="list"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-            >
-              {filteredWorkers.length > 0 ? (
-                filteredWorkers.map((worker) => (
-                  <WorkerCard key={worker.id} worker={worker} />
-                ))
-              ) : (
-                <div className="col-span-full py-20 text-center space-y-4">
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-800 mx-auto">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    <line x1="11" y1="8" x2="11" y2="14"></line>
-                    <line x1="8" y1="11" x2="14" y2="11"></line>
-                  </svg>
-                  <p className="text-zinc-500 font-medium">{t("search.noResults")}</p>
-                </div>
-              )}
-            </motion.div>
-          ) : (
-            <motion.div
-              key="map"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-            >
-              <MapComponent workers={filteredWorkers} />
-            </motion.div>
-          )}
-        </AnimatePresence>
+           {/* Breadcrumbs */}
+           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-600 max-w-full mx-auto">
+              <span>Home</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4"><path d="M9 18l6-6-6-6"/></svg>
+              <span className="text-zinc-400">Find Workers</span>
+           </div>
+        </div>
       </div>
 
+      <div className="max-w-[95%] mx-auto p-6 lg:p-12">
+        <div className="flex flex-col lg:flex-row gap-12">
+          
+          {/* ── SIDEBAR (FILTERS) ── */}
+          <aside className="lg:w-80 shrink-0">
+             <div className="sticky top-28">
+                <SearchFilters 
+                  filters={filters} 
+                  setFilters={setFilters} 
+                  viewMode={viewMode}
+                  setViewMode={setViewMode}
+                  resultsCount={workers.length}
+                />
+             </div>
+          </aside>
+
+          {/* ── MAIN CONTENT (RESULTS) ── */}
+          <main className="flex-1 space-y-8">
+            <div className="flex items-center justify-between">
+               <h2 className="text-xl font-black uppercase tracking-tight text-white">
+                  Available Local Workers <span className="text-zinc-600 ml-2 font-bold text-sm">({workers.length} Found)</span>
+               </h2>
+               
+               {/* View Toggle */}
+               <div className="flex bg-white/5 border border-white/10 p-1 rounded-2xl">
+                  <button 
+                    onClick={() => setViewMode("list")}
+                    className={`flex items-center gap-2 px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === "list" ? "bg-green-400 text-black shadow-lg" : "text-zinc-500 hover:text-white"}`}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                    List
+                  </button>
+                  <button 
+                    onClick={() => setViewMode("map")}
+                    className={`flex items-center gap-2 px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === "map" ? "bg-green-400 text-black shadow-lg" : "text-zinc-500 hover:text-white"}`}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+                    Map
+                  </button>
+               </div>
+            </div>
+
+            <AnimatePresence mode="wait">
+              {viewMode === "list" ? (
+                <motion.div
+                  key="list"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-4"
+                >
+                  {workers.length > 0 ? (
+                    workers.map((worker) => (
+                      <WorkerCard key={worker.id} worker={worker} />
+                    ))
+                  ) : (
+                    <div className="py-20 px-12 text-left space-y-6 bg-white/5 rounded-[3rem] border border-white/5">
+                      <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-zinc-700">
+                          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                      </div>
+                      <p className="text-zinc-500 font-black uppercase tracking-widest text-[10px]">No workers match your current filters.</p>
+                    </div>
+                  )}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="map"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                >
+                  <MapComponent workers={workers} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </main>
+        </div>
+      </div>
     </div>
   );
 }

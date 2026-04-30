@@ -42,7 +42,7 @@ export default function AppShell({ children, role, userEmail }: AppShellProps) {
     <div className="flex flex-col min-h-screen bg-background text-text-high selection:bg-green-400/30 font-inter">
       {/* Desktop Navigation */}
       <nav className="hidden md:block border-b border-border/10 bg-surface/80 backdrop-blur-xl sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-8 h-20 flex items-center justify-between">
+        <div className="max-w-[95%] mx-auto px-8 h-20 flex items-center justify-between">
           <div className="flex items-center gap-12">
             <Link href="/" className="flex items-center gap-3 group">
                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center group-hover:rotate-12 transition-transform shadow-lg shadow-white/5">
@@ -114,8 +114,8 @@ export default function AppShell({ children, role, userEmail }: AppShellProps) {
         </div>
       </nav>
 
-      {/* Mobile Top Header */}
-      <div className="md:hidden flex items-center justify-between px-6 pt-8 pb-4 bg-background sticky top-0 z-40 border-b border-border/10">
+      {/* Mobile Top Header - Hidden in favor of app-first UI */}
+      <div className="hidden items-center justify-between px-6 pt-8 pb-4 bg-background sticky top-0 z-40 border-b border-border/10">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-lg shadow-white/5">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-black">
@@ -149,7 +149,17 @@ export default function AppShell({ children, role, userEmail }: AppShellProps) {
 
       {/* Main Content Area */}
       <main className="flex-grow p-4 md:p-10 pb-32 md:pb-10 overflow-x-hidden">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-[95%] mx-auto">
+          {/* Subtle Mobile Brand Mark */}
+          <div className="md:hidden flex items-center gap-2 mb-8 px-2">
+            <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center shadow-md">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-black">
+                  <path d="M 11 2 C 3 2 1 10 1 15 L 7 15 C 7 11 9 8 11 8 Z" />
+                  <path d="M 13 22 C 21 22 23 14 23 9 L 17 9 C 17 13 15 16 13 16 Z" />
+                </svg>
+            </div>
+            <span className="text-[10px] font-black tracking-widest text-zinc-500 uppercase">DIRE<span className="text-green-400">SKILL</span></span>
+          </div>
           {children}
         </div>
       </main>
