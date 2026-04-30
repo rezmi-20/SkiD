@@ -33,10 +33,28 @@ export default function AppShell({ children, role, userEmail }: AppShellProps) {
   const navItems = role === "client" ? CLIENT_NAV : WORKER_NAV;
   const { language, setLanguage, t } = useLanguage();
   const [mounted, setMounted] = useState(false);
+  const [tookTooLong, setTookTooLong] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { 
+    setMounted(true); 
+    const timer = setTimeout(() => {
+      if (!mounted) setTookTooLong(true);
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, [mounted]);
 
-  if (!mounted) return null;
+  if (!mounted) {
+    if (tookTooLong) {
+      return (
+        <div className="min-h-screen bg-[#09090b] flex flex-col items-center justify-center p-10 text-center space-y-4">
+          <p className="text-zinc-500 font-black uppercase tracking-widest text-[10px]">Initialization taking too long...</p>
+          <button onClick={() => window.location.reload()} className="bg-green-400 text-black px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">Force Reload</button>
+          <p className="text-[8px] text-zinc-700">Check if your browser blocks LocalStorage or Geolocation</p>
+        </div>
+      );
+    }
+    return null;
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-text-high selection:bg-green-400/30 font-inter">

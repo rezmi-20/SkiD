@@ -90,6 +90,8 @@ AUTH_SECRET=pY8uX1k5vR3tZ7wQ2mN9bV4cMx0fL6jS9gH1kP3nG0o
 
 # NextAuth URL — must match where app runs locally
 NEXTAUTH_URL=http://localhost:3000
+
+> ⚠️ **MOBILE TESTING:** If you are testing on mobile via your machine's IP (e.g., http://10.235.92.15:3000), you **MUST** update `NEXTAUTH_URL` in `.env.local` to match that IP. Otherwise, authentication and redirects will fail (causing a white screen or session errors).
 ```
 
 > **Note:** The Neon database is already provisioned and seeded. No migration needed on first run (tables already exist in the cloud DB).

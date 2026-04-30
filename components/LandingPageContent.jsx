@@ -11,11 +11,16 @@ export default function Home({ userRole }) {
   const { theme, setTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
   const [mounted, setMounted] = useState(false);
+  const [tookTooLong, setTookTooLong] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    const timer = setTimeout(() => {
+      if (!mounted) setTookTooLong(true);
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, [mounted]);
 
   const toggleTheme = () => {
     const modes = ['grayscale', 'dark', 'light'];
@@ -26,8 +31,14 @@ export default function Home({ userRole }) {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-[#09090b] flex flex-col items-center justify-center gap-4">
+      <div className="min-h-screen bg-[#09090b] flex flex-col items-center justify-center p-10 text-center gap-6">
         <div className="w-12 h-12 border-2 border-green-400/20 border-t-green-400 rounded-full animate-spin"></div>
+        {tookTooLong && (
+          <div className="space-y-4">
+             <p className="text-zinc-500 font-black uppercase tracking-widest text-[10px]">Initializing taking too long...</p>
+             <button onClick={() => window.location.reload()} className="bg-green-400 text-black px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">Force Reload</button>
+          </div>
+        )}
       </div>
     );
   }
