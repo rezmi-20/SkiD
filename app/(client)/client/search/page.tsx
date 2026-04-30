@@ -279,12 +279,21 @@ export default function SearchPage() {
               />
            </div>
 
-           {/* Breadcrumbs */}
-           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-600 max-w-full mx-auto">
-              <span>Home</span>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4"><path d="M9 18l6-6-6-6"/></svg>
-              <span className="text-zinc-400">Find Workers</span>
-           </div>
+            {/* Breadcrumbs & Location Status */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 max-w-full mx-auto">
+               <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-600">
+                  <span>Home</span>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4"><path d="M9 18l6-6-6-6"/></svg>
+                  <span className="text-zinc-400">Find Workers</span>
+               </div>
+               
+               <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-zinc-900 border border-white/5">
+                  <div className={`w-1.5 h-1.5 rounded-full ${location ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
+                  <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">
+                     {locLoading ? "Locating..." : location ? `Location: ${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}` : "Location Access Required"}
+                  </span>
+               </div>
+            </div>
         </div>
       </div>
 

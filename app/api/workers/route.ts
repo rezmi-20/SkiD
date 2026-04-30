@@ -11,6 +11,8 @@ export async function GET(req: NextRequest) {
     const maxDist = parseFloat(searchParams.get("maxDistance") || "100");
 
     const hasCoords = !isNaN(userLat) && !isNaN(userLng);
+    
+    console.log("[WORKERS_GET] Params:", { skill, userLat, userLng, maxDist, hasCoords });
 
     let query = `
       SELECT
@@ -49,30 +51,39 @@ export async function GET(req: NextRequest) {
 
     const params: (string | number)[] = [];
 
-    if (skill) {
-      params.push(`%${skill}%`);
-      query += ` AND $${params.length} = ANY(wp.skills)`;
+    // Case-insensitive skill matching
+    if (skill && skill.trim() !== "") {
+      params.push(skill.toLowerCase());
+      query += ` AND EXISTS (
+        SELECT 1 FROM unnest(wp.skills) s 
+        WHERE LOWER(s) LIKE '%' || $${params.length} || '%'
+      )`;
     }
 
+    // Distance filter - only apply if worker HAS coordinates
+    // If worker has NO coordinates, they are only hidden if maxDist is very small (< 100)
     if (hasCoords && maxDist < 100) {
       query += ` AND (
-        111.111 * DEGREES(ACOS(LEAST(1.0, COS(RADIANS(${userLat}))
-         * COS(RADIANS(wp.latitude))
-         * COS(RADIANS(wp.longitude) - RADIANS(${userLng}))
-         + SIN(RADIANS(${userLat}))
-         * SIN(RADIANS(wp.latitude)))))
-      ) <= ${maxDist}`;
+        wp.latitude IS NULL OR (
+          111.111 * DEGREES(ACOS(LEAST(1.0, COS(RADIANS(${userLat}))
+           * COS(RADIANS(wp.latitude))
+           * COS(RADIANS(wp.longitude) - RADIANS(${userLng}))
+           + SIN(RADIANS(${userLat}))
+           * SIN(RADIANS(wp.latitude)))))
+        ) <= ${maxDist}
+      )`;
     }
 
-    query += ` GROUP BY u.id, wp.full_name, wp.bio, wp.skills, wp.latitude, wp.longitude, wp.hourly_rate, wp.avatar_url, wp.is_verified, wp.latitude, wp.longitude`;
+    query += ` GROUP BY u.id, wp.full_name, wp.bio, wp.skills, wp.latitude, wp.longitude, wp.hourly_rate, wp.avatar_url, wp.is_verified`;
     
     if (hasCoords) {
-      query += ` ORDER BY distance ASC, avg_rating DESC LIMIT 50`;
+      query += ` ORDER BY distance ASC NULLS LAST, avg_rating DESC LIMIT 50`;
     } else {
       query += ` ORDER BY avg_rating DESC LIMIT 50`;
     }
 
     const workers = await sql(query, params);
+    console.log(`[WORKERS_GET] Found ${workers.length} workers`);
 
     return NextResponse.json({ workers });
   } catch (error) {
