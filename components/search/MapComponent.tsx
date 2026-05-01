@@ -130,7 +130,7 @@ export default function MapComponent({ workers }: MapComponentProps) {
                 </div>
                 
                 <a 
-                  href={`/worker/${worker.id}`} 
+                  href={`/client/worker/${worker.id}`} 
                   className="block text-center py-2 bg-white hover:bg-white/90 text-black text-[9px] font-black uppercase tracking-widest rounded-lg no-underline transition-colors"
                 >
                   View Profile

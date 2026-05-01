@@ -77,9 +77,9 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
 
         {/* Desktop CTA (Far Right) */}
         <div className="hidden lg:block shrink-0">
-           <button className="w-48 h-14 bg-[#2dd4bf] hover:bg-teal-300 text-black text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-[0_10px_30px_rgba(45,212,191,0.2)] active:scale-95">
+           <a href={`/client/worker/${worker.id}`} className="flex items-center justify-center w-48 h-14 bg-[#2dd4bf] hover:bg-teal-300 text-black text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all shadow-[0_10px_30px_rgba(45,212,191,0.2)] active:scale-95 no-underline">
               View Profile
-           </button>
+           </a>
         </div>
 
         {/* Mobile Bottom Row (Rating, Distance, CTA) */}
@@ -95,9 +95,9 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
               {worker.distance === "N/A" ? "Location N/A" : `${worker.distance} km away`}
             </span>
           </div>
-          <button className="px-4 py-1.5 bg-[#2dd4bf] hover:bg-teal-300 text-black text-xs font-semibold rounded-full transition-all">
+          <a href={`/client/worker/${worker.id}`} className="flex items-center justify-center px-4 py-1.5 bg-[#2dd4bf] hover:bg-teal-300 text-black text-xs font-semibold rounded-full transition-all no-underline">
             View Profile
-          </button>
+          </a>
         </div>
         
       </div>
