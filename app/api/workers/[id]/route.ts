@@ -26,7 +26,7 @@ export async function GET(
       JOIN worker_profiles wp ON u.id = wp.user_id
       LEFT JOIN ratings r ON u.id = r.rated_id
       WHERE u.id = ${id} AND u.role = 'worker'
-      GROUP BY u.id, wp.full_name, wp.bio, wp.skills, wp.latitude, wp.longitude, wp.hourly_rate, wp.avatar_url, wp.is_verified`;
+      GROUP BY u.id, u.email, wp.full_name, wp.bio, wp.skills, wp.latitude, wp.longitude, wp.hourly_rate, wp.avatar_url, wp.is_verified`;
 
     if (rows.length === 0) {
       return NextResponse.json({ error: "Worker not found" }, { status: 404 });

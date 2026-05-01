@@ -244,7 +244,7 @@ export default function SearchPage() {
             distance: w.distance != null ? Number(w.distance).toFixed(1) : "N/A",
             lat: Number(w.latitude) || 0,
             lng: Number(w.longitude) || 0,
-            photo: w.avatar_url || "https://images.unsplash.com/photo-1540560485459-c219e9939392?auto=format&fit=crop&w=400&q=80",
+            photo: w.avatar_url || null,
             isVerified: w.is_verified,
             district: "Dire Dawa",
             skills: w.skills
