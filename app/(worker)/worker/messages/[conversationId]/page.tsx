@@ -55,7 +55,7 @@ export default function WorkerChatPage() {
         const data = await res.json();
         setMessages(data.messages || []);
       }
-    } catch (e) { console.error(e); }
+    } catch (e: any) { console.error(e); }
   }, [convId]);
 
   useEffect(() => {
@@ -85,7 +85,7 @@ export default function WorkerChatPage() {
         setText("");
         fetchMessages();
       }
-    } catch (e) {
+    } catch (e: any) {
       setError("Connection error");
     } finally {
       setSending(false);
@@ -135,8 +135,8 @@ export default function WorkerChatPage() {
           <input
             type="text"
             value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setText(e.target.value)}
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === "Enter" && sendMessage()}
             placeholder="Reply to client..."
             className="flex-1 bg-zinc-800 border-0 rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-[#2dd4bf]"
           />
