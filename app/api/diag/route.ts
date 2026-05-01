@@ -5,7 +5,7 @@ import { auth } from "@/lib/auth";
 export async function GET() {
   try {
     const session = await auth();
-    const dbTest = await sql`SELECT 1 as connected`.catch(e => ({ error: e.message }));
+    const dbTest = await sql`SELECT 1 as connected`.catch((e: any) => ({ error: e.message }));
     
     return NextResponse.json({
       status: "online",
