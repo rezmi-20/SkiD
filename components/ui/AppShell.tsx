@@ -17,6 +17,7 @@ interface AppShellProps {
 const CLIENT_NAV: { key: TranslationKey, href: string }[] = [
   { key: "nav.discover", href: "/client/search" },
   { key: "nav.myjobs", href: "/client/dashboard" },
+  { key: "nav.contracts", href: "/client/contracts" },
   { key: "nav.chat", href: "/client/messages" },
   { key: "nav.profile", href: "/client/profile" },
 ];
@@ -24,6 +25,7 @@ const CLIENT_NAV: { key: TranslationKey, href: string }[] = [
 const WORKER_NAV: { key: TranslationKey, href: string }[] = [
   { key: "nav.dashboard", href: "/worker/dashboard" },
   { key: "nav.mygigs", href: "/worker/gigs" },
+  { key: "nav.contracts", href: "/worker/contracts" },
   { key: "nav.chat", href: "/worker/messages" },
   { key: "nav.earnings", href: "/worker/earnings" },
   { key: "nav.profile", href: "/worker/profile" },

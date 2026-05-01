@@ -18,6 +18,7 @@
 | Global language (EN / Amharic) | ✅ Done |
 | PWA Support (Offline/Install) | ✅ Active (Fixed sw.js paths) |
 | High-Fidelity Landing & Search | ✅ Done (Bento layouts) |
+| My Contracts Hub (Lumina Design) | ✅ Done (List & Digital Contract views) |
 | Stability & Hydration Fixes | ✅ Active |
 
 **GitHub:** https://github.com/rezmi-20/SkiD  
@@ -206,11 +207,13 @@ SklD/
 │       ├── jobs/               ← Job CRUD
 │       ├── workers/            ← Worker search
 │       ├── ratings/
-│       ├── contracts/
+│       ├── contracts/          ← Contract retrieval
 │       └── payments/chapa/     ← Chapa webhook
 │
 ├── components/
 │   ├── LandingPageContent.jsx  ← Full landing page (hero, categories, how it works)
+│   ├── ContractsPageContent.tsx ← My Contracts list (Lumina style)
+│   ├── ContractDetails.tsx     ← Digital Contract detail view
 │   ├── Providers.tsx           ← ThemeProvider + LanguageProvider + SessionProvider
 │   └── ui/
 │       ├── AppShell.tsx        ← Authenticated layout shell (nav + mobile nav)
@@ -434,13 +437,11 @@ npx drizzle-kit studio # Open Drizzle Studio (visual DB explorer)
 
 | Feature | File(s) | Notes |
 |---|---|---|
-| Real-time messaging | `app/(client)/client/messages/` | UI exists, needs WebSocket or Pusher |
-| Worker profile editing | `app/(worker)/worker/profile/` | Form needs save action |
-| Client dashboard (My Jobs) | `app/(client)/client/dashboard/` | Needs job CRUD wiring |
+| My Contracts Hub | `app/contracts/[id]/` | ✅ Done (Lumina design) |
 | Chapa payment flow | `app/api/payments/chapa/route.ts` | Webhook exists, needs test |
 | OTP verification | `app/(auth)/otp-verification/` | UI done, SMS not wired |
 | Worker job browse | `/worker/jobs` (not created yet) | Needs new page |
 
 ---
 
-*Last updated: 2026-04-30 — after full-width search & PWA stability fixes*
+*Last updated: 2026-05-01 — after My Contracts Hub & Digital Contract implementation*

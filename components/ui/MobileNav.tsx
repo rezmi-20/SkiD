@@ -55,11 +55,21 @@ const Icons = {
       <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
     </svg>
   ),
+  Contracts: (isActive: boolean) => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+      <polyline points="14 2 14 8 20 8"></polyline>
+      <line x1="16" y1="13" x2="8" y2="13"></line>
+      <line x1="16" y1="17" x2="8" y2="17"></line>
+      <polyline points="10 9 9 9 8 9"></polyline>
+    </svg>
+  ),
 };
 
 const CLIENT_NAV: NavItem[] = [
   { key: "nav.discover", href: "/client/search", icon: Icons.Discover },
   { key: "nav.myjobs", href: "/client/dashboard", icon: Icons.MyJobs },
+  { key: "nav.contracts", href: "/client/contracts", icon: Icons.Contracts },
   { key: "nav.chat", href: "/client/messages", icon: Icons.Chat },
   { key: "nav.profile", href: "/client/profile", icon: Icons.Profile },
 ];
@@ -67,8 +77,8 @@ const CLIENT_NAV: NavItem[] = [
 const WORKER_NAV: NavItem[] = [
   { key: "nav.dashboard", href: "/worker/dashboard", icon: Icons.Dashboard },
   { key: "nav.mygigs", href: "/worker/gigs", icon: Icons.Gigs },
+  { key: "nav.contracts", href: "/worker/contracts", icon: Icons.Contracts },
   { key: "nav.chat", href: "/worker/messages", icon: Icons.Chat },
-  { key: "nav.earnings", href: "/worker/earnings", icon: Icons.Earnings },
   { key: "nav.profile", href: "/worker/profile", icon: Icons.Profile },
 ];
 

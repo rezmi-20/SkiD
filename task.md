@@ -1,4 +1,12 @@
-- [/] Install dependencies (leaflet, react-leaflet)
+- [x] Update `lib/translations.ts` with contract-related keys
+- [x] Add "Contracts" to `AppShell.tsx` and `MobileNav.tsx`
+- [x] Create `lib/actions/contracts.ts` for fetching contract data
+- [x] Implement `ContractsPageContent.tsx` (List View)
+- [x] Create client and worker contract list pages
+- [x] Implement `ContractDetails.tsx` (Detail View matching mockup)
+- [x] Create shared contract details route
+- [ ] Verify functionality and responsiveness
+- [ ] Install dependencies (leaflet, react-leaflet)
 - [ ] Implement search mock data provider
 - [ ] Create WorkerCard component
 - [ ] Create SearchFilters and ViewToggle components
