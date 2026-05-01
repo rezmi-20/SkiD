@@ -47,6 +47,22 @@ const userLocationIcon = () => L.divIcon({
 
 import { useLocation, DEFAULT_CENTER } from "@/context/LocationContext";
 
+const MapUpdater = ({ workers, center }: { workers: Worker[], center: [number, number] }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (workers.length > 0) {
+      const bounds = L.latLngBounds([center]);
+      workers.forEach(w => bounds.extend([w.lat, w.lng]));
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+    } else {
+      map.setView(center, 13);
+    }
+  }, [workers, center, map]);
+  
+  return null;
+};
+
 export default function MapComponent({ workers }: MapComponentProps) {
   const [isMounted, setIsMounted] = useState(false);
   const { theme } = useTheme();
@@ -69,13 +85,14 @@ export default function MapComponent({ workers }: MapComponentProps) {
     : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 
   return (
-    <div className="h-[calc(100vh-280px)] w-full rounded-[2rem] overflow-hidden border border-white/5 shadow-2xl">
+    <div className="h-[calc(100vh-280px)] w-full rounded-[2rem] overflow-hidden border border-white/5 shadow-2xl z-0">
       <MapContainer
         center={center}
-        zoom={14}
+        zoom={13}
         scrollWheelZoom={true}
         style={{ height: "100%", width: "100%", background: isLight ? "#f8f9fa" : "#1a1a1a" }}
       >
+        <MapUpdater workers={workers} center={center} />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
           url={tileUrl}
