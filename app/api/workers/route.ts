@@ -5,7 +5,8 @@ import { auth } from "@/lib/auth";
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const skill = searchParams.get("skill");
+    const queryStr = searchParams.get("query") || "";
+    const category = searchParams.get("category") || "";
     const userLat = parseFloat(searchParams.get("lat") || "");
     const userLng = parseFloat(searchParams.get("lng") || "");
     const maxDist = parseFloat(searchParams.get("maxDistance") || "100");
@@ -13,7 +14,7 @@ export async function GET(req: NextRequest) {
     const hasCoords = !isNaN(userLat) && !isNaN(userLng);
     const params: (string | number)[] = [];
     
-    console.log("[WORKERS_GET] Start", { skill, userLat, userLng, hasCoords });
+    console.log("[WORKERS_GET] Start", { queryStr, category, userLat, userLng, hasCoords });
 
     let distanceSql = "0";
     if (hasCoords) {
@@ -58,9 +59,21 @@ export async function GET(req: NextRequest) {
       WHERE u.role = 'worker'
     `;
 
-    // Skill filtering
-    if (skill && skill.trim() !== "") {
-      params.push(`%${skill.toLowerCase()}%`);
+    // Query filtering (Name OR Skill)
+    if (queryStr && queryStr.trim() !== "") {
+      params.push(`%${queryStr.toLowerCase()}%`);
+      query += ` AND (
+        LOWER(wp.full_name) LIKE $${params.length} 
+        OR EXISTS (
+          SELECT 1 FROM unnest(wp.skills) s 
+          WHERE LOWER(s) LIKE $${params.length}
+        )
+      )`;
+    }
+
+    // Category filtering (Skill specific)
+    if (category && category.trim() !== "" && category !== "All") {
+      params.push(`%${category.toLowerCase()}%`);
       query += ` AND EXISTS (
         SELECT 1 FROM unnest(wp.skills) s 
         WHERE LOWER(s) LIKE $${params.length}

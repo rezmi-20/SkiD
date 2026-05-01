@@ -13,7 +13,7 @@ interface SearchFiltersProps {
 }
 
 const CATEGORIES = ["All", "Electrician", "Plumber", "Painter", "Satellite Dish", "House Finishing"];
-const MOBILE_CATEGORIES = ["Plumbing", "Electrical", "Cleaning"];
+const MOBILE_CATEGORIES = ["Plumber", "Electrician", "Painter"];
 
 export default function SearchFilters({
   filters,

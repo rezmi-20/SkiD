@@ -219,7 +219,8 @@ export default function SearchPage() {
       setLoading(true);
       try {
         const params = new URLSearchParams({
-          skill: filters.category || filters.query,
+          query: filters.query || "",
+          category: filters.category === "All" ? "" : (filters.category || ""),
           minRating: filters.minRating.toString(),
           maxDistance: filters.maxDistance.toString(),
         });
