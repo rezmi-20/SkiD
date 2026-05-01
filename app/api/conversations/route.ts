@@ -37,24 +37,20 @@ export async function GET() {
       SELECT
         c.id,
         c.created_at,
-        -- The "other" participant
         CASE WHEN c.client_id = ${userId} THEN c.worker_id ELSE c.client_id END AS other_id,
         ou.email AS other_email,
-        COALESCE(wp.full_name, cp.full_name, ou.email) AS other_name,
-        COALESCE(wp.avatar_url, cp.avatar_url) AS other_avatar,
+        COALESCE(wp.full_name, ou.email) AS other_name,
+        wp.avatar_url AS other_avatar,
         COALESCE(wp.skills[1], 'Professional') AS other_skill,
-        wp.is_verified,
-        -- Latest message
+        COALESCE(wp.is_verified, false) AS is_verified,
         lm.body AS last_body,
         lm.image_url AS last_image,
         lm.created_at AS last_at,
         lm.sender_id AS last_sender,
-        -- Unread count (messages not sent by current user)
         COALESCE(unread.cnt, 0) AS unread
       FROM conversations c
       JOIN users ou ON ou.id = CASE WHEN c.client_id = ${userId} THEN c.worker_id ELSE c.client_id END
       LEFT JOIN worker_profiles wp ON wp.user_id = ou.id
-      LEFT JOIN client_profiles cp ON cp.user_id = ou.id
       LEFT JOIN LATERAL (
         SELECT body, image_url, created_at, sender_id
         FROM messages
@@ -62,7 +58,7 @@ export async function GET() {
         ORDER BY created_at DESC LIMIT 1
       ) lm ON true
       LEFT JOIN LATERAL (
-        SELECT COUNT(*) AS cnt
+        SELECT COUNT(*)::int AS cnt
         FROM messages
         WHERE conversation_id = c.id AND sender_id != ${userId}
       ) unread ON true
