@@ -261,13 +261,46 @@ export default function SearchPage() {
   }, [filters, location]);
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-white">
-      {/* ── TOP SEARCH BAR AREA ── */}
-      <div className="w-full bg-[#0c0c0e] border-b border-white/5 pt-28 pb-12 px-6">
+    <div className="min-h-screen bg-zinc-50 dark:bg-[#18181b] lg:bg-[#09090b] lg:dark:bg-[#09090b] text-zinc-900 dark:text-white pb-20 lg:pb-0">
+      
+      {/* ── MOBILE HEADER (Hidden on Desktop) ── */}
+      <header className="lg:hidden sticky top-0 z-40 bg-zinc-50/80 dark:bg-[#18181b]/80 backdrop-blur-md px-4 py-4 border-b border-zinc-200 dark:border-white/5">
+        <div className="flex items-center justify-between">
+          <button className="p-2 -ml-2 text-zinc-900 dark:text-white" onClick={() => window.history.back()}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h1 className="text-[20px] font-bold">Search Workers</h1>
+          <button className="p-2 -mr-2 text-zinc-900 dark:text-white">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+               <circle cx="12" cy="7" r="4" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Compact Search Bar */}
+        <div className="relative mt-4 group">
+          <input 
+            type="text"
+            placeholder="Search workers by name or skill..."
+            value={filters.query}
+            onChange={(e) => setFilters({ ...filters, query: e.target.value })}
+            className="w-full h-[52px] bg-white dark:bg-[#27272a] border border-zinc-200 dark:border-white/5 rounded-2xl pl-5 pr-12 text-[15px] font-medium text-zinc-900 dark:text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#2dd4bf] transition-all shadow-sm"
+          />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-[#2dd4bf] transition-colors pointer-events-none">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </div>
+      </header>
+
+      {/* ── DESKTOP TOP HEADER AREA (Hidden on Mobile) ── */}
+      <div className="hidden lg:block w-full bg-[#0c0c0e] border-b border-white/5 pt-28 pb-12 px-6">
         <div className="max-w-[95%] mx-auto space-y-8">
            {/* Big Search Bar */}
            <div className="relative max-w-6xl group">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-green-400 transition-colors">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-[#2dd4bf] transition-colors">
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
               <input 
@@ -275,7 +308,7 @@ export default function SearchPage() {
                 placeholder="Search workers by name or skill..."
                 value={filters.query}
                 onChange={(e) => setFilters({ ...filters, query: e.target.value })}
-                className="w-full h-16 bg-white/5 border border-white/10 rounded-full pl-16 pr-8 text-lg font-bold text-white placeholder:text-zinc-600 focus:outline-none focus:border-green-400/30 transition-all shadow-2xl"
+                className="w-full h-16 bg-white/5 border border-white/10 rounded-full pl-16 pr-8 text-lg font-bold text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#2dd4bf]/30 transition-all shadow-2xl"
               />
            </div>
 
@@ -288,7 +321,7 @@ export default function SearchPage() {
                </div>
                
                <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-zinc-900 border border-white/5">
-                  <div className={`w-1.5 h-1.5 rounded-full ${location ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
+                  <div className={`w-1.5 h-1.5 rounded-full ${location ? 'bg-[#2dd4bf] animate-pulse' : 'bg-red-400'}`} />
                   <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">
                      {locLoading ? "Locating..." : location ? `Location: ${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}` : "Location Access Required"}
                   </span>
@@ -297,12 +330,13 @@ export default function SearchPage() {
         </div>
       </div>
 
-      <div className="max-w-[95%] mx-auto p-6 lg:p-12">
-        <div className="flex flex-col lg:flex-row gap-12">
+      {/* ── MAIN CONTENT AREA ── */}
+      <div className="px-4 py-2 lg:p-12 max-w-lg lg:max-w-[95%] mx-auto">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-12">
           
-          {/* ── SIDEBAR (FILTERS) ── */}
+          {/* ── SIDEBAR / INLINE FILTERS ── */}
           <aside className="lg:w-80 shrink-0">
-             <div className="sticky top-28">
+             <div className="lg:sticky lg:top-28">
                 <SearchFilters 
                   filters={filters} 
                   setFilters={setFilters} 
@@ -314,24 +348,24 @@ export default function SearchPage() {
           </aside>
 
           {/* ── MAIN CONTENT (RESULTS) ── */}
-          <main className="flex-1 space-y-8">
-            <div className="flex items-center justify-between">
+          <main className="flex-1 mt-2 lg:mt-0 space-y-4 lg:space-y-8">
+            <div className="hidden lg:flex items-center justify-between">
                <h2 className="text-xl font-black uppercase tracking-tight text-white">
                   Available Local Workers <span className="text-zinc-600 ml-2 font-bold text-sm">({workers.length} Found)</span>
                </h2>
                
-               {/* View Toggle */}
+               {/* View Toggle (Desktop) */}
                <div className="flex bg-white/5 border border-white/10 p-1 rounded-2xl">
                   <button 
                     onClick={() => setViewMode("list")}
-                    className={`flex items-center gap-2 px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === "list" ? "bg-green-400 text-black shadow-lg" : "text-zinc-500 hover:text-white"}`}
+                    className={`flex items-center gap-2 px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === "list" ? "bg-[#2dd4bf] text-black shadow-lg" : "text-zinc-500 hover:text-white"}`}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
                     List
                   </button>
                   <button 
                     onClick={() => setViewMode("map")}
-                    className={`flex items-center gap-2 px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === "map" ? "bg-green-400 text-black shadow-lg" : "text-zinc-500 hover:text-white"}`}
+                    className={`flex items-center gap-2 px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === "map" ? "bg-[#2dd4bf] text-black shadow-lg" : "text-zinc-500 hover:text-white"}`}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
                     Map
@@ -346,20 +380,20 @@ export default function SearchPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  className="space-y-4"
+                  className="space-y-3.5 lg:space-y-4"
                 >
                   {workers.length > 0 ? (
                     workers.map((worker) => (
                       <WorkerCard key={worker.id} worker={worker} />
                     ))
                   ) : (
-                    <div className="py-20 px-12 text-left space-y-6 bg-white/5 rounded-[3rem] border border-white/5">
-                      <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center">
+                    <div className="py-20 px-12 text-center lg:text-left space-y-4 lg:space-y-6 lg:bg-white/5 lg:rounded-[3rem] lg:border border-white/5">
+                      <div className="hidden lg:flex w-16 h-16 bg-white/5 rounded-2xl items-center justify-center">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-zinc-700">
                           <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                         </svg>
                       </div>
-                      <p className="text-zinc-500 font-black uppercase tracking-widest text-[10px]">No workers match your current filters.</p>
+                      <p className="text-zinc-500 font-medium text-sm lg:text-[10px] lg:font-black lg:uppercase lg:tracking-widest">No workers match your current filters.</p>
                     </div>
                   )}
                 </motion.div>
