@@ -51,9 +51,12 @@ const MapUpdater = ({ workers, center }: { workers: Worker[], center: [number, n
   const map = useMap();
   
   useEffect(() => {
-    if (workers.length > 0) {
+    // Filter out workers that don't have valid coordinates (0,0 is null fallback)
+    const validWorkers = workers.filter(w => w.lat !== 0 && w.lng !== 0);
+    
+    if (validWorkers.length > 0) {
       const bounds = L.latLngBounds([center]);
-      workers.forEach(w => bounds.extend([w.lat, w.lng]));
+      validWorkers.forEach(w => bounds.extend([w.lat, w.lng]));
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
     } else {
       map.setView(center, 13);
@@ -108,7 +111,7 @@ export default function MapComponent({ workers }: MapComponentProps) {
           </Popup>
         </Marker>
 
-        {workers.map((worker) => (
+        {workers.filter(w => w.lat !== 0 && w.lng !== 0).map((worker) => (
           <Marker key={worker.id} position={[worker.lat, worker.lng]} icon={createWorkerIcon(worker.rating)}>
             <Popup className="compact-popup">
               <div className="p-1 font-sans min-w-[120px]">
@@ -122,7 +125,7 @@ export default function MapComponent({ workers }: MapComponentProps) {
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="material-symbols-outlined text-[10px] text-on-surface-variant">location_on</span>
-                    <span className="font-bold text-[9px] text-on-surface-variant uppercase">{worker.distance} KM</span>
+                    <span className="font-bold text-[9px] text-on-surface-variant uppercase">{worker.distance === "N/A" ? "N/A" : `${worker.distance} KM`}</span>
                   </div>
                 </div>
                 

@@ -69,7 +69,7 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
                    <span className="text-sm font-black text-white">{worker.rating}</span>
                 </div>
                 <div className="text-sm font-black text-zinc-500 uppercase tracking-widest">
-                   {worker.distance} KM AWAY
+                   {worker.distance === "N/A" ? "Location N/A" : `${worker.distance} KM AWAY`}
                 </div>
              </div>
           </div>
@@ -92,7 +92,7 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
               <span className="text-[13px] font-medium text-zinc-900 dark:text-white">{worker.rating}</span>
             </div>
             <span className="text-[13px] text-zinc-500 dark:text-zinc-400">
-              {worker.distance} km away
+              {worker.distance === "N/A" ? "Location N/A" : `${worker.distance} km away`}
             </span>
           </div>
           <button className="px-4 py-1.5 bg-[#2dd4bf] hover:bg-teal-300 text-black text-xs font-semibold rounded-full transition-all">
