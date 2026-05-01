@@ -4,7 +4,7 @@ export interface Worker {
   skill: string;
   rating: number;
   reviews: number;
-  distance: number;
+  distance: number | string;
   lat: number;
   lng: number;
   photo: string;

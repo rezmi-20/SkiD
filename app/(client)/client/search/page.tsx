@@ -205,6 +205,7 @@ export default function SearchPage() {
   const { location, loading: locLoading } = useLocation();
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [filters, setFilters] = useState<FilterType>({
     query: "",
@@ -251,8 +252,9 @@ export default function SearchPage() {
           }));
           setWorkers(mapped);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Failed to fetch workers", err);
+        setError(`Fetch failed: ${err.message}. Check Network tab for /api/workers.`);
       } finally {
         setLoading(false);
       }
@@ -373,6 +375,19 @@ export default function SearchPage() {
                   </button>
                </div>
             </div>
+            
+            {error && (
+              <div className="p-6 bg-red-500/10 border border-red-500/50 rounded-2xl text-red-400">
+                <h3 className="font-bold mb-2">Diagnostic Error:</h3>
+                <p className="text-sm opacity-80">{error}</p>
+                <button 
+                  onClick={() => window.location.reload()}
+                  className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg text-xs font-bold"
+                >
+                  Retry Connection
+                </button>
+              </div>
+            )}
 
             <AnimatePresence mode="wait">
               {viewMode === "list" ? (

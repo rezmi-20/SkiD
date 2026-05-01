@@ -76,9 +76,24 @@ export default function WorkerProfilePage() {
   );
 
   if (error || !worker) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#0c0c0e] text-white gap-4">
-      <h1 className="text-2xl font-bold">Profile Not Found</h1>
-      <button onClick={() => router.back()} className="px-6 py-2 bg-[#2dd4bf] text-black font-bold rounded-xl">Go Back</button>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#0c0c0e] text-white p-10 gap-6">
+      <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center text-red-500">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <div className="text-center">
+        <h1 className="text-2xl font-bold mb-2">Profile Load Failed</h1>
+        <p className="text-zinc-500 max-w-md mx-auto">{error || "The worker profile could not be found or the database connection timed out."}</p>
+      </div>
+      <div className="flex gap-4">
+        <button onClick={() => router.back()} className="px-6 py-3 bg-zinc-800 text-white font-bold rounded-xl hover:bg-zinc-700 transition-colors">Go Back</button>
+        <button onClick={() => window.location.reload()} className="px-6 py-3 bg-[#2dd4bf] text-black font-bold rounded-xl hover:bg-teal-400 transition-colors">Try Again</button>
+      </div>
+      {error && (
+        <div className="mt-8 p-4 bg-white/5 rounded-lg border border-white/10 w-full max-w-2xl overflow-auto">
+          <p className="text-[10px] font-mono text-zinc-600 uppercase mb-2">Technical Details:</p>
+          <code className="text-xs text-red-400">{error}</code>
+        </div>
+      )}
     </div>
   );
 
