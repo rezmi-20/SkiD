@@ -3,35 +3,12 @@ import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { filterContactInfo } from "@/lib/filterContactInfo";
 
-async function ensureTables() {
-  await sql`
-    CREATE TABLE IF NOT EXISTS conversations (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      client_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      worker_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      created_at TIMESTAMPTZ DEFAULT now(),
-      UNIQUE(client_id, worker_id)
-    )
-  `;
-  await sql`
-    CREATE TABLE IF NOT EXISTS messages (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
-      sender_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      body TEXT,
-      image_url TEXT,
-      created_at TIMESTAMPTZ DEFAULT now()
-    )
-  `;
-}
-
 // GET /api/conversations/[id]/messages
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await ensureTables();
     const session = await auth();
     if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -52,11 +29,12 @@ export async function GET(
         m.body,
         m.image_url,
         m.created_at,
-        COALESCE(wp.full_name, u.email) AS sender_name,
-        wp.avatar_url AS sender_avatar
+        COALESCE(wp.full_name, cp.full_name, u.email) AS sender_name,
+        COALESCE(wp.avatar_url, cp.avatar_url) AS sender_avatar
       FROM messages m
       JOIN users u ON u.id = m.sender_id
       LEFT JOIN worker_profiles wp ON wp.user_id = u.id
+      LEFT JOIN client_profiles cp ON cp.user_id = u.id
       WHERE m.conversation_id = ${id}
       ORDER BY m.created_at ASC
     `;
@@ -74,7 +52,6 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await ensureTables();
     const session = await auth();
     if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -94,7 +71,7 @@ export async function POST(
       return NextResponse.json({ error: "Message cannot be empty" }, { status: 400 });
     }
 
-    // Contact info filter (only on text body)
+    // Contact info filter
     if (body) {
       const check = filterContactInfo(body);
       if (check.blocked) {
