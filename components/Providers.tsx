@@ -4,6 +4,7 @@ import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { LocationProvider } from "@/context/LocationContext";
+import { MessagingProvider } from "@/context/MessagingContext";
 import { useState, useEffect } from "react";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
@@ -33,7 +34,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       <ThemeProvider attribute="data-theme" defaultTheme="grayscale" themes={["light", "dark", "grayscale"]}>
         <LanguageProvider>
           <LocationProvider>
-            {children}
+            <MessagingProvider>
+              {children}
+            </MessagingProvider>
           </LocationProvider>
         </LanguageProvider>
       </ThemeProvider>
