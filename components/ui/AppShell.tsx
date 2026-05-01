@@ -182,8 +182,8 @@ export default function AppShell({ children, role, userEmail }: AppShellProps) {
         </div>
       </main>
 
-      {/* Mobile Navigation — hidden on worker profile page */}
-      {!/^\/client\/worker\//.test(pathname) && <MobileNav role={role} />}
+      {/* Mobile Navigation — hidden on worker profile and chat pages */}
+      {!/^\/(client\/worker\/|client\/messages\/)/.test(pathname) && <MobileNav role={role} />}
     </div>
   );
 }

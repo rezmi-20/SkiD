@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useCallback } from "react";
 
 interface WorkerProfile {
   id: string;
@@ -45,6 +46,28 @@ export default function WorkerProfilePage() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [id]);
+
+  const [messaging, setMessaging] = useState(false);
+
+  const handleMessage = useCallback(async () => {
+    if (messaging || !worker) return;
+    setMessaging(true);
+    try {
+      const res = await fetch("/api/conversations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workerId: worker.id }),
+      });
+      const data = await res.json();
+      if (res.ok && data.conversationId) {
+        router.push(`/client/messages/${data.conversationId}`);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setMessaging(false);
+    }
+  }, [worker, messaging, router]);
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-[#0c0c0e]">
@@ -224,8 +247,11 @@ export default function WorkerProfilePage() {
       {/* ── MOBILE STICKY BOTTOM BAR ── */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-5 pt-3 bg-[#0c0c0e]/95 backdrop-blur-xl border-t border-white/5">
         <div className="flex gap-3">
-          <button className="flex-1 py-4 bg-[#1c1c1f] border border-white/10 text-white font-bold rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-transform">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+          <button onClick={handleMessage} disabled={messaging}
+            className="flex-1 py-4 bg-[#1c1c1f] border border-white/10 text-white font-bold rounded-2xl flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-60">
+            {messaging
+              ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>}
             Message
           </button>
           <Link href={`/client/contract/new?workerId=${worker.id}`}
@@ -269,8 +295,11 @@ export default function WorkerProfilePage() {
             </div>
             <p className="text-zinc-400 text-sm mb-8 z-10">1.2 km away • Dire Dawa</p>
             <div className="w-full flex gap-3 z-10">
-              <button className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-colors">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+              <button onClick={handleMessage} disabled={messaging}
+                className="flex-1 py-3 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-60 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-colors">
+                {messaging
+                  ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>}
                 Message
               </button>
               <Link href={`/client/contract/new?workerId=${worker.id}`}
