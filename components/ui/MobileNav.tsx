@@ -67,6 +67,7 @@ const CLIENT_NAV: NavItem[] = [
 const WORKER_NAV: NavItem[] = [
   { key: "nav.dashboard", href: "/worker/dashboard", icon: Icons.Dashboard },
   { key: "nav.mygigs", href: "/worker/gigs", icon: Icons.Gigs },
+  { key: "nav.chat", href: "/worker/messages", icon: Icons.Chat },
   { key: "nav.earnings", href: "/worker/earnings", icon: Icons.Earnings },
   { key: "nav.profile", href: "/worker/profile", icon: Icons.Profile },
 ];

@@ -24,6 +24,7 @@ const CLIENT_NAV: { key: TranslationKey, href: string }[] = [
 const WORKER_NAV: { key: TranslationKey, href: string }[] = [
   { key: "nav.dashboard", href: "/worker/dashboard" },
   { key: "nav.mygigs", href: "/worker/gigs" },
+  { key: "nav.chat", href: "/worker/messages" },
   { key: "nav.earnings", href: "/worker/earnings" },
   { key: "nav.profile", href: "/worker/profile" },
 ];
@@ -183,7 +184,7 @@ export default function AppShell({ children, role, userEmail }: AppShellProps) {
       </main>
 
       {/* Mobile Navigation — hidden on worker profile and chat pages */}
-      {!/^\/(client\/worker\/|client\/messages\/)/.test(pathname) && <MobileNav role={role} />}
+      {!/^\/(client\/worker\/|client\/messages\/|worker\/messages\/)/.test(pathname) && <MobileNav role={role} />}
     </div>
   );
 }
