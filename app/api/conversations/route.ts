@@ -19,16 +19,17 @@ export async function GET() {
           WHEN c.client_id = ${userId} THEN c.worker_id
           ELSE c.client_id
         END as other_user_id,
-        COALESCE(wp.full_name, cp.full_name, u.email) as other_user_name,
-        COALESCE(wp.avatar_url, cp.avatar_url) as other_user_avatar,
-        (SELECT body FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message,
-        (SELECT created_at FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message_at
+        COALESCE(wp.full_name, cp.full_name, u.email) as other_name,
+        COALESCE(wp.avatar_url, cp.avatar_url) as other_avatar,
+        (SELECT body FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_body,
+        (SELECT image_url FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_image,
+        (SELECT created_at FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_at
       FROM conversations c
       JOIN users u ON u.id = (CASE WHEN c.client_id = ${userId} THEN c.worker_id ELSE c.client_id END)
       LEFT JOIN worker_profiles wp ON wp.user_id = u.id
       LEFT JOIN client_profiles cp ON cp.user_id = u.id
       WHERE c.client_id = ${userId} OR c.worker_id = ${userId}
-      ORDER BY last_message_at DESC NULLS LAST
+      ORDER BY last_at DESC NULLS LAST
     `;
 
     return NextResponse.json({ conversations });
@@ -62,7 +63,10 @@ export async function POST(req: NextRequest) {
     `;
 
     if (existing.length > 0) {
-      return NextResponse.json({ conversation: existing[0] });
+      return NextResponse.json({ 
+        conversation: existing[0],
+        conversationId: existing[0].id 
+      });
     }
 
     // Create new
@@ -72,7 +76,10 @@ export async function POST(req: NextRequest) {
       RETURNING id
     `;
 
-    return NextResponse.json({ conversation: rows[0] });
+    return NextResponse.json({ 
+      conversation: rows[0],
+      conversationId: rows[0].id 
+    });
   } catch (err) {
     console.error("[CONVERSATIONS_POST]", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
