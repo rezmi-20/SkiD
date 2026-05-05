@@ -465,6 +465,14 @@ npx drizzle-kit studio # Open Drizzle Studio (visual DB explorer)
 **Cause:** Disconnect between `lib/schema.ts` and the raw SQL queries in `app/api/conversations`. The table `conversations` was missing from the schema, and `messages` had different column names (`content` vs `body`).
 **Fix:** Synchronized the schema with the actual messaging implementation.
 
+### ❌ Persistent "White Screen" (Service Worker Cache)
+**Symptoms:** Page works in Incognito mode but shows a blank white screen in normal browser mode after a new deployment.
+**Cause:** The manual `sw.js` was using a **Cache-First** strategy for the home page (`/`). It served an old version of `index.html` which referenced JavaScript bundles that had been deleted/replaced on Vercel.
+**Fix:** 
+1. Updated `sw.js` to use a **Network-First** strategy for HTML navigation.
+2. Bumped the `CACHE_NAME` to `v2` to force a cache purge.
+3. Added an **Emergency Clear** mechanism in `ServiceWorkerRegistration.tsx`: visiting `?clear_cache=true` manually unregisters the SW.
+
 ---
 
-*Last updated: 2026-05-05 — Post-Stability & Vercel Fixes*
+*Last updated: 2026-05-05 — Post-Stability & SW Cache Fixes*
