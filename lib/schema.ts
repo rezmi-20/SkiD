@@ -113,18 +113,30 @@ export const ratings = pgTable("ratings", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// ─── Conversations ────────────────────────────────────────────────────────────
+export const conversations = pgTable("conversations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  clientId: uuid("client_id")
+    .notNull()
+    .references(() => users.id),
+  workerId: uuid("worker_id")
+    .notNull()
+    .references(() => users.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // ─── Messages ─────────────────────────────────────────────────────────────────
 export const messages = pgTable("messages", {
   id: uuid("id").primaryKey().defaultRandom(),
+  conversationId: uuid("conversation_id")
+    .notNull()
+    .references(() => conversations.id, { onDelete: "cascade" }),
   senderId: uuid("sender_id")
     .notNull()
     .references(() => users.id),
-  receiverId: uuid("receiver_id")
-    .notNull()
-    .references(() => users.id),
-  jobId: uuid("job_id").references(() => jobs.id),
-  content: text("content").notNull(),
-  sentAt: timestamp("sent_at").notNull().defaultNow(),
+  body: text("body"),
+  imageUrl: text("image_url"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 // ─── Payments ─────────────────────────────────────────────────────────────────

@@ -1,34 +1,46 @@
 import { neon } from "@neondatabase/serverless";
 
 /**
- * Build-Safe Database Proxy
- * 
- * In Next.js 15+, code is often executed during the build ('Collecting page data').
- * If DATABASE_URL is missing during build, a standard initialization would crash the process.
- * 
- * This Proxy targets a dummy function to allow both:
- * 1. Tagged template usage: sql`SELECT...`
- * 2. Property access: sql.transaction(...)
- * 
- * It only initializes the 'neon' client when a query is actually attempted.
+ * DATABASE SINGLETON
+ * We use a global variable to ensure that the database client is initialized only once.
+ * This is crucial for serverless environments like Vercel to prevent "Too many connections" errors.
  */
-const dummy = () => {};
+const globalForDb = global as unknown as {
+  sql: ReturnType<typeof neon> | undefined;
+};
 
-export const sql = new Proxy(dummy, {
-  get(target, prop) {
-    if (!process.env.DATABASE_URL) {
-      // Return undefined for property access during build if no DB URL
-      return undefined;
+const getDbClient = () => {
+  if (!process.env.DATABASE_URL) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("DATABASE_URL is missing in production.");
     }
-    const connection = neon(process.env.DATABASE_URL);
-    const value = (connection as any)[prop];
-    return typeof value === 'function' ? value.bind(connection) : value;
-  },
-  apply(target, thisArg, argumentsList) {
-    if (!process.env.DATABASE_URL) {
-      throw new Error("DATABASE_URL environment variable is not set. Please add it to your environment variables or Vercel settings.");
-    }
-    const connection = neon(process.env.DATABASE_URL);
-    return (connection as any)(...argumentsList);
+    // Return a dummy for build time
+    return () => { throw new Error("Database accessed during build without URL."); };
   }
+  
+  if (!globalForDb.sql) {
+    globalForDb.sql = neon(process.env.DATABASE_URL);
+  }
+  return globalForDb.sql;
+};
+
+/**
+ * SQL PROXY
+ * This allows us to use `sql` as a tagged template literal OR as a function.
+ * We also add a `.query` helper to prevent crashes if code tries to call sql.query().
+ */
+export const sql = new Proxy(() => {}, {
+  get: (target, prop) => {
+    const client = getDbClient();
+    // If someone calls sql.query(...), we redirect it to the main connection function
+    if (prop === 'query') {
+        return client;
+    }
+    const value = (client as any)[prop];
+    return typeof value === 'function' ? value.bind(client) : value;
+  },
+  apply: (target, thisArg, args) => {
+    const client = getDbClient();
+    return (client as any)(...args);
+  },
 }) as any;

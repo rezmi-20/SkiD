@@ -444,4 +444,27 @@ npx drizzle-kit studio # Open Drizzle Studio (visual DB explorer)
 
 ---
 
-*Last updated: 2026-05-01 — after My Contracts Hub & Digital Contract implementation*
+## 14. Troubleshooting: Vercel Deployment & Stability (POST-MORTEM)
+
+### ❌ Persistent "White Screen" on Mobile/Web
+**Symptoms:** Page hangs on a blank white screen during initial load or transitions.
+**Cause:** Next.js 15 Server Components suspend while waiting for database queries. Without a `loading.tsx` file, the browser has no HTML to render, leaving the user with a white screen.
+**Fix:** We implemented a global `app/loading.tsx` and `app/error.tsx`. The app now shows a branded spinner immediately during any server-side delay.
+
+### ❌ Frequent 500 Errors / App Crashes in Production
+**Cause 1: Database Connection Exhaustion**: The `lib/db.ts` file was re-initializing the Neon client on every request. In serverless environments, this quickly hits connection limits.
+**Fix:** Refactored `lib/db.ts` to use a **Singleton Pattern**, ensuring only one database client exists per lambda execution.
+
+**Cause 2: Syntax Error in Workers API**: The code was calling `sql.query(...)`. The Neon serverless client is a function, not an object with a `.query` method.
+**Fix:** Corrected all instances to use the standard `sql(query, params)` or `sql` tagged template literal. Added a `.query` helper to the `sql` proxy as a safety fallback.
+
+**Cause 3: Middleware Export Issue**: The file `proxy.ts` was present, but it used a named export (`export const proxy`) instead of the required `default` export. This caused Next.js to ignore the authentication logic.
+**Fix:** Updated `proxy.ts` to use `export default auth(...)`. Note: In this project's version of Next.js, `proxy.ts` is the standard name instead of `middleware.ts`.
+
+### ❌ Messaging System 500 Errors
+**Cause:** Disconnect between `lib/schema.ts` and the raw SQL queries in `app/api/conversations`. The table `conversations` was missing from the schema, and `messages` had different column names (`content` vs `body`).
+**Fix:** Synchronized the schema with the actual messaging implementation.
+
+---
+
+*Last updated: 2026-05-05 — Post-Stability & Vercel Fixes*

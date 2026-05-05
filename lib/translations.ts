@@ -11,6 +11,7 @@ export const translations = {
     "nav.dashboard": "Dashboard",
     "nav.mygigs": "My Gigs",
     "nav.earnings": "Earnings",
+    "nav.contracts": "Contracts",
 
     "common.workspace": "Workspace",
     "common.login": "Login",
@@ -166,6 +167,25 @@ export const translations = {
     "hero.search.neighborhood": "ሰፈር",
     "hero.cta.find": "ባለሙያ አሁን ያግኙ",
     "hero.cta.join": "እንደ ባለሙያ ይመዝገቡ",
+    "contracts.title": "የእኔ ውሎች",
+    "contracts.all": "ሁሉም",
+    "contracts.active": "ንቁ",
+    "contracts.pending": "በጥበቃ ላይ",
+    "contracts.completed": "ተጠናቋል",
+    "contracts.search_placeholder": "ውሎችን ፈልግ...",
+    "contracts.empty_title": "እስካሁን ምንም ውል የለም",
+    "contracts.empty_desc": "እስካሁን ምንም አይነት የአገልግሎት ስምምነት የለዎትም። ባለሙያ በመፈለግ ይጀምሩ።",
+    "contracts.cta_worker": "ባለሙያ ፈልግ",
+    "contracts.cta_services": "አገልግሎቶችን ይመልከቱ",
+    "contracts.download_pdf": "ፒዲኤፍ አውርድ",
+    "contracts.leave_rating": "ደረጃ ይስጡ",
+    "contracts.view_details": "ዝርዝሮችን ይመልከቱ",
+    "contracts.status.pending_signature": "ፊርማ በመጠባበቅ ላይ",
+    "contracts.status.signed": "ተፈርሟል",
+    "contracts.status.completed": "ተጠናቋል",
+    "contracts.status.disputed": "አለመግባባት",
+    "contracts.digital_contract": "ዲጂታል ውል",
+    "contracts.proceed_to_signing": "ወደ ፊርማ ቀጥል",
   }
 };
 
