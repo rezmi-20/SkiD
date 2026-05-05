@@ -16,10 +16,24 @@ export default function ServiceWorkerRegistration() {
         if (!isLocal) {
           const register = () => {
             navigator.serviceWorker.register('/sw.js').then(
-              (reg) => console.debug('SW registered'),
+              (reg) => {
+                console.debug('SW registered');
+                // Check for updates on every mount
+                reg.update();
+              },
               (err) => console.log('SW failed', err)
             );
           };
+
+          // EMERGENCY SELF-HEALING:
+          // If the page has crashed or is showing a white screen repeatedly,
+          // the user can add ?clear_cache=true to the URL to force unregister
+          if (window.location.search.includes('clear_cache=true')) {
+            navigator.serviceWorker.getRegistrations().then(regs => {
+              for(let r of regs) r.unregister();
+              window.location.href = window.location.pathname;
+            });
+          }
 
           if (document.readyState === 'complete') {
             register();

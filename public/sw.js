@@ -1,26 +1,30 @@
-const CACHE_NAME = 'direskill-v1';
+const CACHE_NAME = 'direskill-v2';
 const ASSETS_TO_CACHE = [
-  '/',
   '/site.webmanifest',
   '/icon-192.svg',
   '/icon-512.svg',
+  '/noise.svg'
 ];
 
+// 1. Install - Cache static assets only
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
+      console.log('[SW] Caching static assets');
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
   self.skipWaiting();
 });
 
+// 2. Activate - Cleanup old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
+            console.log('[SW] Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -30,16 +34,43 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+// 3. Fetch Strategy
 self.addEventListener('fetch', (event) => {
-  // Only intercept GET requests for assets/pages
-  if (event.request.method !== 'GET') return;
+  const url = new URL(event.request.url);
 
+  // Skip non-GET, API calls, and Next.js internal data
+  if (
+    event.request.method !== 'GET' || 
+    url.pathname.startsWith('/api/') || 
+    url.pathname.startsWith('/_next/data/') ||
+    url.search.includes('_next_data')
+  ) {
+    return;
+  }
+
+  // STRATEGY: Network-First for HTML pages (to prevent stale white screens)
+  if (event.request.mode === 'navigate' || url.pathname === '/') {
+    event.respondWith(
+      fetch(event.request)
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // STRATEGY: Stale-While-Revalidate for other assets
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request).catch(() => {
-        // Return a generic error if offline and not in cache
-        return new Response('Network error occurred', { status: 408 });
+    caches.match(event.request).then((cachedResponse) => {
+      const fetchPromise = fetch(event.request).then((networkResponse) => {
+        // Only cache successful local responses
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return networkResponse;
       });
+      return cachedResponse || fetchPromise;
     })
   );
 });
