@@ -183,10 +183,13 @@ export default function ContractsPageContent({ contracts, role }: Props) {
                     </div>
 
                     {isCompleted && (
-                      <button className="w-full h-14 bg-primary/10 border border-primary/20 text-primary rounded-2xl flex items-center justify-center gap-3 hover:bg-primary hover:text-on-primary transition-all active:scale-95 font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-primary/5">
-                         <span className="material-symbols-outlined">star</span>
-                         Rate Professional
-                      </button>
+                      <Link
+                        href={role === 'client' ? `/client/rate/${contract.job_id}` : `/worker/rate/${contract.job_id}`}
+                        className="w-full h-14 bg-primary/10 border border-primary/20 text-primary rounded-2xl flex items-center justify-center gap-3 hover:bg-primary hover:text-on-primary transition-all active:scale-95 font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-primary/5"
+                      >
+                         <span className="material-symbols-outlined filled">star</span>
+                         {role === 'client' ? 'Rate Professional' : 'Rate Client'}
+                      </Link>
                     )}
 
                     {isDisputed && (

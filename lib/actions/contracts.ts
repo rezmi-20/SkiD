@@ -2,6 +2,7 @@
 
 import { sql } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { createNotification } from "@/lib/actions/notifications";
 
 export async function getUserContracts() {
   const session = await auth();
@@ -147,6 +148,33 @@ export async function signContract(contractId: string) {
     if (updatedContract.client_signed_at && updatedContract.worker_signed_at) {
       await sql`UPDATE contracts SET signed_at = NOW() WHERE id = ${contractId}`;
       await sql`UPDATE jobs SET status = 'active' WHERE id = ${contract.job_id}`;
+
+      // Both parties signed — notify each other
+      await createNotification({
+        userId: job.client_id,
+        type: "contract_signed",
+        title: "Contract is Now Active!",
+        body: `Both parties have signed. The job "${job.title}" is now in progress.`,
+        linkHref: `/contracts/${contractId}`,
+      });
+      await createNotification({
+        userId: job.worker_id,
+        type: "contract_signed",
+        title: "Contract is Now Active!",
+        body: `Both parties have signed. The job "${job.title}" is now in progress.`,
+        linkHref: `/contracts/${contractId}`,
+      });
+    } else {
+      // Notify the other party that one side signed
+      const notifyId = role === "client" ? job.worker_id : job.client_id;
+      const signerLabel = role === "client" ? "Client" : "Worker";
+      await createNotification({
+        userId: notifyId,
+        type: "contract_signed",
+        title: `${signerLabel} Signed the Contract`,
+        body: `The ${signerLabel.toLowerCase()} has signed for "${job.title}". Waiting for your signature.`,
+        linkHref: `/contracts/${contractId}`,
+      });
     }
 
     return { success: true };

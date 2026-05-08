@@ -6,6 +6,7 @@ import { useTheme } from "next-themes";
 import MobileNav from "./MobileNav";
 import Sidebar from "./Sidebar";
 import { useLanguage } from "@/context/LanguageContext";
+import NotificationBell from "./NotificationBell";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -55,7 +56,7 @@ export default function AppShell({ children, role, userEmail }: AppShellProps) {
               </div>
             </div>
 
-            {/* Right: Controls (Theme, Language, Profile) */}
+            {/* Right: Controls (Notifications, Theme, Language, Profile) */}
             <div className="flex items-center gap-3 md:gap-4">
               {/* Language Switcher */}
               <div className="hidden sm:flex bg-surface-container rounded-full p-1 border border-surface-container-highest">
@@ -72,6 +73,9 @@ export default function AppShell({ children, role, userEmail }: AppShellProps) {
                   አማ
                 </button>
               </div>
+
+              {/* Notification Bell */}
+              <NotificationBell role={role} />
 
               {/* Theme Toggle */}
               <button 

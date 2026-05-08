@@ -113,6 +113,8 @@ export const ratings = pgTable("ratings", {
     .references(() => users.id),
   score: integer("score").notNull(),
   comment: text("comment"),
+  photoUrls: text("photo_urls").array(),
+  isFlagged: boolean("is_flagged").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -188,5 +190,17 @@ export const communityComments = pgTable("community_comments", {
   userId: uuid("user_id").notNull().references(() => users.id),
   postId: uuid("post_id").notNull().references(() => communityPosts.id),
   content: text("content").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ─── Notifications ─────────────────────────────────────────────────────────────
+export const notifications = pgTable("notifications", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  type: text("type").notNull(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  linkHref: text("link_href"),
+  isRead: boolean("is_read").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
