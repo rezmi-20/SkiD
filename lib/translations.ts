@@ -93,6 +93,12 @@ export const translations = {
     "contracts.status.disputed": "Disputed",
     "contracts.digital_contract": "Digital Contract",
     "contracts.proceed_to_signing": "Proceed to Signing",
+
+    "dashboard.welcome": "Welcome back,",
+    "dashboard.active_contracts": "Active Contracts",
+    "dashboard.quick_actions": "Quick Actions",
+    "dashboard.recent_activity": "Recent Activity",
+    "dashboard.search_placeholder": "What service do you need today?",
   },
   am: {
     "nav.home": "ዋና ገፅ",
@@ -186,6 +192,12 @@ export const translations = {
     "contracts.status.disputed": "አለመግባባት",
     "contracts.digital_contract": "ዲጂታል ውል",
     "contracts.proceed_to_signing": "ወደ ፊርማ ቀጥል",
+
+    "dashboard.welcome": "እንኳን ደህና መጡ፣",
+    "dashboard.active_contracts": "ንቁ ውሎች",
+    "dashboard.quick_actions": "ፈጣን እርምጃዎች",
+    "dashboard.recent_activity": "የቅርብ ጊዜ እንቅስቃሴዎች",
+    "dashboard.search_placeholder": "ዛሬ ምን አይነት አገልግሎት ይፈልጋሉ?",
   }
 };
 

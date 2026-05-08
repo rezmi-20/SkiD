@@ -92,6 +92,8 @@ export const contracts = pgTable("contracts", {
     .references(() => jobs.id, { onDelete: "cascade" }),
   terms: text("terms"),
   pdfUrl: text("pdf_url"),
+  clientSignedAt: timestamp("client_signed_at"),
+  workerSignedAt: timestamp("worker_signed_at"),
   signedAt: timestamp("signed_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

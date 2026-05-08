@@ -1,11 +1,11 @@
-import { Manrope, Inter } from "next/font/google";
+import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 
-const manrope = Manrope({
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-manrope",
-  weight: ["200", "400", "700", "800"],
+  variable: "--font-plus-jakarta",
+  weight: ["200", "300", "400", "500", "600", "700", "800"],
 });
 
 const inter = Inter({
@@ -21,7 +21,7 @@ export const metadata = {
 };
 
 export const viewport = {
-  themeColor: "#09090b",
+  themeColor: "#f8f9fb",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -32,27 +32,12 @@ import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${manrope.variable} ${inter.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${plusJakartaSans.variable} ${inter.variable}`} suppressHydrationWarning>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var d = document.documentElement;
-                  var t = localStorage.getItem('theme');
-                  if (t) {
-                    d.setAttribute('data-theme', t);
-                  } else {
-                    d.setAttribute('data-theme', 'grayscale');
-                  }
-                } catch (e) {}
-              })();
-            `,
-          }}
-        />
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet"/>
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
       </head>
-      <body className="bg-background text-text-high font-body min-h-screen flex flex-col" suppressHydrationWarning>
+      <body className="bg-background text-on-background font-body min-h-screen flex flex-col" suppressHydrationWarning>
         <Providers>{children}</Providers>
         <ServiceWorkerRegistration />
       </body>

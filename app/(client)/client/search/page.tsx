@@ -1,204 +1,19 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import WorkerCard from "@/components/search/WorkerCard";
 import SearchFilters from "@/components/search/SearchFilters";
 import { Worker, ViewMode, SearchFilters as FilterType } from "@/components/search/types";
 import { useLanguage } from "@/context/LanguageContext";
+import { useLocation } from "@/context/LocationContext";
 
 // Dynamically import Map with no SSR
 const MapComponent = dynamic(() => import("@/components/search/MapComponent"), { 
     ssr: false,
-    loading: () => <div className="h-[calc(100vh-280px)] w-full bg-zinc-900 animate-pulse rounded-[2rem]" />
+    loading: () => <div className="h-[calc(100vh-280px)] w-full bg-surface-container animate-pulse rounded-[2rem]" />
 });
-
-const MOCK_WORKERS: Worker[] = [
-  {
-    id: "1",
-    name: "Ahmed Tesfaye",
-    skill: "Master Plumber",
-    category: "Plumber",
-    rating: 4.9,
-    reviews: 124,
-    distance: 0.8,
-    lat: 9.5932,
-    lng: 41.8615,
-    photo: "https://images.unsplash.com/photo-1540560485459-c219e9939392?auto=format&fit=crop&w=400&q=80",
-    isVerified: true,
-    district: "Kezira",
-    skills: ["Pipe Installation", "Leak Repair", "Solar Water Heaters"]
-  },
-  {
-    id: "2",
-    name: "Selamawit Kebede",
-    skill: "Industrial Electrician",
-    category: "Electrician",
-    rating: 4.8,
-    reviews: 89,
-    distance: 1.2,
-    lat: 9.5854,
-    lng: 41.8752,
-    photo: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80",
-    isVerified: true,
-    district: "Ashawa",
-    skills: ["Wiring", "Control Panels", "Solar Installation"]
-  },
-  {
-    id: "3",
-    name: "Dawit Berhanu",
-    skill: "House Painter & Finisher",
-    category: "Painter",
-    rating: 4.7,
-    reviews: 56,
-    distance: 2.1,
-    lat: 9.5982,
-    lng: 41.8701,
-    photo: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=400&q=80",
-    isVerified: false,
-    district: "Gende Korem",
-    skills: ["Interior Painting", "Wall Texturing", "Stucco"]
-  },
-  {
-    id: "4",
-    name: "Muna Ibrahim",
-    skill: "Satellite Dish Expert",
-    category: "Satellite Dish",
-    rating: 4.9,
-    reviews: 210,
-    distance: 0.5,
-    lat: 9.5912,
-    lng: 41.8645,
-    photo: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=400&q=80",
-    isVerified: true,
-    district: "Sabian",
-    skills: ["DSTV Setup", "Canal+ Calibration", "Multi-Dish Systems"]
-  },
-  {
-    id: "5",
-    name: "Yonas Mekonnen",
-    skill: "Emergency Plumber",
-    category: "Plumber",
-    rating: 4.5,
-    reviews: 34,
-    distance: 3.4,
-    lat: 9.5821,
-    lng: 41.8542,
-    photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
-    isVerified: false,
-    district: "Melka Jebdu",
-    skills: ["Drain Unclogging", "Valve Replacement", "Emergency Repair"]
-  },
-  {
-    id: "6",
-    name: "Hana Tadesse",
-    skill: "Interior Designer",
-    category: "House Finishing",
-    rating: 5.0,
-    reviews: 18,
-    distance: 1.5,
-    lat: 9.5955,
-    lng: 41.8688,
-    photo: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80",
-    isVerified: true,
-    district: "Kezira",
-    skills: ["Flooring", "Tiling", "Ceiling Design"]
-  },
-  {
-    id: "7",
-    name: "Tewodros Kassahun",
-    skill: "Certified Electrician",
-    category: "Electrician",
-    rating: 4.6,
-    reviews: 72,
-    distance: 0.9,
-    lat: 9.5901,
-    lng: 41.8622,
-    photo: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80",
-    isVerified: true,
-    district: "Sabian",
-    skills: ["Lighting Design", "Smart Home Setup", "Main Breakers"]
-  },
-  {
-    id: "8",
-    name: "Abebech Zewdu",
-    skill: "Appliance Repair",
-    category: "Electrician",
-    rating: 4.3,
-    reviews: 42,
-    distance: 4.2,
-    lat: 9.6010,
-    lng: 41.8500,
-    photo: "https://images.unsplash.com/photo-1605462863863-10d9e47e15ee?auto=format&fit=crop&w=400&q=80",
-    isVerified: false,
-    district: "Mariam Sefer",
-    skills: ["Oven Repair", "Washing Machines", "Fridge Fix"]
-  },
-  {
-    id: "9",
-    name: "Bereket Tilahun",
-    skill: "Commercial Painter",
-    category: "Painter",
-    rating: 4.8,
-    reviews: 110,
-    distance: 1.8,
-    lat: 9.5880,
-    lng: 41.8710,
-    photo: "https://images.unsplash.com/photo-1534030347209-467a5b0ad3e6?auto=format&fit=crop&w=400&q=80",
-    isVerified: true,
-    district: "Megala",
-    skills: ["Exterior Painting", "Spray Painting", "Epoxy"]
-  },
-  {
-    id: "10",
-    name: "Kidist Alemu",
-    skill: "Custom Cabinetry",
-    category: "House Finishing",
-    rating: 4.9,
-    reviews: 65,
-    distance: 2.5,
-    lat: 9.5940,
-    lng: 41.8600,
-    photo: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=400&q=80",
-    isVerified: true,
-    district: "Dechatu",
-    skills: ["Kitchen Cabinets", "Shelving", "Wood Finishing"]
-  },
-  {
-    id: "11",
-    name: "Eyob Worku",
-    skill: "Water Pump Technician",
-    category: "Plumber",
-    rating: 4.1,
-    reviews: 21,
-    distance: 5.5,
-    lat: 9.6050,
-    lng: 41.8450,
-    photo: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80",
-    isVerified: false,
-    district: "Gende Kore",
-    skills: ["Pump Installation", "Motor Repair", "Tank Cleaning"]
-  },
-  {
-    id: "12",
-    name: "Fasika Endale",
-    skill: "Network Installer",
-    category: "Electrician",
-    rating: 4.4,
-    reviews: 38,
-    distance: 1.0,
-    lat: 9.5895,
-    lng: 41.8650,
-    photo: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80",
-    isVerified: true,
-    district: "Kezira",
-    skills: ["Cabling", "Wi-Fi Setup", "Router Config"]
-  }
-];
-
-import { useLocation } from "@/context/LocationContext";
-import { useEffect } from "react";
 
 export default function SearchPage() {
   const { t } = useLanguage();
@@ -254,7 +69,7 @@ export default function SearchPage() {
         }
       } catch (err: any) {
         console.error("Failed to fetch workers", err);
-        setError(`Fetch failed: ${err.message}. Check Network tab for /api/workers.`);
+        setError(`Fetch failed: ${err.message}.`);
       } finally {
         setLoading(false);
       }
@@ -264,168 +79,122 @@ export default function SearchPage() {
   }, [filters, location]);
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-[#18181b] lg:bg-[#09090b] lg:dark:bg-[#09090b] text-zinc-900 dark:text-white pb-20 lg:pb-0">
+    <div className="flex flex-col gap-8 pb-32 md:pb-8">
       
-      {/* ── MOBILE HEADER (Hidden on Desktop) ── */}
-      <header className="lg:hidden sticky top-0 z-40 bg-zinc-50/80 dark:bg-[#18181b]/80 backdrop-blur-md px-4 py-4 border-b border-zinc-200 dark:border-white/5">
-        <div className="flex items-center justify-between">
-          <button className="p-2 -ml-2 text-zinc-900 dark:text-white" onClick={() => window.history.back()}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h1 className="text-[20px] font-bold">Search Workers</h1>
-          <button className="p-2 -mr-2 text-zinc-900 dark:text-white">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-               <circle cx="12" cy="7" r="4" />
-            </svg>
-          </button>
+      {/* ── Page Header (Justified) ── */}
+      <section className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 w-fit mb-2">
+             <div className={`w-1.5 h-1.5 rounded-full ${location ? 'bg-primary animate-pulse' : 'bg-error'}`} />
+             <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
+                {locLoading ? "Locating..." : location ? `Nearby Kezira, DD` : "Location Required"}
+             </span>
+          </div>
+          <h1 className="text-headline-lg text-on-background tracking-tight">
+            Discover Professionals
+          </h1>
+          <p className="text-body-md text-on-surface-variant max-w-xl">
+            Find and hire verified service experts in your local district.
+          </p>
         </div>
 
-        {/* Compact Search Bar */}
-        <div className="relative mt-4 group">
-          <input 
-            type="text"
-            placeholder="Search workers by name or skill..."
-            value={filters.query}
-            onChange={(e) => setFilters({ ...filters, query: e.target.value })}
-            className="w-full h-[52px] bg-white dark:bg-[#27272a] border border-zinc-200 dark:border-white/5 rounded-2xl pl-5 pr-12 text-[15px] font-medium text-zinc-900 dark:text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#2dd4bf] transition-all shadow-sm"
-          />
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-[#2dd4bf] transition-colors pointer-events-none">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
+        {/* Desktop View Toggle */}
+        <div className="hidden md:flex bg-surface-container rounded-2xl p-1 border border-surface-container-highest shadow-sm">
+           <button 
+             onClick={() => setViewMode("list")}
+             className={`flex items-center gap-2 px-6 py-2 rounded-xl text-label-md font-bold transition-all ${viewMode === "list" ? "bg-on-surface text-surface-container-lowest shadow-lg" : "text-on-surface-variant hover:text-on-surface"}`}
+           >
+             <span className="material-symbols-outlined text-[18px]">format_list_bulleted</span>
+             List
+           </button>
+           <button 
+             onClick={() => setViewMode("map")}
+             className={`flex items-center gap-2 px-6 py-2 rounded-xl text-label-md font-bold transition-all ${viewMode === "map" ? "bg-on-surface text-surface-container-lowest shadow-lg" : "text-on-surface-variant hover:text-on-surface"}`}
+           >
+             <span className="material-symbols-outlined text-[18px]">map</span>
+             Map
+           </button>
         </div>
-      </header>
+      </section>
 
-      {/* ── DESKTOP TOP HEADER AREA (Hidden on Mobile) ── */}
-      <div className="hidden lg:block w-full bg-[#0c0c0e] border-b border-white/5 pt-28 pb-12 px-6">
-        <div className="max-w-[95%] mx-auto space-y-8">
-           {/* Big Search Bar */}
-           <div className="relative max-w-6xl group">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-[#2dd4bf] transition-colors">
-                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-              </svg>
-              <input 
-                type="text"
-                placeholder="Search workers by name or skill..."
-                value={filters.query}
-                onChange={(e) => setFilters({ ...filters, query: e.target.value })}
-                className="w-full h-16 bg-white/5 border border-white/10 rounded-full pl-16 pr-8 text-lg font-bold text-white placeholder:text-zinc-600 focus:outline-none focus:border-[#2dd4bf]/30 transition-all shadow-2xl"
-              />
-           </div>
+      {/* ── Search & Results Layout ── */}
+      <div className="flex flex-col lg:flex-row gap-8 items-start">
+        
+        {/* Sidebar Filters */}
+        <aside className="w-full lg:w-80 shrink-0 lg:sticky lg:top-28">
+           <SearchFilters 
+             filters={filters} 
+             setFilters={setFilters} 
+             viewMode={viewMode}
+             setViewMode={setViewMode}
+             resultsCount={workers.length}
+           />
+        </aside>
 
-            {/* Breadcrumbs & Location Status */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 max-w-full mx-auto">
-               <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-600">
-                  <span>Home</span>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4"><path d="M9 18l6-6-6-6"/></svg>
-                  <span className="text-zinc-400">Find Workers</span>
-               </div>
-               
-               <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-zinc-900 border border-white/5">
-                  <div className={`w-1.5 h-1.5 rounded-full ${location ? 'bg-[#2dd4bf] animate-pulse' : 'bg-red-400'}`} />
-                  <span className="text-[9px] font-black uppercase tracking-widest text-zinc-500">
-                     {locLoading ? "Locating..." : location ? `Location: ${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}` : "Location Access Required"}
-                  </span>
-               </div>
+        {/* Results Main Area */}
+        <main className="flex-grow w-full min-w-0 flex flex-col gap-6">
+          {/* Smart Search Bar */}
+          <div className="relative group w-full max-w-2xl">
+            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary text-[22px]">search</span>
+            <input 
+              type="text"
+              placeholder="Search by name, skill, or service..."
+              value={filters.query}
+              onChange={(e) => setFilters({ ...filters, query: e.target.value })}
+              className="w-full bg-surface-container-low border border-surface-container-highest focus:ring-2 focus:ring-primary/20 text-on-surface rounded-2xl py-4 pl-12 pr-4 transition-all group-hover:bg-surface-container-high placeholder:text-on-surface-variant/40 outline-none"
+            />
+          </div>
+
+          {error && (
+            <div className="p-4 bg-error-container/20 border border-error/20 rounded-2xl text-error text-sm flex items-center gap-3">
+              <span className="material-symbols-outlined">warning</span>
+              {error}
             </div>
-        </div>
-      </div>
+          )}
 
-      {/* ── MAIN CONTENT AREA ── */}
-      <div className="px-4 py-2 lg:p-12 max-w-lg lg:max-w-[95%] mx-auto">
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-12">
-          
-          {/* ── SIDEBAR / INLINE FILTERS ── */}
-          <aside className="lg:w-80 shrink-0">
-             <div className="lg:sticky lg:top-28">
-                <SearchFilters 
-                  filters={filters} 
-                  setFilters={setFilters} 
-                  viewMode={viewMode}
-                  setViewMode={setViewMode}
-                  resultsCount={workers.length}
-                />
-             </div>
-          </aside>
-
-          {/* ── MAIN CONTENT (RESULTS) ── */}
-          <main className="flex-1 mt-2 lg:mt-0 space-y-4 lg:space-y-8">
-            <div className="hidden lg:flex items-center justify-between">
-               <h2 className="text-xl font-black uppercase tracking-tight text-white">
-                  Available Local Workers <span className="text-zinc-600 ml-2 font-bold text-sm">({workers.length} Found)</span>
-               </h2>
-               
-               {/* View Toggle (Desktop) */}
-               <div className="flex bg-white/5 border border-white/10 p-1 rounded-2xl">
-                  <button 
-                    onClick={() => setViewMode("list")}
-                    className={`flex items-center gap-2 px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === "list" ? "bg-[#2dd4bf] text-black shadow-lg" : "text-zinc-500 hover:text-white"}`}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                    List
-                  </button>
-                  <button 
-                    onClick={() => setViewMode("map")}
-                    className={`flex items-center gap-2 px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === "map" ? "bg-[#2dd4bf] text-black shadow-lg" : "text-zinc-500 hover:text-white"}`}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
-                    Map
-                  </button>
-               </div>
-            </div>
-            
-            {error && (
-              <div className="p-6 bg-red-500/10 border border-red-500/50 rounded-2xl text-red-400">
-                <h3 className="font-bold mb-2">Diagnostic Error:</h3>
-                <p className="text-sm opacity-80">{error}</p>
-                <button 
-                  onClick={() => window.location.reload()}
-                  className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg text-xs font-bold"
-                >
-                  Retry Connection
-                </button>
-              </div>
-            )}
-
-            <AnimatePresence mode="wait">
-              {viewMode === "list" ? (
-                <motion.div
-                  key="list"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="space-y-3.5 lg:space-y-4"
-                >
-                  {workers.length > 0 ? (
-                    workers.map((worker) => (
-                      <WorkerCard key={worker.id} worker={worker} />
-                    ))
-                  ) : (
-                    <div className="py-20 px-12 text-center lg:text-left space-y-4 lg:space-y-6 lg:bg-white/5 lg:rounded-[3rem] lg:border border-white/5">
-                      <div className="hidden lg:flex w-16 h-16 bg-white/5 rounded-2xl items-center justify-center">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-zinc-700">
-                          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                        </svg>
+          <AnimatePresence mode="wait">
+            {viewMode === "list" ? (
+              <motion.div
+                key="list"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
+              >
+                {workers.length > 0 ? (
+                  workers.map((worker) => (
+                    <WorkerCard key={worker.id} worker={worker} />
+                  ))
+                ) : (
+                  !loading && (
+                    <div className="col-span-full py-20 bg-surface-container-lowest rounded-3xl border border-dashed border-surface-container-highest flex flex-col items-center justify-center text-center px-6">
+                      <div className="w-16 h-16 bg-surface-container rounded-full flex items-center justify-center mb-4">
+                        <span className="material-symbols-outlined text-on-surface-variant/40 text-[32px]">search_off</span>
                       </div>
-                      <p className="text-zinc-500 font-medium text-sm lg:text-[10px] lg:font-black lg:uppercase lg:tracking-widest">No workers match your current filters.</p>
+                      <h3 className="text-headline-md text-on-surface">No results found</h3>
+                      <p className="text-body-md text-on-surface-variant max-w-xs mt-2">Try adjusting your filters or searching for something else.</p>
                     </div>
-                  )}
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="map"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                >
-                  <MapComponent workers={workers} />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </main>
-        </div>
+                  )
+                )}
+                {loading && (
+                  Array(4).fill(0).map((_, i) => (
+                    <div key={i} className="h-40 bg-surface-container-low animate-pulse rounded-2xl" />
+                  ))
+                )}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="map"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                className="h-[600px] w-full rounded-3xl overflow-hidden border border-surface-container-highest shadow-inner"
+              >
+                <MapComponent workers={workers} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </main>
       </div>
     </div>
   );

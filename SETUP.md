@@ -177,15 +177,15 @@ SklD/
 │   │   ├── register/
 │   │   │   ├── client/page.tsx
 │   │   │   └── worker/page.tsx
-│   │   └── otp-verification/page.tsx
 │   │
 │   ├── (client)/               ← Client group (wrapped in AppShell role="client")
 │   │   ├── layout.tsx          ← Auth guard + AppShell
 │   │   └── client/
 │   │       ├── search/page.tsx ← Worker search + map
 │   │       ├── dashboard/      ← My Jobs
-│   │       ├── messages/       ← Chat (in progress)
-│   │       └── profile/        ← Client profile
+│   │       ├── messages/       ← Chat (In Progress)
+│   │       ├── profile/        ← Client profile
+│   │       └── contracts/      ← Redirects to /contracts
 │   │
 │   ├── (worker)/               ← Worker group (wrapped in AppShell role="worker")
 │   │   ├── layout.tsx
@@ -193,13 +193,19 @@ SklD/
 │   │       ├── dashboard/page.tsx ← Earnings, jobs, analytics
 │   │       ├── gigs/page.tsx
 │   │       ├── earnings/page.tsx
-│   │       └── profile/page.tsx
+│   │       ├── messages/       ← Chat (In Progress)
+│   │       └── profile/        ← Worker profile
 │   │
 │   ├── (admin)/                ← Admin panel
 │   │   ├── layout.tsx
 │   │   └── admin/
 │   │       ├── dashboard/
 │   │       └── verify/[id]/    ← Worker ID verification
+│   │
+│   ├── contracts/              ← Contracts Hub
+│   │   └── [id]/               ← Digital Contract view
+│   │
+│   ├── diag/                   ← Diagnostic tools
 │   │
 │   └── api/
 │       ├── auth/[...nextauth]/ ← NextAuth route handler
@@ -269,6 +275,7 @@ The app uses **3 themes** controlled by `next-themes` with `attribute="data-them
 --text-high      /* Primary high-contrast text */
 --text-med       /* Secondary muted text */
 --primary-accent /* Brand accent (Neon-Green) */
+--brand-logo     /* Brand identity color */
 --surface-glass  /* Semi-transparent panel background */
 --border-glass   /* Subtle border/separator color */
 ```
@@ -280,6 +287,7 @@ border-border  → --border-glass
 text-text-high → --text-high
 text-text-med  → --text-med
 text-primary   → --primary-accent
+brand-logo     → --brand-logo
 ```
 
 ### Iconography Strategy
@@ -392,9 +400,9 @@ export default function MyComponent() {
 
 ### ❌ Chrome Mobile White Screen
 **Symptoms:** Page stays white on mobile browsers.
-**Cause:** Often caused by hydration crashes or ad-blockers blocking critical assets (like `manifest.json`).
+**Cause:** Often caused by hydration crashes or ad-blockers blocking critical assets (like `site.webmanifest`).
 **Fixes:**
-1. **IP Whitelisting:** Added `10.*` IP range to `ServiceWorkerRegistration` to prevent SW interference during local cross-device testing.
+1. **IP Whitelisting:** Added `10.*` IP range to `sw.js` logic to prevent SW interference during local cross-device testing.
 2. **Path Correction:** Fixed `sw.js` trying to cache a non-existent `manifest.json` (renamed to `site.webmanifest`).
 3. **AppShell Centering:** Removed strict `max-w-7xl` centering that left large empty spaces on wide screens.
 
@@ -439,40 +447,27 @@ npx drizzle-kit studio # Open Drizzle Studio (visual DB explorer)
 |---|---|---|
 | My Contracts Hub | `app/contracts/[id]/` | ✅ Done (Lumina design) |
 | Chapa payment flow | `app/api/payments/chapa/route.ts` | Webhook exists, needs test |
-| OTP verification | `app/(auth)/otp-verification/` | UI done, SMS not wired |
-| Worker job browse | `/worker/jobs` (not created yet) | Needs new page |
+| Messaging System | `app/(client)/client/messages` | UI implemented, Socket.io pending |
+| Worker job browse | `/worker/gigs` | ✅ Done |
 
 ---
 
-## 14. Troubleshooting: Vercel Deployment & Stability (POST-MORTEM)
+## 14. Core Stability & Pattern Fixes
 
 ### ❌ Persistent "White Screen" on Mobile/Web
 **Symptoms:** Page hangs on a blank white screen during initial load or transitions.
-**Cause:** Next.js 15 Server Components suspend while waiting for database queries. Without a `loading.tsx` file, the browser has no HTML to render, leaving the user with a white screen.
-**Fix:** We implemented a global `app/loading.tsx` and `app/error.tsx`. The app now shows a branded spinner immediately during any server-side delay.
+**Cause:** Next.js 16 Server Components suspend while waiting for database queries. Without a `loading.tsx` file, the browser has no HTML to render.
+**Fix:** Implemented global `app/loading.tsx` and `app/error.tsx`. The app now shows a branded spinner immediately.
 
-### ❌ Frequent 500 Errors / App Crashes in Production
-**Cause 1: Database Connection Exhaustion**: The `lib/db.ts` file was re-initializing the Neon client on every request. In serverless environments, this quickly hits connection limits.
-**Fix:** Refactored `lib/db.ts` to use a **Singleton Pattern**, ensuring only one database client exists per lambda execution.
+### ❌ Database Connection Exhaustion (Fixed)
+**Cause:** Re-initializing the Neon client on every request in serverless.
+**Fix:** Refactored `lib/db.ts` to use a **Singleton Pattern**.
 
-**Cause 2: Syntax Error in Workers API**: The code was calling `sql.query(...)`. The Neon serverless client is a function, not an object with a `.query` method.
-**Fix:** Corrected all instances to use the standard `sql(query, params)` or `sql` tagged template literal. Added a `.query` helper to the `sql` proxy as a safety fallback.
-
-**Cause 3: Middleware Export Issue**: The file `proxy.ts` was present, but it used a named export (`export const proxy`) instead of the required `default` export. This caused Next.js to ignore the authentication logic.
-**Fix:** Updated `proxy.ts` to use `export default auth(...)`. Note: In this project's version of Next.js, `proxy.ts` is the standard name instead of `middleware.ts`.
-
-### ❌ Messaging System 500 Errors
-**Cause:** Disconnect between `lib/schema.ts` and the raw SQL queries in `app/api/conversations`. The table `conversations` was missing from the schema, and `messages` had different column names (`content` vs `body`).
-**Fix:** Synchronized the schema with the actual messaging implementation.
-
-### ❌ Persistent "White Screen" (Service Worker Cache)
-**Symptoms:** Page works in Incognito mode but shows a blank white screen in normal browser mode after a new deployment.
-**Cause:** The manual `sw.js` was using a **Cache-First** strategy for the home page (`/`). It served an old version of `index.html` which referenced JavaScript bundles that had been deleted/replaced on Vercel.
-**Fix:** 
-1. Updated `sw.js` to use a **Network-First** strategy for HTML navigation.
-2. Bumped the `CACHE_NAME` to `v2` to force a cache purge.
-3. Added an **Emergency Clear** mechanism in `ServiceWorkerRegistration.tsx`: visiting `?clear_cache=true` manually unregisters the SW.
+### ❌ Service Worker Cache (Solved)
+**Symptoms:** Page works in Incognito but shows blank in normal browser after deployment.
+**Cause:** Cache-First strategy served old `index.html` referencing deleted JS bundles.
+**Fix:** Updated `sw.js` to **Network-First** for navigation and bumped `CACHE_NAME` to `v2`.
 
 ---
 
-*Last updated: 2026-05-05 — Post-Stability & SW Cache Fixes*
+*Last updated: 2026-05-08 — Consolidated Architecture & OTP removal*
