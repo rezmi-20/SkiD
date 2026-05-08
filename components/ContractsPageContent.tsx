@@ -192,6 +192,16 @@ export default function ContractsPageContent({ contracts, role }: Props) {
                       </Link>
                     )}
 
+                    {role === 'client' && status === 'active' && contract.signed_at && (
+                      <Link
+                        href={`/client/pay/${contract.job_id}`}
+                        className="w-full h-14 bg-green-500/10 border border-green-500/20 text-green-500 rounded-2xl flex items-center justify-center gap-3 hover:bg-green-500 hover:text-white transition-all active:scale-95 font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-green-500/10"
+                      >
+                        <span className="material-symbols-outlined filled">payments</span>
+                        Complete Payment
+                      </Link>
+                    )}
+
                     {isDisputed && (
                       <button className="w-full h-14 bg-error/10 border border-error/20 text-error rounded-2xl flex items-center justify-center gap-3 hover:bg-error hover:text-on-error transition-all active:scale-95 font-black text-[10px] uppercase tracking-[0.2em]">
                          <span className="material-symbols-outlined">gavel</span>
