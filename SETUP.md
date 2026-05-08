@@ -19,6 +19,9 @@
 | PWA Support (Offline/Install) | ✅ Active (Fixed sw.js paths) |
 | High-Fidelity Landing & Search | ✅ Done (Bento layouts) |
 | My Contracts Hub (Lumina Design) | ✅ Done (List & Digital Contract views) |
+| Bidirectional Rating & Reviews | ✅ Done (with media support & unique guards) |
+| In-App Notification Hub | ✅ Done (Bell polling + real-time alerts) |
+| Payment Simulation | ✅ Done (Chapa test mode with receipt UI) |
 | Stability & Hydration Fixes | ✅ Active |
 
 **GitHub:** https://github.com/rezmi-20/SkiD  
@@ -195,7 +198,10 @@ SklD/
 │   │       ├── dashboard/      ← My Jobs
 │   │       ├── messages/       ← Chat (In Progress)
 │   │       ├── profile/        ← Client profile
-│   │       └── contracts/      ← Redirects to /contracts
+│   │       ├── contracts/      ← Redirects to /contracts
+│   │       ├── notifications/  ← Notification Hub
+│   │       ├── pay/[jobId]/    ← Payment Simulation
+│   │       └── rate/[jobId]/   ← Rating Page
 │   │
 │   ├── (worker)/               ← Worker group (wrapped in AppShell role="worker")
 │   │   ├── layout.tsx
@@ -204,7 +210,9 @@ SklD/
 │   │       ├── gigs/page.tsx
 │   │       ├── earnings/page.tsx
 │   │       ├── messages/       ← Chat (In Progress)
-│   │       └── profile/        ← Worker profile
+│   │       ├── profile/        ← Worker profile
+│   │       ├── notifications/  ← Notification Hub
+│   │       └── rate/[jobId]/   ← Rating Page
 │   │
 │   ├── (admin)/                ← Admin panel
 │   │   ├── layout.tsx
@@ -224,7 +232,7 @@ SklD/
 │       ├── workers/            ← Worker search
 │       ├── ratings/
 │       ├── contracts/          ← Contract retrieval
-│       └── payments/chapa/     ← Chapa webhook
+│       └── payments/chapa/     ← Simulated Chapa API
 │
 ├── components/
 │   ├── LandingPageContent.jsx  ← Full landing page (hero, categories, how it works)
@@ -232,7 +240,7 @@ SklD/
 │   ├── ContractDetails.tsx     ← Digital Contract detail view
 │   ├── Providers.tsx           ← ThemeProvider + LanguageProvider + SessionProvider
 │   └── ui/
-│       ├── AppShell.tsx        ← Authenticated layout shell (nav + mobile nav)
+│       ├── AppShell.tsx        ← Authenticated layout shell (nav + mobile nav + notification bell)
 │       └── MobileNav.tsx       ← Bottom tab bar for mobile
 │   └── search/
 │       ├── WorkerCard.tsx      ← Worker result card
@@ -249,10 +257,16 @@ SklD/
 │   ├── schema.ts               ← Drizzle ORM schema (all tables)
 │   ├── translations.ts         ← EN/AM translation strings
 │   └── actions/
-│       └── admin.ts            ← Admin server actions
+│       ├── admin.ts            ← Admin server actions
+│       ├── notifications.ts    ← Notification server actions
+│       ├── ratings.ts          ← Rating server actions
+│       └── payments.ts         ← Payment server actions
 │
 ├── types/
 │   └── index.ts                ← Shared global types (e.g., Session user augmentation)
+│
+├── scratch/
+│   └── simulate_flow.js        ← End-to-end flow testing script
 │
 ├── public/
 │   ├── site.webmanifest        ← PWA manifest (Renamed from .json to bypass blockers)
@@ -331,9 +345,10 @@ Tables already created in cloud DB:
 | `client_profiles` | Client details |
 | `jobs` | Job postings (pending/active/completed/disputed/cancelled) |
 | `contracts` | Contract PDFs per job |
-| `ratings` | Rating scores (1-5) per completed job |
+| `ratings` | Rating scores, text, media `photo_urls[]`, and `is_flagged` per job/user |
 | `messages` | Chat messages between users |
 | `payments` | Chapa payment records (held/released/refunded) |
+| `notifications` | Cross-platform real-time alerts (`is_read`, `type`, `link_href`) |
 
 ### Roles
 - `client` → can search workers, post jobs, pay
