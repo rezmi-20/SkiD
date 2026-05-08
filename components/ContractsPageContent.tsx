@@ -16,10 +16,11 @@ export default function ContractsPageContent({ contracts, role }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const tabs = [
-    { id: "all", label: t("contracts.all") },
-    { id: "active", label: t("contracts.active") },
-    { id: "pending", label: t("contracts.pending") },
-    { id: "completed", label: t("contracts.completed") },
+    { id: "all", label: "All" },
+    { id: "active", label: "Active" },
+    { id: "pending", label: "Pending" },
+    { id: "completed", label: "Completed" },
+    { id: "disputed", label: "Disputed" },
   ];
 
   const filteredContracts = contracts.filter((c) => {
@@ -27,7 +28,8 @@ export default function ContractsPageContent({ contracts, role }: Props) {
       activeTab === "all" ||
       (activeTab === "active" && c.job_status === "active") ||
       (activeTab === "pending" && c.job_status === "pending") ||
-      (activeTab === "completed" && c.job_status === "completed");
+      (activeTab === "completed" && c.job_status === "completed") ||
+      (activeTab === "disputed" && c.job_status === "disputed");
 
     const matchesSearch = 
       c.job_title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -37,150 +39,161 @@ export default function ContractsPageContent({ contracts, role }: Props) {
   });
 
   return (
-    <div className="flex flex-col gap-8 pb-32 md:pb-8">
-      {/* ── Header Section ── */}
-      <section className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-headline-lg text-on-background tracking-tight">
-            {t("contracts.title")}
+    <div className="flex flex-col gap-10 pb-32 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      
+      {/* ── Page Header ── */}
+      <header className="flex flex-col gap-6 px-1">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+             <span className="w-8 h-[2px] bg-primary"></span>
+             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">
+                Service Repository
+             </p>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black text-on-surface tracking-tighter leading-tight">
+            My <span className="text-primary italic">Contracts</span>
           </h1>
-          <p className="text-body-md text-on-surface-variant max-w-xl">
-            {role === "client" 
-              ? "Manage your active agreements, review pending terms, and track payment milestones." 
-              : "Track your professional service agreements and manage upcoming deliverables."}
-          </p>
         </div>
 
-        {/* Filters - Improved spacing and visibility */}
-        <div className="flex items-center overflow-x-auto no-scrollbar gap-3 pb-2 md:pb-0">
+        {/* Tab Navigation */}
+        <div className="flex items-center overflow-x-auto no-scrollbar gap-2 p-1 bg-surface-container-low/50 rounded-3xl w-fit border border-surface-container-highest/30">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`
-                whitespace-nowrap px-6 py-2.5 rounded-full text-label-md font-bold transition-all active:scale-95 shadow-sm
+                whitespace-nowrap px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.15em] transition-all active:scale-95
                 ${activeTab === tab.id 
-                  ? "bg-on-surface text-surface-container-lowest" 
-                  : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface border border-surface-container-highest"}
+                  ? "bg-primary text-on-primary shadow-lg shadow-primary/20" 
+                  : "text-on-surface-variant hover:text-on-surface"}
               `}
             >
               {tab.label}
             </button>
           ))}
         </div>
-      </section>
+      </header>
 
-      {/* ── Search Bar ── */}
-      <div className="relative group max-w-2xl">
-        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
-        <input 
-          type="text"
-          placeholder={t("contracts.search_placeholder")}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-surface-container-low border border-surface-container-highest focus:ring-2 focus:ring-primary/20 text-on-surface rounded-2xl py-4 pl-12 pr-4 transition-all group-hover:bg-surface-container-high placeholder:text-on-surface-variant/50 outline-none"
-        />
+      {/* ── Filter & Search Bar ── */}
+      <div className="flex flex-col md:flex-row gap-4 px-1">
+        <div className="relative flex-grow group">
+          <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-on-surface-variant opacity-40 group-focus-within:text-primary transition-colors">search</span>
+          <input 
+            type="text"
+            placeholder="Search by worker, client, or service type..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-surface-container-lowest border border-surface-container-highest text-on-surface rounded-[2rem] py-4 pl-14 pr-6 focus:ring-2 focus:ring-primary/20 transition-all outline-none font-medium shadow-sm"
+          />
+        </div>
+        <button className="h-[60px] px-8 bg-surface-container-low border border-surface-container-highest rounded-[2rem] flex items-center justify-center gap-3 text-on-surface-variant hover:bg-surface-container transition-all active:scale-95 group">
+           <span className="material-symbols-outlined text-[20px] group-hover:rotate-180 transition-transform duration-500">tune</span>
+           <span className="text-xs font-black uppercase tracking-widest">Filter by Date</span>
+        </button>
       </div>
 
-      {/* ── Contracts Grid (Bento Style) ── */}
+      {/* ── Contracts Feed ── */}
       {filteredContracts.length > 0 ? (
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           <AnimatePresence mode="popLayout">
             {filteredContracts.map((contract, index) => {
-              const isHighlight = contract.job_status === 'active';
+              const status = contract.job_status;
+              const isCompleted = status === 'completed';
+              const isDisputed = status === 'disputed';
+              const isPending = !contract.signed_at;
+
               return (
                 <motion.article 
-                  key={contract.contract_id || contract.id}
+                  key={contract.contract_id}
                   layout
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className={`
-                    rounded-2xl shadow-sm p-6 flex flex-col gap-4 border transition-all duration-300 relative overflow-hidden group
-                    ${isHighlight 
-                      ? "bg-[#1a1c1e] border-zinc-800 shadow-xl" 
-                      : "bg-surface-container-lowest border-surface-container-highest hover:shadow-md"}
-                  `}
+                  className="bg-surface-container-lowest border border-surface-container-highest rounded-[2.5rem] p-8 flex flex-col gap-6 shadow-sm hover:shadow-2xl hover:border-primary/20 transition-all group relative overflow-hidden"
                 >
-                  {/* Top accent line (only for non-highlight cards) */}
-                  {!isHighlight && (
-                    <div className={`absolute top-0 left-0 w-full h-1 ${
-                      contract.job_status === 'active' ? 'bg-primary-container' : 
-                      contract.job_status === 'pending' ? 'bg-secondary-container' : 
-                      'bg-surface-container-high'
-                    }`} />
-                  )}
-  
-                  <div className="flex justify-between items-start w-full relative z-10">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-full overflow-hidden border-2 flex items-center justify-center shrink-0 ${isHighlight ? "border-zinc-700 bg-zinc-800" : "border-surface bg-surface-container-high"}`}>
+                  {/* Status Ribbon (Subtle Background) */}
+                  <div className={`absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full blur-[40px] opacity-10 transition-opacity group-hover:opacity-20 ${getStatusColor(status)}`} />
+
+                  {/* Partner Header */}
+                  <div className="flex justify-between items-start relative z-10">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-surface-container-high border border-surface-container-highest flex items-center justify-center shrink-0 overflow-hidden shadow-inner">
                         {contract.partner_avatar ? (
-                          <img 
-                            src={contract.partner_avatar} 
-                            alt="" 
-                            className="w-full h-full object-cover"
-                          />
+                          <img src={contract.partner_avatar} alt="" className="w-full h-full object-cover" />
                         ) : (
-                          <span className={`material-symbols-outlined ${isHighlight ? "text-zinc-500" : "text-on-surface-variant"}`}>person</span>
+                          <span className="material-symbols-outlined text-on-surface-variant opacity-40">person</span>
                         )}
                       </div>
                       <div className="flex flex-col">
-                        <span className={`text-headline-md leading-tight truncate w-32 md:w-40 ${isHighlight ? "text-white" : "text-on-surface"}`}>
+                        <h3 className="text-xl font-black text-on-surface tracking-tighter leading-none group-hover:text-primary transition-colors">
                           {contract.partner_name}
-                        </span>
-                        <span className={`text-label-md font-normal ${isHighlight ? "text-zinc-500" : "text-on-surface-variant"}`}>
-                          {role === "client" ? "Contractor" : "Client"}
-                        </span>
+                        </h3>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-40 mt-1">
+                          {role === "client" ? "Verified Contractor" : "Client Member"}
+                        </p>
                       </div>
                     </div>
                     
-                    <div className={`px-3 py-1 rounded-full flex items-center gap-1.5 border font-bold ${
-                      isHighlight 
-                        ? "bg-green-400/10 text-green-400 border-green-400/30" 
-                        : getStatusStyles(contract.job_status)
-                    }`}>
-                      {contract.job_status === 'active' && <span className="material-symbols-outlined text-[14px] filled">check_circle</span>}
-                      <span className="text-label-sm uppercase tracking-widest">{getStatusLabel(contract.job_status, t)}</span>
+                    <div className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border shadow-sm ${getStatusStyles(status)}`}>
+                       {getStatusLabel(status, contract.signed_at)}
                     </div>
                   </div>
-  
-                  <div className="flex flex-col gap-1 mt-2 relative z-10">
-                    <span className={`text-label-sm uppercase tracking-widest ${isHighlight ? "text-zinc-600" : "text-outline"}`}>Service Category</span>
-                    <span className={`text-body-lg font-bold line-clamp-1 ${isHighlight ? "text-zinc-300" : "text-on-background"}`}>{contract.job_title}</span>
+
+                  {/* Service Detail */}
+                  <div className="space-y-1 relative z-10">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-30">Service Taxonomy</p>
+                    <h4 className="text-lg font-bold text-on-surface leading-tight line-clamp-1 italic">{contract.job_title}</h4>
                   </div>
-  
-                  <div className={`grid grid-cols-2 gap-4 py-4 border-y relative z-10 ${isHighlight ? "border-zinc-800/50" : "border-surface-container"}`}>
-                    <div className="flex flex-col gap-1">
-                      <span className={`text-label-sm ${isHighlight ? "text-zinc-600" : "text-outline"}`}>Timeline</span>
-                      <span className={`text-body-md flex items-center gap-1 ${isHighlight ? "text-zinc-400" : "text-on-surface"}`}>
-                        <span className="material-symbols-outlined text-[16px] opacity-60">calendar_today</span>
-                        {new Date(contract.contract_created_at || contract.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - Nov 15
-                      </span>
+
+                  {/* Metrics Grid */}
+                  <div className="grid grid-cols-2 gap-6 py-6 border-y border-surface-container-highest/50 relative z-10">
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-30">Engagement</p>
+                      <div className="flex items-center gap-2 text-on-surface font-bold text-xs">
+                         <span className="material-symbols-outlined text-[16px] opacity-40">event</span>
+                         {new Date(contract.contract_created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      </div>
                     </div>
-                    <div className="flex flex-col gap-1 items-end">
-                      <span className={`text-label-sm ${isHighlight ? "text-zinc-600" : "text-outline"}`}>Contract Value</span>
-                      <span className={`text-headline-md ${isHighlight ? "text-white" : "text-on-background"}`}>
-                        {contract.budget ? `${contract.budget.toLocaleString()} ETB` : "---"}
-                      </span>
+                    <div className="space-y-1 text-right">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-30">
+                        {role === "worker" ? "Net Earnings" : "Agreed Value"}
+                      </p>
+                      <div className="text-lg font-black text-on-surface tracking-tighter">
+                        {contract.budget ? `${contract.budget.toLocaleString()} ETB` : "N/A"}
+                      </div>
                     </div>
                   </div>
-  
-                  <div className="flex flex-col gap-2 mt-2 relative z-10">
-                    <button className={`w-full h-12 flex items-center justify-center gap-2 rounded-xl text-label-md font-black uppercase tracking-widest transition-all active:scale-95 ${
-                      isHighlight 
-                        ? "bg-green-400 text-black shadow-lg shadow-green-400/20" 
-                        : "bg-on-surface text-surface-container-lowest hover:opacity-90"
-                    }`}>
-                      <span className="material-symbols-outlined text-[20px]">{isHighlight ? "download" : "visibility"}</span>
-                      {isHighlight ? "Download PDF" : "View Details"}
-                    </button>
-                    {!isHighlight && (
-                      <Link 
-                        href={`/contracts/${contract.contract_id || contract.id}`}
-                        className="w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-surface-container text-on-surface border border-surface-container-highest hover:bg-surface-container-high transition-colors text-label-md"
-                      >
-                        Full Management
-                      </Link>
+
+                  {/* Action Stack */}
+                  <div className="flex flex-col gap-3 relative z-10 mt-2">
+                    <div className="flex gap-3">
+                       <Link 
+                          href={`/contracts/${contract.contract_id}`}
+                          className="flex-grow h-14 bg-on-surface text-surface-container-lowest rounded-2xl flex items-center justify-center gap-3 hover:bg-primary hover:text-on-primary transition-all active:scale-95 shadow-xl shadow-black/10 group/btn"
+                       >
+                          <span className="text-[10px] font-black uppercase tracking-[0.2em]">{isPending ? "Review & Sign" : "View Details"}</span>
+                          <span className="material-symbols-outlined text-[18px] group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
+                       </Link>
+                       
+                       {(contract.signed_at || contract.pdf_url) && (
+                         <button className="w-14 h-14 bg-surface-container-high border border-surface-container-highest rounded-2xl flex items-center justify-center text-on-surface hover:bg-primary/10 hover:text-primary transition-all active:scale-95 group/down">
+                            <span className="material-symbols-outlined group-hover/down:translate-y-0.5 transition-transform">download</span>
+                         </button>
+                       )}
+                    </div>
+
+                    {isCompleted && (
+                      <button className="w-full h-14 bg-primary/10 border border-primary/20 text-primary rounded-2xl flex items-center justify-center gap-3 hover:bg-primary hover:text-on-primary transition-all active:scale-95 font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-primary/5">
+                         <span className="material-symbols-outlined">star</span>
+                         Rate Professional
+                      </button>
+                    )}
+
+                    {isDisputed && (
+                      <button className="w-full h-14 bg-error/10 border border-error/20 text-error rounded-2xl flex items-center justify-center gap-3 hover:bg-error hover:text-on-error transition-all active:scale-95 font-black text-[10px] uppercase tracking-[0.2em]">
+                         <span className="material-symbols-outlined">gavel</span>
+                         Open Resolution
+                      </button>
                     )}
                   </div>
                 </motion.article>
@@ -190,45 +203,59 @@ export default function ContractsPageContent({ contracts, role }: Props) {
         </section>
       ) : (
         /* Empty State */
-        <section className="mt-8 pt-8 border-t border-surface-container">
-          <div className="w-full bg-surface-container-lowest border border-dashed border-outline-variant rounded-2xl flex flex-col items-center justify-center py-[80px] px-8 text-center shadow-sm">
-            <div className="w-20 h-20 rounded-full bg-surface-container-low flex items-center justify-center mb-6">
-              <span className="material-symbols-outlined text-[40px] text-on-surface-variant opacity-50">draft</span>
-            </div>
-            <h3 className="text-headline-lg text-on-background mb-2">No contracts found</h3>
-            <p className="text-body-md text-on-surface-variant max-w-md mx-auto mb-8">
-              You don't have any active or pending contracts matching your current filters.
-            </p>
-            <Link 
-              href={role === "client" ? "/client/search" : "/worker/dashboard"}
-              className="px-8 py-3 rounded-full bg-primary text-on-primary text-body-md font-bold hover:shadow-md transition-all flex items-center gap-2"
-            >
-              <span className="material-symbols-outlined">add</span>
-              {role === "client" ? "Find a Professional" : "Go to Dashboard"}
-            </Link>
+        <motion.section 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="py-32 flex flex-col items-center text-center gap-8 bg-surface-container-low/30 rounded-[3rem] border border-dashed border-surface-container-highest"
+        >
+          <div className="w-32 h-32 bg-surface-container-high rounded-full flex items-center justify-center relative">
+             <span className="material-symbols-outlined text-[64px] text-on-surface-variant opacity-20">contract</span>
+             <div className="absolute inset-0 bg-primary/5 rounded-full animate-ping" />
           </div>
-        </section>
+          <div className="space-y-2">
+            <h3 className="text-2xl font-black text-on-surface tracking-tight uppercase">Repository Empty</h3>
+            <p className="text-on-surface-variant opacity-60 max-w-xs mx-auto text-sm leading-relaxed">
+              No formal service agreements were found matching your current selection.
+            </p>
+          </div>
+          <Link 
+            href={role === "client" ? "/client/search" : "/worker/dashboard"}
+            className="px-10 py-4 bg-primary text-on-primary rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:shadow-2xl hover:shadow-primary/20 transition-all active:scale-95"
+          >
+            {role === "client" ? "Explore Professionals" : "Visit Dashboard"}
+          </Link>
+        </motion.section>
       )}
     </div>
   );
 }
 
-function getStatusLabel(status: string, t: any) {
+function getStatusLabel(status: string, signedAt: string | null) {
+  if (!signedAt) return "Pending Signature";
   switch (status) {
-    case "pending": return "Pending";
-    case "active": return "Signed";
-    case "completed": return "Completed";
-    case "disputed": return "Disputed";
+    case "active": return "In Progress";
+    case "completed": return "Finalized";
+    case "disputed": return "In Dispute";
+    case "cancelled": return "Terminated";
     default: return status;
   }
 }
 
 function getStatusStyles(status: string) {
   switch (status) {
-    case "active": return "bg-primary-container/20 text-on-primary-container border-primary-container/30";
-    case "pending": return "bg-secondary-container/30 text-on-secondary-container border-secondary-container/50";
-    case "completed": return "bg-surface-container text-on-surface border-surface-container-highest";
-    case "disputed": return "bg-error-container text-on-error-container border-error/30";
-    default: return "bg-surface-container text-on-surface border-surface-container-highest";
+    case "active": return "bg-primary/10 text-primary border-primary/20";
+    case "completed": return "bg-green-500/10 text-green-500 border-green-500/20";
+    case "disputed": return "bg-error/10 text-error border-error/20";
+    case "cancelled": return "bg-on-surface-variant/10 text-on-surface-variant border-on-surface-variant/20";
+    default: return "bg-secondary/10 text-secondary border-secondary/20";
+  }
+}
+
+function getStatusColor(status: string) {
+  switch (status) {
+    case "active": return "bg-primary";
+    case "completed": return "bg-green-500";
+    case "disputed": return "bg-error";
+    default: return "bg-secondary";
   }
 }

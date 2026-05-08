@@ -31,6 +31,12 @@ export default function WorkerProfilePage() {
       group: "Professional",
       items: [
         {
+          label: "Edit Profile",
+          subtitle: "Manage your professional identity",
+          icon: "edit_square",
+          link: "/worker/profile/settings",
+        },
+        {
           label: "Sync My Location",
           subtitle: "Update your district position",
           icon: "location_on",

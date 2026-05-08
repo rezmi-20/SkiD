@@ -13,7 +13,7 @@ interface NavItem {
 
 const CLIENT_NAV: NavItem[] = [
   { key: "nav.home", href: "/client/dashboard", icon: "grid_view" },
-  { key: "nav.discover", href: "/client/search", icon: "search" },
+  { key: "nav.feed", href: "/community/feed", icon: "forum" },
   { key: "nav.contracts", href: "/client/contracts", icon: "description" },
   { key: "nav.chat", href: "/client/messages", icon: "chat_bubble" },
   { key: "nav.profile", href: "/client/profile", icon: "person" },
@@ -21,7 +21,7 @@ const CLIENT_NAV: NavItem[] = [
 
 const WORKER_NAV: NavItem[] = [
   { key: "nav.home", href: "/worker/dashboard", icon: "grid_view" },
-  { key: "nav.mygigs", href: "/worker/gigs", icon: "construction" },
+  { key: "nav.feed", href: "/community/feed", icon: "forum" },
   { key: "nav.contracts", href: "/worker/contracts", icon: "description" },
   { key: "nav.chat", href: "/worker/messages", icon: "chat_bubble" },
   { key: "nav.profile", href: "/worker/profile", icon: "person" },

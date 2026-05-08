@@ -20,6 +20,12 @@ export default function ClientProfilePage() {
       group: "Account",
       items: [
         {
+          label: "Profile Settings",
+          subtitle: "Edit your information & preferences",
+          icon: "settings",
+          link: "/client/profile/settings",
+        },
+        {
           label: "Wishlist",
           subtitle: "Saved workers & favorites",
           icon: "favorite",

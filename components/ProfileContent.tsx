@@ -51,12 +51,24 @@ export default function ProfileContent({ user, stats, menuGroups, skills }: Prof
                 <h1 className="text-[28px] md:text-[36px] font-bold text-on-surface leading-tight tracking-tight">
                    {user.name}
                 </h1>
+                {(user as any).is_verified && (
+                   <div className="flex items-center gap-1.5 px-3 py-1 bg-primary text-on-primary rounded-full shadow-lg shadow-primary/20 scale-90 md:scale-100">
+                      <span className="material-symbols-outlined text-[16px] filled">verified</span>
+                      <span className="text-[9px] font-black uppercase tracking-widest">Verified Identity</span>
+                   </div>
+                )}
              </div>
              <p className="text-body-md text-on-surface-variant opacity-60 font-medium">{user.email}</p>
-             <div className="mt-2">
-                <span className="px-4 py-1.5 bg-primary/10 text-primary border border-primary/20 rounded-full text-label-sm font-bold uppercase tracking-widest">
+             <div className="mt-2 flex flex-wrap gap-2">
+                <span className="px-4 py-1.5 bg-surface-container-high text-on-surface-variant border border-surface-container-highest rounded-full text-label-sm font-bold uppercase tracking-widest">
                    {user.role} Account
                 </span>
+                {(user as any).is_verified && (
+                   <span className="px-4 py-1.5 bg-primary/10 text-primary border border-primary/20 rounded-full text-label-sm font-bold uppercase tracking-widest flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[14px]">shield_person</span>
+                      Official Fayda Profile
+                   </span>
+                )}
              </div>
           </div>
         </div>

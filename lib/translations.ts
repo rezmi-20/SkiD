@@ -12,6 +12,7 @@ export const translations = {
     "nav.mygigs": "My Gigs",
     "nav.earnings": "Earnings",
     "nav.contracts": "Contracts",
+    "nav.feed": "Feed",
 
     "common.workspace": "Workspace",
     "common.login": "Login",
@@ -113,6 +114,7 @@ export const translations = {
     "nav.mygigs": "የእኔ ስራዎች",
     "nav.earnings": "ገቢዎች",
     "nav.contracts": "ውሎች",
+    "nav.feed": "ፊድ",
 
     "common.workspace": "የስራ ገበታ",
     "common.login": "ግባ",

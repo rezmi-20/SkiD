@@ -148,7 +148,12 @@ export default function WorkerProfilePage() {
           </div>
 
           {/* Name */}
-          <h2 className="text-2xl font-black tracking-tight mb-3">{worker.full_name}</h2>
+          <div className="flex items-center gap-2 mb-3">
+            <h2 className="text-2xl font-black tracking-tight">{worker.full_name}</h2>
+            {worker.is_verified && (
+               <span className="material-symbols-outlined text-primary text-[20px] filled" title="Verified Official Identity">verified</span>
+            )}
+          </div>
 
           {/* Badges */}
           <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
@@ -156,9 +161,9 @@ export default function WorkerProfilePage() {
               Senior {primarySkill}
             </span>
             {worker.is_verified && (
-              <span className="flex items-center gap-1 px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/40 rounded-full text-xs font-bold">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
-                Fayda Verified
+              <span className="flex items-center gap-1.5 px-3 py-1 bg-primary/20 text-primary border border-primary/30 rounded-full text-[9px] font-black uppercase tracking-widest">
+                <span className="material-symbols-outlined text-[14px]">shield_person</span>
+                Official Identity
               </span>
             )}
           </div>
@@ -293,13 +298,18 @@ export default function WorkerProfilePage() {
                 : <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" className="text-zinc-500"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
               }
             </div>
-            <h2 className="text-2xl font-black tracking-tight mb-3 z-10">{worker.full_name}</h2>
+            <div className="flex items-center gap-3 mb-3 z-10">
+              <h2 className="text-2xl font-black tracking-tight leading-none">{worker.full_name}</h2>
+              {worker.is_verified && (
+                 <span className="material-symbols-outlined text-primary text-[24px] filled">verified</span>
+              )}
+            </div>
             <div className="flex flex-wrap justify-center gap-2 mb-4 z-10">
               <span className="px-3 py-1 bg-blue-600/30 text-blue-400 border border-blue-500/40 rounded-full text-xs font-bold">Senior {primarySkill}</span>
               {worker.is_verified && (
-                <span className="flex items-center gap-1 px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/40 rounded-full text-xs font-bold">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
-                  Fayda Verified
+                <span className="flex items-center gap-1.5 px-3 py-1 bg-primary/20 text-primary border border-primary/30 rounded-full text-[9px] font-black uppercase tracking-widest">
+                  <span className="material-symbols-outlined text-[14px]">shield_person</span>
+                  Official Identity
                 </span>
               )}
             </div>

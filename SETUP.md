@@ -26,7 +26,17 @@
 
 ---
 
-## 2. Tech Stack
+## 2. Default Admin Credentials
+
+For local development and platform management, use the following administrator credentials:
+
+| Role | Email | Password |
+|---|---|---|
+| **Admin** | `admin@dire-skill.com` | `admin123` |
+
+---
+
+## 3. Tech Stack
 
 | Layer | Technology |
 |---|---|
