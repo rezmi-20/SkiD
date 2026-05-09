@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
+import { authClient } from "@/lib/auth/client";
 
 interface Coords {
   lat: number;
@@ -24,7 +24,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useState<Coords | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
 
   const refreshLocation = useCallback(() => {
     if (!navigator.geolocation) {

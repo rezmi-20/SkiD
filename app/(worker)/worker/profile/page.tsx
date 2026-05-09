@@ -2,11 +2,11 @@
 
 import { useLocation } from "@/context/LocationContext";
 import { useState } from "react";
-import { useSession } from "next-auth/react";
+import { authClient } from "@/lib/auth/client";
 import ProfileContent from "@/components/ProfileContent";
 
 export default function WorkerProfilePage() {
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
   const { refreshLocation, loading: locLoading } = useLocation();
   const [justUpdated, setJustUpdated] = useState(false);
 

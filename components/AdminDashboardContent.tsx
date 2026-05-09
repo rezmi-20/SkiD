@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useTransition } from "react";
 import { toggleWorkerVerification } from "@/lib/actions/admin";
-import { signOut } from "next-auth/react";
+import { authClient } from "@/lib/auth/client";
 
 interface AdminDashboardContentProps {
   adminName: string;
@@ -69,7 +69,7 @@ export default function AdminDashboardContent({
         </div>
 
         <button 
-          onClick={() => signOut({ callbackUrl: "/login" })}
+          onClick={() => authClient.signOut({ fetchOptions: { onSuccess: () => window.location.href = "/login" } })}
           className="flex items-center gap-3 px-6 py-3 bg-surface-container-high border border-surface-container-highest rounded-2xl text-secondary hover:bg-secondary hover:text-on-secondary transition-all group active:scale-95"
         >
           <span className="text-xs font-black uppercase tracking-[0.2em]">Exit System</span>

@@ -1,10 +1,10 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { authClient } from "@/lib/auth/client";
 import ProfileContent from "@/components/ProfileContent";
 
 export default function ClientProfilePage() {
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
   const name = session?.user?.name || "Professional";
   const email = session?.user?.email || "client@direskilld.com";
   const initials = name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);

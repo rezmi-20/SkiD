@@ -51,7 +51,7 @@ export default function WorkerRegisterPage() {
   const validateStep = () => {
     setError("");
     if (step === 1) {
-      if (!formData.fullName || !formData.phone || !formData.dateOfBirth || !formData.gender || !formData.password) {
+      if (!formData.fullName || !formData.email || !formData.phone || !formData.dateOfBirth || !formData.gender || !formData.password) {
         setError(language === "en" ? "Fill all required identity fields." : "እባክዎን ሁሉንም አስፈላጊ ቦታዎች ይሙሉ");
         return false;
       }
@@ -96,20 +96,36 @@ export default function WorkerRegisterPage() {
     setError("");
 
     try {
-      const res = await fetch("/api/auth/register", {
+      const { authClient } = await import("@/lib/auth/client");
+
+      const { data, error: signUpError } = await authClient.signUp.email({
+        email: formData.email,
+        password: formData.password,
+        name: formData.fullName,
+      });
+
+      if (signUpError) {
+        setError(signUpError.message || "Registration failed.");
+        setIsLoading(false);
+        return;
+      }
+
+      const res = await fetch("/api/auth/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
+          email: formData.email, // Save real email to our database
           district: formData.location,
           role: "worker",
           bio: formData.experience,
+          neonUserId: data?.user?.id
         }),
       });
 
-      const data = await res.json();
+      const profileData = await res.json();
       if (!res.ok) {
-        setError(data.error || "Submission failed. Please check field formats.");
+        setError(profileData.error || "Profile indexing failed.");
       } else {
         setIsSuccess(true);
       }
@@ -319,17 +335,44 @@ export default function WorkerRegisterPage() {
                         placeholder="Surname, First Name"
                       />
                     </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[13px] font-medium text-zinc-300 ml-1">Email Address</label>
+                      <input
+                        type="email"
+                        required
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        className="w-full h-[52px] px-4 bg-zinc-900 border border-zinc-700 rounded-2xl focus:border-green-400/80 focus:ring-1 focus:ring-green-400/80 outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white shadow-sm"
+                        placeholder="you@example.com"
+                      />
+                    </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-[13px] font-medium text-zinc-300 ml-1">Phone (+251)</label>
-                        <input
-                          type="tel"
-                          required
-                          value={formData.phone}
-                          onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, "") })}
-                          className="w-full h-[52px] px-4 bg-zinc-900 border border-zinc-700 rounded-2xl focus:border-green-400/80 focus:ring-1 focus:ring-green-400/80 outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white shadow-sm"
-                          placeholder="9..."
-                        />
+                        <label className="text-[13px] font-medium text-zinc-300 ml-1">Phone Number</label>
+                        <div className="relative flex">
+                          <div className="h-[52px] px-4 bg-zinc-800 border border-zinc-700 border-r-0 rounded-l-2xl flex items-center justify-center text-zinc-400 font-medium text-[14px]">
+                            +251
+                          </div>
+                          <input
+                            type="tel"
+                            required
+                            value={formData.phone}
+                            onChange={(e) => {
+                              let val = e.target.value.replace(/\D/g, "");
+                              if (val.length > 10) val = val.substring(0, 10);
+                              setFormData({ ...formData, phone: val });
+                            }}
+                            onBlur={(e) => {
+                              let val = e.target.value;
+                              if (val.startsWith("0") && val.length === 10) {
+                                val = val.substring(1);
+                                setFormData({ ...formData, phone: val });
+                              }
+                            }}
+                            className="w-full h-[52px] px-4 bg-zinc-900 border border-zinc-700 rounded-r-2xl focus:border-green-400/80 focus:ring-1 focus:ring-green-400/80 outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white shadow-sm"
+                            placeholder="9XX XXX XXX"
+                          />
+                        </div>
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-[13px] font-medium text-zinc-300 ml-1">Date of Birth</label>

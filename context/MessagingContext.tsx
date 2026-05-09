@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
-import { useSession } from "next-auth/react";
+import { authClient } from "@/lib/auth/client";
 import { AnimatePresence, motion } from "framer-motion";
 
 interface Conversation {
@@ -20,7 +20,7 @@ interface MessagingContextType {
 const MessagingContext = createContext<MessagingContextType | undefined>(undefined);
 
 export function MessagingProvider({ children }: { children: React.ReactNode }) {
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [lastNotificationId, setLastNotificationId] = useState<string | null>(null);
   const [activeToast, setActiveToast] = useState<{ name: string; body: string; id: string } | null>(null);
