@@ -55,13 +55,14 @@ export default function ClientRegisterPage() {
       } else {
         // If email verification is enabled, data.user.emailVerified will be false
         if (data?.user && !data.user.emailVerified) {
-          router.push(`/otp-verification?email=${encodeURIComponent(email)}`);
+          router.push(`/otp-verification?email=${encodeURIComponent(formData.email)}`);
         } else {
           router.push("/login?registered=true");
         }
       }
-    } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
+    } catch (err: any) {
+      console.error("Registration Error:", err);
+      setError(err.message || "An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }

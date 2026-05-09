@@ -74,6 +74,11 @@ export default function LoginPage() {
       });
 
       if (signInError) {
+        // Handle Email Not Verified (Neon Auth returns a specific message or 403)
+        if (signInError.status === 403 || signInError.message?.toLowerCase().includes("verify")) {
+           router.push(`/otp-verification?email=${encodeURIComponent(emailToUse)}`);
+           return;
+        }
         setError("Invalid credentials. Please check your email/phone and password.");
       } else {
         const res = await fetch("/api/auth/me");
@@ -87,7 +92,8 @@ export default function LoginPage() {
           window.location.href = "/";
         }
       }
-    } catch (err) {
+    } catch (err: any) {
+      console.error("Login Error:", err);
       setError("An unexpected error occurred. Please try again later.");
     } finally {
       setIsLoading(false);

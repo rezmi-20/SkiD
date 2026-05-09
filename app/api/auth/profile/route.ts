@@ -15,6 +15,7 @@ const registerSchema = z.object({
   skills: z.array(z.string()).optional(),
   faydaDocUrl: z.string().optional(),
   bio: z.string().optional(),
+  neonUserId: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -67,8 +68,17 @@ export async function POST(req: NextRequest) {
       { message: "Registration successful", userId },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("[REGISTER_ERROR]", error);
+    
+    // Handle unique constraint violations
+    if (error.code === "23505" || error.message?.includes("unique constraint")) {
+      return NextResponse.json(
+        { error: "Account already exists with this email or phone number." },
+        { status: 409 }
+      );
+    }
+
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

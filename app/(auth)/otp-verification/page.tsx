@@ -19,7 +19,20 @@ export default function OTPVerificationPage() {
     setMounted(true);
     if (!email) {
       router.push("/login");
+      return;
     }
+
+    // Diagnostic: Check if already verified
+    const checkStatus = async () => {
+      const { authClient } = await import("@/lib/auth/client");
+      const { data: session } = await authClient.getSession();
+      // Only redirect if they are actually verified AND it's a valid session
+      if (session?.user?.emailVerified) {
+        console.log("[OTP] User already verified, moving to login");
+        router.push("/login?verified=true");
+      }
+    };
+    checkStatus();
   }, [email, router]);
 
   const otp = digits.join("");
@@ -68,8 +81,9 @@ export default function OTPVerificationPage() {
       } else {
         router.push("/login?verified=true");
       }
-    } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
+    } catch (err: any) {
+      console.error("Verification Error:", err);
+      setError(err.message || "An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -83,9 +97,9 @@ export default function OTPVerificationPage() {
     
     try {
        const { authClient } = await import("@/lib/auth/client");
-       await authClient.emailOtp.sendVerificationCode({
+       await authClient.emailOtp.sendVerificationOtp({
          email,
-         type: "sign-up"
+         type: "email-verification"
        });
     } catch (err) {
        console.error("Failed to resend code", err);

@@ -46,7 +46,7 @@ For local development and platform management, use the following administrator c
 | Framework | Next.js 16.2.2 (App Router, Turbopack) |
 | Language | TypeScript + JSX |
 | Styling | Tailwind CSS v4 + vanilla CSS custom properties |
-| Auth | NextAuth v5 (beta) — Credentials provider, JWT |
+| Auth | Neon Auth (@neondatabase/auth) — Email/OTP, Multi-role |
 | Database | Neon PostgreSQL (serverless) |
 | ORM | Drizzle ORM |
 | Map | Leaflet + react-leaflet |
@@ -99,13 +99,11 @@ Create a file named **`.env.local`** in the project root with exactly these valu
 # Neon PostgreSQL — serverless DB hosted on neon.tech
 DATABASE_URL=postgresql://neondb_owner:npg_uH9bUs3KmtLP@ep-mute-meadow-anqyrcz7-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
 
-# NextAuth secret — used to sign JWT tokens
-AUTH_SECRET=pY8uX1k5vR3tZ7wQ2mN9bV4cMx0fL6jS9gH1kP3nG0o
+# Neon Auth (Better Auth) configuration
+NEON_AUTH_BASE_URL=https://auth.neon.tech
+NEON_AUTH_COOKIE_SECRET=your_secret_here
 
-# NextAuth URL — must match where app runs locally
-NEXTAUTH_URL=http://localhost:3000
-
-> ⚠️ **MOBILE TESTING:** If you are testing on mobile via your machine's IP (e.g., http://10.235.92.15:3000), you **MUST** update `NEXTAUTH_URL` in `.env.local` to match that IP. Otherwise, authentication and redirects will fail (causing a white screen or session errors).
+> ⚠️ **AUTH MIGRATION:** We have migrated from NextAuth to Neon Auth. The `AUTH_SECRET` is no longer used. Ensure `NEON_AUTH_BASE_URL` is set to your Neon project's auth URL.
 ```
 
 > **Note:** The Neon database is already provisioned and seeded. No migration needed on first run (tables already exist in the cloud DB).
@@ -382,6 +380,7 @@ import { sql } from "@/lib/db";
 import { redirect } from "next/navigation";
 
 export default async function MyPage() {
+  // Use the compatibility wrapper from @/lib/auth
   const session = await auth();
   if (!session || session.user.role !== "worker") redirect("/login");
   

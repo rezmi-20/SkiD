@@ -129,13 +129,14 @@ export default function WorkerRegisterPage() {
       } else {
         // If email verification is enabled, data.user.emailVerified will be false
         if (data?.user && !data.user.emailVerified) {
-          router.push(`/otp-verification?email=${encodeURIComponent(email)}`);
+          router.push(`/otp-verification?email=${encodeURIComponent(formData.email)}`);
         } else {
           setIsSuccess(true);
         }
       }
-    } catch (err) {
-      setError("Network timeout. Please verify your connection.");
+    } catch (err: any) {
+      console.error("Worker Registration Error:", err);
+      setError(err.message || "Network timeout. Please verify your connection.");
     } finally {
       setIsLoading(false);
     }

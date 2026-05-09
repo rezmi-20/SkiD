@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth/server";
+import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { redirect } from "next/navigation";
 import WorkerDashboardContent from "@/components/WorkerDashboardContent";

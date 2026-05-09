@@ -2,8 +2,12 @@
 import { auth as serverAuth } from "./server";
 import { sql } from "../db";
 
+import { headers } from "next/headers";
+
 export const auth = async () => {
-  const { data: session } = await serverAuth.getSession();
+  const { data: session } = await serverAuth.getSession({
+    headers: await headers()
+  });
   if (!session?.user) return null;
 
   try {

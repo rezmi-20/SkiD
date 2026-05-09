@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth/server";
+import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
   try {
-    const { data: session } = await auth.getSession();
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
