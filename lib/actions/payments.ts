@@ -1,7 +1,7 @@
 "use server";
 
 import { sql } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth/server";
 
 export async function getPaymentPageData(jobId: string) {
   const session = await auth();

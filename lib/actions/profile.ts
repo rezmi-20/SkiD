@@ -6,10 +6,10 @@ import { revalidatePath } from "next/cache";
 
 export async function getProfileData() {
   const session = await auth();
-  if (!session?.user?.id) return null;
+  if (!session?.user) return null;
 
   const userId = session.user.id;
-  const role = session.user.role;
+  const role = (session.user as any).role;
 
   try {
     const userRows = await sql`SELECT email, phone FROM users WHERE id = ${userId}`;
@@ -37,10 +37,10 @@ export async function getProfileData() {
 
 export async function updateProfile(data: any) {
   const session = await auth();
-  if (!session?.user?.id) return { success: false, error: "Unauthorized" };
+  if (!session?.user) return { success: false, error: "Unauthorized" };
 
   const userId = session.user.id;
-  const role = session.user.role;
+  const role = (session.user as any).role;
 
   try {
     // 1. Fetch current verification status

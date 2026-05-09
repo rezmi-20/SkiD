@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth/server";
 import { z } from "zod";
 
 const ratingSchema = z.object({

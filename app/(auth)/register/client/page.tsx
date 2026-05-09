@@ -53,7 +53,12 @@ export default function ClientRegisterPage() {
       if (!res.ok) {
         setError(profileData.error || "Profile creation failed.");
       } else {
-        router.push("/login?registered=true");
+        // If email verification is enabled, data.user.emailVerified will be false
+        if (data?.user && !data.user.emailVerified) {
+          router.push(`/otp-verification?email=${encodeURIComponent(email)}`);
+        } else {
+          router.push("/login?registered=true");
+        }
       }
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");

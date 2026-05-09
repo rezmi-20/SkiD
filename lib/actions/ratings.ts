@@ -1,7 +1,7 @@
 "use server";
 
 import { sql } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth/server";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "@/lib/actions/notifications";
 

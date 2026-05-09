@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth/server";
 
 export default async function TestUpdatePage() {
   const session = await auth();

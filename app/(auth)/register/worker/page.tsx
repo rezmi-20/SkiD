@@ -127,7 +127,12 @@ export default function WorkerRegisterPage() {
       if (!res.ok) {
         setError(profileData.error || "Profile indexing failed.");
       } else {
-        setIsSuccess(true);
+        // If email verification is enabled, data.user.emailVerified will be false
+        if (data?.user && !data.user.emailVerified) {
+          router.push(`/otp-verification?email=${encodeURIComponent(email)}`);
+        } else {
+          setIsSuccess(true);
+        }
       }
     } catch (err) {
       setError("Network timeout. Please verify your connection.");

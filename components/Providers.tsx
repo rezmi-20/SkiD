@@ -4,6 +4,8 @@ import { LanguageProvider } from "@/context/LanguageContext";
 import { LocationProvider } from "@/context/LocationContext";
 import { MessagingProvider } from "@/context/MessagingContext";
 import { useState, useEffect } from "react";
+import { authClient } from "@/lib/auth/client";
+import { NeonAuthUIProvider } from "@neondatabase/auth/react";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +34,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       <LanguageProvider>
         <LocationProvider>
           <MessagingProvider>
-            {children}
+            <NeonAuthUIProvider authClient={authClient} emailOTP social={{ providers: ['google'] }}>
+              {children}
+            </NeonAuthUIProvider>
           </MessagingProvider>
         </LocationProvider>
       </LanguageProvider>

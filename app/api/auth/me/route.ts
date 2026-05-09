@@ -14,7 +14,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "User profile not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ role: rows[0].role }, { status: 200 });
+    return NextResponse.json({ 
+      role: rows[0].role,
+      emailVerified: session.user.emailVerified 
+    }, { status: 200 });
   } catch (error) {
     console.error("[AUTH_ME_ERROR]", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

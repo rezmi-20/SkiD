@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth/server";
 
 // Uses Cloudinary's unsigned upload — no API secret needed.
 // Set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME in .env.local

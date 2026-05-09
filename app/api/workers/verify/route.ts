@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth/server";
 
 export async function POST(req: NextRequest) {
   try {
