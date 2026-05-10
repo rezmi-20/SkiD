@@ -4,7 +4,11 @@ import { neon } from "@neondatabase/serverless";
 
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const { data: session } = await auth.getSession(req);
+  const { data: session } = await auth.getSession({
+    fetchOptions: {
+      headers: Object.fromEntries(req.headers.entries()),
+    },
+  });
   const isLoggedIn = !!session;
   let user = session?.user as any;
 
