@@ -6,7 +6,9 @@ import { headers } from "next/headers";
 
 export const auth = async () => {
   const { data: session } = await serverAuth.getSession({
-    headers: await headers()
+    fetchOptions: {
+      headers: await headers()
+    }
   });
   if (!session?.user) return null;
 
