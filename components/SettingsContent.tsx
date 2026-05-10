@@ -237,10 +237,10 @@ export default function SettingsContent({ initialData, role }: Props) {
                   <div className="space-y-4">
                      <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">Service Skills</label>
                      <div className="flex flex-wrap gap-2">
-                        {formData.skills.map((s, i) => (
+                        {formData.skills.map((s: string, i: number) => (
                           <span key={i} className="px-5 py-2.5 bg-primary/10 text-primary border border-primary/20 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
                              {s}
-                             <button type="button" onClick={() => setFormData({...formData, skills: formData.skills.filter((_, idx) => idx !== i)})}>
+                             <button type="button" onClick={() => setFormData({...formData, skills: formData.skills.filter((_: string, idx: number) => idx !== i)})}>
                                 <span className="material-symbols-outlined text-[16px]">close</span>
                              </button>
                           </span>
