@@ -26,4 +26,4 @@ export const auth = async () => {
 };
 
 // Re-export handlers if needed, though they should be used via lib/auth/server
-export const handlers = serverAuth.handlers;
+export const handlers = serverAuth.handler;
