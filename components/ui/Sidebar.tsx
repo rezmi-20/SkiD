@@ -124,7 +124,7 @@ export default function Sidebar({ role, userEmail }: { role: "client" | "worker"
           
           {!isCollapsed && (
             <button 
-              onClick={() => authClient.signOut({ fetchOptions: { onSuccess: () => window.location.href = "/login" } })}
+              onClick={() => authClient.signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/login"; } } })}
               className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-error/10 text-error hover:bg-error hover:text-white transition-all text-xs font-bold uppercase tracking-widest"
             >
               <span className="material-symbols-outlined text-[18px]">logout</span>

@@ -75,7 +75,7 @@ export default function ProfileContent({ user, stats, menuGroups, skills }: Prof
         
         <div className="hidden md:flex items-center gap-4">
            <button 
-             onClick={() => authClient.signOut({ fetchOptions: { onSuccess: () => window.location.href = "/login" } })}
+             onClick={() => authClient.signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/login"; } } })}
              className="h-12 px-8 flex items-center justify-center bg-error-container text-on-error-container rounded-2xl text-label-md font-bold uppercase tracking-widest hover:bg-error hover:text-on-error transition-all"
            >
               Sign Out
@@ -152,7 +152,7 @@ export default function ProfileContent({ user, stats, menuGroups, skills }: Prof
       {/* ── Mobile Logout ── */}
       <div className="md:hidden mx-1">
          <button 
-           onClick={() => authClient.signOut({ fetchOptions: { onSuccess: () => window.location.href = "/login" } })}
+           onClick={() => authClient.signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/login"; } } })}
            className="w-full flex items-center gap-4 p-5 bg-error-container/20 border border-error/20 rounded-[2rem] text-error group hover:bg-error hover:text-on-error transition-all"
          >
             <div className="w-12 h-12 bg-error-container rounded-2xl flex items-center justify-center">
