@@ -20,7 +20,7 @@ export default async function ClientRatingPage({ params }: { params: { jobId: st
       ratedAvatar={data.ratedAvatar}
       ratedVerified={data.ratedVerified ?? false}
       jobTitle={data.job.job_title}
-      currentUserRole={data.currentUserRole}
+      currentUserRole={data.currentUserRole ?? "client"}
       alreadyRated={data.alreadyRated}
       dashboardHref="/client/dashboard"
     />
