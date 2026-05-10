@@ -1,5 +1,7 @@
 import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
+
+export const dynamic = 'force-dynamic';
 import AdminDashboardContent from "@/components/AdminDashboardContent";
 import { redirect } from "next/navigation";
 

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import ClientDashboardContent from "@/components/ClientDashboardContent";
