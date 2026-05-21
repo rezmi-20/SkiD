@@ -475,4 +475,34 @@ npx drizzle-kit studio # Open Drizzle Studio (visual DB explorer)
 
 ---
 
-*Last updated: 2026-05-05 — Post-Stability & SW Cache Fixes*
+*Last updated: 2026-05-13 — Post-Stability & SW Cache Fixes*
+
+---
+
+## 15. Development Workflow & Rules (Strict)
+
+To ensure high code quality, stability, and maintainability, all AI assistants and developers MUST follow these rules:
+
+### 15.1 Phased Implementation
+- **Divide into Phases**: Every non-trivial task must have an implementation plan divided into logical phases.
+- **Dynamic Phase Count**: The number of phases should be appropriate for the task's complexity (e.g., 3-8 phases).
+- **Test-After-Phase**: Each phase must be tested and verified as "working" before proceeding to the next. Do not implement everything at once.
+
+### 15.2 Root Cause Analysis (100% Certainty)
+- **No Guess-Fixing**: When an error occurs, identify the problem with 100% certainty before attempting a fix.
+- **Diagnostic Step**: Use logging, error boundaries, or isolated reproduction to confirm the bug.
+- **Avoid "Trial and Error"**: If a fix fails twice, step back and re-analyze the root cause.
+
+### 15.3 Modular Component Architecture (Small Files)
+- **File Length Limit**: **STRICT** limit of **300 lines** per file.
+- **Ideal Length**: Target **~100 lines** for individual components.
+- **Split & Disband**: If a file grows near or over 300 lines, it **MUST** be refactored into smaller, logical sub-components or utility files.
+- **Preference**: It is significantly better to have **5 files of 100 lines** than **1 file of 500 lines**.
+
+### 15.4 Full-Page Translation (Mandatory)
+- **Comprehensive Support**: Every page developed or modified must include full translation support (e.g., English and Amharic) for all text elements.
+- **No Partial Translations**: Do not limit translations to just sidebars or navigation. The entire page content (labels, placeholders, buttons, messages) must be translated.
+- **Translation Pattern**: Use the established `t()` hook and `lib/translations.ts` pattern.
+
+### 15.5 Learning Behavior
+- The AI assistant should treat these rules as core operational instructions and maintain consistency across sessions.
