@@ -37,7 +37,7 @@ export default function WorkerRegisterPage() {
 
   const validateStep = () => {
     setError("");
-    if (step === 1 && (!formData.fullName || !formData.phone || !formData.dateOfBirth || !formData.gender || !formData.password)) {
+    if (step === 1 && (!formData.fullName || !formData.email || !formData.phone || !formData.dateOfBirth || !formData.gender || !formData.password)) {
       setError(t("register.errors.fill_all"));
       return false;
     }
@@ -74,16 +74,46 @@ export default function WorkerRegisterPage() {
     setIsLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/auth/register", {
+      const { authClient } = await import("@/lib/auth/client");
+
+      const { data, error: signUpError } = await authClient.signUp.email({
+        email: formData.email,
+        password: formData.password,
+        name: formData.fullName,
+      });
+
+      if (signUpError) {
+        setError(signUpError.message || "Registration failed.");
+        setIsLoading(false);
+        return;
+      }
+
+      const res = await fetch("/api/auth/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, district: formData.location, role: "worker", bio: formData.experience }),
+        body: JSON.stringify({
+          ...formData,
+          email: formData.email,
+          district: formData.location,
+          role: "worker",
+          bio: formData.experience,
+          neonUserId: data?.user?.id
+        }),
       });
-      const data = await res.json();
-      if (!res.ok) setError(data.error || t("register.errors.submission_failed"));
-      else setIsSuccess(true);
-    } catch (err) {
-      setError(t("register.errors.network_timeout"));
+
+      const profileData = await res.json();
+      if (!res.ok) {
+        setError(profileData.error || t("register.errors.submission_failed"));
+      } else {
+        if (data?.user && !data.user.emailVerified) {
+          router.push(`/otp-verification?email=${encodeURIComponent(formData.email)}`);
+        } else {
+          setIsSuccess(true);
+        }
+      }
+    } catch (err: any) {
+      console.error("Worker Registration Error:", err);
+      setError(err.message || t("register.errors.network_timeout"));
     } finally {
       setIsLoading(false);
     }

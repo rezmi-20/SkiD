@@ -23,6 +23,17 @@ export default function StepIdentity({ formData, setFormData }: StepIdentityProp
           placeholder={t("register.fields.fullName.placeholder")}
         />
       </div>
+      <div className="space-y-1.5">
+        <label className="text-[13px] font-medium text-zinc-300 ml-1">{t("register.fields.email")}</label>
+        <input
+          type="email"
+          required
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          className="w-full h-[52px] px-4 bg-zinc-900 border border-zinc-700 rounded-2xl focus:border-green-400/80 focus:ring-1 focus:ring-green-400/80 outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white shadow-sm"
+          placeholder={t("register.fields.email.placeholder")}
+        />
+      </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <label className="text-[13px] font-medium text-zinc-300 ml-1">{t("register.fields.phone")}</label>

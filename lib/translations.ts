@@ -12,6 +12,7 @@ export const translations = {
     "nav.mygigs": "My Gigs",
     "nav.earnings": "Earnings",
     "nav.contracts": "Contracts",
+    "nav.feed": "Feed",
 
     "common.workspace": "Workspace",
     "common.login": "Login",
@@ -111,6 +112,8 @@ export const translations = {
 
     "register.fields.fullName": "Full Legal Name",
     "register.fields.fullName.placeholder": "Surname, First Name",
+    "register.fields.email": "Email Address",
+    "register.fields.email.placeholder": "you@example.com",
     "register.fields.phone": "Phone (+251)",
     "register.fields.phone.placeholder": "9...",
     "register.fields.dob": "Date of Birth",
@@ -140,6 +143,12 @@ export const translations = {
     "register.errors.expertise_required": "Select at least one expertise and location.",
     "register.errors.submission_failed": "Submission failed. Please check field formats.",
     "register.errors.network_timeout": "Network timeout. Please verify your connection.",
+
+    "dashboard.welcome": "Welcome back,",
+    "dashboard.active_contracts": "Active Contracts",
+    "dashboard.quick_actions": "Quick Actions",
+    "dashboard.recent_activity": "Recent Activity",
+    "dashboard.search_placeholder": "What service do you need today?",
   },
   am: {
     "nav.home": "ዋና ገፅ",
@@ -154,6 +163,7 @@ export const translations = {
     "nav.mygigs": "የእኔ ስራዎች",
     "nav.earnings": "ገቢዎች",
     "nav.contracts": "ውሎች",
+    "nav.feed": "ፊድ",
 
     "common.workspace": "የስራ ገበታ",
     "common.login": "ግባ",
@@ -251,6 +261,8 @@ export const translations = {
 
     "register.fields.fullName": "ሙሉ ስም",
     "register.fields.fullName.placeholder": "የአያት ስም፣ ስም",
+    "register.fields.email": "ኢሜይል አድራሻ",
+    "register.fields.email.placeholder": "you@example.com",
     "register.fields.phone": "ስልክ (+251)",
     "register.fields.phone.placeholder": "9...",
     "register.fields.dob": "የልደት ቀን",
@@ -280,6 +292,12 @@ export const translations = {
     "register.errors.expertise_required": "እባክዎን ሙያ እና አካባቢ ይምረጡ",
     "register.errors.submission_failed": "ምዝገባው አልተሳካም። እባክዎን መረጃዎን ያረጋግጡ።",
     "register.errors.network_timeout": "ኢንተርኔት ተቋርጧል። እባክዎን ግንኙነትዎን ያረጋግጡ።",
+
+    "dashboard.welcome": "እንኳን ደህና መጡ፣",
+    "dashboard.active_contracts": "ንቁ ውሎች",
+    "dashboard.quick_actions": "ፈጣን እርምጃዎች",
+    "dashboard.recent_activity": "የቅርብ ጊዜ እንቅስቃሴዎች",
+    "dashboard.search_placeholder": "ዛሬ ምን አይነት አገልግሎት ይፈልጋሉ?",
   }
 };
 

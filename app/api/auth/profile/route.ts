@@ -15,6 +15,7 @@ const registerSchema = z.object({
   skills: z.array(z.string()).optional(),
   faydaDocUrl: z.string().optional(),
   bio: z.string().optional(),
+  neonUserId: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -30,22 +31,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { email, password, role, fullName, phone } = parsed.data;
+    const { email, password, role, fullName, phone, neonUserId } = parsed.data as any;
 
-    // Check if email already exists (if provided)
-    if (email) {
-      const existing = await sql`SELECT id FROM users WHERE email = ${email}`;
-      if (existing.length > 0) {
-        return NextResponse.json({ error: "Email already registered" }, { status: 409 });
-      }
+    if (!neonUserId) {
+      return NextResponse.json({ error: "Missing Neon User ID" }, { status: 400 });
     }
 
-    const passwordHash = await bcrypt.hash(password, 12);
-
-    // Insert user
+    // Insert user into our public schema users table with the same ID as neon_auth
     const newUser = await sql`
-       INSERT INTO users (email, password_hash, role, phone)
-       VALUES (${email || `phone-${phone}`}, ${passwordHash}, ${role}, ${phone})
+       INSERT INTO users (id, email, password_hash, role, phone)
+       VALUES (${neonUserId}, ${email || `phone-${phone}`}, 'managed_by_neon_auth', ${role}, ${phone})
        RETURNING id, email, role`;
 
     const userId = newUser[0].id;
@@ -73,8 +68,17 @@ export async function POST(req: NextRequest) {
       { message: "Registration successful", userId },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("[REGISTER_ERROR]", error);
+    
+    // Handle unique constraint violations
+    if (error.code === "23505" || error.message?.includes("unique constraint")) {
+      return NextResponse.json(
+        { error: "Account already exists with this email or phone number." },
+        { status: 409 }
+      );
+    }
+
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

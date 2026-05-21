@@ -1,31 +1,40 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isRegistered = searchParams.get("registered") === "true";
+  const needsVerification = searchParams.get("verify") === "true";
+
+  // Detect input type
+  const isEmail = identifier.includes("@");
+  const isPhone = !isEmail && /^[0-9+]/.test(identifier);
 
   useEffect(() => {
     setMounted(true);
     const checkSession = async () => {
-      const { getSession } = await import("next-auth/react");
-      const session = await getSession();
+      const { authClient } = await import("@/lib/auth/client");
+      const { data: session } = await authClient.getSession();
       if (session) {
-        const role = (session.user as any)?.role;
-        if (role === "client") router.replace("/client/search");
-        else if (role === "worker") router.replace("/worker/dashboard");
-        else if (role === "admin") router.replace("/admin/dashboard");
+        const res = await fetch("/api/auth/me");
+        if (res.ok) {
+          const { role } = await res.json();
+          if (role === "client") router.replace("/client/search");
+          else if (role === "worker") router.replace("/worker/dashboard");
+          else if (role === "admin") router.replace("/admin/dashboard");
+        }
       }
     };
     checkSession();
@@ -37,25 +46,54 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const result = await signIn("credentials", {
-        identifier,
+      const { authClient } = await import("@/lib/auth/client");
+
+      let emailToUse = identifier.trim();
+
+      // If the user typed a phone number, look up their email from our DB
+      if (!isEmail) {
+        const lookupRes = await fetch("/api/auth/lookup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: identifier }),
+        });
+
+        if (!lookupRes.ok) {
+          setError("No account found with this phone number.");
+          setIsLoading(false);
+          return;
+        }
+
+        const { email } = await lookupRes.json();
+        emailToUse = email;
+      }
+
+      const { error: signInError } = await authClient.signIn.email({
+        email: emailToUse,
         password,
-        redirect: false,
       });
 
-      if (result?.error) {
-        setError("Invalid credentials. Please try again.");
+      if (signInError) {
+        // Handle Email Not Verified (Neon Auth returns a specific message or 403)
+        if (signInError.status === 403 || signInError.message?.toLowerCase().includes("verify")) {
+           router.push(`/otp-verification?email=${encodeURIComponent(emailToUse)}`);
+           return;
+        }
+        setError("Invalid credentials. Please check your email/phone and password.");
       } else {
-        const { getSession } = await import("next-auth/react");
-        const session = await getSession();
-        const role = (session?.user as any)?.role;
-
-        if (role === "admin") window.location.href = "/admin/dashboard";
-        else if (role === "worker") window.location.href = "/worker/dashboard";
-        else if (role === "client") window.location.href = "/client/search";
-        else window.location.href = "/";
+        const res = await fetch("/api/auth/me");
+        if (res.ok) {
+          const { role } = await res.json();
+          if (role === "admin") window.location.href = "/admin/dashboard";
+          else if (role === "worker") window.location.href = "/worker/dashboard";
+          else if (role === "client") window.location.href = "/client/search";
+          else window.location.href = "/";
+        } else {
+          window.location.href = "/";
+        }
       }
-    } catch (err) {
+    } catch (err: any) {
+      console.error("Login Error:", err);
       setError("An unexpected error occurred. Please try again later.");
     } finally {
       setIsLoading(false);
@@ -77,7 +115,6 @@ export default function LoginPage() {
             alt="Office Background" 
             className="w-full h-full object-cover opacity-60"
           />
-          {/* Subtle dark tint to ensure white text remains readable, without hiding the image */}
           <div className="absolute inset-0 bg-[#09090b]/40"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-[#09090b] via-transparent to-[#09090b]/30"></div>
         </div>
@@ -106,7 +143,7 @@ export default function LoginPage() {
             Elevate your <br/><span className="text-green-400">Professional</span> Journey
           </h2>
           <p className="text-zinc-400 text-lg max-w-md mx-auto leading-relaxed">
-            Join the premier marketplace for top-tier freelancers and extraordinary opportunities.
+            Join the premier marketplace for top-tier professionals and extraordinary opportunities.
           </p>
         </div>
         
@@ -127,7 +164,6 @@ export default function LoginPage() {
           
           {/* Header Section */}
           <div className="flex flex-col items-center mb-8 space-y-5 w-full">
-            {/* Logo and App Name */}
             <div className="flex items-center gap-3 mb-2">
               <div className="w-14 h-14 bg-white flex items-center justify-center rounded-2xl shadow-lg shadow-white/5">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" className="text-[#09090b]">
@@ -143,7 +179,7 @@ export default function LoginPage() {
                 Hi, Welcome Back <span>👋</span>
               </h1>
               <p className="text-zinc-500 text-[15px] font-medium">
-                Sign in to your account
+                Sign in with your email or phone number
               </p>
             </div>
           </div>
@@ -154,7 +190,7 @@ export default function LoginPage() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl text-sm font-semibold flex items-center gap-3 mb-6 w-full"
+                className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl text-sm font-semibold flex items-center gap-3 mb-6 w-full shadow-[0_0_20px_rgba(239,68,68,0.1)]"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                   <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -162,28 +198,85 @@ export default function LoginPage() {
                 {error}
               </motion.div>
             )}
+            
+            {isRegistered && !error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-green-500/10 border border-green-500/20 text-green-400 p-4 rounded-2xl text-sm font-semibold flex flex-col gap-2 mb-6 w-full shadow-[0_0_20px_rgba(34,197,94,0.1)]"
+              >
+                <div className="flex items-center gap-3">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  <span>Account Created Successfully!</span>
+                </div>
+                {needsVerification && (
+                  <p className="text-[12px] text-zinc-400 font-medium ml-8 leading-relaxed">
+                    A verification link has been sent to your email. Please verify your account before signing in.
+                  </p>
+                )}
+              </motion.div>
+            )}
           </AnimatePresence>
 
           <form onSubmit={handleSubmit} className="space-y-4 w-full">
-            {/* Email Input */}
+
+            {/* Unified Email / Phone Input */}
             <div className="space-y-1.5">
-              <label className="text-[13px] font-medium text-zinc-300 ml-1">Email</label>
+              <label className="text-[13px] font-medium text-zinc-300 ml-1">
+                Email or Phone Number
+              </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500">
-                    <rect x="2" y="4" width="20" height="16" rx="2" />
-                    <path d="M2 4l10 8 10-8" />
-                  </svg>
+                  <AnimatePresence mode="wait">
+                    {isEmail ? (
+                      <motion.svg key="email-icon" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-400">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                      </motion.svg>
+                    ) : isPhone ? (
+                      <motion.svg key="phone-icon" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-400">
+                        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.09 1.18 2 2 0 012 .05h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"></path>
+                      </motion.svg>
+                    ) : (
+                      <motion.svg key="default-icon" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500">
+                        <circle cx="12" cy="8" r="4"></circle>
+                        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path>
+                      </motion.svg>
+                    )}
+                  </AnimatePresence>
                 </div>
                 <input
                   type="text"
                   required
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
+                  onBlur={() => {
+                    // Phone blur formatting: strip leading 0 if 10 digits
+                    if (!isEmail && identifier.length === 10 && identifier.startsWith("0")) {
+                      setIdentifier(identifier.slice(1));
+                    }
+                  }}
                   className="w-full h-[52px] pl-[44px] pr-4 bg-zinc-900 border border-zinc-700 rounded-2xl focus:border-green-400/80 focus:ring-1 focus:ring-green-400/80 outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white shadow-sm"
-                  placeholder="Enter your email"
+                  placeholder="you@example.com or 0911 997 755"
                 />
               </div>
+              {/* Subtle hint showing detected mode */}
+              <AnimatePresence>
+                {identifier.length > 0 && (
+                  <motion.p 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="text-[11px] ml-1 font-bold uppercase tracking-widest"
+                    style={{ color: isEmail || isPhone ? "#4ade80" : "#71717a" }}
+                  >
+                    {isEmail ? "✓ Signing in with email" : isPhone ? "✓ Signing in with phone number" : "Enter email or phone"}
+                  </motion.p>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Password Input */}
@@ -224,31 +317,15 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password */}
-            <div className="flex justify-between items-center pt-2 pb-2">
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <div className={`w-4 h-4 rounded-[4px] border flex items-center justify-center transition-colors ${rememberMe ? 'bg-white border-white' : 'border-zinc-700 bg-transparent group-hover:border-zinc-500'}`}>
-                  {rememberMe && (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                  )}
-                </div>
-                <input 
-                  type="checkbox" 
-                  className="hidden" 
-                  checked={rememberMe}
-                  onChange={() => setRememberMe(!rememberMe)}
-                />
-                <span className="text-[13px] font-medium text-zinc-400 group-hover:text-zinc-300 transition-colors">Remember me</span>
-              </label>
+            {/* Forgot Password */}
+            <div className="flex justify-end pt-1 pb-1">
               <Link href="#" className="text-[13px] font-bold text-green-400 hover:text-green-300 transition-colors tracking-wide">
                 Forgot Password?
               </Link>
             </div>
 
             {/* Primary Login Button */}
-            <div className="pt-2">
+            <div className="pt-1">
               <button
                 type="submit"
                 disabled={isLoading}
@@ -257,7 +334,7 @@ export default function LoginPage() {
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                 ) : (
-                  "Login"
+                  "Sign In"
                 )}
               </button>
             </div>

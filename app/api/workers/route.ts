@@ -93,7 +93,7 @@ export async function GET(req: NextRequest) {
     }
 
     console.log("[WORKERS_GET] Executing Query");
-    const workers = await sql(query, params);
+    const workers = await sql.query(query, params);
     console.log(`[WORKERS_GET] Success: ${workers.length} found`);
 
     return NextResponse.json({ workers });

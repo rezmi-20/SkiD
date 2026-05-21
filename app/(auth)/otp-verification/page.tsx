@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 export default function OTPVerificationPage() {
@@ -9,9 +9,31 @@ export default function OTPVerificationPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [resent, setResent] = useState(false);
-  const [mounted, setMounted] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const refs = Array.from({ length: 6 }, () => useRef<HTMLInputElement>(null));
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email");
+
+  useEffect(() => {
+    setMounted(true);
+    if (!email) {
+      router.push("/login");
+      return;
+    }
+
+    // Diagnostic: Check if already verified
+    const checkStatus = async () => {
+      const { authClient } = await import("@/lib/auth/client");
+      const { data: session } = await authClient.getSession();
+      // Only redirect if they are actually verified AND it's a valid session
+      if (session?.user?.emailVerified) {
+        console.log("[OTP] User already verified, moving to login");
+        router.push("/login?verified=true");
+      }
+    };
+    checkStatus();
+  }, [email, router]);
 
   const otp = digits.join("");
 
@@ -43,25 +65,49 @@ export default function OTPVerificationPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (otp.length < 6) return;
+    if (otp.length < 6 || !email) return;
     setIsLoading(true);
     setError("");
-    setTimeout(() => {
-      if (otp === "123456") {
-        router.push("/login?verified=true");
+
+    try {
+      const { authClient } = await import("@/lib/auth/client");
+      const { error: verifyError } = await authClient.emailOtp.verifyEmail({
+        email,
+        otp,
+      });
+
+      if (verifyError) {
+        setError(verifyError.message || "Invalid code. Please try again.");
       } else {
-        setError("Invalid code. Use 123456 for testing.");
-        setIsLoading(false);
+        router.push("/login?verified=true");
       }
-    }, 1200);
+    } catch (err: any) {
+      console.error("Verification Error:", err);
+      setError(err.message || "An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleResend = () => {
+  const handleResend = async () => {
+    if (!email) return;
     setResent(true);
     setDigits(["", "", "", "", "", ""]);
     refs[0].current?.focus();
+    
+    try {
+       const { authClient } = await import("@/lib/auth/client");
+       await authClient.emailOtp.sendVerificationOtp({
+         email,
+         type: "email-verification"
+       });
+    } catch (err) {
+       console.error("Failed to resend code", err);
+    }
+    
     setTimeout(() => setResent(false), 4000);
   };
+
 
   return (
     <div className="min-h-[100dvh] w-full flex bg-[#09090b] text-white font-inter overflow-x-hidden selection:bg-green-400/30">

@@ -1,5 +1,7 @@
 import { auth } from "@/lib/auth";
 
+export const dynamic = 'force-dynamic';
+
 export default async function TestUpdatePage() {
   const session = await auth();
   

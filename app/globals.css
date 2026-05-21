@@ -1,78 +1,144 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: var(--primary-accent);
-  --color-background: var(--bg-page);
-  --color-surface: var(--surface-glass);
-  --color-border: var(--border-glass);
-  --color-text-high: var(--text-high);
-  --color-text-med: var(--text-med);
-  --color-brand-accent: var(--brand-logo);
+  --color-primary: var(--md-sys-color-primary);
+  --color-on-primary: var(--md-sys-color-on-primary);
+  --color-primary-container: var(--md-sys-color-primary-container);
+  --color-on-primary-container: var(--md-sys-color-on-primary-container);
   
-  --radius-DEFAULT: 1rem;
-  --radius-lg: 1.5rem;
-  --radius-xl: 2rem;
+  --color-background: var(--md-sys-color-background);
+  --color-on-background: var(--md-sys-color-on-background);
+  
+  --color-surface: var(--md-sys-color-surface);
+  --color-on-surface: var(--md-sys-color-on-surface);
+  --color-surface-variant: var(--md-sys-color-surface-variant);
+  --color-on-surface-variant: var(--md-sys-color-on-surface-variant);
+  
+  --color-surface-container-lowest: var(--md-sys-color-surface-container-lowest);
+  --color-surface-container-low: var(--md-sys-color-surface-container-low);
+  --color-surface-container: var(--md-sys-color-surface-container);
+  --color-surface-container-high: var(--md-sys-color-surface-container-high);
+  --color-surface-container-highest: var(--md-sys-color-surface-container-highest);
+
+  --color-outline: var(--md-sys-color-outline);
+  --color-outline-variant: var(--md-sys-color-outline-variant);
+  --color-error: var(--md-sys-color-error);
+  --color-error-container: var(--md-sys-color-error-container);
+  --color-on-error-container: var(--md-sys-color-on-error-container);
+
+  --color-secondary-container: var(--md-sys-color-secondary-container);
+  --color-on-secondary-container: var(--md-sys-color-on-secondary-container);
+  
+  --radius-DEFAULT: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2.5rem;
   --radius-full: 9999px;
 
-  --font-headline: var(--font-inter), "Inter", sans-serif;
-  --font-body: var(--font-inter), "Inter", sans-serif;
-  --font-label: var(--font-inter), "Inter", sans-serif;
+  --font-headline: "Plus Jakarta Sans", sans-serif;
+  --font-body: "Plus Jakarta Sans", sans-serif;
+  --font-label: "Plus Jakarta Sans", sans-serif;
 }
 
 @layer base {
+  :root, [data-theme='light'] {
+    /* ── LUMINA LIGHT ── */
+    --md-sys-color-primary: #006e2a;
+    --md-sys-color-on-primary: #ffffff;
+    --md-sys-color-primary-container: #7ee38b;
+    --md-sys-color-on-primary-container: #002108;
+    
+    --md-sys-color-background: #f3f4f6;
+    --md-sys-color-on-background: #191c1e;
+    
+    --md-sys-color-surface: #f3f4f6;
+    --md-sys-color-on-surface: #191c1e;
+    --md-sys-color-surface-variant: #dfe2e6;
+    --md-sys-color-on-surface-variant: #3f4a3e;
+    
+    --md-sys-color-surface-container-lowest: #ffffff;
+    --md-sys-color-surface-container-low: #edeff2;
+    --md-sys-color-surface-container: #e7e9ed;
+    --md-sys-color-surface-container-high: #e1e3e8;
+    --md-sys-color-surface-container-highest: #dbdee3;
+
+    --md-sys-color-outline: #72777f;
+    --md-sys-color-outline-variant: #c2c7cf;
+    --md-sys-color-error: #ba1a1a;
+    --md-sys-color-error-container: #ffdad6;
+    --md-sys-color-on-error-container: #410002;
+
+    --md-sys-color-secondary-container: #dfdfe6;
+    --md-sys-color-on-secondary-container: #1a1c20;
+
+    --brand-logo: #006e2a;
+    --img-grayscale: 0;
+  }
+
+  [data-theme='dark'], [data-theme='grayscale'] {
+    /* ── LUMINA DARK / GRAYSCALE ── */
+    --md-sys-color-primary: #77dc85;
+    --md-sys-color-on-primary: #003912;
+    --md-sys-color-primary-container: #00531e;
+    --md-sys-color-on-primary-container: #93f99e;
+    
+    --md-sys-color-background: #0e1411;
+    --md-sys-color-on-background: #e1e3df;
+    
+    --md-sys-color-surface: #0e1411;
+    --md-sys-color-on-surface: #e1e3df;
+    --md-sys-color-surface-variant: #414941;
+    --md-sys-color-on-surface-variant: #c1c9be;
+    
+    --md-sys-color-surface-container-lowest: #090f0c;
+    --md-sys-color-surface-container-low: #171d19;
+    --md-sys-color-surface-container: #1b211d;
+    --md-sys-color-surface-container-high: #252b27;
+    --md-sys-color-surface-container-highest: #303631;
+
+    --md-sys-color-outline: #8b9389;
+    --md-sys-color-outline-variant: #414941;
+    --md-sys-color-error: #ffb4ab;
+    --md-sys-color-error-container: #93000a;
+    --md-sys-color-on-error-container: #ffdad6;
+
+    --md-sys-color-secondary-container: #45474c;
+    --md-sys-color-on-secondary-container: #e2e2e9;
+
+    --brand-logo: #77dc85;
+    --img-grayscale: 1;
+  }
+
   body {
-    overflow-x: hidden;
-  }
-
-  /* ── GRAYSCALE (Default) ── */
-  :root, [data-theme='grayscale'] {
-    --bg-page: #09090b;
-    --text-high: #ffffff;
-    --text-med: #a1a1aa;
-    --primary-accent: #4ade80;
-    --surface-glass: rgba(18, 18, 18, 0.8);
-    --border-glass: rgba(255, 255, 255, 0.05);
-    --brand-logo: #4ade80;
-    --selection-bg: rgba(74, 222, 128, 0.3);
-    --selection-text: #ffffff;
-    --img-grayscale: 0%;
-  }
-
-  /* ── BENTO NOIR (Dark) ── */
-  [data-theme='dark'] {
-    --bg-page: #000000;
-    --text-high: #ffffff;
-    --text-med: #a1a1aa;
-    --primary-accent: #4ade80;
-    --surface-glass: rgba(9, 9, 11, 0.9);
-    --border-glass: rgba(255, 255, 255, 0.1);
-    --brand-logo: #4ade80;
-    --selection-bg: #4ade80;
-    --selection-text: #000000;
-    --img-grayscale: 0%;
-  }
-
-  /* ── BENTO LUMIERE (Light) ── */
-  [data-theme='light'] {
-    --bg-page: #ffffff;
-    --text-high: #09090b;
-    --text-med: #71717a;
-    --primary-accent: #22c55e;
-    --surface-glass: #f4f4f5;
-    --border-glass: rgba(0, 0, 0, 0.08);
-    --brand-logo: #16a34a;
-    --selection-bg: #4ade80;
-    --selection-text: #ffffff;
-    --img-grayscale: 0%;
+    background-color: var(--md-sys-color-background);
+    color: var(--md-sys-color-on-background);
+    font-family: "Plus Jakarta Sans", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.35s ease, color 0.35s ease;
   }
 }
+
+/* ── Typography Helpers ── */
+.text-headline-lg { font-size: 24px; line-height: 32px; font-weight: 700; }
+.text-headline-md { font-size: 18px; line-height: 24px; font-weight: 600; }
+.text-body-lg { font-size: 16px; line-height: 24px; font-weight: 500; }
+.text-body-md { font-size: 14px; line-height: 20px; font-weight: 400; }
+.text-label-md { font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.02em; }
+.text-label-sm { font-size: 10px; line-height: 12px; font-weight: 700; }
 
 .material-symbols-outlined {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
+
+.material-symbols-outlined.filled {
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
 .theme-img {
     filter: grayscale(var(--img-grayscale));
 }
+
 .glass-panel {
     background: rgba(18, 18, 18, 0.4);
     backdrop-filter: blur(20px);
@@ -124,142 +190,13 @@
     filter: brightness(100%) contrast(150%);
 }
 
-/* ═══════════════════════════════════════════
-   LIGHT MODE — Premium Editorial Overrides
-   Covers hardcoded dark Tailwind patterns
-   ═══════════════════════════════════════════ */
-
-[data-theme='light'] .grain-overlay { opacity: 0 !important; }
-
-[data-theme='light'] * {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-
-/* ── Backgrounds ── */
-[data-theme='light'] .bg-surface,
-[data-theme='light'] .bg-surface-container-low,
-[data-theme='light'] .bg-surface-container-high,
-[data-theme='light'] .bg-surface-container,
-[data-theme='light'] .bg-surface-variant {
-  background-color: #ffffff !important;
-}
-
-[data-theme='light'] .bg-background { background-color: var(--bg-page) !important; }
-
-/* ── Borders ── */
-[data-theme='light'] .border-white\/5,
-[data-theme='light'] .border-white\/10,
-[data-theme='light'] .border-white\/20 {
-  border-color: rgba(0,0,0,0.08) !important;
-}
-
-/* ── Text ── */
-[data-theme='light'] .text-white { color: #111827 !important; }
-[data-theme='light'] .text-on-surface { color: #111827 !important; }
-[data-theme='light'] .text-on-surface-variant { color: #6b7280 !important; }
-[data-theme='light'] .text-text-high { color: #111827 !important; }
-[data-theme='light'] .text-text-med { color: #6b7280 !important; }
-
-/* ── Icon & hover states ── */
-[data-theme='light'] .hover\:bg-white\/10:hover,
-[data-theme='light'] .hover\:bg-white\/5:hover {
-  background-color: rgba(0,0,0,0.05) !important;
-}
-
-[data-theme='light'] .hover\:bg-black\/5:hover {
-  background-color: rgba(0,0,0,0.05) !important;
-}
-
-/* ── Nav bar ── */
-[data-theme='light'] nav {
-  background: rgba(255, 255, 240, 0.97) !important;
-  border-bottom-color: rgba(0, 0, 0, 0.09) !important;
-}
-
-/* ── Inputs & Selects ── */
-[data-theme='light'] input,
-[data-theme='light'] select {
-  background-color: #f5f4f0 !important;
-  color: #111827 !important;
-  border-color: rgba(0,0,0,0.1) !important;
-}
-
-[data-theme='light'] input::placeholder {
-  color: #9ca3af !important;
-}
-
-/* ── Cards (any rounded panels with dark bg) ── */
-[data-theme='light'] .rounded-2xl,
-[data-theme='light'] .rounded-3xl,
-[data-theme='light'] .rounded-xl {
-  --tw-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-}
-
-/* ── Hero overlays: dark scrim so photo is vivid ── */
-[data-theme='light'] .hero-overlay-r {
-  background: linear-gradient(to right, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.2) 55%, transparent 100%) !important;
-}
-[data-theme='light'] .hero-overlay-t {
-  background: linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 55%) !important;
-}
-
-/* ── Hero LEFT text: force white on dark scrim ── */
-[data-theme='light'] .hero-text,
-[data-theme='light'] .hero-text h1,
-[data-theme='light'] .hero-text p,
-[data-theme='light'] .hero-text span { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
-[data-theme='light'] .hero-text .text-gradient {
-  background: linear-gradient(to bottom right, #ffffff 30%, rgba(255,255,255,0.75) 100%);
-  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent !important;
-}
-
-/* ── Section overlay ── */
-[data-theme='light'] .section-overlay { background-color: rgba(255, 255, 240, 0.48) !important; }
-
-/* ── Floating benefit cards ── */
-[data-theme='light'] .animate-float {
-  background: #ffffff !important;
-  border-color: rgba(0,0,0,0.07) !important;
-  box-shadow: 0 2px 24px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04) !important;
-}
-
-/* ── Text gradient ── */
-[data-theme='light'] .text-gradient {
-  background: linear-gradient(to bottom right, #111827 0%, #374151 100%);
-  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-}
-
-/* ── Separators ── */
-[data-theme='light'] .h-px.bg-white\/5,
-[data-theme='light'] .w-px.bg-white\/5 {
-  background-color: rgba(0,0,0,0.1) !important;
-}
-
-/* ── Worker card & popup ── */
-[data-theme='light'] .leaflet-popup-content-wrapper {
-  background: #ffffff !important;
-  color: #111827 !important;
-  border: 1px solid rgba(0,0,0,0.08) !important;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
-}
-[data-theme='light'] .leaflet-popup-tip { background: #ffffff !important; }
-[data-theme='light'] .leaflet-bar a {
-  background-color: #ffffff !important;
-  color: #111827 !important;
-  border-bottom: 1px solid rgba(0,0,0,0.08) !important;
-}
-
 .text-gradient {
   background: linear-gradient(to bottom right, var(--text-high) 30%, var(--text-med) 100%);
   -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
 }
 
-::selection { background-color: var(--selection-bg); color: var(--selection-text); }
+::selection { background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
 
-* { transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease; }
-
-/* ── PWA & Mobile ── */
 @layer utilities {
   .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
 }

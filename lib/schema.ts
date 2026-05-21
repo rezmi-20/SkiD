@@ -66,6 +66,7 @@ export const clientProfiles = pgTable("client_profiles", {
   avatarUrl: text("avatar_url"),
   latitude: doublePrecision("latitude"),
   longitude: doublePrecision("longitude"),
+  isVerified: boolean("is_verified").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -92,6 +93,8 @@ export const contracts = pgTable("contracts", {
     .references(() => jobs.id, { onDelete: "cascade" }),
   terms: text("terms"),
   pdfUrl: text("pdf_url"),
+  clientSignedAt: timestamp("client_signed_at"),
+  workerSignedAt: timestamp("worker_signed_at"),
   signedAt: timestamp("signed_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -110,6 +113,8 @@ export const ratings = pgTable("ratings", {
     .references(() => users.id),
   score: integer("score").notNull(),
   comment: text("comment"),
+  photoUrls: text("photo_urls").array(),
+  isFlagged: boolean("is_flagged").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -148,5 +153,54 @@ export const payments = pgTable("payments", {
   amount: integer("amount").notNull(),
   status: paymentStatusEnum("status").notNull().default("held"),
   chapaRef: varchar("chapa_ref", { length: 255 }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ─── Community Feed ────────────────────────────────────────────────────────────
+export const communityPosts = pgTable("community_posts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  mediaUrl: text("media_url"),
+  category: text("category").notNull(),
+  likesCount: integer("likes_count").notNull().default(0),
+  flagsCount: integer("flags_count").notNull().default(0),
+  isRemoved: boolean("is_removed").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const communityLikes = pgTable("community_likes", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id),
+  postId: uuid("post_id").notNull().references(() => communityPosts.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const communityFlags = pgTable("community_flags", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id),
+  postId: uuid("post_id").notNull().references(() => communityPosts.id),
+  reason: text("reason"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const communityComments = pgTable("community_comments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id),
+  postId: uuid("post_id").notNull().references(() => communityPosts.id),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// ─── Notifications ─────────────────────────────────────────────────────────────
+export const notifications = pgTable("notifications", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  type: text("type").notNull(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  linkHref: text("link_href"),
+  isRead: boolean("is_read").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

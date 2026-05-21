@@ -2,6 +2,7 @@
 
 import { sql } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { createNotification } from "@/lib/actions/notifications";
 
 export async function getUserContracts() {
   const session = await auth();
@@ -19,6 +20,8 @@ export async function getUserContracts() {
       return await sql`
         SELECT 
           c.id as contract_id,
+          c.client_signed_at,
+          c.worker_signed_at,
           c.signed_at,
           c.pdf_url,
           c.created_at as contract_created_at,
@@ -40,6 +43,8 @@ export async function getUserContracts() {
       return await sql`
         SELECT 
           c.id as contract_id,
+          c.client_signed_at,
+          c.worker_signed_at,
           c.signed_at,
           c.pdf_url,
           c.created_at as contract_created_at,
@@ -73,6 +78,8 @@ export async function getContractDetails(contractId: string) {
     const contracts = await sql`
       SELECT 
         c.*,
+        c.client_signed_at,
+        c.worker_signed_at,
         j.title as job_title,
         j.description as job_description,
         j.status as job_status,
@@ -108,3 +115,72 @@ export async function getContractDetails(contractId: string) {
     return null;
   }
 }
+
+export async function signContract(contractId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const userId = session.user.id;
+  const role = session.user.role;
+
+  try {
+    const contractRows = await sql`SELECT * FROM contracts WHERE id = ${contractId}`;
+    if (contractRows.length === 0) throw new Error("Contract not found");
+    const contract = contractRows[0];
+
+    const jobRows = await sql`SELECT * FROM jobs WHERE id = ${contract.job_id}`;
+    if (jobRows.length === 0) throw new Error("Job not found");
+    const job = jobRows[0];
+
+    let updateQuery;
+    if (role === "client" && job.client_id === userId) {
+      updateQuery = sql`UPDATE contracts SET client_signed_at = NOW() WHERE id = ${contractId} RETURNING *`;
+    } else if (role === "worker" && job.worker_id === userId) {
+      updateQuery = sql`UPDATE contracts SET worker_signed_at = NOW() WHERE id = ${contractId} RETURNING *`;
+    } else {
+      throw new Error("Forbidden");
+    }
+
+    const updatedContract = (await updateQuery)[0];
+
+    if (updatedContract.client_signed_at && updatedContract.worker_signed_at) {
+      await sql`UPDATE contracts SET signed_at = NOW() WHERE id = ${contractId}`;
+      await sql`UPDATE jobs SET status = 'active' WHERE id = ${contract.job_id}`;
+
+      // Both parties signed — notify each other
+      await createNotification({
+        userId: job.client_id,
+        type: "contract_signed",
+        title: "Contract is Now Active!",
+        body: `Both parties have signed. The job "${job.title}" is now in progress.`,
+        linkHref: `/contracts/${contractId}`,
+      });
+      await createNotification({
+        userId: job.worker_id,
+        type: "contract_signed",
+        title: "Contract is Now Active!",
+        body: `Both parties have signed. The job "${job.title}" is now in progress.`,
+        linkHref: `/contracts/${contractId}`,
+      });
+    } else {
+      // Notify the other party that one side signed
+      const notifyId = role === "client" ? job.worker_id : job.client_id;
+      const signerLabel = role === "client" ? "Client" : "Worker";
+      await createNotification({
+        userId: notifyId,
+        type: "contract_signed",
+        title: `${signerLabel} Signed the Contract`,
+        body: `The ${signerLabel.toLowerCase()} has signed for "${job.title}". Waiting for your signature.`,
+        linkHref: `/contracts/${contractId}`,
+      });
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("[SIGN_CONTRACT_ERROR]", error);
+    return { success: false, error: "Failed to sign contract" };
+  }
+}
+

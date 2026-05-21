@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { authClient } from "@/lib/auth/client";
 
 interface Message {
   id: string;
@@ -26,7 +26,7 @@ export default function WorkerChatPage() {
   const params = useParams();
   const router = useRouter();
   const convId = params.conversationId as string;
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
   const myId = session?.user?.id;
 
   const [messages, setMessages] = useState<Message[]>([]);
