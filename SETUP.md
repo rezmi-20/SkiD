@@ -468,7 +468,132 @@ npx drizzle-kit studio # Open Drizzle Studio (visual DB explorer)
 
 ---
 
-## 12. Deployment Notes
+## 12. Nuclear Reset — When to Delete & Reinstall
+
+Some problems **cannot be fixed by changing code**. They are caused by corrupted caches, stale build artifacts, or broken lock files. In these cases, the only correct fix is to **delete the specific directory and regenerate it**.
+
+Here are all the cases you will encounter in this project:
+
+---
+
+### 🗑️ Case 1: Stale Next.js Build Cache (`.next/`)
+**When to do this:**
+- You see TypeScript errors referencing routes or files that no longer exist (e.g., old `[...nextauth]` route after migration).
+- Pages are rendering old content even after you've changed the code.
+- Build output references deleted files or shows phantom type errors.
+- The dev server crashes on startup with cryptic module resolution errors.
+
+**Fix:**
+```powershell
+# In PowerShell:
+Remove-Item -Recurse -Force .next
+npm run dev
+```
+```bash
+# In Git Bash / Mac / Linux:
+rm -rf .next
+npm run dev
+```
+> The `.next` folder is **always safe to delete**. Next.js regenerates it fully on every `npm run dev` or `npm run build`.
+
+---
+
+### 🗑️ Case 2: Broken or Mismatched Dependencies (`node_modules/`)
+**When to do this:**
+- After pulling from a branch where `package.json` changed significantly.
+- You see errors like `Cannot find module 'X'` even though it's listed in `package.json`.
+- Running `npm install` gives peer dependency errors or skips packages silently.
+- The app crashes with `Module not found: Error: Can't resolve '@neondatabase/auth/react'`.
+- After switching Node.js versions (e.g., Node 18 → Node 20).
+
+**Fix:**
+```powershell
+# In PowerShell:
+Remove-Item -Recurse -Force node_modules
+Remove-Item -Force package-lock.json
+npm install --legacy-peer-deps
+```
+```bash
+# In Git Bash / Mac / Linux:
+rm -rf node_modules package-lock.json
+npm install --legacy-peer-deps
+```
+> ⚠️ Always delete **both** `node_modules` AND `package-lock.json` together. Deleting only one can leave them out of sync.
+
+---
+
+### 🗑️ Case 3: TypeScript Build Cache (`tsconfig.tsbuildinfo`)
+**When to do this:**
+- `npx tsc --noEmit` reports errors for files that look perfectly correct.
+- After a large refactor where many files were renamed or moved.
+- You renamed or deleted a file but TypeScript still complains about it.
+
+**Fix:**
+```powershell
+Remove-Item -Force tsconfig.tsbuildinfo
+npx tsc --noEmit
+```
+
+---
+
+### 🗑️ Case 4: Browser Service Worker & Cache (PWA)
+**When to do this:**
+- The browser loads an old cached version of the app even after a full rebuild.
+- A white or black screen persists in the browser but the terminal shows no errors.
+- Old API endpoint URLs (e.g., `/api/auth/register`) are being called even though you renamed them.
+- The app works in **Incognito** but not in the normal browser window.
+
+**Fix (Chrome / Edge):**
+1. Open DevTools (`F12`).
+2. Go to the **Application** tab.
+3. Click **Service Workers** in the left panel → click **Unregister**.
+4. Click **Storage** in the left panel → click **Clear site data**.
+5. Hard refresh: `Ctrl + Shift + R`.
+
+---
+
+### 🗑️ Case 5: Full Clean Slate (New Device / Persistent Errors)
+**When to do this:**
+- You just cloned/pulled on a new device and nothing works.
+- Multiple errors are happening at once and you can't isolate the root cause.
+- You've tried everything and the app still won't start.
+
+**Complete reset sequence (run in order):**
+```powershell
+# 1. Delete all generated/cached directories
+Remove-Item -Recurse -Force .next
+Remove-Item -Recurse -Force node_modules
+Remove-Item -Force package-lock.json
+Remove-Item -Force tsconfig.tsbuildinfo
+
+# 2. Reinstall all dependencies
+npm install --legacy-peer-deps
+
+# 3. Verify your .env.local exists (CRITICAL - not in git!)
+#    See Section 5 for the exact values to paste.
+
+# 4. Start the dev server fresh
+npm run dev
+```
+
+> ⚠️ After step 4, **do not open the browser immediately**. Wait for the terminal to show `✓ Ready on http://localhost:3000` before navigating to the page.
+
+---
+
+### 📋 Quick Reference Cheat Sheet
+
+| Problem | Delete This | Then Run |
+|---|---|---|
+| Phantom TypeScript errors | `.next/` | `npm run dev` |
+| `Module not found` after pull | `node_modules/` + `package-lock.json` | `npm install --legacy-peer-deps` |
+| Old code still rendering | `.next/` | `npm run dev` |
+| TS errors on renamed files | `tsconfig.tsbuildinfo` | `npx tsc --noEmit` |
+| Old API URLs being called | Browser cache (DevTools) | Clear site data + Hard refresh |
+| Nothing works (new device) | `.next/` + `node_modules/` + `package-lock.json` | `npm install --legacy-peer-deps` then `npm run dev` |
+
+---
+
+## 13. Deployment Notes
 
 - The app is **not yet deployed** to production.
 - Planned platform: **Vercel** (free tier, automatic deploys from `main`)
