@@ -99,19 +99,31 @@ Create a file named **`.env.local`** in the project root with exactly these valu
 # Neon PostgreSQL — serverless DB hosted on neon.tech
 DATABASE_URL=postgresql://neondb_owner:npg_uH9bUs3KmtLP@ep-mute-meadow-anqyrcz7-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
 
-# Neon Auth (Better Auth) configuration
+# Neon Auth (Better Auth) configuration (Optional for local fallback, but recommended)
 NEON_AUTH_BASE_URL=https://auth.neon.tech
 NEON_AUTH_COOKIE_SECRET=your_secret_here
-
-> ⚠️ **AUTH MIGRATION:** We have migrated from NextAuth to Neon Auth. The `AUTH_SECRET` is no longer used. Ensure `NEON_AUTH_BASE_URL` is set to your Neon project's auth URL.
 ```
+
+> ⚠️ **IMPORTANT NOTE FOR NEW DEVICES:** Because `.env.local` is gitignored, it does not get pulled automatically. You **must** create it manually in the root of the directory on your new device for the database connection to work.
 
 > **Note:** The Neon database is already provisioned and seeded. No migration needed on first run (tables already exist in the cloud DB).
 
-### If you get a DB connection error:
-1. Verify `DATABASE_URL` is exactly as above (no spaces, no line break).
-2. The Neon project is in **us-east-1**. Connection should work from any device.
-3. If the pool says "too many connections", wait 30 seconds and retry.
+### 5.1 Troubleshooting Database Connection Problems on a New Device
+
+If you can see the web app running but it hangs, shows a blank screen, or fails on registration/login due to a database error, follow these verification steps:
+
+1. **Verify `.env.local` Existence**: Ensure the `.env.local` file is in the root directory (same folder as `package.json`, NOT inside the `app` or `lib` folder).
+2. **Verify Environment Variables**: Make sure the keys are exactly `DATABASE_URL` with the connection string provided in Section 5 above (without spaces, double quotes, or trailing slashes).
+3. **Restart the Dev Server**: Next.js does **not** hot-reload changes in `.env.local`. You **must** stop the server (`Ctrl + C`) and restart it using `npm run dev` to load the new values.
+4. **Neon IP Allowlist Block**:
+   - If your database dashboard has an IP Allowlist turned on, it will reject requests from your new machine's IP address.
+   - Go to your **Neon Console -> Settings -> Security -> IP Allowlist** and verify if it's restricting connections.
+5. **Flush Service Worker & Local Cache**:
+   - The PWA Service Worker may cache old pages that attempt connections to obsolete endpoints.
+   - Open Chrome DevTools (`F12`).
+   - Navigate to the **Application** tab.
+   - Click **Storage** on the left menu, and click **Clear site data**.
+   - Refresh the page to reload the latest bundle.
 
 ---
 
