@@ -32,10 +32,6 @@ const getDbClient = () => {
 export const sql = new Proxy(() => {}, {
   get: (target, prop) => {
     const client = getDbClient();
-    // If someone calls sql.query(...), we redirect it to the main connection function
-    if (prop === 'query') {
-        return client;
-    }
     const value = (client as any)[prop];
     return typeof value === 'function' ? value.bind(client) : value;
   },

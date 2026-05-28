@@ -159,7 +159,7 @@ export default function SearchPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                className="flex flex-col gap-4"
               >
                 {workers.length > 0 ? (
                   workers.map((worker) => (

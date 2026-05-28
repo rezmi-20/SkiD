@@ -24,14 +24,16 @@ interface MapComponentProps {
 
 const createWorkerIcon = (rating: number) => {
   const isTopRated = rating >= 4.5;
-  const colorClass = isTopRated ? 'bg-[#ffb703]' : 'bg-white';
-  const shadowClass = isTopRated ? 'shadow-[0_0_15px_rgba(255,183,3,0.5)]' : 'shadow-lg';
+  const colorClass = isTopRated ? 'text-[#ffb703]' : 'text-[#4ade80]';
+  const shadowClass = isTopRated ? 'drop-shadow-[0_0_10px_rgba(255,183,3,0.8)]' : 'drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]';
   
   return L.divIcon({
-    html: `<div class="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-black ${colorClass} ${shadowClass}"></div>`,
-    className: 'custom-leaflet-icon',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
+    html: `<div class="flex flex-col items-center justify-center -mt-8">
+             <span class="material-symbols-outlined text-[42px] ${colorClass} ${shadowClass}" style="font-variation-settings: 'FILL' 1;">location_on</span>
+           </div>`,
+    className: 'custom-leaflet-icon bg-transparent border-0',
+    iconSize: [42, 42],
+    iconAnchor: [21, 40],
   });
 };
 
@@ -50,6 +52,9 @@ import { useLocation, DEFAULT_CENTER } from "@/context/LocationContext";
 const MapUpdater = ({ workers, center }: { workers: Worker[], center: [number, number] }) => {
   const map = useMap();
   
+  // Create a string representation of workers to use in dependency array to avoid reference issues
+  const workersHash = workers.map(w => w.id).join(',');
+
   useEffect(() => {
     // Filter out workers that don't have valid coordinates (0,0 is null fallback)
     const validWorkers = workers.filter(w => w.lat !== 0 && w.lng !== 0);
@@ -61,7 +66,7 @@ const MapUpdater = ({ workers, center }: { workers: Worker[], center: [number, n
     } else {
       map.setView(center, 13);
     }
-  }, [workers, center, map]);
+  }, [workersHash, center[0], center[1], map]);
   
   return null;
 };
@@ -83,9 +88,8 @@ export default function MapComponent({ workers }: MapComponentProps) {
     : [DEFAULT_CENTER.lat, DEFAULT_CENTER.lng];
   
   const isLight = theme === 'light';
-  const tileUrl = isLight 
-    ? "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-    : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+  // Use colorful OpenStreetMap tiles regardless of theme
+  const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 
   return (
     <div className="h-[calc(100vh-280px)] w-full rounded-[2rem] overflow-hidden border border-white/5 shadow-2xl z-0">
@@ -146,14 +150,14 @@ export default function MapComponent({ workers }: MapComponentProps) {
           background: var(--bg-page) !important;
         }
         .leaflet-popup-content-wrapper {
-          background: var(--surface-glass) !important;
-          color: var(--text-high) !important;
+          background: #1a1a1a !important;
+          color: #ffffff !important;
           border-radius: 1rem !important;
-          border: 1px solid var(--border-glass);
-          box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+          border: 1px solid rgba(255,255,255,0.1);
+          box-shadow: 0 20px 40px rgba(0,0,0,0.5);
         }
         .leaflet-popup-tip {
-          background: var(--surface-glass) !important;
+          background: #1a1a1a !important;
         }
         .leaflet-bar a {
            background-color: var(--surface-glass) !important;
