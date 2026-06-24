@@ -2,8 +2,14 @@
 import { createNeonAuth } from '@neondatabase/auth/next/server';
 
 const getBaseUrl = () => {
-  if (process.env.NEON_AUTH_BASE_URL) return process.env.NEON_AUTH_BASE_URL;
+  // If deployed on Vercel, ALWAYS use the current Vercel deployment URL
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  
+  // Only use NEON_AUTH_BASE_URL if it's not the generic auth.neon.tech placeholder
+  if (process.env.NEON_AUTH_BASE_URL && !process.env.NEON_AUTH_BASE_URL.includes("auth.neon.tech")) {
+    return process.env.NEON_AUTH_BASE_URL;
+  }
+  
   return "http://localhost:3000";
 };
 
