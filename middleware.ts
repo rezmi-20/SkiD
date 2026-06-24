@@ -14,10 +14,15 @@ export default async function middleware(req: NextRequest) {
     const headers = new Headers(req.headers);
     const cookieStr = headers.get("cookie");
     if (cookieStr) {
-      const rewrittenCookie = cookieStr
-        .replace(/neon-auth\.session_token=/g, "__Secure-neon-auth.session_token=")
-        .replace(/neon-auth\.session_data=/g, "__Secure-neon-auth.session_data=");
-      headers.set("cookie", rewrittenCookie);
+      // Only apply the __Secure- workaround if we are running locally on HTTP.
+      // On Vercel (HTTPS), Better Auth expects the native __Secure- cookie.
+      const url = new URL(req.url);
+      if (url.protocol === "http:" && (url.hostname === "localhost" || url.hostname === "127.0.0.1")) {
+        const rewrittenCookie = cookieStr
+          .replace(/neon-auth\.session_token=/g, "__Secure-neon-auth.session_token=")
+          .replace(/neon-auth\.session_data=/g, "__Secure-neon-auth.session_data=");
+        headers.set("cookie", rewrittenCookie);
+      }
     }
 
     const { data: session } = await auth.getSession({
