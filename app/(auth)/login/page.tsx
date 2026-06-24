@@ -24,6 +24,11 @@ export default function LoginPage() {
 
   useEffect(() => {
     setMounted(true);
+
+    // If ?logout=1 is in URL, we came here to force sign out — skip the session redirect
+    const forceLogout = searchParams.get("logout") === "1";
+    if (forceLogout) return;
+
     const checkSession = async () => {
       try {
         const res = await fetch("/api/auth/me", { credentials: "include" });
@@ -38,7 +43,7 @@ export default function LoginPage() {
       }
     };
     checkSession();
-  }, [router]);
+  }, [router, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

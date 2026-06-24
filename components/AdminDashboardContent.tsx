@@ -3,7 +3,7 @@
 import { useLanguage } from "@/context/LanguageContext";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { toggleWorkerVerification } from "@/lib/actions/admin";
 import { authClient } from "@/lib/auth/client";
 
@@ -30,6 +30,16 @@ export default function AdminDashboardContent({
   const [workers, setWorkers] = useState(initialWorkers);
   const [isPending, startTransition] = useTransition();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [currentDate, setCurrentDate] = useState("");
+
+  useEffect(() => {
+    setCurrentDate(new Date().toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    }));
+  }, []);
 
   const handleAction = async (userId: string, approve: boolean) => {
     startTransition(async () => {
@@ -41,13 +51,6 @@ export default function AdminDashboardContent({
       }
     });
   };
-
-  const currentDate = new Date().toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
 
   return (
     <div className="flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-4 duration-700 w-full max-w-full pb-20">
@@ -69,7 +72,16 @@ export default function AdminDashboardContent({
         </div>
 
         <button 
-          onClick={() => authClient.signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/login"; } } })}
+          onClick={async () => {
+            try {
+              // 1. Ask Neon to revoke the session server-side
+              await authClient.signOut();
+            } catch (_) {}
+            // 2. Force-clear all cookies via our server route
+            await fetch("/api/auth/sign-out", { method: "POST", credentials: "include" });
+            // 3. Hard-navigate to login with logout flag to skip session re-check
+            window.location.href = "/login?logout=1";
+          }}
           className="flex items-center gap-3 px-6 py-3 bg-surface-container-high border border-surface-container-highest rounded-2xl text-secondary hover:bg-secondary hover:text-on-secondary transition-all group active:scale-95"
         >
           <span className="text-xs font-black uppercase tracking-[0.2em]">Exit System</span>

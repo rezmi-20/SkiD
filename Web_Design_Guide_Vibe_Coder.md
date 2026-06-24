@@ -1,0 +1,1447 @@
+
+
+Web_Design_Guide_Vibe_Coder.docx
+TheVibeCoder'sWebDesign
+## Guide
+EverythingabeginnerneedstoknowtopromptAItoolslikeStitch,Framer,or
+WebflowAI
+Includes:DesignAesthetics·Scroll&Animation·Layouts·Navigation·Typography&
+Color·UIPatterns
+
+HowtoUseThisGuide
+## Thisguideisyourcheatsheetforwebdesign—writtenforvibecoderswhobuild
+websitesbypromptingAItools.Youdon'tneedtowritecodebyhand.WhatyouDO
+needisthevocabularytotelltheAIexactlywhatyouwant.
+## Eachentryinthisguidefollowsthesameformat:
+WhatitisAplain-Englishexplanationoftheconcept
+HowitworksThevisualmechanism—whatmakesitlookorbehavethatway
+AIPromptAcopy-pastepromptyoucangivetoStitch,FramerAI,oranyAIbuilder
+ExampleSitesRealwebsitesthatusethisstylesoyoucanseeitinaction
+TIPWhenpromptinganAItool,alwayscombine3things:Aesthetic+Layout+Animation.
+Example:'Buildaglassmorphismherosection(aesthetic)withacenteredtwo-columnlayout
+(layout)wherethecardsfadeinonscroll(animation).'Thatlevelofdetailgetsyougreat
+results.
+
+1.DesignAesthetics
+## Designaestheticsarethevisuallanguageofawebsite—theoverall'vibe'and
+personality.Whenyoulookatawebsiteandthink'thatlooksfuturistic'or'thatfeels
+premium',you'rereactingtoitsaesthetic.Understandingthesestylesletsyou
+describeexactlywhatyouwanttoanAI.
+1.1Glassmorphism
+## Whatitis
+GlassmorphismmakesUIelementslooklikefrostedglass—semi-transparent,
+blurred,withasubtleborder.Imagineaglasspanelsittinginfrontofacolorful,blurry
+background.Thepanelletssomeofthebackgroundbleedthroughwhileremaining
+readable.
+## Howitworks
+ThemagichappenswithtwoCSSproperties:backdrop-filter:blur()whichblurs
+everythingbehindtheelement,andabackground-colorsettorgba()(red,green,blue,
+alpha)wherealphaisalowvaluelike0.15makingitpartiallytransparent.Athin
+whiteborderatlowopacitycompletestheglasslook.Youalwaysneedacolorful,
+vibrantbackgroundbehindtheglasspanels—otherwisethere'snothingtoblur.
+backdrop-filterCSSpropertythatblursthecontentbehindanelement
+rgba()Colorwithtransparency—the4thvalue(alpha)controlshowsee-through
+itis
+## Semi-
+transparent
+## Partiallysee-through—likelookingthroughtintedglass
+## Best
+background
+## Purple/blue/pinkgradients,abstractblobs,orcolorfulphotos
+## AIPROMPTTOUSE
+"BuildaglassmorphismSaaSlandingpage.Useavividpurple-to-bluegradientbackground
+(#667eeato#764ba2).Create3featurecardsthatlooklikefrostedglasspanels—eachcard
+shouldhavebackground:rgba(255,255,255,0.15),abackdrop-filterblurof12px,awhite
+borderat30%opacity,andasubtledropshadow.Textshouldbewhite.Addaglass-style
+navbaratthetop."
+## EXAMPLEWEBSITESTOSTUDY
+→HaloLabonDribbble—ClassicglassmorphismUIkitwithfrostedcardsandvivid
+gradients(dribbble.com/tags/glassmorphism)
+→AppleiCloud.com—SubtleglasspanelsinloginUI—veryrefined
+glassmorphism(icloud.com)
+→Glassmorphism.com—InteractiveCSSgeneratortounderstandtheeffect
+visually(glassmorphism.com)
+1.2Neumorphism(SoftUI)
+## Whatitis
+## Neumorphism(new+skeuomorphism)createsbuttonsandcardsthatlooklikethey
+arephysicallypushedoutoforpressedintothebackgroundsurface.Everythingis
+theSAMEcolor—thebackgroundandtheelementshareanidenticalcolor.What
+createsthe3Dillusionisapairofshadows:onedarkshadowfromthebottom-right
+andonelight(near-white)shadowfromthetop-left.
+## Howitworks
+Thetrickisallinbox-shadow.Youapplytwoshadowssimultaneously.Thedark
+shadowsimulateswherelightwouldNOThitaraisedsurface.Thelightshadow
+simulateswherelightWOULDhit.Becauseboththebackgroundandtheelementare
+
+theexactsamecolor(like#e0e5ec),theelementappearstogroworganicallyfrom
+thesurfaceratherthansitontopofit.
+box-shadowCSSproperty—youcanapplyTWOshadowstooneelementseparated
+byacomma
+ConcavePressedinward—feelslikeapressedbutton(innershadow)
+ConvexPushedoutward—feelslikearaisedelement(outershadow)
+ColorruleBackgroundcolorandelementcolorMUSTmatchexactly
+TIPNeumorphismlooksbestatlowcontrast.It'sidealfordarkmodemusicplayers,control
+panels,anddashboardwidgets.Itstruggleswithaccessibilityonbrightscreensbecausethe
+contrastisverylow—don'tuseitforcriticaltextorimportantCTAs.
+## AIPROMPTTOUSE
+"Createaneumorphismmusicplayerdashboardona#e0e5ecbackground.Buildraised
+circularplay/pausebuttonsusingdualbox-shadows:box-shadow:6px6px12px#b8bec7,-
+6px-6px12px#ffffff.Addpressed(active)statewithinsetshadows:inset4px4px8px
+#b8bec7,inset-4px-4px8px#ffffff.Includeavolumesliderandtrackprogressbarinthe
+sameneumorphicstyle."
+## EXAMPLEWEBSITESTOSTUDY
+→Neumorphism.io—CSSgenerator—dragtheslidersandwatchtheeffectbuild.Best
+waytolearnit.(neumorphism.io)
+→Dribbble—NeumorphismUI—HundredsofbeautifulNeumorphismUIexamplesfor
+reference(dribbble.com/tags/neumorphism)
+→UI8SoftUIKits—Downloadableneumorphismdesignkitsshowingrealapp
+screens(ui8.net/tags/neumorphism)
+1.3Brutalism
+## Whatitis
+Brutalistwebdesignisintentionallyraw,ugly-on-purpose,andanti-establishment.It
+rejectsthepolishedcorporatedesignofmosttechcompaniesandembracesthick
+blackborders,starkprimarycolors(red,yellow,black),systemfontslikemonospace,
+andasymmetricortiltedlayouts.It'sthepunkrockofwebdesign.
+## Howitworks
+Noroundedcorners.Nogradients.Nosubtleshadows.Instead:solid2-4pxblack
+bordersoneverything,backgroundsofpureyellow(#FFE600)orpurewhite,textin
+boldblack,elementsthatareslightlyrotatedwithCSStransform:rotate,anda
+generalsensethatsomeonetypedtheHTMLinNotepadin1998.Paradoxically,it
+takesskilltodobrutalismWELL.
+transform:rotate()Tiltselementsbyafewdegrees—ahallmarkbrutalismdetail
+MonospacefontFixed-widthfontlikeCourierthatlookslikeatypewriter
+Noborder-radiusSharpcornersonly—noroundedshapesanywhere
+PrimarycolorsPurered,yellow,blue,black,white—nopastelsormutedtones
+## AIPROMPTTOUSE
+"Buildabrutalistportfoliowebsitewithapurewhite#FFFFFFbackground.Useboldblack
+borders(3pxsolid#000)oneverycardandsection.Typographyshouldbeblackand
+oversized(heroheadlineat80px,font-weight900).Accentcolorisyellow(#FFE600)usedfor
+hoverstatesandhighlightedsections.Addslightrotation(transform:rotate(-1deg)to-2deg)
+onsomeimagecards.Useamonospacefontforbodytext.Nogradients,nodropshadows,
+noborder-radiusanywhere."
+
+## EXAMPLEWEBSITESTOSTUDY
+→Gumroad.com—Themostfamousmodernbrutalistwebsite—productsellingplatform
+withthickborders(gumroad.com)
+→Figma—CommunityBrutalismUI—Search'brutalism'inFigmaCommunityforready-
+madetemplatestostudy(figma.com/community)
+→Hype4.academy—Webdesignlearningplatformwithaslightlybrutalist
+aesthetic(hype4.academy)
+1.4Minimalism
+## Whatitis
+Minimalismisthephilosophythatcontentisthedesign.Everythingthatdoesn'tserve
+thecontentisremoved.Whatremainsis:generouswhite(oroff-white)space,a
+singletypeface,amonochromaticornear-monochromaticcolorpalette,andzero
+decoration.Thewhitespaceitselfcreatesvisualrhythmandbreathingroom.
+## Howitworks
+Thinkofminimalismasremoval.Youstartwithadesignandkeepasking'canthisbe
+removedwithoutlosingmeaning?'Largepaddingandmargins,asinglefontusedat
+multipleweights(light,regular,bold),near-blacktextonnear-whitebackground,and
+contentarrangedwithcleartypographichierarchy.Noicons,noillustrations,no
+gradients—unlesstheyserveaspecificpurpose.
+WhitespaceEmptyspaceusedintentionallyasadesignelement—notwastedspace
+## Typographic
+hierarchy
+## Usingsize,weight,andspacingalonetoshowwhat'simportant
+MonochromaticUsingonecoloratdifferentshades—likeallblacks,grays,andwhites
+NegativespaceTheemptyareasaroundandbetweenobjects—asimportantasthe
+objectsthemselves
+## AIPROMPTTOUSE
+"Designaminimalistphotographyportfoliohomepage.Use#FAFAF9(warmoff-white)asthe
+background.Typographyonly:asinglefontfamily(CormorantGaramondorPlayfairDisplay),
+heroheadlineat72pxweight300,sectiontitlesat32px.Colorpalette:near-black#111for
+text,#888forcaptions.Noicons,nodecorativeelements,nogradients.Largepaddingonall
+sections(80pxvertical).Imagegridwithgenerouswhitespacebetweenphotos.Letthe
+whitespacebethedesign."
+## EXAMPLEWEBSITESTOSTUDY
+→Awwwards—MinimalistCategory—Award-winningminimalwebsites—filterby
+## 'minimalism'(awwwards.com/websites/minimal)
+→Linear.app—Projectmanagementtool—oneofthecleanest,mostminimalSaaS
+designs(linear.app)
+→Typewolf.com—Typography-focusedminimaldesigninspiration,allreal
+websites(typewolf.com)
+1.5BentoGrid
+## Whatitis
+Abentogridisalayout(andaesthetic)inspiredbyaJapanesebentobox—agridof
+varied-sizecompartments,eachshowingadifferentfeatureorpieceofcontent.
+PopularizedbyApple'sMacproductpages,it'snowoneofthemostpopulardesign
+trendsforSaaSandproductlandingpages.Thinkofitasamosaicofcards,each
+withitsowndesign,creatingavisualcollage.
+## Howitworks
+CSSGridisthetechnicalfoundation.Somecardsspan2columns,othersaretall
+andspan2rows,somearesmallandsquare.Cardshavedifferentvisualtreatments:
+somedark(#111),somelight(#F5F5F5),somewithgradientbackgrounds,some
+
+withproductscreenshots,somewithlargetypographyandastat.Thevarietyinsize
+ANDcoloriswhatmakesitfeelpremium.
+grid-column:
+span2
+## Makesacardtakeup2columnsofthegridinsteadof1
+grid-row:span
+## 2
+## Makesacardtakeup2rows—createsatallfeaturedcard
+## Varied
+treatments
+## Eachcardhasitsownbackground—dark,light,gradient,orimage
+Apple-styleUsuallyonablackorverydarkgraypagebackgroundformaxcontrast
+TIPThekeytoagreatbentogridisthemixofbigandsmall.Don'tmakeallcardsthesame
+size—youwant1-2largefeaturedcards(span2columnsor2rows)and3-4smaller
+supportingcards.Thelargecardsshouldholdyourmostimpressivecontent.
+## AIPROMPTTOUSE
+"Buildabentogridfeaturesectionona#0A0A0A(near-black)background.Createa
+responsiveCSSGridwith3columnsandautorows.Include6cardsofvaryingsizes:one
+largecardspanning2columnsshowingaproductscreenshot,onetallcardspanning2rows
+withaboldstat(like'10xfaster'),and4smallercardseachhighlightingonefeature.Dark
+cardsuse#111111background,lightaccentcardsuse#1A1A2E.Roundallcardswith16px
+border-radius.Addhoverscaleeffect(transform:scale(1.02))."
+## EXAMPLEWEBSITESTOSTUDY
+→AppleMacproductpage—Thegoldstandardofbentogrids—studyhowApplevaries
+cardsizesandtreatments(apple.com/mac)
+→Linear.apphomepage—Darkbento-stylefeaturegridforaSaaSproduct(linear.app)
+→Framer.com—Websitebuilderwithabeautifulbentogridontheirhomepage(framer.com)
+→Dribbble—BentoGridUI—Search'bentogrid'forhundredsofdesign
+references(dribbble.com/tags/bento)
+1.6DarkMode/DarkLuxury
+## Whatitis
+## Darkluxuryusesdeepcharcoalornear-blackbackgroundstocreateapremium,
+sophisticatedatmosphere.Thinkofahigh-endwatchbrandwebsiteorapremium
+SaaSproduct.It'snotjustdarkmode—it'sadeliberateaestheticchoicethatuses
+darknesstomakeaccentcolorsandproductscreenshotspopdramatically.
+## Howitworks
+Backgroundisnear-black(#0A0A0Aor#0D0D1A),NOTpureblack(#000000)which
+canfeelharsh.Cardsandsectionsuseslightlylighterdarks(#111111,#1A1A2E)to
+createsubtledepth.Asingleaccentcolor—oftenelectricblue(#0066FF),amber
+(#F59E0B),orsoftpurple(#8B5CF6)—isusedsparinglyforCTAs,icons,and
+highlights.Typographyispurewhiteornear-white(#F1F1EE).Thinbordersatlow
+opacity(rgba(255,255,255,0.08))separatesectionssoftly.
+Near-black#0A0A0Aor#0D0D1A—notpureblack,whichcanfeelharshonscreens
+AccentcolorOnebrightcolorusedONLYforimportantelements—CTAs,icons,
+highlights
+BorderopacityVerylowopacityborderslikergba(255,255,255,0.08)forsubtleseparation
+## Subtle
+gradient
+## Averyfaintradialgradientinthebackgroundgivesdepthwithoutbeing
+garish
+## AIPROMPTTOUSE
+"BuildadarkluxurySaaSlandingpage.Background:#0D0D1A(deepdarkblue-black).
+
+Primarytext:#F1F1EE.Accentcolor:electricblue#0066FFforbuttonsandhighlightedtext.
+Cardsuse#111827backgroundwitha1pxborderatrgba(255,255,255,0.08).Addavery
+subtleradialgradientinthehero:asoftpurpleglowat20%opacitycenteredbehindthehero
+text.Cleansans-seriftypography(InterorSatoshi).CTAbutton:#0066FFwithwhitetextand
+asubtlegloweffect(box-shadow:0030pxrgba(0,102,255,0.4))."
+## EXAMPLEWEBSITESTOSTUDY
+→Vercel.com—Near-perfectdarkluxurySaaSdesign—studyeverydetailoftheir
+homepage(vercel.com)
+→Raycast.com—Macproductivityappwithstunningdarkluxuryaesthetic(raycast.com)
+→Stripe.com—Premiumdarksectionsmixedwithlightsections—a
+masterclass(stripe.com)
+1.7Retro/Y2K
+## Whatitis
+RetroandY2Kdesigndrawsnostalgiafromthe90sandearly2000sinternet—neon
+gradients,pixelart,boldtypography,starfieldbackgrounds,andthevisualenergyof
+earlywebdesignbeforeeveryoneagreedon'goodtaste'.Ironically,GenZdesigners
+havemadethisoneofthehottestaestheticsrightnow.
+## Howitworks
+Keyvisualingredients:hotpink(#FF00FF)andcyan(#00FFFF)orbrightlimegreen
+(#AAFF00)asmaincolors,oftenonablackorverydarkbackground.Pixelordisplay
+fontswithatechnologicalorretrofeel.Star/sparkledecorationsscatteredacrossthe
+page.Bolditalictype.Brightgradientsthatlookunafraid.Sometimesactualanimated
+GIF-styleelements.Chrome/metallictexteffects.
+## AIPROMPTTOUSE
+"CreateaY2K-inspiredportfoliowebsiteona#0A0A0Abackground.Colorpalette:hotpink
+#FF1493,electriccyan#00E5FF,andneonlime#AAFF00asaccents.Useabolddisplay
+fontlikeBebasNeueorBlackHanSansforheadings.AddCSSsparkle/stardecorations
+(small✦symbols)scatteredonthepage.Heroheadlineinchromemetallicgradienttext
+(silvertowhite).Sectionsseparatedbybrightgradientdividers.Navigationlinksinbold
+uppercasewithaneonhoverunderlineeffect."
+## EXAMPLEWEBSITESTOSTUDY
+→Y2KAestheticCommunityonDribbble—Search'Y2Kwebdesign'forhundredsof
+references(dribbble.com/tags/y2k)
+→BratGirlStudio—RealbrandthatfullycommitstobrightY2Kcolorsand
+energy(bratgirlstudio.com)
+→Awwwards—Experimentalcategory—Findretroandexperimentalsitesthatpush
+beyondconventionaldesign(awwwards.com)
+1.8Claymorphism/3DUI
+## Whatitis
+ClaymorphismmakesUIelementslookinflated,puffy,andthree-dimensional—like
+they'remadeofclayorrubber.Buttonsandcardsappeartohavephysicalvolume
+andweight.Thisstylecreatesaplayful,friendly,andapproachablefeel,makingit
+popularforappstargetinggeneralconsumers,productivitytools,andanyproduct
+thatwantstofeelfunratherthancorporate.
+## Howitworks
+The3Deffectiscreatedwithmultiplebox-shadows:abottomshadowinadarker
+versionoftheelement'scolor(simulatingtheunderside),andalargersoftglow
+shadowaroundthewholeelement.Candycolors(softpastelsorvividsaturated
+colors)aretypical.Highborder-radius(24px+)oneverything.Whenthebuttonis
+clicked,thebottomshadowshrinks,makingitfeellikeit'sbeingphysicallypressed
+down.
+
+## Multi-layer
+shadow
+## Twoorthreebox-shadowsatonce:ahardbottomonefordepth,soft
+ambientglow
+CandycolorsBrightbutslightlysoftcolors—purple,coral,mint,skyblue
+PressstateOnclick,bottomshadowdisappears,elementmovesdownbytheshadow
+height
+## Highborder-
+radius
+## 24-32pxcorners—veryrounded,almostpill-shapedforsmallelements
+## AIPROMPTTOUSE
+"DesignaclaymorphismtaskmanagementappUIonasoft#F0F4FFbackground.Create
+3D-lookingcardsandbuttonsusingmulti-layerbox-shadows:box-shadow:08px0#4B44CC,
+014px20pxrgba(108,99,255,0.35)foraraisedpurplebutton.Usecandycolors:softpurple
+#6C63FF,coral#FF6B6B,mint#4ECDC4.Allelementshaveborder-radius:20pxminimum.
+Addpressedanimationonbuttons:transform:translateY(4px)withreducedshadowto
+simulatephysicalpressing.Backgroundisasoftlightblue-gray."
+## EXAMPLEWEBSITESTOSTUDY
+→CubertoAgency—3DUIKits—Premium3DandclaymorphismUIkitswithrealapp
+screenexamples(cuberto.com)
+→Dribbble—Claymorphism—Search'clayUI'or'claymorphism'forreference
+designs(dribbble.com/tags/claymorphism)
+→Notion.so—Subtle3Delementsintheirmarketing—goodexampleofrefined
+claymorphism(notion.so)
+
+2.Scroll&Animation
+Scrollandanimationarewhatseparateastaticwebsitefromanexperience.These
+techniquescontrolhowelementsappear,move,andrespondastheuserscrolls
+throughyourpage.Usedwell,theyguideattention,revealcontentattheright
+moment,andmakeasitefeelpremium.Usedpoorly,they'rejustdistracting.
+2.1ParallaxScrolling
+## Whatitis
+## Parallaxcreatesanillusionofdepthbymakingdifferentlayersofthepagescrollat
+differentspeeds.Thebackgroundmovesslowlywhiletheforeground(text,buttons)
+movesatnormalspeed.Thismakesthepagefeelthree-dimensional—likelooking
+throughawindowwheredistantobjectsappeartomoveslowerthancloseones.
+## Howitworks
+ThesimplestversionusesCSSbackground-attachment:fixedonabackground
+image,makingitstayputwhilethecontentscrollsoverit.Moreadvancedparallax
+usesJavaScripttotrackhowfartheuserhasscrolledandappliesaCSStransform:
+translateY()atafractionofthatscrolldistancetoeachlayer.Threelayersminimum:
+farbackground(moves20%ofscrollspeed),midbackground(moves50%),
+foregroundtext(moves100%).
+## AIPROMPTTOUSE
+"Buildaparallaxherosectionwith3scrollinglayers.Backgroundlayer:amountain/nature
+imagethatmovesat30%ofscrollspeed(translateYby0.3*scrollY).Middlelayer:floating
+abstractblobshapesthatmoveat60%speed.Foregroundlayer:heroheadlineandCTAthat
+scrollnormallyat100%.UseJavaScriptIntersectionObserverorrequestAnimationFrameto
+updatetransformsonscroll.Thedepthillusionshouldbeclearlyvisiblewhenscrolling
+throughthesection."
+## EXAMPLEWEBSITESTOSTUDY
+→FirewatchGameWebsite—Themostfamousparallaxwebsiteever—multiple
+illustratedlayers(firewatchgame.com)
+→WebflowUniversity—ParallaxTutorial—No-codeparallaxscrolltutorial,greatfor
+understandingthemechanics(university.webflow.com)
+→Awwwards—ParallaxSites—Award-winningwebsitesusingadvancedparallax
+effects(awwwards.com/websites/parallax)
+2.2Scroll-TriggeredAnimations
+## Whatitis
+Elementsarehidden(invisibleand/oroff-position)whenthepageloads.Astheuser
+scrollsdownandasectionentersthevisibleareaofthescreen(the'viewport'),that
+elementanimatesintoplace.Thisisbyfarthemostcommonanimationtechniqueon
+modernwebsites.Theclassicversionis'fadeup'—elementstartsinvisibleand
+slightlybelowitsfinalposition,thenfadesinandslidesup.
+## Howitworks
+TheIntersectionObserverJavaScriptAPIwatcheswhenelementsenterorleavethe
+viewport.Whenanelemententers,aCSSclassisaddedtoit(like.visible).That
+classtriggersaCSStransitionoranimationthatplaysthereveal.Theelementstarts
+withopacity:0andtransform:translateY(40px),thentransitionstoopacity:1and
+translateY(0).Thetiming—howlongtheanimationtakesanditseasing—
+determineswhetheritfeelssmoothorjanky.
+IntersectionObserverAJavaScriptAPIthatfiresacallbackwhenanelement
+enters/leavestheviewport
+opacity:0→1Elementgoesfrominvisibletofullyvisible—thefoundationoffade
+animations
+
+translateY(40px)→0Elementmovesupwardasitreveals—the'rise'infade-up
+StaggerDelayingeachelementslightlymorethantheprevious—createsa
+cascadingeffect
+AOSlibraryAnimateOnScroll—asimpleJavaScriptlibrarythathandlesallthis
+automatically
+## AIPROMPTTOUSE
+"Buildafeaturespagewhereeverycardandsectionanimatesintoviewonscroll.Use
+IntersectionObservertodetectwheneachelementis20%visible.Applythesedefaultstart
+states:opacity:0andtransform:translateY(30px).Onintersection,addclass.visiblewhich
+transitionstoopacity:1,transform:translateY(0)withtransitionduration0.6sandease:cubic-
+bezier(0.4,0,0.2,1).For3-columnfeaturegrids,staggereachcardby0.1sextradelay(first
+card0s,second0.1s,third0.2s)."
+## EXAMPLEWEBSITESTOSTUDY
+→Stripe.com—Best-in-classscrollanimationsoneverysection—studyhowsubtleand
+purposefultheyare(stripe.com)
+→AOS(AnimateOnScroll)Demo—Interactivedemoofeveryscrollanimationtypethis
+librarysupports(michalsnik.github.io/aos)
+→GSAPScrollTriggerDemos—Themostpowerfulscrollanimationlibrary—seewhat's
+possible(gsap.com/scroll)
+2.3HorizontalScrollSections
+## Whatitis
+## Whilethepagescrollsvertically(up-down),aspecificsection'hijacks'thescrolland
+movesthecontentsidewaysinstead.SoasyouscrollDOWNwithyourmouseor
+finger,thecontentinsidethatsectionslidesfromRIGHTtoLEFT.Itfeelslikeflipping
+throughcardsorreadingahorizontaltimeline.Usedalotonportfoliosites,case
+studypages,andproductshowcases.
+## Howitworks
+Thesectionis'pinned'inplaceonthescreenwhiletheuserscrolls.Astheuser
+scrollstherequireddistance,theinnercontent(arowofcardsorpanels)moves
+horizontally.Thetotalscrollingdistancecontrolshowfarthehorizontalmovement
+goes—ifyouhave5cardseach100vwwide,thesectionstayspinnedfor500vhof
+scrolling.TypicallyimplementedwithGSAPScrollTrigger'spinandhorizontalscrub
+features.
+## AIPROMPTTOUSE
+"Createahorizontalscrollportfoliosectionthatpinstothescreenwhiletheuserscrolls
+vertically.Thesectionshouldcontain5projectcards,each80vwwide.Astheuserscrolls
+downthrough500pxofpageheight,thecardsslidehorizontallyfromrighttoleftrevealing
+eachproject.UseGSAPScrollTriggerwithpin:trueandscrub:1forasmoothtied-to-scroll
+feel.Eachcardhasaprojectscreenshot(top60%),projecttitle,briefdescription,and'View
+Project'link.Addahorizontalprogressbaratthebottomofthesection."
+## EXAMPLEWEBSITESTOSTUDY
+→ActiveTheoryAgency—Award-winningagencywithcomplexhorizontalscroll
+portfolio(activetheory.net)
+→LocomotiveScrollExamples—Smoothscrolllibrarywithhorizontalscroll
+demos(locomotivemtl.github.io/locomotive-scroll)
+→Webflow—HorizontalScrollTemplate—No-codehorizontalscrollexamplesyoucan
+studyandclone(webflow.com/templates)
+2.4StickySections/Pinning
+## Whatitis
+Anelementstaysfixedonthescreenwhiletheuserscrolls,butONLYwithinits
+parentsection.Oncetheuserscrollspastthatsection,theelementreleasesand
+
+scrollsawaynormally.Thisiscalled'pinning'.It'sperfectforfeatureexplanations
+whereyouwanttoshowoneproductscreenshotontheleftwhiletheuserscrolls
+throughalistoffeaturesontheright.
+## Howitworks
+ThesimplestimplementationusesCSSposition:stickytop:0,whichkeepsthe
+elementatthetopoftheviewportaslongasitsparentisinview.Acommonlayout
+hastwocolumns:leftcolumnwithposition:sticky(thepersistentvisual—aphone
+mockup,screenshot,orgraphic)andrightcolumnthatscrollsnormally(thefeature
+list).Astheuserscrollsthroughfeaturesontheright,thevisualontheleftstaysput
+andcanchangetoreflecteachfeature.
+## AIPROMPTTOUSE
+"DesignaSaaSfeatureexplanationsectionwithastickyscrolllayout.Leftcolumn(40%
+width):aphonemockuporbrowserwindowscreenshotwithposition:stickytop:80pxthat
+staysinview.Rightcolumn(60%width):4featureblocksstackedvertically,each400pxtall,
+withicon,heading,and2-linedescription.Astheuserscrollsthrougheachfeatureblockon
+theright,useIntersectionObservertodetectwhichblockismostvisibleandupdatetheleft
+screenshottoshowthecorrespondingproductUIscreenwithasmoothcrossfadetransition."
+## EXAMPLEWEBSITESTOSTUDY
+→Notion.soFeaturespage—Classicstickyscroll—leftscreenshotstayswhilefeature
+textscrollsright(notion.so)
+→Linear.app—Excellentstickyfeaturesectionswithanimatedproduct
+screenshots(linear.app)
+→Lottiefiles.com—UsesstickypanelswithanimatedLottieillustrationsalongsidescrolling
+text(lottiefiles.com)
+2.5TextRevealonScroll
+## Whatitis
+## Insteadofthewholeheadingappearingatonce,individualwordsorcharacters
+animateinonebyoneastheuserscrolls.Thisisverypopularonagencywebsites,
+portfoliosites,andanywherethatwantstocreateadramatic,editorialfeel.Thetext
+seemsto'writeitself'or'emerge'astheuserscrollsthrough.
+## Howitworks
+AJavaScriptlibrarycalledSplitType.jstakesaheadinglike'HelloWorld'andsplitsit
+intoindividualspans—oneperwordorevenpercharacter.ThenGSAPorCSS
+animationstargetthosespanswithastagger—eachonedelayedslightlymorethan
+theprevious.Therevealeffectitselfcanbe:fadefromopacity0,slideupfrombelow
+aclippingmask,orablurry-to-sharpfocustransition.
+## AIPROMPTTOUSE
+"Createaherosectionwithaword-by-wordtextrevealanimation.Themainheadlineshould
+besplitintoindividualwordspansusingaJavaScriptloop.Onpageload(orscrolltrigger),
+eachwordstartsatopacity:0andtransform:translateY(20px),thentransitionstoopacity:1and
+translateY(0).Applya0.08secondstaggerbetweeneachword(word1at0s,word2at
+0.08s,word3at0.16s,etc.).Usetransition-timing-function:cubic-bezier(0.4,0,0.2,1)fora
+smooth,professionalfeel.Totalanimationdurationperword:0.5seconds."
+## EXAMPLEWEBSITESTOSTUDY
+→Resn.co.nz—NewZealandagency—stunningtextrevealanimations
+throughout(resn.co.nz)
+→SplitType.jsDemo—Librarydocumentationwithlivedemosoftextsplittingand
+animation(split-type.vercel.app)
+→Awwwards—Typographycategory—Filterforsiteswinningawardsfortypographyand
+textanimation(awwwards.com/websites/typography)
+2.6ScrollProgressIndicator
+## Whatitis
+
+## Athinbar,usuallyattheverytopofthepage,thatfillsfromlefttorightastheuser
+readsdownthepage.Whentheuserisatthetop,thebarisempty.Whentheyreach
+thebottom,thebarisfull.Itgivesreadersasenseofhowfarthroughthecontent
+theyare,particularlyusefulonlongblogpostsandarticles.
+## Howitworks
+## Afixed-positionelementsitsatthetopoftheviewport(position:fixed,top:0,left:0,
+height:3-4px).Itswidthiscalculatedasapercentage:(scrollY/
+(document.body.scrollHeight-window.innerHeight))*100.Thisformulagives0%
+whenatthetopand100%whenfullyscrolled.AJavaScriptscrolleventlistener
+updatesthewidthinreal-time.UsingCSStransform:scaleX()insteadofchanging
+widthissmootheronmostdevices.
+## AIPROMPTTOUSE
+"Addareadingprogressbartoablogpostpage.Createafixedelement:position:fixed,top:0,
+left:0,height:3px,width:100%,z-index:9999.Insideit,adivthatstartsattransform:scaleX(0)
+andtransform-origin:left.Onscrollevent,calculateprogress:scrolled/(totalHeight-
+viewportHeight).Updatetheinnerdiv'sscaleXtotheprogressvalue(0to1).Useagradient
+fillfrompurple#667eeatopink#f64f59.Addasmoothtransitionof0.1sonthescalefora
+slightlagthatfeelsnatural."
+## EXAMPLEWEBSITESTOSTUDY
+→Medium.comarticles—Mediumusesareadingprogressbar—thestandardreference
+forthispattern(medium.com)
+→CSSTricksarticleonprogressbars—Technicalbreakdownofhowtobuildone,with
+codeexamples(css-tricks.com)
+→Anylong-formblog—Scrolldownanylongarticleonmajorblogs—manynowhavethis
+builtin(smashingmagazine.com)
+
+2.7SmoothScroll/Lenis
+## Whatitis
+## Bydefault,browsersscrollinaverymechanical,instantway—youflickthewheel
+andthepagejumps.Smoothscrollreplacesthiswithaphysics-basedmomentum
+system:whenyouscroll,thepagedeceleratessmoothlyinsteadofstoppingabruptly,
+likeaheavyobjectslowlycomingtorest.Lenisisthemostpopularmodern
+JavaScriptlibraryforthis.Whenyouvisitawebsiteandthink'thisscrollfeels
+incredible,sobuttery'—that'salmostalwaysLenis.
+## Howitworks
+Lenisworksbyoverridingthebrowser'snativescroll.Itinterceptsscrollinput(mouse
+wheel,touchswipe,trackpad),appliesitsowneasingandmomentummath,andthen
+movesthepageviaCSStransforminsteadofactualscrolling.Thisissmoother
+becauseCSStransformsareGPU-accelerated.Lenisisinitializedwithafewlinesof
+JavaScriptandrunsoneveryanimationframeusingrequestAnimationFrame.It
+integratesdirectlywithGSAPScrollTrigger—youjustpassLenis'sscrollpositionto
+GSAPandallyourscroll-triggeredanimationsworkasexpected.
+LenisThemostpopularsmoothscrollJavaScriptlibrary—freeand
+widelyused
+requestAnimationFrameAbrowserAPIthatfiresacallback60timespersecond—how
+## Lenisstayssmooth
+EasingThemathcurvecontrollingdeceleration—cubic-beziercontrols
+the'feel'
+lerpLinearinterpolation—howLenisblendscurrentpositiontoward
+targetposition
+GSAPcompatibilityLenispassesitsscrollpositiontoGSAPsoScrollTrigger
+animationsstillwork
+TIPSmoothscrollisaFEELupgrade,notavisualone.Usersmightnotnoticeitconsciously,
+butthesitefeelspremiumandpolished.It'soneofthecheapestwaystomakeawebsitefeel
+high-end.However:neverapplysmoothscrolltopageswithfixed-heightmodalsor
+overflow:hiddensections—itcancausevisualglitches.
+## AIPROMPTTOUSE
+"AddLenissmoothscrollingtothiswebsite.ImportLenisfromCDN:<script
+src='https://unpkg.com/lenis@1.1.13/dist/lenis.min.js'></script>.Initializewith:constlenis=
+newLenis({duration:1.2,easing:(t)=>Math.min(1,1.001-Math.pow(2,-10*t)),smooth:
+true}).Runinanimationloop:functionraf(time){lenis.raf(time);
+requestAnimationFrame(raf);}requestAnimationFrame(raf).IfGSAPScrollTriggerisusedon
+thispage,alsoadd:lenis.on('scroll',ScrollTrigger.update)andgsap.ticker.add((time)=>
+## {lenis.raf(time*1000)})."
+## EXAMPLEWEBSITESTOSTUDY
+→LenisbyStudioFreight—Demo—TheofficialLenisdemopage—feelthedifference
+betweennativeandsmoothscroll(lenis.darkroom.engineering)
+→Awwwards—SitesusingLenis—FilterAwwwardssitesby'smoothscroll'tofindthe
+bestimplementations(awwwards.com)
+→LocomotiveScroll—Alternativesmoothscrolllibrarywithitsownparallaxsystem—
+olderbutwidelyused(locomotivemtl.github.io/locomotive-scroll)
+
+3.Layouts
+## Layoutishowyouorganizeinformationonthepage—wherethingsgoandhowthey
+relatetoeachother.Agreatlayoutguidesthereader'seyefromthemostimportant
+elementtotheleastimportant,withoutthemnoticing.Layoutdecisionsinclude:how
+manycolumns,what'sinthecentervsedges,howmuchspacebetweenelements,
+andwhat'sabovethefold(visiblewithoutscrolling).
+3.1F-PatternLayout
+## Whatitis
+## Eye-trackingresearchhasshownthatwhenpeoplereadwebpages,theireyesdon't
+scaneverywordequally.Instead,theytraceanF-shape:firsttheyscanacrossthe
+verytopofthepage(thetopbaroftheF),thentheyscanashorterhorizontalbanda
+littlelower(themiddlebaroftheF),thentheireyesdriftdowntheleftedgeofthe
+pagereadingonlythefirstfewwordsofeachline.Understandingthispatternhelps
+youplaceyourmostimportantcontentwhereeyesnaturallyfall.
+## Howitworks
+## Thepracticaltakeawayis:putyourmostimportantcontentinthetophorizontalband
+(theheadline,navigation,heromessage).Putyoursecondmostimportantelement
+belowthatbutstillnearthetop-left.Yourleftmarginandleftedgeofcontentareseen
+farmorethantheright.Contentonthefarrightofthepageisoftenneverseenatall
+byuserswhoarescanningratherthanreading.Thismeansleft-alignedtext,left-
+placedCTAs,andleft-columnnavigationareallstrategicallyplacedwhereeyes
+actuallygo.
+AbovethefoldThetopportionvisiblewithoutscrolling—highestattentionzone
+## Leftedge
+priority
+## Leftcolumnandleft-alignedtextgetsfarmoreattentionthanright-aligned
+VisualanchorsBoldtext,images,andiconscreatestoppingpointsthatpulltheeye
+Z-patternForpageswithlesstext(landingpages),eyesscaninaZratherthanF
+## Scanningvs
+reading
+## Mostusersscanfirst,readonlyifinterested—designforscannersfirst
+TIPTheF-patternisstrongestontext-heavypageslikearticlesandsearchresults.On
+landingpageswithlotsofimagery,aZ-pattern(top-left→top-right→bottom-left→bottom-
+rightdiagonal)ismorecommon.Formarketingpages:centeryourheroforvisualimpact,
+thenswitchtoleft-alignedlayoutsbelowthefoldwherereadingbegins.
+## AIPROMPTTOUSE
+"Designalong-formblogarticlelayoutfollowingtheF-patternreadingbehavior.Full-width
+headerwitharticletitle(left-aligned,notcentered).Below:atwo-columnlayout—leftcolumn
+68%widthforarticlebody(left-alignedtext,comfortablelinelengthof65-70charactersmax,
+18pxbodytext).Rightcolumn28%widthforastickytableofcontentssidebarthatstays
+visibleasyouread.Inthearticlebody,useboldleadsentencesatthestartofeach
+paragraph,subheadingsevery200-300words,andinlinepull-quotestocreatevisualstopping
+points.PlacekeyCTAs(emailsignup,relatedarticles)intheleft-alignedbodycolumn,notin
+therightsidebar."
+## EXAMPLEWEBSITESTOSTUDY
+→Medium.com—Articlelayout—Cleanleft-alignedarticlelayoutdesignedaround
+naturalreadingbehavior(medium.com)
+→SmashingMagazine—Expert-levelarticlelayoutwithstrategicleft-aligned
+hierarchy(smashingmagazine.com)
+→NielsenNormanGroup—F-Patternresearch—Theoriginaleye-trackingresearch
+paperthatidentifiedtheF-pattern,withheatmapimages(nngroup.com/articles/f-shaped-pattern-
+
+reading-web-content)
+
+3.2Hero+FeatureGrid
+## Whatitis
+ThesinglemostcommonlayoutforSaaS(SoftwareasaService)andproduct
+websites.Atthetop:alarge,boldHerosectionthatstatesthemainvalueproposition
+withaCTAbutton.Below:agridofFeaturecards(usually3columns,2-3rows)each
+explainingonecapabilityoftheproduct.Thislayouthasbeenbattle-testedand
+convertsextremelywell.
+## Howitworks
+Herosection:full-width,center-aligned,boldH1headline(max8words),one-
+sentencesubtext,andaprimaryCTAbutton.Belowthis,oftenastripofcompany
+logos('TrustedbyXandY').Thenthefeaturegrid:3equalcolumns,eachcardwith
+anicon,a3-5wordtitle,anda1-2sentencedescription.Thegridcanhave2-4rows
+ofcardsdependingonhowmanyfeaturesyou'rehighlighting.
+## AIPROMPTTOUSE
+"BuildacompleteSaaSlandingpagelayout.Herosection:darkbackground(#0A0A0A),
+centeredcontent,badgechipattop('NowinBeta'),H1headlineat64pxboldwithagradient
+word,1-linesubtext,andtwobuttonssidebyside(primary:filledblue,secondary:outlined).
+Below:arowof5-6companylogosinlightgray.Thenafeaturegrid:3-columnresponsive
+CSSgrid,eachcardhasasmallcoloredicon,boldfeaturetitle,2-sentencedescription.6
+cardstotal.Belowthat:atestimonialquote.Thenapricingsection.FinishwithaCTAbanner
+andfooter."
+## EXAMPLEWEBSITESTOSTUDY
+→Vercel.com—ThereferencestandardforSaaSlandingpages—hero+featuregriddone
+perfectly(vercel.com)
+→TailwindUIComponents—Pre-builtheroandfeaturegridcomponentstostudythe
+structure(tailwindui.com/components)
+→Landingfolio.com—Galleryof1000+landingpagedesignsforinspiration—alltagged
+bylayouttype(landingfolio.com)
+3.3Asymmetric/SplitLayout
+## Whatitis
+## Insteadofdividingthepageintoequal50/50halves,asymmetriclayoutsuseunequal
+proportions—like60/40,65/35,or70/30.Onesidegetsthedominantvisual(large
+image,video,illustration),whiletheothersidegetssupportingcontent(text,stats,
+CTA).Theimbalancecreatesvisualtensionthatmakesthelayoutfeeldynamicand
+intentionalratherthansterileandcorporate.
+## Howitworks
+UsingCSSGridwithnon-equalcolumndefinitions:grid-template-columns:3fr2fr
+(60/40)or2fr1fr(67/33).Thelargercolumnholdstheheroimageorproduct
+screenshot.Thesmallercolumnholdstheheadline,description,andCTA.Onmobile,
+bothcolumnsstackto100%width.Thekeyvisualdesignprinciplehereiscontrast—
+alarge,boldvisualononesidecreatesfocus,whilethesmallertextcolumncreates
+breathingroomandguidestheeyetotheCTA.
+## AIPROMPTTOUSE
+"Createaproductlandingpageusinga60/40asymmetricsplitlayout.Leftside(60%):full-
+heightproductscreenshotormockupwithsubtleshadow,slightlyoverlappingtheright
+column.Rightside(40%):verticallycenteredcontentwithasmalloverlinelabel(like'NEW
+FEATURE'),H2heading,2-paragraphdescription,featurechecklistwithcheckmarks,anda
+CTAbutton.UseCSSGrid:grid-template-columns:3fr2fr.Addasecondsplitsectionbelow
+withthelayoutreversed(imageonright,textonleft)forvisualvariety."
+## EXAMPLEWEBSITESTOSTUDY
+→Notion.soMarketingpages—Excellentuseofasymmetricsplitlayoutsacrosstheir
+featurepages(notion.so)
+
+→Dribbble—SplitLayout—Search'splitlayoutwebdesign'forvisual
+references(dribbble.com)
+→Lapa.ninja—Curatedlandingpagedesigns—manyuseasymmetricsplits
+beautifully(lapa.ninja)
+3.4MasonryLayout
+## Whatitis
+## Namedafterthewaybricklayersstackbricks,amasonrylayoutarrangescardsin
+columnswhereeachcard'sheightisdeterminedbyitscontent.Shortitemsfillin
+belowtalleritemsinadjacentcolumns,ratherthanleavingemptyspace.Thiscreates
+aPinterest-stylemosaicthatfeelsorganicandcontent-rich,makingitperfectfor
+photogalleries,blogposts,designportfolios,andsocialfeeds.
+## Howitworks
+ThesimplestCSSapproachusestheCSScolumnsproperty:columns:3onthe
+containermakescontentflowinto3columnsautomatically,witheachitemtaking
+onlyasmuchheightasitneeds.Itemsflowdownthefirstcolumn,thenthesecond,
+thenthird.Formorecontrol,JavaScriptlibrarieslikeMasonry.jsorPackerycalculate
+andpositioneachitemmanually.Theresultisthesame:agridwherenothingis
+wasted.
+## AIPROMPTTOUSE
+"Buildaphotographyportfoliogalleryusingmasonrylayout.UseCSScolumns:3with
+column-gap:12pxonthecontainer.Eachimagecardshouldbedisplay:inline-block,
+width:100%,margin-bottom:12px.Imagesshouldbedifferentheights(someportrait,some
+landscape)toshowthemasonryeffectclearly.Addahoveroverlayoneachimageshowinga
+briefcaptionandazoomicon.Onmobile(under768px),reducetocolumns:2.Under480px,
+reducetocolumns:1.Includeacategoryfilterbaratthetop(All,Architecture,Portraits,
+## Nature)thatfilterswhichimagesshow."
+## EXAMPLEWEBSITESTOSTUDY
+→Pinterest.com—Themasonrylayout—thisisexactlywherethestylebecame
+mainstream(pinterest.com)
+→Unsplash.com—Beautifulmasonryphotogrid—noticehowdifferently-sizedphotosflow
+together(unsplash.com)
+→Masonry.jsdocumentation—TheclassicJavaScriptmasonrylibrarywithdemosand
+codeexamples(masonry.desandro.com)
+3.5Full-PageScrollSections
+## Whatitis
+## Eachsectionofthewebsitefillstheentirescreen(100%oftheviewportheight,called
+100vh).Whentheuserscrolls,thepagesnapstothenextfull-screensection—like
+flippingbetweenslidesinapresentation.There'snopartialscrolling;you'realways
+viewingexactlyonesectionatatime.Thiscreatesaverycontrolled,cinematic
+storytellingexperience.
+## Howitworks
+CSSmakesthissurprisinglysimple.Thecontainergetsscroll-snap-type:y
+mandatoryandoverflow-y:scroll.Eachchildsectiongetsheight:100vhandscroll-
+snap-align:start.Thebrowserthenhandlesthesnappingautomatically.Formore
+features(navigationdots,transitions,callbacks),thefullPage.jslibraryhandles
+everything.Eachsectiontypicallyhasonefocusedmessage,onevisual,andone
+## CTA.
+## AIPROMPTTOUSE
+"Builda5-sectionfullpagescrollwebsiteusingCSSscroll-snap.Container:height:100vh,
+overflow-y:scroll,scroll-snap-type:ymandatory.Eachsection:height:100vh,scroll-snap-
+align:start.Section1:DarkherowithheadlineandCTA.Section2:Featureexplanationwith
+imageleft,textright.Section3:Statisticswith3largenumbers.Section4:Testimonialquote
+
+centeredwithauthor.Section5:FinalCTAwithnewslettersignup.Addnavigationdotsonthe
+rightside:fixedposition,5smalldots,activedotisfilledwhite,clickingadotsmoothlyscrolls
+tothatsectionusingscrollIntoView."
+## EXAMPLEWEBSITESTOSTUDY
+→FullPage.jsExamples—Themostpopularfullpagescrolllibrary—dozensofexamples
+showingthepattern(alvarotrigo.com/fullPage/examples)
+→Webflow—FullPageTemplates—No-codefull-pagescrollwebsite
+templates(webflow.com/templates)
+→SonyBEMOVEDcampaign—Classicexampleoffullpagescrollstorytellingfora
+product(sony.com)
+3.6Sidebar+ContentLayout
+## Whatitis
+## Apersistentnavigationpanelontheleftsideofthescreen,withthemainworking
+areaontheright.Thisistheuniversallayoutforwebapplications,dashboards,and
+admininterfaces.Thesidebarstaysfixedasthemaincontentareascrolls.The
+sidebartypicallycontainstheapp'smainnavigation,whilethecontentareashows
+whateverpageiscurrentlyselected.
+## Howitworks
+Theoutercontainerusesdisplay:flexorCSSGridwithtwocolumns:afixed-width
+sidebar(240-280px)andaflex-1orfrcontentareathatfillstheremainingspace.The
+sidebargetsposition:stickytop:0withheight:100vhsoitstaysvisiblewhilethe
+contentscrolls.Thesidebarcontainsthelogoattop,navigationlinksinthemiddle
+(withicons),anduserprofileatthebottom.Thecontentareahasitsowninternal
+scrolling.
+## AIPROMPTTOUSE
+"BuildaSaaSdashboardlayoutwithasidebar+contentstructure.Sidebar:240pxwide,dark
+background(#111827),fixedtoleftside,height:100vh.Contains:logoattop,navigationlinks
+withicons(Dashboard,Analytics,Projects,Settings,Team)withactivestatehighlightedin
+blue,anduseravatar+nameatbottom.Maincontentarea:flex-1,lightgraybackground
+(#F9FAFB),hasatopheaderbarwithpagetitleandactionbuttons.Contentbelowshows:4
+statcardsinarow(Users,Revenue,Orders,Growth),thenadatatable.Onmobile,sidebar
+collapsesbehindahamburgermenu."
+## EXAMPLEWEBSITESTOSTUDY
+→VercelDashboard—ThereferenceformodernSaaSdashboards—sidebar+content
+doneperfectly(vercel.com/dashboard)
+→TailwindUI—ApplicationUI—Pre-builtsidebardashboardcomponentsshowingall
+variations(tailwindui.com/components#application-ui)
+→AdminLTEDemo—Open-sourceadmindashboardtemplateshowingcomplexsidebar
+layouts(adminlte.io)
+
+4.Navigation
+Navigationishowusersfindtheirwayaroundyourwebsite.Goodnavigationis
+invisible—usersdon'tnoticeitbecausetheyalwaysknowwheretheyareandhow
+togetwheretheywant.Badnavigationisnoticedimmediatelybecauseusersgetlost
+orfrustrated.Thenavigationpatternyouchoosedependsonthecomplexityofyour
+siteandthedevicesit'susedon.
+4.1StickyNavbar
+## Whatitis
+Anavigationbarthatstaysfixedtothetopoftheviewportastheuserscrolls.Unlike
+astaticnavthatscrollsawaywiththepage,astickynavisalwaysaccessibleno
+matterhowfardowntheuserhasscrolled.Thisisthemostcommonandexpected
+navigationpatternformarketingwebsitesandlandingpages.
+## Howitworks
+position:stickytop:0keepsthenavbaratthetopoftheviewportwhenwithinits
+parent.Apopularenhancement:thenavbarstartstransparent(showingthehero
+contentbehindit),andastheuserscrollsevenafewpixels,ittransitionstoasolidor
+frosted-glassbackground.Thisisdetectedbylisteningtothescrolleventand
+checkingifwindow.scrollYisgreaterthan0(orsomethresholdlike80).
+## AIPROMPTTOUSE
+"Createastickynavbarthatistransparentattheverytopofthepage
+(background:transparent)andtransitionstoawhitefrosted-glassbackgroundwhentheuser
+scrollspast60px(background:rgba(255,255,255,0.85),backdrop-filter:blur(12px),box-
+shadow:01px20pxrgba(0,0,0,0.08)).Navigationhas:logoontheleft,5navlinksinthe
+center,andaCTAbuttonontheright.Adda0.3stransitiononbackground-colorand
+backdrop-filter.Onmobile(under768px),hidethecenterlinksandshowahamburgermenu
+iconinstead."
+## EXAMPLEWEBSITESTOSTUDY
+→Apple.com—Thestickyfrosted-glassnavbar—themostcopiednavbardesigninthe
+world(apple.com)
+→GitHub.com—Cleanstickynavbarwithexcellentmobilebehavior(github.com)
+→Framer.com—Beautifulstickynavwithasmoothscroll-basedtransparency
+effect(framer.com)
+4.2Hamburger/MobileMenu
+## Whatitis
+Onmobilescreens,thereisn'troomforallnavigationlinks.Thehamburgermenu
+## (namedafteritsresemblancetoahamburgerwhenviewedfromtheside:bun,patty,
+bun=threehorizontallines)hidesallnavigationbehindasingleicon.Tappingit
+revealsthefullnavigation—eitherasafullscreenoverlay,asidedrawer,ora
+dropdownpanel.
+## Howitworks
+Threehorizontaldivelements(oracustomSVG)formtheicon.Whenclicked,
+JavaScripttogglesaclassonafullscreenoverlayelement(display:none→
+display:flex).ThethreelinesanimateintoanXusingCSStransforms:thetopline
+rotates45degrees,themiddlelinefadestoopacity:0,thebottomlinerotates-45
+degrees.Theoverlaymenutypicallyappearswithafadeorslide-intransition.
+## AIPROMPTTOUSE
+"Buildafullscreenhamburgermenuformobile.Three-linehamburgericon:eachlineis24px
+wide,2pxtall,darkcolor,with5pxgapbetweenthem.Whenclicked,animatetoX:topline
+rotates45degandtranslatesdown,middlelinefadestoopacity:0,bottomlinerotates-45deg
+andtranslatesup.Thefullscreenmenuoverlayusesposition:fixed,inset:0,
+background:#0A0A0A,z-index:9999.Navigationlinksappearcentered,large(40px),white,
+
+withastaggerfade-in(eachlink0.05slater).Includeclosebutton(X)intopright.Bodyscroll
+shouldbelockedwhenmenuisopen(overflow:hiddenonbody)."
+## EXAMPLEWEBSITESTOSTUDY
+→Manyagencywebsites—Mostcreativeagencysitesusefullscreenhamburgermenus—
+search'agencyportfolio'onAwwwards(awwwards.com/websites/portfolio)
+→Codrops—MenuAnimations—Collectionofcreativehamburgermenuanimation
+techniqueswithcode(tympanus.net/codrops)
+→Cuberto.com—Russianagencywithbeautifulfullscreenhamburgermenu
+animations(cuberto.com)
+4.3MegaMenu
+## Whatitis
+## Amegamenuisalargedropdownpanelthatappearswhenyouhoverover(orclick)
+anavigationitem.Unlikeasimpledropdownwithalistoflinks,amegamenucan
+containmultiplecolumnsoflinks,featuredimages,highlightedpromotions,icons,
+andevenminidescriptions.They'reusedoncomplexwebsiteswhereasinglenav
+itemleadstomanysub-pages—commonone-commercesites('Shop'opensa
+panelwithallcategories),documentationsites,andlargecorporatewebsites.
+## Howitworks
+## Whentheuserhoversanavigationlink(orclicksonmobile),anabsolutely-positioned
+full-widthorwidepanelappearsbelowthenavbar.Thispanelistypicallyorganized
+into3-5columns,eachcontainingacategoryheadingand4-8linksbelowit.One
+columnmightbea'Featured'panelwithanimageandahighlightedpromotion.The
+panelappearswithasubtlefadeorslide-inanimation.Ondesktopit'shover-
+triggered;onmobile,aclick/tapopensit.
+position:absoluteThemegamenupanelisabsolutelypositionedbelowthenavbar
+HovertriggerDesktop:hoveronnavlinkshowsthepanel.Mobile:tap/clickinstead.
+## Multi-column
+grid
+Insidethepanel,linksareorganizedinto3-5equalcolumnsusingCSS
+## Grid
+FeaturedcolumnOnecolumnwithanimageandCTA—drawsattentiontoapromoted
+item
+z-indexMegamenumusthavehighz-index(like9000)toappearaboveall
+pagecontent
+## AIPROMPTTOUSE
+"Createamegamenuforane-commercefashionwebsite.Navbarhaslinks:Women,Men,
+Kids,Sale.Whenhovering'Women':afull-widthpaneldropsdown(backgroundwhite,box-
+shadow:020px40pxrgba(0,0,0,0.1),padding:40px).Panelcontainsa4-columnCSSgrid:
+Column1'Clothing'withlinks(Dresses,Tops,Jeans,Jackets,Skirts).Column2'Accessories'
+withlinks(Bags,Shoes,Jewelry,Scarves).Column3'ByOccasion'withlinks(Work,
+Weekend,Party,Holiday).Column4:afeaturedimagepanelwithaproductphoto,'New
+Arrivals'labelinabadge,anda'ShopNow'button.Animatethepanel:opacity0to1,
+translateY(-8px)to0,over0.2s.Closewhenmouseleavesboththenavlinkandthepanel."
+## EXAMPLEWEBSITESTOSTUDY
+→ASOS.com—Oneofthebestmegamenusontheweb—clean,fast,multi-columnwith
+imagery(asos.com)
+→Apple.comnavigation—Refinedmegamenuforaproductcompany—minimalbut
+effective(apple.com)
+→Shopify—PolarisNavigationdocs—HowShopifydesignsandimplementsmega
+menusintheirdesignsystem(polaris.shopify.com)
+4.4DotNavigation
+
+## Whatitis
+## Asmallsetofdots(usually4-8)positionedontherightorbottomsideofthescreen.
+Eachdotrepresentsonesectionorslideofthewebsite.Thedotcorrespondingtothe
+currently-visiblesectionisfilledorlargerthantheothers.Clickingadotinstantly
+jumpsthepagetothatsection.Thispatternisalmostexclusivelyusedonfullpage
+scrollwebsitesandslideshow-stylepresentationswherethepagesnapsfromsection
+tosection.
+## Howitworks
+## Thedotsaresmallcircularelements(8-12pxdiameter)positionedwithposition:fixed
+ontherightedgeoftheviewport.They'restyledwithasemi-transparentborderby
+defaultandfilledsolidwhenactive.Astheuserscrolls,JavaScriptdetectswhich
+sectioniscurrentlyinview(usingIntersectionObserverorScrollTriggercallbacks)
+andupdateswhichdothasthe'active'class.Clickingadottriggersasmoothscrollto
+thatsectionusingscrollIntoView()orGSAP'sscrollToplugin.
+position:fixedrightDotsarefixedtotheviewportsotheystayvisibleassections
+change
+ActivestateActivedot:larger(12pxvs8px),fullyfilled.Others:outlinedorsemi-
+transparent.
+IntersectionObserverDetectswhichsectioniscurrentlymostvisibletoupdatetheactive
+dot
+TooltiponhoverHoveringadotshowsthesectionname—helpsusersknowwhere
+they'rejumping
+scrollIntoView()JavaScriptmethodtosmoothlyscrolltoaspecificelementwhena
+dotisclicked
+## AIPROMPTTOUSE
+"Adddotnavigationtoa6-sectionfullpagescrollwebsite.Create6dotsusingposition:fixed,
+right:24px,top:50%,transform:translateY(-50%),displayedasaverticalcolumnwith16pxgap
+betweendots.Defaultdotstyle:8pxwidthandheight,border-radius:50%,border:2pxsolid
+rgba(255,255,255,0.6),background:transparent,cursor:pointer,transitionall0.3s.Activedot
+style:12pxwidthandheight,background:white,border-color:white,box-shadow:008px
+rgba(255,255,255,0.5).Onhoverofanydot,showatooltiptotheleftwiththesectionname
+(absolutepositioned,background:rgba(0,0,0,0.7),whitetext,padding:4px10px,border-
+radius:4px).UseIntersectionObserver(threshold:0.5)toupdateactivedotassectionsscroll
+intoview."
+## EXAMPLEWEBSITESTOSTUDY
+→FullPage.jsexamples—EveryfullPage.jsdemousesdotnavigation—clickthedotsto
+seethebehavior(alvarotrigo.com/fullPage/examples)
+→Apple—Specialeventpages—Apple'sproductkeynotemicrositesusedotnavfortheir
+fullpagesections(apple.com/apple-events)
+→Dribbble—DotNavigationUI—Search'dotnavigation'forvisualexamplesofdifferent
+dotstyles(dribbble.com/tags/dot-navigation)
+4.5Breadcrumbs
+## Whatitis
+## Breadcrumbsareasecondarynavigationelementshowingtheuser'scurrentlocation
+withinthewebsite'shierarchy.NamedaftertheHanselandGretelfairytale(dropping
+breadcrumbstofindyourwayhome),theyappearasahorizontaltrailoflinks:
+Home>Category>Subcategory>CurrentPage.Theyletusersunderstandexactly
+wheretheyareandjumpbacktoanyparentlevelwithoneclick.They'reessentialon
+e-commercesites,documentationportals,andanywebsitewithmorethan2levelsof
+depth.
+## Howitworks
+
+Breadcrumbsareanorderedlist(HTMLolelement)oflinksseparatedbyavisual
+divider—usuallyaforwardslash(/),chevron(›),oranglebracket(>).Thecurrent
+pageisthelastitemandisNOTalink(it'swhereyoualreadyare).Allitemsbeforeit
+areclickablelinks.Thevisualstyleisintentionallysubtle—smallfontsize(13-14px),
+mutedcolor—soitdoesn'tcompetewiththemainpageheading.Adding
+schema.orgBreadcrumbListmarkuphelpsGoogleunderstandanddisplay
+breadcrumbsinsearchresults.
+olelementBreadcrumbsuseanorderedlist(ol)forcorrectHTMLsemantics
+aria-
+label:breadcrumb
+## Accessibilityattributethattellsscreenreadersthisisabreadcrumb
+navigation
+aria-current:pageMarksthecurrent(last)itemforscreenreaders—nolinkonthisitem
+schema.org
+markup
+StructureddatathatmakesbreadcrumbsappearinGooglesearch
+results
+SeparatorThedividerbetweenitems—usuallyCSS::aftercontent:'/'or'›'
+## AIPROMPTTOUSE
+"Addabreadcrumbnavigationtoaproductdetailpage.HTMLstructure:<navaria-
+label='Breadcrumb'><ol>withliitemsseparatedbyCSS-generateddividers.Style:font-
+size:13px,color:#888888.Eachlink(exceptlast):color:#888,text-decoration:none,
+hover:color:#111with0.2stransition.Lastitem(currentpage):color:#111,font-weight:500,no
+link.Separator:CSSli+li::before{content:'›';margin:08px;color:#CCCCCC}.The
+breadcrumbpathforthispage:Home→Men'sClothing→Outerwear→WinterJackets.
+Wrapinacontainerwith16pxtopandbottompadding.AlsoaddJSON-LDschema.org
+BreadcrumbListmarkupintheheadforSEO."
+## EXAMPLEWEBSITESTOSTUDY
+→Amazon.comproductpages—Everyproductpagehasbreadcrumbs—themost-seen
+implementationintheworld(amazon.com)
+→MDNWebDocs—Documentationportalwithcleanbreadcrumbnavigationshowingdeep
+pagehierarchies(developer.mozilla.org)
+→Zalando.com—E-commercewithexcellentbreadcrumbimplementationandschema
+markup(zalando.com)
+4.6TabNavigation
+## Whatitis
+## Tabsareahorizontalrowofclickablelabelsatthetopofacontentarea,where
+clickingatabswapsthecontentpanelbelowit.Thinkofaphysicalfilingcabinetwith
+tabbeddividers—clickatabandyouseewhat'sinthatfolder.Tabsareperfectfor
+organizingrelatedcontentthatusersneedtoswitchbetweenwithoutleavingthe
+page:productspecsvsreviewsvsQ&Aonaproductpage,ordifferentdashboard
+viewslikeOverview,Analytics,andSettings.
+## Howitworks
+Arowofbuttonoranchorelementsactsasthetabstrip.Thecurrentlyactivetabis
+indicatedvisually:anunderlineborder-bottominthebrandcolor,afilledbackground,
+boldtext,oracombination.Clickingatabaddsan'active'classtothattabandshows
+thecorrespondingcontentpanelwhilehidingallothers.Contentpanelsswapwith
+eitherdisplay:none/blocktoggling(instant)oranopacity/fadetransition(smooth).
+## Eachtabandpanelpairneedsaria-selected,role:tab,aria-controlsandrole:tabpanel
+attributesforaccessibility.
+## Active
+indicator
+## Underline,filledbackground,orboldtextshowingtheselectedtab
+PanelswapOtherpanelssettodisplay:noneoropacity:0whentheirtabisinactive
+
+role:tab/
+tabpanel
+## Accessibilityattributessokeyboardandscreenreaderuserscannavigate
+## Keyboard
+navigation
+## Arrowkeysshouldmovebetweentabs—standardexpectedbehavior
+## Animated
+indicator
+## Aslidingunderlinethatmovessmoothlybetweentabs—verypolished
+touch
+TIPTheslidinganimatedtabindicatorisagreatdetailthatmakestabsfeelpremium.
+## Achieveitwithaseparateunderlineelement(position:absolute,bottom:0)thatmovesvia
+transform:translateX()whentabsareclicked.CalculatethetargetXpositionfromtheclicked
+tab'soffsetLeft.
+## AIPROMPTTOUSE
+"Buildaproductdetailpagewithtabnavigation.Tabbar:4tabs—Overview,Specifications,
+Reviews(withcountbadge),FAQ.Tabstripstyling:whitebackground,bottomborder1px
+solid#E5E7EB,tabshavepadding:14px24px,font-size:15px,font-weight:500,
+color:#6B7280.Activetab:color:#111,border-bottom:2pxsolid#2563EB(brandblue),
+margin-bottom:-1pxtooverlapcontainerborder.Addaslidinganimatedindicator:a2pxblue
+line(position:absolute,bottom:-1px,transition:transform0.25sease,widthmatchestheactive
+tab)thatslidesacrosswhentabsareclicked.Contentpanels:onlytheactivepanelisvisible
+(othersdisplay:none).Eachpanelhasfade-in:opacity0to1over0.2sonactivation."
+## EXAMPLEWEBSITESTOSTUDY
+→GitHubrepositorypages—TheCode/Issues/PullRequests/Actionstabbar—used
+bymillionsofdevelopersdaily(github.com)
+→RadixUI—Tabscomponent—Fullyaccessible,animatedtabcomponentwithcode
+examples(radix-ui.com/primitives/docs/components/tabs)
+→Amazonproductpages—ProductDetails/Reviews/Q&Atabs—high-traffice-
+commercetabimplementation(amazon.com)
+
+5.Typography&Color
+TypographyandcoloraretheDNAofabrand'svisualidentity.Theycommunicate
+personalitybeforeasinglewordisread.Aheadlineinaboldgeometricsans-serif
+communicatestechnologyandconfidence.Thesameheadlineinanelegantserif
+communicatesluxuryandtradition.Coloroperatesthesameway—independentlyof
+content,colorcreatesemotionalassociations.
+5.1TypeScale&Hierarchy
+## Whatitis
+## Atypescaleisasystemofpredeterminedfontsizesthatworkharmoniouslytogether.
+## Insteadofchoosingrandomsizes(40pxhere,22pxthere),youpickascaleratio—
+like1.25xor1.414x—andmultiplyupanddownfromabasesize.Thiscreates
+visualharmonybecauseeverysizeismathematicallyrelatedtotheothers.Hierarchy
+meansusingsize,weight,andcolortocommunicateimportance:thebiggest,boldest
+textisthemostimportant.
+## Howitworks
+Startwithabasebodysizeof16pxor18px.Multiplybyyourratioforeachlevelup.
+At1.25xscalefrom16px:body=16px,H4=20px,H3=25px,H2=31px,H1=39px,
+display=49px.Forlandingpages,youcanbemoreaggressive—H1at56-80px,H2
+at36-48px.Theclamp()CSSfunctioncreatesfluidtypographythatsmoothlyscales
+betweenminimumandmaximumsizesbasedonviewportwidth.
+clamp(min,
+preferred,max)
+## Fontsizefluidlybetweenminandmax—clamp(40px,6vw,80px)
+## Fontweight100=thin,400=normal,600=semibold,700=bold,900=black
+Letter-spacingNegativevalues(-0.02em)onlargeheadingsmakesthemfeeltighterand
+modern
+## Line-height1.1-1.2forheadings,1.6-1.7forbodytext—criticalforreadability
+## AIPROMPTTOUSE
+"DefineacompletetypographysystemusingCSScustomproperties.--font-display:
+clamp(56px,8vw,96px),font-weight:800,letter-spacing:-0.04em,line-height:1.05.--font-h1:
+clamp(40px,5vw,64px),font-weight:700,letter-spacing:-0.02em.--font-h2:clamp(28px,
+3.5vw,44px),font-weight:600.--font-h3:24px,font-weight:600.--font-body:17px,font-
+weight:400,line-height:1.7.--font-small:14px,font-weight:400,color:mutedgray.Applythis
+systemconsistentlythroughoutthepagesothevisualhierarchyisimmediatelyclear."
+## EXAMPLEWEBSITESTOSTUDY
+→Typescale.com—Interactivetool—chooseascaleratioandseeallthesizesgenerated.
+## Essentialresource.(typescale.com)
+→Fontjoy.com—AI-poweredfontpairingtool—generatescomplementaryfont
+combinations(fontjoy.com)
+→Typewolf.com—Dailytypographyinspirationfromrealwebsites,withfont
+identification(typewolf.com)
+5.2FontPairing
+## Whatitis
+## Usingtwocomplementaryfontstogether—oneforheadingsanddisplaytext,one
+forbodytextandUI.Theheadingfontshouldhavestrongpersonalityandvisual
+impact.Thebodyfontshouldbehighlyreadableatsmallsizesandinparagraphs.
+Thetwofontsshouldcontrastbutnotclash.Usingmorethantwofontsonawebsite
+almostalwayslooksamateur.
+## Recommendedpairingsfordifferentvibes
+Editorial/PlayfairDisplay(headings)+DMSans(body)—classicandrefined
+
+## Luxury
+ModernStartupClashDisplay(headings)+Satoshi(body)—boldandcontemporary
+Tech/SaaSSyne(headings)+Inter(body)—cleanandfunctional
+ExperimentalMonumentExtended(headings)+NeueHaasGrotesk(body)—striking
+## Friendly/
+## Consumer
+NunitoorPoppins(headings)+SourceSansPro(body)—approachable
+## AIPROMPTTOUSE
+"Usethesefontpairingsforthiswebsite:importClashDisplayfromFontshareCDN
+(https://api.fontshare.com/v2/css?f[]=clash-display@700&display=swap)forallheadingsat
+font-weight:700.ImportSatoshifromFontshare
+(https://api.fontshare.com/v2/css?f[]=satoshi@400,500&display=swap)forbodytextatfont-
+weight:400forparagraphsand500forUIlabels.ApplyClashDisplaytoallh1,h2,h3
+elementswithletter-spacing:-0.03em.ApplySatoshitobody,p,button,inputwithline-
+height:1.6."
+## EXAMPLEWEBSITESTOSTUDY
+→Fontshare.com—Freehigh-qualityfontsspecificallycuratedforwebdesign—much
+betterthanGoogleFonts(fontshare.com)
+→GoogleFonts—Pairings—Eachfontpagesuggestspopularpairings.Freeand
+reliable.(fonts.google.com)
+→FontsInUse—Real-worldexamplesoffontusageacrosswebsites,posters,and
+branding(fontsinuse.com)
+5.3ColorTheory:The60-30-10Rule
+## Whatitis
+## The60-30-10ruleisasimplecolordistributionformulaborrowedfrominteriordesign.
+## 60%ofthevisualareausesthedominantcolor(usuallyaneutral—white,off-white,
+lightgray,ornear-black).30%usesthesecondarycolor(slightlydifferenttonefor
+cards,sections,orbackgrounds).10%usestheaccentcolor(yourbrandcolor—for
+CTAs,highlights,icons,andimportantUIelements).
+## Howitworks
+Thedominant60%setstheoverallmood.Anear-whitedominantcolorfeelslightand
+modern.Anear-blackdominantcolorfeelspremiumandserious.Thesecondary
+30%createsdepthandsectiondifferentiation.Theaccent10%drawstheeyeto
+whatmatters—yourcall-to-actionbutton,importantstatistics,orlinks.Ifyouraccent
+appearsmorethan10%ofthetime,itlosesitsabilitytodrawattention.
+## Dominant
+## (60%)
+## Yourbackgroundcolor—neutral,setstheoverallmood
+## Secondary
+## (30%)
+## Cardbackgrounds,alternatesections,sidebarbackgrounds
+Accent(10%)Brandcolor—ONLYforCTAs,highlights,activestates,keyicons
+Tints&shadesLighter/darkerversionsofonecolor—createsdepthwithoutaddingnew
+colors
+## AIPROMPTTOUSE
+"Designawebsiteusingthe60-30-10colorrule.Dominantcolor(60%):#FAFAF7(warmoff-
+white)forpagebackgrounds.Secondarycolor(30%):#F0EDE8(slightlywarmergray)for
+cards,alternatesections,andfooter.Accentcolor(10%):#2563EB(electricblue)ONLYfor
+primaryCTAbuttons,activenavigationlinks,highlightedtext,andicons.Text:#111111for
+headings,#555555forbodytext,#888888forcaptions.Neverusetheelectricbluefor
+anythingdecorative—onlyforactionableandimportantelements."
+
+## EXAMPLEWEBSITESTOSTUDY
+→Coolors.co—Colorpalettegenerator—generateandlockcolorsuntilyoufindthe
+perfectpalette(coolors.co)
+→Paletton.com—Colortheory-basedpalettebuildershowingcomplementary,triadic,and
+analogouscolors(paletton.com)
+→Huemint.com—AI-poweredbrandcolorpalettegenerator—generatesfullpalettes
+instantly(huemint.com)
+5.4GradientText
+## Whatitis
+## Insteadofasolidcolorforaheadingorkeyword,thetextitselfisrenderedasa
+gradient—flowingfromonecolortoanother.ExtremelypopularinAI/tech/SaaS
+websitesbecauseitaddsvisualinteresttoplaintextwithoutneedingadditional
+designelements.Oftenjustoneortwowordsinaheadlinegetthegradienttreatment,
+whiletherestoftheheadingstayssolid.
+## Howitworks
+ThisisaCSStrickcombiningthreeproperties.First,setbackground:linear-
+gradient(...)onthetextelement.Second,background-clip:textclipsthegradientto
+theshapeofthetextcharacters.Third,-webkit-text-fill-color:transparent(orcolor:
+transparent)makestheactualtextcolorinvisible,revealingthegradientbackground
+showingthroughthetextshape.Withoutallthree,itdoesn'twork.
+## AIPROMPTTOUSE
+"Applyagradientcoloreffecttokeywordsintheheroheadline.Theheadlinereads:'Build
+websitesthatactuallyconvert.'Maketheword'convert'agradientfrom#667eea(purple-blue)
+to#f64f59(coral-red).CSS:background:linear-gradient(135deg,#667eea0%,#f64f59
+100%);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+color:transparent.Wrapthatspecificwordinaspanwiththisclass.Therestoftheheadline
+shouldbewhite(ondarkbackground).Addasecondgradientwordinthesubheadingusinga
+differentgradient(greentocyan:#11998eto#38ef7d)."
+## EXAMPLEWEBSITESTOSTUDY
+→Stripe.com—Masterfuluseofsubtlegradienttextinheadings—restrainedand
+effective(stripe.com)
+→Vercel.com—Boldgradienttextintheheroheadline—electricandattention-
+grabbing(vercel.com)
+→GradienttextCSSgenerator(CSSGradient)—Interactivegeneratorforgradienttext
+CSS—copyandpasteready(cssgradient.io)
+5.5Display/HeroTypography
+## Whatitis
+## Displaytypographymeansusingtextitselfastheprimaryvisualelementofadesign
+## —theheadlineissolarge,sobold,andsobeautifullysetthatnoheroimageis
+needed.At80px,100px,orevenlarger,asingleheadlinebecomesavisual
+experience.Thisapproachispopularonportfoliosites,creativeagencies,editorial
+brands,andtechproductsthatwanttoleadwithconfidenceandpersonalityrather
+thanagenericstockphoto.
+## Howitworks
+ThekeyCSSpropertyisfont-sizesetverylarge—typicallyusingclamp(60px,9vw,
+120px)soitscalessmoothlyfrommobiletodesktop.Font-weightisusually700(bold)
+or900(black/extra-bold)formaximumvisualweight.Letter-spacingistightenedwith
+anegativevalue(-0.03emto-0.05em)whichmakeslargedisplaytextfeelmore
+professionalandmodern—looseletter-spacingonlargetextlookscheap.Line-
+heightisreduced(0.9to1.1)becausedisplaytextwrapstofewerlinesandtightline
+heightcreatesacompact,powerfulblock.
+clamp(min,clamp(60px,9vw,120px)—scalesthefontbetweenminandmaxbased
+
+fluid,max)onviewport
+## Negativeletter-
+spacing
+## -0.03emto-0.05emonlargeheadings—makesitfeeltightand
+contemporary
+## Line-height<10.9to1.05fordisplaytext—tighterthanbodytext,createsacompact
+visualmass
+## Font-weight
+## 900
+BlackorExtraBoldweight—maximumvisualimpactatlargesizes
+TextwrappingLetdisplayheadlineswrapnaturallyto2-3lines—don'tforceoneline
+TIPOneofthemostpowerfuldisplaytypographytechniques:setonekeywordinadifferent
+color,gradient,oritalic/outlinedstyle.Thiscreatesavisualanchorandrhythmintheheadline.
+Example:'Designwith'(regularwhite)'purpose.'(gradientcolor).Thecontrastwordshouldbe
+themostimportantconceptinyourheadline.
+## AIPROMPTTOUSE
+"CreateatypographicherosectionwheretheheadlineISthedesign—noheroimage
+needed.Background:#0A0A0A(near-black).Mainheadline:font-sizeclamp(64px,9vw,
+112px),font-weight:800,letter-spacing:-0.04em,line-height:0.95,color:#F1F1EE.The
+headlinereads:'Wecraftdigitalexperiencesthatmatter.'Make'digitalexperiences'renderin
+italicstyleANDagradienttext(from#667eeato#f64f59).Belowtheheadline:a1pxwhite
+horizontalruleat20%opacity,thenatwo-columnlayout—left:subtextparagraph(18px,
+muted#888,max-width:400px),right:twoCTAbuttonsstackedvertically.Noimageanywhere
+onthishero.Letthetypographybreathewith120pxtopandbottompadding."
+## EXAMPLEWEBSITESTOSTUDY
+→Awwwards—Typographycategory—Award-winningsiteswheredisplaytypographyis
+themaindesignelement(awwwards.com/websites/typography)
+→ObysAgency—Ukrainianagency—incredibledisplaytypographyusedastheprimary
+visualsystem(obys.agency)
+→Sempliceportfoliobuilder—PortfoliositesbuiltonSemplicefrequentlyusedisplay
+typographyashero(semplice.com/inspiration)
+5.6Dark/LightModeToggle
+## Whatitis
+## Atogglethatletsusersswitchbetweentwocompletevisualthemes—alightversion
+## (white/off-whitebackground,darktext)andadarkversion(near-blackbackground,
+lighttext).Manyuserspreferdarkmodefornight-timereading,reducedeyestrain,or
+aestheticpreference.Offeringbothmodesshowsattentiontouserneedsandisnow
+consideredastandardfeatureonqualitywebsites.Thebrowser/OSalsosignalsthe
+user'spreferredmodethroughaCSSmediaquery,whichyoursitecanrespect
+automatically.
+## Howitworks
+TheentirecolorsystemisbuiltusingCSScustomproperties(variables)definedon
+the:rootelement.Twosetsofvaluesaredefined—oneforlightmode,onefordark
+mode.Switchingmodesmeansupdatingthedata-themeattributeontheHTML
+element(like<htmldata-theme='dark'>),whichtriggersadifferentsetofCSS
+variablevalues.JavaScriptsavestheuser'spreferencetolocalStoragesoitpersists
+betweenvisits.Theprefers-color-schememediaqueryletsyousetthedefaultbased
+ontheuser'sOSsetting.
+CSScustom
+properties
+## Variableslike--color-bg,--color-textthatchangevaluewhentheme
+switches
+data-theme
+attribute
+<htmldata-theme='dark'>—theselectorthattriggersdarkmodeCSS
+values
+
+prefers-color-
+scheme
+CSSmediaquerydetectingiftheuser'sOSissettodarkorlightmode
+localStorageBrowserstoragethatsavestheuser'sthemechoiceacrosssessions
+## Transitiontransition:background0.3s,color0.3s—smoothfadebetweenmodes,
+notinstantjump
+## AIPROMPTTOUSE
+"Implementacompletedark/lightmodesystem.InCSS,defineon:root:--bg:#FFFFFF,--bg-
+secondary:#F5F5F5,--text:#111111,--text-muted:#666666,--border:#E5E7EB,--
+accent:#2563EB.Define[data-theme='dark']:--bg:#0D0D0D,--bg-secondary:#1A1A1A,--
+text:#F1F1EE,--text-muted:#888888,--border:#2A2A2A,--accent:#3B82F6.Applytoall
+elements:background:var(--bg),color:var(--text).Addbody{transition:background0.3s
+ease,color0.3sease}.Togglebutton:onclick,toggledata-theme='dark'onthehtmlelement
+andsavetolocalStorage.Onpageload:checklocalStoragefirst,thencheckprefers-color-
+schememediaqueryasfallback.Togglebuttonshowssuniconindarkmodeandmoonicon
+inlightmode."
+## EXAMPLEWEBSITESTOSTUDY
+→Linear.app—Excellentdark/lightmodetoggle—noticethesmoothtransitionandhow
+everycoloradapts(linear.app)
+→JoshWComeau—DarkModeGuide—Themostcomprehensiveguidetobuildingdark
+modewithoutthedreadedflashofwrongtheme(joshwcomeau.com/react/dark-mode)
+→RaunoFreiberg'sportfolio—DesigneratLinear—hisportfoliohasabeautifully
+implementedthemetoggle(rauno.me)
+
+6.UIPatterns
+UIpatternsarereusablesolutionstocommondesignproblems.They'vebeentested
+bymillionsofusersacrossthousandsofwebsites,sousersalreadyknowhowthey
+work.Acard,amodal,apricingtable,anaccordion—thesepatternshave
+establishedbehaviorsthatusersexpect.Learningthesepatternsmeansyoucan
+describeexactlywhatcomponentyouneedwhenpromptinganAIbuilder.
+6.1HeroSection
+## Whatitis
+## Theheroisthefirstthingavisitorseeswhentheylandonyourwebsite—beforeany
+scrolling.It'syour3-secondpitch.Agreatheroimmediatelycommunicates:whatthis
+is,whoit'sfor,andwhytheyshouldcare.Ittypicallycontainsamainheadline(the
+biggest,mostprominenttextonthepage),asupportingsubheadline,andoneclear
+call-to-actionbutton.
+## Howitworks
+## Herosectionsaretypicallyfull-widthandeitherfull-height(100vh)ortallenoughtofill
+mostofthescreen.Contentiseithercenteredorleft-aligned.Thevisualhierarchyis
+strict:headlinedominates,subtextsupports,CTAstandsout.Avisualelement
+## (productscreenshot,illustration,abstractgraphic)supportsthemessagewithout
+competingwiththetext.
+AbovethefoldEverythingvisiblebeforescrolling—thisisyourherosection'sdomain
+## Value
+proposition
+## Theonesentencethatexplainswhatyourproductdoesandforwhom
+PrimaryCTAOnemainactionbutton—'GetStarted','TryFree','BookDemo'
+SocialproofSmallindicatoroftrustneartheCTA:'2,000+companiestrustus'orstar
+rating
+## AIPROMPTTOUSE
+"BuildaherosectionforaproductivitySaaS.Layout:centered,full-width,darkbackground
+(#050505).Badgeattop:smallpillshapewithtext'NowwithAI•What'snew→'.H1headline
+at72pxbold:'Doyourbestwork,'—nextline:'inhalfthetime.'with'halfthetime'ingradient
+text.Subtextat20pxmutedgray:'TheAI-poweredworkspacethatthinksasfastasyoudo.'
+Twobuttons:primary('Startforfree',bluefilled)andsecondary('Seehowitworks→',text
+only).Belowbuttons:smalltrustrow'★★★★★Lovedby10,000+teams'.Belowthat:a
+productscreenshotinabrowserchromemockupwithasubtlegloweffect."
+## EXAMPLEWEBSITESTOSTUDY
+→Landingfolio.com—Heroes—500+herosectiondesignsfilteredbystyle—thebest
+referencelibrary(landingfolio.com)
+→Saaspo.com—SaaSlandingpageinspirationgallery—allherosections
+catalogued(saaspo.com)
+→TailwindUI—HeroSections—Pre-builtherosectioncodeinmultiplestyles—studythe
+structure(tailwindui.com/components/marketing/sections/heroes)
+6.2PricingTable
+## Whatitis
+Astructuredcomparisonofyourproduct'sdifferentpricingtiers.Almostalways3
+columns:afree/starterplan,apaidproplan(theoneyouwantmostpeopletobuy),
+andanenterpriseplan.Theproplanisvisuallyhighlighted—larger,withacolored
+border,anelevatedposition,anda'MostPopular'or'Recommended'badge—to
+guideuserstowardit.
+## Howitworks
+
+Three-columnlayout.Eachcolumnisacardcontaining:planname,price(largeand
+prominent),billingperiod,1-linedescription,achecklistofincludedfeatures,anda
+CTAbutton.Thepro/featuredplancardgetsspecialvisualtreatment:acolored
+border(2px,notjust0.5px),abadgeatthetop,andsometimesaslightscale-up
+## (transform:scale(1.05))orextraverticalpaddingtomakeitliterallybiggerthanthe
+others.
+## AIPROMPTTOUSE
+"Builda3-tierpricingtablewithmonthly/annualtoggle.Freetier:whitecard,$0/month,5
+features,outlinedbutton.Protier(highlighted):coloredborder(#2563EB,2px),
+transform:scale(1.04),'MostPopular'badgeinblueattop,$29/month(annual)/$39/month
+(monthly),12features,filledCTAbutton.Enterprise:whitecard,'Custompricing',6features,
+outlinedbutton.Allcardshave:planname(bold),price(48px),featurechecklistwith
+checkmarkicons(greenchecks,graycrossesforexcluded).Themonthly/annualtoggle
+animatesthepriceschangingandshows'Save25%'badgenexttotheannualoption."
+## EXAMPLEWEBSITESTOSTUDY
+→TailwindUI—PricingSections—Multiplepre-builtpricingtablelayoutsshowing
+differentstructures(tailwindui.com/components/marketing/sections/pricing)
+→Pricingpages.xyz—GalleryofrealSaaSpricingpagescreenshotsand
+designs(pricingpages.xyz)
+→Linear.app/pricing—Oneofthecleanestpricingpages—studythelayoutand
+copy(linear.app/pricing)
+6.3Testimonials/SocialProof
+## Whatitis
+Asectionshowingquotesfromrealusersofyourproduct.Socialproofisoneofthe
+mostpowerfulconversionelementsonawebsite—peopletrustotherpeople's
+opinionsmorethantheytrustthecompanysellingtheproduct.Thebesttestimonials
+arespecific('increasedourrevenueby40%')ratherthangeneric('greatproduct,love
+it').Theyshouldinclude:thequote,theperson'sphoto,name,jobtitle,andcompany.
+## Howitworks
+## Canbelaidoutas:a3-columngridofcards,asinglelargefeaturedquote,oran
+auto-scrollingmarquee(infinitehorizontalscroll).Themarqueeversionisvery
+popularcurrently—cardsscrollcontinuouslyfromrighttoleft,oftenwithtworows
+movinginoppositedirections.Clickingstopsthescroll.Starratingsabovethequote
+addcredibility.
+## AIPROMPTTOUSE
+"Createatestimonialsectionwithadual-rowinfinitemarquee.Tworowsoftestimonialcards,
+eachrowauto-scrollinghorizontallyatdifferentspeeds.Row1scrollsleftat30px/s,Row2
+scrollsrightat20px/s.Eachcard(280pxwide,whitebackground,12pxborder-radius,subtle
+shadow):starrating(5goldstars),quotetextinquotes,horizontaldivider,avatarcircle(40px,
+initials),name(bold14px),roleandcompany(12pxgray).8cardsperrowduplicatedfor
+infiniteloop(useCSSanimationwithkeyframestranslatingXby-50%).Sectionbackground:
+lightgray#F5F5F5."
+## EXAMPLEWEBSITESTOSTUDY
+→Senja.io—Testimonialcollectiontool—theirownwebsiteshowsexcellenttestimonial
+patterns(senja.io)
+→Testimonial.to—Anothertestimonialwidgetproduct—greatreferenceformodern
+testimonialUI(testimonial.to)
+→Stripe.com—Customerspage—Howaworld-classcompanydoessocialproof—mix
+oflogos,quotes,andcasestudies(stripe.com/customers)
+6.4Accordion/FAQ
+## Whatitis
+## Alistofquestionswhereclickinganyquestionexpandsittorevealtheanswer,then
+clickingagaincollapsesit.ThispatternisperfectforFAQsections,help
+
+documentation,andanysituationwhereyouhavemanypiecesofrelatedcontent
+thatwouldbeoverwhelmingifallshownatonce.Itletsusersscanthequestions
+quicklyandonlyexpandtheonestheycareabout.
+## Howitworks
+## Eachitemhasavisiblequestionrow(witha+orchevroniconontheright)anda
+hiddenanswerpanelbelowit.Theanswerpanelstartsatmax-height:0and
+overflow:hidden.Whenthequestionisclicked,aclassistoggledthatchangesmax-
+heighttoalargevalue(orauto)andthepanelrevealswithasmoothCSStransition.
+Theiconrotates45degrees(+becomes×)or180degrees(chevronflips).HTML
+alsohasanativedetails/summaryelementthatdoesthiswithoutJavaScript.
+## AIPROMPTTOUSE
+"BuildanFAQsectionwith8questions.EachFAQitem:full-width,whitebackground,
+separatedbya1px#E5E7EBborder.Questionrow:padding20px,questiontextinfont-
+weight:500,anda+iconontherightthatrotates45degto×whenopen.Answerpanel:starts
+height:0overflow:hidden,transitionstoautoheightin0.3sease.Answertextismutedgray
+(#6B7280),16px,with20pxpadding.Onlyonequestioncanbeopenatatime(openinga
+newoneclosestheprevious).AddasearchinputatthetopoftheFAQthatfiltersquestions
+astheusertypes."
+## EXAMPLEWEBSITESTOSTUDY
+→WebflowUniversity—FAQTemplates—No-codeaccordionFAQexampleswithstyling
+guidance(university.webflow.com)
+→HeadlessUI(byTailwindLabs)—Accessibleaccordioncomponentswithanimations—
+codeexamples(headlessui.com)
+→Linear.app/pricingFAQ—Simple,cleanFAQimplementationatthebottomoftheir
+pricingpage(linear.app/pricing)
+6.5Modal/Dialog
+## Whatitis
+## Amodal(ordialog)isapopupoverlaythatappearsoverthepagecontent,requiring
+theusertointeractwithitordismissitbeforereturningtothemainpage.It'susedfor:
+confirmations('Areyousureyouwanttodeletethis?'),forms(signup,login),image
+lightboxes(viewingaphotolarger),videoplayers,andonboardingflows.The
+backgroundisdarkenedtodirectfocustothemodal.
+## Howitworks
+## Anoverlaydivcoverstheentirescreen(position:fixed,inset:0,
+background:rgba(0,0,0,0.5)).Themodalpanelsitscenteredontopoftheoverlay,
+usuallyachievedwithdisplay:flex,align-items:center,justify-content:centeronthe
+overlay.Themodalpanelitselfisawhitecardwithpadding,shadow,andborder-
+radius.Itanimatesinwithascale+opacitytransition.Clickingtheoverlayor
+pressingEscapeclosesthemodal.Focusshouldbetrappedinsidethemodalwhile
+it'sopen.
+## AIPROMPTTOUSE
+"Buildamodalcomponentthatopenswhenabuttonisclicked.Overlay:position:fixed,
+inset:0,background:rgba(0,0,0,0.6),backdrop-filter:blur(4px),z-index:1000.Modalpanel:
+background:white,border-radius:16px,padding:32px,max-width:480px,width:90%,box-
+shadow:025px50pxrgba(0,0,0,0.25).Animatein:transform:scale(0.92)opacity:0→scale(1)
+opacity:1,0.25sease.Closeon:Xbuttontop-right,clickingoverlay,pressingEscapekey.
+Includeasign-upforminside:heading'Createyouraccount',emailinput,passwordinput,
+primarysubmitbutton,anda'Signininstead'link.Bodyscrollshouldlockwhenmodalis
+open."
+## EXAMPLEWEBSITESTOSTUDY
+→RadixUI—Dialog—Themostaccessible,well-implementedmodalcomponentwith
+animationexamples(radix-ui.com/primitives/docs/components/dialog)
+→Flowbite—ModalExamples—Multiplemodalstylesandvariationswithcopy-paste
+
+code(flowbite.com/docs/components/modal)
+→Dribbble—ModalDesign—Visualinspirationforcreativemodalanddialog
+designs(dribbble.com/tags/modal)
+6.6CardComponent
+## Whatitis
+## Acardisaself-containedrectangularcontainerthatgroupsrelatedinformationabout
+asinglesubject—ablogpost,aproduct,ateammember,aproject.Cardsarethe
+mostuniversalbuildingblockofwebUIdesign.Theycreatevisualseparation
+betweenitemswithoutrequiringharddividers,andtheymakecomplexpages
+scannablebecauseeachcardisitsownfocusedunitofcontent.Thepatterncomes
+fromphysicalindexcardsandplayingcards—abounded,portable,self-explanatory
+informationunit.
+## Howitworks
+## Abasiccardhas:avisualareaatthetop(image,illustration,orcoloredblock),a
+contentareabelowwithatitle,description,optionalmetadata(date,author,tags,
+readingtime),andsometimesacall-to-action(link,button).Cardsaregroupedin
+grids(2,3,or4columns)andoftenhaveahoverstate—asubtlelifteffect
+(translateY(-4px)withincreasedshadow)thatsignalsinteractivity.Thecarditselfis
+eitherfullyclickableorhasaspecificCTAlink.
+VisualareaTopsectionofcard:image,videothumbnail,illustration,orsolidcolor
+block
+ContentareaPaddedsectionbelowthevisual:title,description,metainfo,CTA
+Hoverlifttransform:translateY(-4px)+increasedbox-shadowonhover—signals
+thecardisclickable
+overflow:hiddenAppliedtothecardcontainer—clipstheimagetothecard'sborder-
+radius
+aspect-ratioe.g.aspect-ratio:16/9ontheimageareakeepscardsconsistentheight
+regardlessofimage
+TIPThreethingsmakeorbreakacardgrid:consistentimageaspectratios(useaspect-
+ratio:16/9or4/3ontheimagecontainer,nottheimageitself),comfortableinternalpadding
+(20-24pxisstandard),andaclearhoverstate.Withoutahoverstate,cardsfeelstaticand
+usersdon'tknowthey'reclickable.Asubtlelift+borderhighlightisusuallyenough.
+## AIPROMPTTOUSE
+"Buildablogpostcardgridwith3columns.Eachcard:whitebackground(#FFFFFF),
+border:1pxsolid#E5E7EB,border-radius:12px,overflow:hidden,cursor:pointer.Hoverstate:
+transform:translateY(-4px),box-shadow:012px30pxrgba(0,0,0,0.1),border-color:#D0D0D0.
+Alltransitions:0.25sease.Cardstructure:imagecontainer(aspect-ratio:16/9,
+background:#F0F0F0asplaceholder)→contentareawithpadding:20pxcontaining:category
+tag(smallpill,coloredbackground,11pxuppercasetext),H3title(18px,font-weight:600,2-
+lineclampwith-webkit-line-clamp:2),excerptparagraph(14px,mutedgray,3-lineclamp),
+bottommetarow(authoravatar28pxcircle+name+date+readingtime,all13pxmuted).
+Entirecardiswrappedinan<a>tag.Onmobile(under768px):1column.Tablet(768-
+## 1024px):2columns."
+## EXAMPLEWEBSITESTOSTUDY
+→Dribbble.com—Dribbble'sownprojectcardsareareference—hovereffect,image,title,
+authormeta(dribbble.com)
+→TailwindUI—CardComponents—Pre-builtcardcomponentsinmultiplestyles—
+studythemarkupandpaddingchoices(tailwindui.com/components/marketing/elements/cards)
+
+→Read.cv—Portfolioplatformwithbeautifullycraftedcard-basedprofileandpost
+layouts(read.cv)
+
+QuickReference:PromptingVocabulary
+WhenpromptinganyAItool(Stitch,FramerAI,v0.dev,Bolt,orsimilar),usethis
+vocabularytodescribewhatyouwantwithprecision:
+## Foraestheticsglassmorphism/neumorphism/brutalism/minimalism/darkluxury/
+bentogrid/claymorphism/Y2K
+## Forfeelpremium/editorial/playful/corporate/warm/clean/bold/refined/
+futuristic
+## Forlayouthero+featuregrid/bento/masonry/fullpagescroll/sidebar+content/
+splitasymmetric
+## Foranimationscroll-triggeredfade-up/parallax/stickyscroll/textreveal/horizontal
+scroll/smoothlenis
+## Fornavigationstickyfrostednavbar/hamburgerfullscreen/megamenu/dotnavigation
+## /tabnavigation
+## For
+components
+pricingtablewithtoggle/testimonialmarquee/FAQaccordion/sticky
+scrollfeature/herosection/cardgrid
+## Fortypographydisplayheadline/typescale/gradienttext/fontpairing/tightletter-
+spacing
+## Forcolor60-30-10rule/near-blackdarkmode/singleaccentcolor/gradient
+background/monochromatic
+TIPTheperfectAIpromptcombines:1aesthetic+1layout+1animation+specificcolors
+andfonts.Example:'Buildaglassmorphism(aesthetic)herosectionwithacenteredlayout
+## (layout)wherefeaturecardsfadeuponscroll(animation),usingapurple-to-bluegradient
+background,whitefrostedglasscards,andClashDisplayfontfortheheadline.'
+—EndofGuide—
