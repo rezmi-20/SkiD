@@ -1,7 +1,7 @@
 // lib/auth/server.ts
 import { createNeonAuth } from '@neondatabase/auth/next/server';
 
-const getBaseUrl = () => {
+export const getBaseUrl = () => {
   // If deployed on Vercel, ALWAYS use the current Vercel deployment URL
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;

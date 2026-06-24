@@ -60,14 +60,31 @@ const proxyHandler = async (req: NextRequest, context: any) => {
   }
 };
 
+import { getBaseUrl } from "@/lib/auth/server";
+
 const routeHandler = async (req: NextRequest, ctx: any) => {
   const url = new URL(req.url);
   // Only apply the proxy workaround if running on localhost (HTTP)
   if (url.protocol === "http:" && (url.hostname === "localhost" || url.hostname === "127.0.0.1")) {
     return proxyHandler(req, ctx);
   }
+  
+  // For Vercel/production, we bypass the proxy but Better Auth router strictly matches req.url against baseUrl.
+  // To avoid 404 errors on custom domains or previews, we MUST rewrite the req.url to perfectly match the internal baseUrl!
+  const baseAuthUrl = new URL(getBaseUrl());
+  url.protocol = baseAuthUrl.protocol;
+  url.host = baseAuthUrl.host;
+  url.port = baseAuthUrl.port;
+  
+  const newReq = new NextRequest(url.toString(), {
+    method: req.method,
+    headers: req.headers,
+    body: req.body ? req.body : undefined,
+    duplex: 'half'
+  } as any);
+
   // Otherwise (like on Vercel), use the native handler directly!
-  return handlers[req.method as keyof typeof handlers](req, ctx);
+  return handlers[req.method as keyof typeof handlers](newReq, ctx);
 };
 
 export const GET = routeHandler;
