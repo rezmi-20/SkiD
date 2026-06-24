@@ -1,34 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth as serverAuth } from "@/lib/auth/server";
 import { sql } from "@/lib/db";
-import { writeLog } from "@/lib/diag-logger";
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
-    const headers = new Headers(req.headers);
-    const cookieStr = headers.get("cookie");
-    if (cookieStr) {
-      const url = new URL(req.url);
-      if (url.protocol === "http:" && (url.hostname === "localhost" || url.hostname === "127.0.0.1")) {
-        const rewrittenCookie = cookieStr
-          .replace(/neon-auth\.session_token=/g, "__Secure-neon-auth.session_token=")
-          .replace(/neon-auth\.session_data=/g, "__Secure-neon-auth.session_data=");
-        headers.set("cookie", rewrittenCookie);
-      }
-    }
-    
-    writeLog(`[/api/auth/me] Cookie header received: ${headers.get("cookie") || 'Missing'}`);
-    
-    const { data: session } = await serverAuth.getSession({
-      fetchOptions: {
-        headers: Object.fromEntries(headers.entries()),
-      },
-    });
-    
-    writeLog(`[/api/auth/me] Session extracted: ${session ? session.user.id : 'undefined'}`);
+    // Neon Auth reads cookies from next/headers automatically in server context
+    const { data: session } = await serverAuth.getSession();
     
     if (!session) {
-      writeLog(`[/api/auth/me] Unauthorized: no session found`);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

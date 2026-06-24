@@ -6,31 +6,9 @@ export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   try {
-    // Check for required env vars to avoid silent crashes
-    if (!process.env.NEON_AUTH_BASE_URL || !process.env.NEON_AUTH_COOKIE_SECRET) {
-      console.error("[MIDDLEWARE_ERROR] Missing NEON_AUTH environment variables");
-    }
+    // Neon Auth getSession reads cookies from next/headers automatically
+    const { data: session } = await auth.getSession();
 
-    const headers = new Headers(req.headers);
-    const cookieStr = headers.get("cookie");
-    if (cookieStr) {
-      // Only apply the __Secure- workaround if we are running locally on HTTP.
-      // On Vercel (HTTPS), Better Auth expects the native __Secure- cookie.
-      const url = new URL(req.url);
-      if (url.protocol === "http:" && (url.hostname === "localhost" || url.hostname === "127.0.0.1")) {
-        const rewrittenCookie = cookieStr
-          .replace(/neon-auth\.session_token=/g, "__Secure-neon-auth.session_token=")
-          .replace(/neon-auth\.session_data=/g, "__Secure-neon-auth.session_data=");
-        headers.set("cookie", rewrittenCookie);
-      }
-    }
-
-    const { data: session } = await auth.getSession({
-      fetchOptions: {
-        headers: Object.fromEntries(headers.entries()),
-      },
-    });
-    
     const isLoggedIn = !!session;
     let user = session?.user as any;
 
@@ -86,8 +64,7 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.next();
   } catch (error) {
     console.error("[MIDDLEWARE_CRITICAL_ERROR]", error);
-    // In case of a critical error, let the request through to avoid locking the site, 
-    // or redirect to a safe error page.
+    // In case of a critical error, let the request through to avoid locking the site
     return NextResponse.next();
   }
 }

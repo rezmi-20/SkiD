@@ -1,21 +1,15 @@
-// lib/auth.ts (Compatibility wrapper for Neon Auth)
+// lib/auth/index.ts - Compatibility wrapper for Neon Auth
 import { auth as serverAuth } from "./server";
 import { sql } from "../db";
 
-import { headers } from "next/headers";
-
 export const auth = async () => {
-  const { data: session } = await serverAuth.getSession({
-    fetchOptions: {
-      headers: await headers()
-    }
-  });
+  // Neon Auth reads cookies from next/headers automatically in server context
+  const { data: session } = await serverAuth.getSession();
   if (!session?.user) return null;
 
   try {
     // Fetch role from our DB for compatibility
     const rows = await sql`SELECT role FROM users WHERE id = ${session.user.id}`;
-    console.log("[AUTH_WRAPPER] DB rows for user", session.user.id, ":", rows);
     if (rows && rows[0]) {
       (session.user as any).role = rows[0].role;
     }
@@ -23,7 +17,6 @@ export const auth = async () => {
     console.error("Auth wrapper role fetch failed", err);
   }
 
-  console.log("[AUTH_WRAPPER] Returning session with role:", (session.user as any).role);
   return session;
 };
 
