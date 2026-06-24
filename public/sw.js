@@ -61,14 +61,17 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request).then((networkResponse) => {
-        // Only cache successful local responses
-        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+        // Only cache successful local responses and http/https schemes
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic' && url.protocol.startsWith('http')) {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
+            cache.put(event.request, responseToCache).catch(err => console.log('[SW] Cache put error:', err));
           });
         }
         return networkResponse;
+      }).catch((err) => {
+        console.log('[SW] Fetch failed, using cache if available', err);
+        return cachedResponse;
       });
       return cachedResponse || fetchPromise;
     })
