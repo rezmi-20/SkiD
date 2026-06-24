@@ -1,11 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { auth as serverAuth } from "@/lib/auth/server";
 import { sql } from "@/lib/db";
+import { writeLog } from "@/lib/diag-logger";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
+    const headers = new Headers(req.headers);
+    const cookieStr = headers.get("cookie");
+    if (cookieStr) {
+      const rewrittenCookie = cookieStr
+        .replace(/neon-auth\.session_token=/g, "__Secure-neon-auth.session_token=")
+        .replace(/neon-auth\.session_data=/g, "__Secure-neon-auth.session_data=");
+      headers.set("cookie", rewrittenCookie);
+    }
+    
+    writeLog(`[/api/auth/me] Cookie header received: ${headers.get("cookie") || 'Missing'}`);
+    
+    const { data: session } = await serverAuth.getSession({
+      fetchOptions: {
+        headers: Object.fromEntries(headers.entries()),
+      },
+    });
+    
+    writeLog(`[/api/auth/me] Session extracted: ${session ? session.user.id : 'undefined'}`);
+    
     if (!session) {
+      writeLog(`[/api/auth/me] Unauthorized: no session found`);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

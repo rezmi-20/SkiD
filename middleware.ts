@@ -11,9 +11,18 @@ export default async function middleware(req: NextRequest) {
       console.error("[MIDDLEWARE_ERROR] Missing NEON_AUTH environment variables");
     }
 
+    const headers = new Headers(req.headers);
+    const cookieStr = headers.get("cookie");
+    if (cookieStr) {
+      const rewrittenCookie = cookieStr
+        .replace(/neon-auth\.session_token=/g, "__Secure-neon-auth.session_token=")
+        .replace(/neon-auth\.session_data=/g, "__Secure-neon-auth.session_data=");
+      headers.set("cookie", rewrittenCookie);
+    }
+
     const { data: session } = await auth.getSession({
       fetchOptions: {
-        headers: Object.fromEntries(req.headers.entries()),
+        headers: Object.fromEntries(headers.entries()),
       },
     });
     

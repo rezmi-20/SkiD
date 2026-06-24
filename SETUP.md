@@ -184,6 +184,16 @@ npm run dev
 npm install @neondatabase/serverless
 ```
 
+### ❌ Login Redirect Loop / Endless Loading on localhost (Neon Auth)
+**Symptoms:** After signing in successfully, you are immediately redirected back to the login page.
+**Cause:** The remote Neon Authentication Server strictly issues cookies with the `__Secure-` prefix. Chrome and Edge will silently drop these cookies if the app is running on plain `http://localhost:3000`.
+**Fix (Already implemented):** We built a local HTTP workaround into the proxy (`app/api/auth/[...path]/route.ts`) and `middleware.ts`. It dynamically strips the `__Secure-` prefix when sending cookies to your browser, and silently adds it back before sending requests to the Neon server. You do not need to use `mkcert` or `--experimental-https`.
+
+### ❌ 500 Internal Server Error immediately after code change
+**Symptoms:** After fixing a file, the browser still shows a 500 error complaining about a syntax error or a missing property in a route file.
+**Cause:** Next.js 16 (Turbopack) occasionally fails to invalidate its build cache when modifying catch-all API routes (like `[...path]/route.ts`).
+**Fix:** Perform a Nuclear Reset on the cache: stop the dev server, delete the `.next/` directory (`Remove-Item -Recurse -Force .next`), and run `npm run dev` again.
+
 ---
 
 ## 7. Project Architecture
@@ -656,7 +666,7 @@ To ensure high code quality, stability, and maintainability, all AI assistants a
 - **Preference**: It is significantly better to have **5 files of 100 lines** than **1 file of 500 lines**.
 
 ### 15.4 Full-Page Translation (Mandatory)
-- **Comprehensive Support**: Every page developed or modified must include full translation support (e.g., English and Amharic) for all text elements.
+- **Comprehensive Support**: Every page developed or modified must include full translation support (e.g., English, Affan oromo, Somali(not strict for this) and Amharic for all text elements.
 - **No Partial Translations**: Do not limit translations to just sidebars or navigation. The entire page content (labels, placeholders, buttons, messages) must be translated.
 - **Translation Pattern**: Use the established `t()` hook and `lib/translations.ts` pattern.
 

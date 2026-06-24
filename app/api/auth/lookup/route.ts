@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     if (normalized.startsWith("0")) normalized = normalized.slice(1);
 
     const result = await sql`
-      SELECT email FROM users WHERE phone = ${normalized} LIMIT 1
+      SELECT email FROM users WHERE regexp_replace(phone, '^(\\+251|0)', '') = ${normalized} LIMIT 1
     `;
 
     if (!result || result.length === 0) {

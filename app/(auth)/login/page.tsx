@@ -25,16 +25,16 @@ export default function LoginPage() {
   useEffect(() => {
     setMounted(true);
     const checkSession = async () => {
-      const { authClient } = await import("@/lib/auth/client");
-      const { data: session } = await authClient.getSession();
-      if (session) {
-        const res = await fetch("/api/auth/me");
+      try {
+        const res = await fetch("/api/auth/me", { credentials: "include" });
         if (res.ok) {
           const { role } = await res.json();
           if (role === "client") router.replace("/client/search");
           else if (role === "worker") router.replace("/worker/dashboard");
           else if (role === "admin") router.replace("/admin/dashboard");
         }
+      } catch (err) {
+        console.error("Session check error", err);
       }
     };
     checkSession();
@@ -81,7 +81,7 @@ export default function LoginPage() {
         }
         setError("Invalid credentials. Please check your email/phone and password.");
       } else {
-        const res = await fetch("/api/auth/me");
+        const res = await fetch("/api/auth/me", { credentials: "include" });
         if (res.ok) {
           const { role } = await res.json();
           if (role === "admin") window.location.href = "/admin/dashboard";
