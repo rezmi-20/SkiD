@@ -71,10 +71,11 @@ export default async function AdminDashboardPage() {
     completedJobsThisMonth: completedJobsMonthly[0].count,
     totalDisputes: disputeCount[0].count,
   };
+  const adminName = (session.user as any).name || session.user.email?.split('@')[0] || "Admin";
 
   return (
     <AdminDashboardContent 
-      adminName={session.user.name || session.user.email?.split('@')[0] || "Admin"}
+      adminName={adminName}
       stats={stats}
       unverifiedWorkers={unverifiedWorkers}
       activityFeed={activityFeed}

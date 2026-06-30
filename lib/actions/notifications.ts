@@ -10,9 +10,12 @@ export type NotificationType =
   | "contract_completed"
   | "job_accepted"
   | "job_rejected"
+  | "job_request"
+  | "job_status_update"
   | "fayda_approved"
   | "fayda_rejected"
   | "new_review"
+  | "payment_initiated"
   | "payment_confirmed"
   | "post_liked"
   | "post_commented";

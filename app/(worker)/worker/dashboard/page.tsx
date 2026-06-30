@@ -1,6 +1,8 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
+
 import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
+import { getPendingJobs, getWorkerJobs } from "@/lib/actions/jobs";
 import { redirect } from "next/navigation";
 import WorkerDashboardContent from "@/components/WorkerDashboardContent";
 
@@ -11,39 +13,41 @@ export default async function WorkerDashboardPage() {
     redirect("/login");
   }
 
-  // Fetch worker profile and jobs
-  const profileRows = await sql`SELECT full_name, is_verified, district, skills FROM worker_profiles WHERE user_id = ${session.user.id} LIMIT 1`;
-  const jobRows = await sql`SELECT * FROM jobs WHERE worker_id = ${session.user.id} OR client_id = ${session.user.id} ORDER BY created_at DESC LIMIT 20`;
+  const [profileRows, pendingJobs, recentJobs] = await Promise.all([
+    sql`SELECT full_name, is_verified, district, skills FROM worker_profiles WHERE user_id = ${session.user.id} LIMIT 1`,
+    getPendingJobs(),
+    getWorkerJobs(),
+  ]);
 
   const worker = profileRows[0];
-  
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good Morning" : hour < 17 ? "Good Afternoon" : "Good Evening";
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   const workerData = {
     fullName: worker?.full_name || "Professional",
-    firstName: (worker?.full_name || "Professional").split(' ')[0],
+    firstName: (worker?.full_name || "Professional").split(" ")[0],
     isVerified: worker?.is_verified || false,
     district: worker?.district || "Dire Dawa",
-    skills: worker?.skills || []
+    skills: worker?.skills || [],
   };
 
-  // Calculate stats from job data
-  const completedJobs = jobRows.filter((j: any) => j.status === 'completed');
-  const activeJobs = jobRows.filter((j: any) => j.status === 'active');
-  const totalRevenue = completedJobs.reduce((acc: number, job: any) => acc + (Number(job.amount) || 0), 0);
+  const completedJobs = recentJobs.filter((job: any) => job.status === "completed");
+  const activeJobs = recentJobs.filter((job: any) => ["accepted", "active", "in_progress"].includes(job.status));
+  const totalRevenue = completedJobs.reduce((sum: number, job: any) => sum + (Number(job.budget) || 0), 0);
 
   const stats = {
     activeJobs: activeJobs.length,
+    pendingJobs: pendingJobs.length,
     completedJobs: completedJobs.length,
-    revenue: totalRevenue || 12450 // Fallback for demo if no real revenue
+    revenue: totalRevenue,
   };
 
   return (
-    <WorkerDashboardContent 
+    <WorkerDashboardContent
       worker={workerData}
       stats={stats}
-      recentJobs={jobRows}
+      pendingJobs={pendingJobs}
+      recentJobs={recentJobs.slice(0, 6)}
       greeting={greeting}
     />
   );

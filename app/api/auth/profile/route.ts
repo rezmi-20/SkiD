@@ -1,14 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import bcrypt from "bcryptjs";
 import { sql } from "@/lib/db";
+import { sanitizeText } from "@/lib/sanitize";
+
+const passwordSchema = z
+  .string()
+  .min(8, 'Password must be at least 8 characters')
+  .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+  .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+  .regex(/[0-9]/, 'Password must contain at least one number')
+  .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character');
 
 const registerSchema = z.object({
   email: z.string().email().nullable().or(z.literal("")).optional(),
-  password: z.string().min(6),
+  password: passwordSchema,
   role: z.enum(["client", "worker"]),
   fullName: z.string().min(2),
-  phone: z.string().min(9),
+  phone: z.string().min(9).regex(/^\+?[0-9\-() ]{9,16}$/, 'Invalid phone number format'),
   dateOfBirth: z.string().optional(),
   gender: z.string().optional(),
   district: z.string().optional(),
@@ -31,11 +39,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { email, password, role, fullName, phone, neonUserId } = parsed.data as any;
+    const { email, role, fullName, phone, neonUserId } = parsed.data;
 
     if (!neonUserId) {
       return NextResponse.json({ error: "Missing Neon User ID" }, { status: 400 });
     }
+
+    const sanitizedFullName = sanitizeText(fullName);
 
     // Insert user into our public schema users table with the same ID as neon_auth
     const newUser = await sql`
@@ -48,20 +58,24 @@ export async function POST(req: NextRequest) {
     // Insert role-specific profile
     if (role === "worker") {
       const { dateOfBirth, gender, district, skills, faydaDocUrl, bio } = parsed.data;
+      const sanitizedBio = bio ? sanitizeText(bio) : null;
+      const sanitizedDistrict = district ? sanitizeText(district) : null;
+
       await sql`
-        INSERT INTO worker_profiles (user_id, full_name, date_of_birth, gender, district, skills, fayda_doc_url, bio)
+        INSERT INTO worker_profiles (user_id, full_name, date_of_birth, gender, district, skills, fayda_doc_url, bio, verification_status)
         VALUES (
           ${userId}, 
-          ${fullName}, 
+          ${sanitizedFullName}, 
           ${dateOfBirth ? new Date(dateOfBirth) : null}, 
           ${gender ?? null}, 
-          ${district ?? null}, 
+          ${sanitizedDistrict}, 
           ${skills ?? null}, 
           ${faydaDocUrl ?? null}, 
-          ${bio ?? null}
+          ${sanitizedBio},
+          'pending'
         )`;
     } else {
-      await sql`INSERT INTO client_profiles (user_id, full_name) VALUES (${userId}, ${fullName})`;
+      await sql`INSERT INTO client_profiles (user_id, full_name) VALUES (${userId}, ${sanitizedFullName})`;
     }
 
     return NextResponse.json(

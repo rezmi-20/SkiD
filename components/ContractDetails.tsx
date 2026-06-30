@@ -1,61 +1,80 @@
-"use client";
+﻿"use client";
 
-import { useLanguage } from "@/context/LanguageContext";
 import Link from "next/link";
-import { useState } from "react";
-import { motion } from "framer-motion";
-import PinVerificationModal from "./ui/PinVerificationModal";
-import { signContract } from "@/lib/actions/contracts";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { signContract } from "@/lib/actions/contracts";
+import PinVerificationModal from "./ui/PinVerificationModal";
+import StatusBadge from "./ui/StatusBadge";
 
 interface Props {
   contract: any;
   userId: string;
 }
 
+function formatDate(value: string | Date | null | undefined) {
+  if (!value) return "Pending";
+  return new Date(value).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatMoney(value: number | string | null | undefined) {
+  const amount = Number(value || 0);
+  return `${amount.toLocaleString()} ETB`;
+}
+
+function SignatureRow({ label, name, signedAt }: { label: string; name: string | null; signedAt?: string | Date | null }) {
+  const signed = !!signedAt;
+
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-lg border border-outline-variant bg-surface-container-lowest p-4">
+      <div className="min-w-0">
+        <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">{label}</p>
+        <p className="mt-1 truncate text-sm font-black text-on-surface">{name || "Unknown"}</p>
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        <span className={`material-symbols-outlined text-[18px] ${signed ? "text-primary" : "text-on-surface-variant"}`}>
+          {signed ? "check_circle" : "schedule"}
+        </span>
+        <div className="text-right">
+          <p className={`text-xs font-black ${signed ? "text-primary" : "text-on-surface-variant"}`}>
+            {signed ? "Signed" : "Pending"}
+          </p>
+          <p className="text-[10px] text-on-surface-variant">{formatDate(signedAt)}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ContractDetails({ contract, userId }: Props) {
-  const { t } = useLanguage();
   const router = useRouter();
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [isSigning, setIsSigning] = useState(false);
-  
+
   const isClient = userId === contract.client_id;
+  const backHref = isClient ? "/client/contracts" : "/worker/contracts";
   const hasClientSigned = !!contract.client_signed_at;
   const hasWorkerSigned = !!contract.worker_signed_at;
   const isFullySigned = hasClientSigned && hasWorkerSigned;
   const userHasSigned = isClient ? hasClientSigned : hasWorkerSigned;
-
-  const formatDate = (date: string | Date | null) => {
-    if (!date) return "Pending";
-    return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  };
-
-  const getStatusUI = () => {
-    if (contract.job_status === "completed") return { label: "Completed", color: "bg-blue-400/10 text-blue-400 border-blue-400/20", icon: "done_all" };
-    if (isFullySigned) return { label: "Fully Signed", color: "bg-primary-accent/10 text-primary-accent border-primary-accent/20", icon: "verified" };
-    if (hasClientSigned || hasWorkerSigned) return { label: "Partially Signed", color: "bg-yellow-400/10 text-yellow-400 border-yellow-400/20", icon: "pending" };
-    return { label: "Awaiting Signatures", color: "bg-zinc-500/10 text-zinc-500 border-zinc-500/20", icon: "schedule" };
-  };
-
-  const status = getStatusUI();
+  const signatureStatus = contract.signature_status || (isFullySigned ? "active" : hasClientSigned ? "pending_worker" : "pending_client");
 
   const handleSign = async (pin: string) => {
-    if (pin !== "1234") {
-      alert("Invalid PIN. Use 1234 for testing.");
-      return;
-    }
-
     setIsSigning(true);
     setIsPinModalOpen(false);
-    
+
     try {
-      const result = await signContract(contract.id);
-      if (result.success) {
-        router.refresh();
-      } else {
+      const result = await signContract(contract.id, pin);
+      if (!result.success) {
         alert(result.error);
+        return;
       }
-    } catch (error) {
+      router.refresh();
+    } catch {
       alert("An error occurred during signing.");
     } finally {
       setIsSigning(false);
@@ -63,159 +82,98 @@ export default function ContractDetails({ contract, userId }: Props) {
   };
 
   return (
-    <div className="flex flex-col gap-8 pb-40">
-      
-      {/* ── Top Header ── */}
-      <div className="flex items-center justify-between px-4">
-        <div className="flex items-center gap-4">
-          <Link href={isClient ? "/client/contracts" : "/worker/contracts"} className="w-12 h-12 bg-surface border border-border rounded-full flex items-center justify-center text-text-high hover:bg-surface-container transition-all shadow-sm">
-            <span className="material-symbols-outlined">arrow_back</span>
+    <div className="flex flex-col gap-6 pb-32">
+      <header className="flex flex-col gap-4 border-b border-outline-variant pb-6 md:flex-row md:items-end md:justify-between">
+        <div>
+          <Link
+            href={backHref}
+            className="mb-4 inline-flex h-10 items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 text-xs font-black uppercase tracking-widest text-on-surface hover:border-primary/40"
+          >
+            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+            Back
           </Link>
-          <div className="space-y-0.5">
-            <h1 className="text-xl font-black text-text-high tracking-tight">Contract Overview</h1>
-            <p className="text-[10px] font-black uppercase tracking-widest text-text-med">
-              REF: {contract.id.slice(0, 8).toUpperCase()}
+          <p className="text-xs font-black uppercase tracking-widest text-on-surface-variant">Service Agreement</p>
+          <h1 className="mt-2 text-3xl font-black tracking-tight text-on-surface md:text-4xl">
+            {contract.job_title}
+          </h1>
+          <p className="mt-2 text-sm text-on-surface-variant">
+            Contract #{String(contract.id).slice(0, 8).toUpperCase()}
+          </p>
+        </div>
+        <StatusBadge status={signatureStatus === "active" ? "contract_signed" : "pending"} size="md" />
+      </header>
+
+      <section className="grid gap-4 lg:grid-cols-3">
+        <div className="rounded-lg border border-outline-variant bg-surface-container-lowest p-5">
+          <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Payment</p>
+          <p className="mt-2 text-2xl font-black text-on-surface">{formatMoney(contract.budget)}</p>
+        </div>
+        <div className="rounded-lg border border-outline-variant bg-surface-container-lowest p-5">
+          <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Job Status</p>
+          <p className="mt-2 text-2xl font-black capitalize text-on-surface">{String(contract.job_status || "pending").replaceAll("_", " ")}</p>
+        </div>
+        <div className="rounded-lg border border-outline-variant bg-surface-container-lowest p-5">
+          <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Signatures</p>
+          <p className="mt-2 text-2xl font-black text-on-surface">{[hasClientSigned, hasWorkerSigned].filter(Boolean).length}/2</p>
+        </div>
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-[1.4fr_0.9fr]">
+        <div className="rounded-lg border border-outline-variant bg-surface-container-lowest p-6">
+          <div className="border-b border-outline-variant pb-5">
+            <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Scope of Work</p>
+            <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-on-surface-variant">
+              {contract.job_description || contract.terms || "No specific description provided."}
+            </p>
+          </div>
+
+          <div className="pt-5">
+            <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Terms</p>
+            <p className="mt-3 text-sm leading-7 text-on-surface-variant">
+              This agreement becomes active when both parties sign. Work, payment, and disputes must remain inside DireSkill for safety and platform support.
             </p>
           </div>
         </div>
-        
-        <div className={`px-4 py-2 rounded-full ${status.color} border flex items-center gap-2 font-black text-[9px] uppercase tracking-wider shadow-sm`}>
-          <span className="material-symbols-outlined text-[14px]">{status.icon}</span>
-          {status.label}
-        </div>
-      </div>
 
-      {/* ── Progress Card ── */}
-      <div className="mx-4 bg-surface-container/30 border border-border rounded-[2.5rem] p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-black uppercase tracking-widest text-text-med">Execution Status</span>
-          <span className="text-xs font-black text-primary-accent">{isFullySigned ? "100%" : hasClientSigned || hasWorkerSigned ? "50%" : "0%"}</span>
-        </div>
-        <div className="h-3 bg-surface border border-border rounded-full overflow-hidden">
-          <motion.div 
-            initial={{ width: 0 }}
-            animate={{ width: isFullySigned ? "100%" : hasClientSigned || hasWorkerSigned ? "50%" : "0%" }}
-            className="h-full bg-primary-accent shadow-[0_0_20px_rgba(var(--primary-accent-rgb),0.3)]"
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-           {[
-             { label: "Client Signed", signed: hasClientSigned },
-             { label: "Worker Signed", signed: hasWorkerSigned }
-           ].map((party, i) => (
-             <div key={i} className={`flex items-center gap-3 p-4 rounded-2xl border transition-all ${party.signed ? 'bg-primary-accent/5 border-primary-accent/20' : 'bg-surface border-border'}`}>
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${party.signed ? 'bg-primary-accent text-background' : 'bg-surface-container text-text-med'}`}>
-                  <span className="material-symbols-outlined text-[18px] font-bold">{party.signed ? 'check' : 'close'}</span>
-                </div>
-                <span className={`text-[10px] font-black uppercase tracking-widest ${party.signed ? 'text-text-high' : 'text-text-med'}`}>{party.label}</span>
-             </div>
-           ))}
-        </div>
-      </div>
+        <aside className="flex flex-col gap-4">
+          <SignatureRow label="Client" name={contract.client_name} signedAt={contract.client_signed_at} />
+          <SignatureRow label="Worker" name={contract.worker_name} signedAt={contract.worker_signed_at} />
 
-      {/* ── Parties Info ── */}
-      <div className="px-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-        {[
-          { label: "Service Provider", name: contract.worker_name, avatar: contract.worker_avatar, verified: contract.worker_verified, role: "Worker", signedAt: contract.worker_signed_at },
-          { label: "Employer", name: contract.client_name, avatar: contract.client_avatar, verified: true, role: "Client", signedAt: contract.client_signed_at }
-        ].map((p, i) => (
-          <div key={i} className="bg-surface border border-border rounded-[2rem] p-6 space-y-4 shadow-sm hover:border-primary-accent/20 transition-all">
-            <p className="text-[10px] font-black uppercase tracking-widest text-text-med">{p.label}</p>
-            <div className="flex items-center gap-4">
-              <div className={`w-16 h-16 rounded-2xl overflow-hidden border-2 ${p.verified ? 'border-primary-accent/30' : 'border-border'}`}>
-                {p.avatar ? (
-                  <img src={p.avatar} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-surface-container flex items-center justify-center text-xl font-black text-text-med">
-                    {p.name?.charAt(0)}
-                  </div>
-                )}
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-base font-black text-text-high leading-tight">{p.name}</h3>
-                <div className="flex gap-1.5">
-                  {p.verified && <span className="bg-primary-accent/10 text-primary-accent text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border border-primary-accent/10">Verified</span>}
-                  <span className="bg-surface-container text-text-med text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">{p.role}</span>
-                </div>
-              </div>
-            </div>
-            <div className="pt-4 border-t border-border/50">
-              <p className="text-[9px] font-black text-text-med uppercase tracking-widest mb-1">Status</p>
-              <p className={`text-[10px] font-black uppercase ${p.signedAt ? 'text-primary-accent' : 'text-yellow-400/70'}`}>
-                {p.signedAt ? `Signed: ${formatDate(p.signedAt)}` : "Awaiting Signature"}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* ── Contract Agreement ── */}
-      <div className="mx-4 bg-surface border border-border rounded-[2.5rem] p-8 md:p-12 space-y-10 relative overflow-hidden shadow-sm">
-        {isFullySigned && (
-           <div className="absolute top-12 right-12 -rotate-12 pointer-events-none opacity-10">
-              <div className="border-8 border-primary-accent rounded-3xl px-8 py-4 text-primary-accent text-6xl font-black uppercase tracking-[0.2em]">SIGNED</div>
-           </div>
-        )}
-
-        <div className="space-y-8">
-          <div>
-            <h2 className="text-[10px] font-black text-primary-accent uppercase tracking-[0.4em] mb-4">Master Service Agreement</h2>
-            <h1 className="text-3xl md:text-5xl font-black text-text-high tracking-tighter leading-[0.9]">{contract.job_title}</h1>
-          </div>
-
-          <div className="bg-surface-container/20 rounded-3xl p-6 border border-border/50 italic">
-            <p className="text-text-med text-sm leading-relaxed whitespace-pre-wrap font-medium">{contract.job_description || "No specific description provided"}</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-8 py-8 border-y border-border/50">
-             <div className="space-y-1">
-                <p className="text-[9px] font-black text-text-med uppercase tracking-widest">Agreed Budget</p>
-                <p className="text-3xl font-black text-text-high tracking-tight">{contract.budget.toLocaleString()} <span className="text-primary-accent text-lg">ETB</span></p>
-             </div>
-             <div className="space-y-1">
-                <p className="text-[9px] font-black text-text-med uppercase tracking-widest">Performance Region</p>
-                <p className="text-xl font-black text-text-high tracking-tight">Dire Dawa, ET</p>
-             </div>
-          </div>
-
-          <div className="space-y-4">
-             <h3 className="text-[10px] font-black text-text-high uppercase tracking-widest">Governing Terms</h3>
-             <p className="text-text-med text-xs leading-relaxed font-medium">This agreement is legally binding once signed by both parties. All payments must be processed through the DireSkill escrow system. Any disputes will be subject to local labor laws and platform arbitration.</p>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Actions Overlay ── */}
-      <div className="fixed bottom-24 left-0 right-0 p-6 z-[60] flex justify-center pointer-events-none">
-        <div className="w-full max-w-xl flex gap-3 pointer-events-auto">
-          {!userHasSigned ? (
-            <>
-              <button 
+          <div className="rounded-lg border border-outline-variant bg-surface-container-lowest p-5">
+            {!userHasSigned ? (
+              <button
+                type="button"
                 onClick={() => setIsPinModalOpen(true)}
                 disabled={isSigning}
-                className="flex-[2] h-16 bg-primary-accent text-background rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-[0_15px_35px_rgba(var(--primary-accent-rgb),0.3)] transition-all active:scale-95 disabled:opacity-50"
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-xs font-black uppercase tracking-widest text-on-primary disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isSigning ? "Processing..." : "Electronically Sign"}
-                <span className="material-symbols-outlined text-[20px]">draw</span>
+                <span className="material-symbols-outlined text-[18px]">draw</span>
+                {isSigning ? "Signing" : "Sign Contract"}
               </button>
-              <button className="flex-1 h-16 bg-surface border border-border text-red-500 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-surface-container transition-all active:scale-95 shadow-sm">
-                Decline
-              </button>
-            </>
-          ) : isFullySigned ? (
-            <button className="flex-1 h-16 bg-text-high text-background rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 transition-all active:scale-95 shadow-xl">
-               <span className="material-symbols-outlined text-[20px]">download</span>
-               Download PDF Evidence
-            </button>
-          ) : (
-            <div className="flex-1 h-16 bg-surface-container border border-border text-text-med rounded-2xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 italic px-6 text-center">
-              Awaiting Counter-Signature to Finalize
-            </div>
-          )}
-        </div>
-      </div>
+            ) : isFullySigned ? (
+              <div className="rounded-lg border border-primary/30 bg-primary/10 p-4 text-sm font-bold text-primary">
+                Contract active. Both signatures are complete.
+              </div>
+            ) : (
+              <div className="rounded-lg border border-outline-variant bg-surface-container p-4 text-sm font-bold text-on-surface-variant">
+                Waiting for the other party to sign.
+              </div>
+            )}
 
-      <PinVerificationModal 
+            {contract.pdf_url && (
+              <a
+                href={contract.pdf_url}
+                className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-outline-variant px-4 text-xs font-black uppercase tracking-widest text-on-surface hover:border-primary/40"
+              >
+                <span className="material-symbols-outlined text-[18px]">download</span>
+                Download PDF
+              </a>
+            )}
+          </div>
+        </aside>
+      </section>
+
+      <PinVerificationModal
         isOpen={isPinModalOpen}
         onClose={() => setIsPinModalOpen(false)}
         onVerify={handleSign}

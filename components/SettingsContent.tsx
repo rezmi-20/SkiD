@@ -32,6 +32,28 @@ export default function SettingsContent({ initialData, role }: Props) {
 
   const [activeSection, setActiveSection] = useState("personal");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setFormData((prev: typeof formData) => ({ ...prev, avatarUrl: data.url }));
+      } else {
+        setError(data.error || "Upload failed");
+      }
+    } catch {
+      setError("Avatar upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,9 +162,14 @@ export default function SettingsContent({ initialData, role }: Props) {
                             <span className="text-3xl font-bold text-primary">{formData.fullName.charAt(0) || "U"}</span>
                           )}
                        </div>
-                       {!initialData.is_verified && (
+                       {!initialData.is_verified && !uploading && (
                          <div className="absolute inset-0 bg-black/40 rounded-[2.5rem] opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                             <span className="material-symbols-outlined text-white">camera_alt</span>
+                         </div>
+                       )}
+                       {uploading && (
+                         <div className="absolute inset-0 bg-black/60 rounded-[2.5rem] flex items-center justify-center">
+                            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
                          </div>
                        )}
                        {initialData.is_verified && (
@@ -150,7 +177,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                             <span className="material-symbols-outlined text-[16px] filled">verified</span>
                          </div>
                        )}
-                       <input type="file" ref={fileInputRef} className="hidden" accept="image/*" />
+                       <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleAvatarUpload} />
                     </div>
                     <div className="text-center">
                        <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-40">

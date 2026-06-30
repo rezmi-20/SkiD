@@ -10,6 +10,7 @@ export async function GET(req: NextRequest) {
     const userLat = parseFloat(searchParams.get("lat") || "");
     const userLng = parseFloat(searchParams.get("lng") || "");
     const maxDist = parseFloat(searchParams.get("maxDistance") || "100");
+    const minRating = parseFloat(searchParams.get("minRating") || "0");
 
     const hasCoords = !isNaN(userLat) && !isNaN(userLng);
     const params: (string | number)[] = [];
@@ -83,6 +84,12 @@ export async function GET(req: NextRequest) {
     // Distance filtering
     if (hasCoords && maxDist < 100) {
       query += ` AND (wp.latitude IS NULL OR ${distanceSql} <= ${maxDist})`;
+    }
+
+    // Rating filter
+    if (!isNaN(minRating) && minRating > 0) {
+      params.push(minRating);
+      query += ` AND COALESCE(wr.avg_rating, 0) >= $${params.length}`;
     }
 
     // Sorting

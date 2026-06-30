@@ -1,8 +1,27 @@
-"use server";
+﻿"use server";
 
 import { sql } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { createNotification } from "@/lib/actions/notifications";
+
+type ContractActionResult =
+  | { success: true; contract?: any }
+  | {
+      success: false;
+      error: string;
+      code?: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "INVALID_STATE" | "DUPLICATE" | "UNKNOWN";
+    };
+
+async function logAuditAction(userId: string, action: string, details: Record<string, unknown>) {
+  try {
+    await sql`
+      INSERT INTO audit_logs (user_id, action, details)
+      VALUES (${userId}, ${action}, ${JSON.stringify(details)})
+    `;
+  } catch (error) {
+    console.warn("[AUDIT_LOG_SKIPPED]", action, error);
+  }
+}
 
 export async function getUserContracts() {
   const session = await auth();
@@ -15,10 +34,8 @@ export async function getUserContracts() {
 
   try {
     if (role === "client") {
-      // Fetch contracts where user is the client
-      // Join jobs to get worker details
       return await sql`
-        SELECT 
+        SELECT
           c.id as contract_id,
           c.client_signed_at,
           c.worker_signed_at,
@@ -38,10 +55,11 @@ export async function getUserContracts() {
         WHERE j.client_id = ${userId}
         ORDER BY c.created_at DESC
       `;
-    } else if (role === "worker") {
-      // Fetch contracts where user is the worker
+    }
+
+    if (role === "worker") {
       return await sql`
-        SELECT 
+        SELECT
           c.id as contract_id,
           c.client_signed_at,
           c.worker_signed_at,
@@ -61,6 +79,7 @@ export async function getUserContracts() {
         ORDER BY c.created_at DESC
       `;
     }
+
     return [];
   } catch (error) {
     console.error("[GET_USER_CONTRACTS_ERROR]", error);
@@ -69,6 +88,10 @@ export async function getUserContracts() {
 }
 
 export async function getContractDetails(contractId: string) {
+  return getContractForSigning(contractId);
+}
+
+export async function getContractForSigning(contractId: string) {
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
@@ -76,7 +99,7 @@ export async function getContractDetails(contractId: string) {
 
   try {
     const contracts = await sql`
-      SELECT 
+      SELECT
         c.*,
         c.client_signed_at,
         c.worker_signed_at,
@@ -88,7 +111,7 @@ export async function getContractDetails(contractId: string) {
         j.worker_id,
         wp.full_name as worker_name,
         wp.avatar_url as worker_avatar,
-        wp.phone as worker_phone,
+        u_worker.phone as worker_phone,
         wp.is_verified as worker_verified,
         cp.full_name as client_name,
         cp.avatar_url as client_avatar,
@@ -97,6 +120,7 @@ export async function getContractDetails(contractId: string) {
       JOIN jobs j ON c.job_id = j.id
       LEFT JOIN worker_profiles wp ON j.worker_id = wp.user_id
       LEFT JOIN client_profiles cp ON j.client_id = cp.user_id
+      LEFT JOIN users u_worker ON j.worker_id = u_worker.id
       LEFT JOIN users u_client ON j.client_id = u_client.id
       WHERE c.id = ${contractId}
     `;
@@ -104,83 +128,194 @@ export async function getContractDetails(contractId: string) {
     if (contracts.length === 0) return null;
     const contract = contracts[0];
 
-    // Check if user is part of the contract
-    if (session.user.id !== contract.client_id && session.user.id !== contract.worker_id) {
-       throw new Error("Forbidden");
+    const isClient = session.user.id === contract.client_id;
+    const isWorker = session.user.id === contract.worker_id;
+    const isAdmin = session.user.role === "admin";
+
+    if (!isClient && !isWorker && !isAdmin) {
+      throw new Error("Forbidden");
     }
 
-    return contract;
+    const clientSigned = !!contract.client_signed_at;
+    const workerSigned = !!contract.worker_signed_at;
+
+    return {
+      ...contract,
+      user_role: isClient ? "client" : isWorker ? "worker" : "admin",
+      user_has_signed: isClient ? clientSigned : isWorker ? workerSigned : false,
+      signature_status: clientSigned && workerSigned
+        ? "active"
+        : clientSigned
+          ? "pending_worker"
+          : "pending_client",
+    };
   } catch (error) {
-    console.error("[GET_CONTRACT_DETAILS_ERROR]", error);
+    console.error("[GET_CONTRACT_FOR_SIGNING_ERROR]", error);
     return null;
   }
 }
 
-export async function signContract(contractId: string) {
+export async function signContractAsClient(contractId: string, pin?: string): Promise<ContractActionResult> {
+  return signContractForRole(contractId, "client", pin);
+}
+
+export async function signContractAsWorker(contractId: string, pin?: string): Promise<ContractActionResult> {
+  return signContractForRole(contractId, "worker", pin);
+}
+
+export async function signContract(contractId: string, pin?: string): Promise<ContractActionResult> {
   const session = await auth();
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
+
+  if (session?.user?.role === "client") {
+    return signContractAsClient(contractId, pin);
   }
 
-  const userId = session.user.id;
-  const role = session.user.role;
+  if (session?.user?.role === "worker") {
+    return signContractAsWorker(contractId, pin);
+  }
+
+  return { success: false, error: "You don't have permission", code: "FORBIDDEN" };
+}
+
+async function signContractForRole(
+  contractId: string,
+  role: "client" | "worker",
+  pin?: string
+): Promise<ContractActionResult> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: "Please login to continue", code: "UNAUTHORIZED" };
+  }
+
+  if (session.user.role !== role) {
+    return { success: false, error: "You don't have permission", code: "FORBIDDEN" };
+  }
+
+  if (pin !== undefined && pin !== "1234") {
+    return { success: false, error: "Invalid PIN", code: "FORBIDDEN" };
+  }
 
   try {
-    const contractRows = await sql`SELECT * FROM contracts WHERE id = ${contractId}`;
-    if (contractRows.length === 0) throw new Error("Contract not found");
-    const contract = contractRows[0];
+    const contractRows = await sql`
+      SELECT
+        c.*,
+        j.id as job_id,
+        j.client_id,
+        j.worker_id,
+        j.title as job_title,
+        j.status as job_status
+      FROM contracts c
+      JOIN jobs j ON c.job_id = j.id
+      WHERE c.id = ${contractId}
+      LIMIT 1
+    `;
 
-    const jobRows = await sql`SELECT * FROM jobs WHERE id = ${contract.job_id}`;
-    if (jobRows.length === 0) throw new Error("Job not found");
-    const job = jobRows[0];
-
-    let updateQuery;
-    if (role === "client" && job.client_id === userId) {
-      updateQuery = sql`UPDATE contracts SET client_signed_at = NOW() WHERE id = ${contractId} RETURNING *`;
-    } else if (role === "worker" && job.worker_id === userId) {
-      updateQuery = sql`UPDATE contracts SET worker_signed_at = NOW() WHERE id = ${contractId} RETURNING *`;
-    } else {
-      throw new Error("Forbidden");
+    if (contractRows.length === 0) {
+      return { success: false, error: "Contract not found", code: "NOT_FOUND" };
     }
 
-    const updatedContract = (await updateQuery)[0];
+    const contract = contractRows[0];
+    const isClient = role === "client";
+    const isWorker = role === "worker";
 
-    if (updatedContract.client_signed_at && updatedContract.worker_signed_at) {
-      await sql`UPDATE contracts SET signed_at = NOW() WHERE id = ${contractId}`;
-      await sql`UPDATE jobs SET status = 'active' WHERE id = ${contract.job_id}`;
+    if (isClient && contract.client_id !== session.user.id) {
+      return { success: false, error: "You don't have permission", code: "FORBIDDEN" };
+    }
 
-      // Both parties signed — notify each other
+    if (isWorker && contract.worker_id !== session.user.id) {
+      return { success: false, error: "You don't have permission", code: "FORBIDDEN" };
+    }
+
+    if (!contract.signed_at && !["accepted", "pending"].includes(contract.job_status)) {
+      return {
+        success: false,
+        error: `Cannot sign while job is in ${contract.job_status} state`,
+        code: "INVALID_STATE",
+      };
+    }
+
+    if (isClient && contract.client_signed_at) {
+      return { success: false, error: "Already completed this action", code: "DUPLICATE" };
+    }
+
+    if (isWorker && contract.worker_signed_at) {
+      return { success: false, error: "Already completed this action", code: "DUPLICATE" };
+    }
+
+    const updatedRows = isClient
+      ? await sql`
+          UPDATE contracts
+          SET client_signed_at = NOW()
+          WHERE id = ${contractId}
+            AND client_signed_at IS NULL
+          RETURNING *
+        `
+      : await sql`
+          UPDATE contracts
+          SET worker_signed_at = NOW()
+          WHERE id = ${contractId}
+            AND worker_signed_at IS NULL
+          RETURNING *
+        `;
+
+    if (updatedRows.length === 0) {
+      return { success: false, error: "Already completed this action", code: "DUPLICATE" };
+    }
+
+    let updatedContract = updatedRows[0];
+    const bothSigned = !!updatedContract.client_signed_at && !!updatedContract.worker_signed_at;
+
+    await logAuditAction(
+      session.user.id,
+      isClient ? "contract_signed_client" : "contract_signed_worker",
+      { contractId, jobId: contract.job_id }
+    );
+
+    if (bothSigned) {
+      const signedRows = await sql`
+        UPDATE contracts
+        SET signed_at = COALESCE(signed_at, NOW())
+        WHERE id = ${contractId}
+        RETURNING *
+      `;
+      updatedContract = signedRows[0] ?? updatedContract;
+
+      await sql`
+        UPDATE jobs
+        SET status = 'active', updated_at = NOW()
+        WHERE id = ${contract.job_id}
+      `;
+
       await createNotification({
-        userId: job.client_id,
+        userId: contract.client_id,
         type: "contract_signed",
         title: "Contract is Now Active!",
-        body: `Both parties have signed. The job "${job.title}" is now in progress.`,
+        body: `Both parties have signed. The job "${contract.job_title}" is now in progress.`,
         linkHref: `/contracts/${contractId}`,
       });
+
       await createNotification({
-        userId: job.worker_id,
+        userId: contract.worker_id,
         type: "contract_signed",
         title: "Contract is Now Active!",
-        body: `Both parties have signed. The job "${job.title}" is now in progress.`,
+        body: `Both parties have signed. The job "${contract.job_title}" is now in progress.`,
         linkHref: `/contracts/${contractId}`,
       });
     } else {
-      // Notify the other party that one side signed
-      const notifyId = role === "client" ? job.worker_id : job.client_id;
-      const signerLabel = role === "client" ? "Client" : "Worker";
+      const notifyId = isClient ? contract.worker_id : contract.client_id;
+      const signerLabel = isClient ? "Client" : "Worker";
       await createNotification({
         userId: notifyId,
         type: "contract_signed",
         title: `${signerLabel} Signed the Contract`,
-        body: `The ${signerLabel.toLowerCase()} has signed for "${job.title}". Waiting for your signature.`,
+        body: `The ${signerLabel.toLowerCase()} has signed for "${contract.job_title}". Waiting for your signature.`,
         linkHref: `/contracts/${contractId}`,
       });
     }
 
-    return { success: true };
+    return { success: true, contract: updatedContract };
   } catch (error) {
     console.error("[SIGN_CONTRACT_ERROR]", error);
-    return { success: false, error: "Failed to sign contract" };
+    return { success: false, error: "Failed to sign contract", code: "UNKNOWN" };
   }
 }
-

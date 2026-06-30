@@ -14,19 +14,19 @@ interface NavItem {
 }
 
 const CLIENT_NAV: NavItem[] = [
-  { key: "nav.home", href: "/client/dashboard", icon: "grid_view" },
-  { key: "nav.feed", href: "/community/feed", icon: "forum" },
+  { key: "nav.dashboard", href: "/client/dashboard", icon: "grid_view" },
   { key: "nav.discover", href: "/client/search", icon: "search" },
   { key: "nav.contracts", href: "/client/contracts", icon: "description" },
+  { key: "nav.payments", href: "/client/payments", icon: "payments" },
   { key: "nav.chat", href: "/client/messages", icon: "chat_bubble" },
   { key: "nav.profile", href: "/client/profile", icon: "person" },
 ];
 
 const WORKER_NAV: NavItem[] = [
-  { key: "nav.home", href: "/worker/dashboard", icon: "grid_view" },
-  { key: "nav.feed", href: "/community/feed", icon: "forum" },
+  { key: "nav.dashboard", href: "/worker/dashboard", icon: "grid_view" },
   { key: "nav.mygigs", href: "/worker/gigs", icon: "construction" },
   { key: "nav.contracts", href: "/worker/contracts", icon: "description" },
+  { key: "nav.earnings", href: "/worker/earnings", icon: "account_balance_wallet" },
   { key: "nav.chat", href: "/worker/messages", icon: "chat_bubble" },
   { key: "nav.profile", href: "/worker/profile", icon: "person" },
 ];

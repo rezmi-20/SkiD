@@ -39,17 +39,25 @@ export async function updateProfile(data: any) {
   const session = await auth();
   if (!session?.user) return { success: false, error: "Unauthorized" };
 
-  const userId = session.user.id;
-  const role = (session.user as any).role;
+  const isAdmin = session.user.role === "admin";
+  const targetUserId = (isAdmin && data.userId) ? data.userId : session.user.id;
+
+  let targetRole = (session.user as any).role;
+  if (isAdmin && data.userId) {
+    const roleRows = await sql`SELECT role FROM users WHERE id = ${targetUserId}`;
+    if (roleRows && roleRows[0]) {
+      targetRole = roleRows[0].role;
+    }
+  }
 
   try {
     // 1. Fetch current verification status
     let currentProfile;
-    if (role === "worker") {
-      const rows = await sql`SELECT is_verified, full_name, avatar_url FROM worker_profiles WHERE user_id = ${userId}`;
+    if (targetRole === "worker") {
+      const rows = await sql`SELECT is_verified, full_name, avatar_url FROM worker_profiles WHERE user_id = ${targetUserId}`;
       currentProfile = rows[0];
     } else {
-      const rows = await sql`SELECT is_verified, full_name, avatar_url FROM client_profiles WHERE user_id = ${userId}`;
+      const rows = await sql`SELECT is_verified, full_name, avatar_url FROM client_profiles WHERE user_id = ${targetUserId}`;
       currentProfile = rows[0];
     }
 
@@ -62,12 +70,12 @@ export async function updateProfile(data: any) {
           SET 
             email = COALESCE(${data.email}, email),
             phone = COALESCE(${data.phone}, phone)
-          WHERE id = ${userId}
+          WHERE id = ${targetUserId}
         `;
     }
 
     // 3. Update Profile tables
-    if (role === "worker") {
+    if (targetRole === "worker") {
       await sql`
         UPDATE worker_profiles 
         SET 
@@ -79,7 +87,7 @@ export async function updateProfile(data: any) {
           date_of_birth = ${data.dateOfBirth},
           district = ${data.district},
           hourly_rate = ${data.hourlyRate}
-        WHERE user_id = ${userId}
+        WHERE user_id = ${targetUserId}
       `;
     } else {
       await sql`
@@ -87,15 +95,40 @@ export async function updateProfile(data: any) {
         SET 
           full_name = ${isVerified ? currentProfile.full_name : data.fullName},
           avatar_url = ${isVerified ? currentProfile.avatar_url : data.avatarUrl}
-        WHERE user_id = ${userId}
+        WHERE user_id = ${targetUserId}
       `;
     }
 
-    revalidatePath(`/${role}/profile`);
-    revalidatePath(`/${role}/profile/settings`);
+    revalidatePath(`/${targetRole}/profile`);
+    revalidatePath(`/${targetRole}/profile/settings`);
     return { success: true };
   } catch (error) {
     console.error("[UPDATE_PROFILE_ERROR]", error);
     return { success: false, error: "Failed to update profile" };
   }
 }
+
+export async function resubmitVerification(faydaDocUrl: string) {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== "worker") {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  try {
+    await sql`
+      UPDATE worker_profiles 
+      SET 
+        fayda_doc_url = ${faydaDocUrl}, 
+        verification_status = 'pending',
+        is_verified = false
+      WHERE user_id = ${session.user.id}
+    `;
+
+    revalidatePath("/worker/pending-verification");
+    return { success: true };
+  } catch (error) {
+    console.error("[RESUBMIT_VERIFICATION_ERROR]", error);
+    return { success: false, error: "Failed to resubmit verification document" };
+  }
+}
+

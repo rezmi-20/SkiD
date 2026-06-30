@@ -1,10 +1,21 @@
 // lib/auth/index.ts - Compatibility wrapper for Neon Auth
 import { auth as serverAuth } from "./server";
 import { sql } from "../db";
+import { cookies } from "next/headers";
+import { getNeonSessionFromCookies } from "./session-cookie";
 
+// Server pages, layouts, and API routes should use this wrapper instead of
+// calling serverAuth.getSession() directly. The Neon Auth beta can miss secure
+// session-token cookies, but the signed session-data cookie is still reliable.
 export const auth = async () => {
-  // Neon Auth reads cookies from next/headers automatically in server context
-  const { data: session } = await serverAuth.getSession();
+  const cookieStore = await cookies();
+  let session = await getNeonSessionFromCookies(cookieStore);
+
+  if (!session?.user) {
+    const result = await serverAuth.getSession();
+    session = result.data as typeof session;
+  }
+
   if (!session?.user) return null;
 
   try {

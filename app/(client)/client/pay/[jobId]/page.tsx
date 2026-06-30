@@ -15,8 +15,8 @@ export default async function PaymentPage({ params }: { params: { jobId: string 
   const data = await getPaymentPageData(params.jobId);
   if (!data) redirect("/client/contracts");
 
-  // Only allow payment if contract is signed and job is not cancelled
-  if (!data.signed_at || data.job_status === "cancelled") {
+  // Payment is only available after both parties signed and the worker completed the job.
+  if (!data.signed_at || data.job_status !== "completed") {
     redirect("/client/contracts");
   }
 
@@ -30,7 +30,11 @@ export default async function PaymentPage({ params }: { params: { jobId: string 
       workerName={data.worker_name ?? "Worker"}
       workerAvatar={data.worker_avatar}
       workerVerified={data.worker_verified ?? false}
-      amount={data.budget ?? data.paid_amount ?? 0}
+      amount={data.payment_total ?? data.budget ?? data.paid_amount ?? 0}
+      commissionAmount={data.commission_amount ?? 0}
+      netAmount={data.net_amount ?? 0}
+      commissionRate={data.commission_rate ?? 0.05}
+      paymentStatus={data.payment_status ?? "unpaid"}
       alreadyPaid={alreadyPaid}
       existingTxRef={data.tx_ref}
     />

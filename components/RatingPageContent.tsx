@@ -1,8 +1,6 @@
 "use client";
-// Triggering new build to ensure Vercel picks up the type fix.
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { submitRating } from "@/lib/actions/ratings";
 import { useRouter } from "next/navigation";
 
@@ -15,14 +13,23 @@ interface RatingPageContentProps {
   jobTitle: string;
   currentUserRole: string;
   alreadyRated: boolean;
+  canRate: boolean;
   dashboardHref: string;
 }
 
 const STAR_LABELS = ["", "Poor", "Fair", "Good", "Very Good", "Excellent"];
 
 export default function RatingPageContent({
-  jobId, ratedId, ratedName, ratedAvatar, ratedVerified,
-  jobTitle, currentUserRole, alreadyRated, dashboardHref,
+  jobId,
+  ratedId,
+  ratedName,
+  ratedAvatar,
+  ratedVerified,
+  jobTitle,
+  currentUserRole,
+  alreadyRated,
+  canRate,
+  dashboardHref,
 }: RatingPageContentProps) {
   const router = useRouter();
   const [hoveredStar, setHoveredStar] = useState(0);
@@ -33,213 +40,180 @@ export default function RatingPageContent({
   const [error, setError] = useState<string | null>(null);
 
   const activeStar = hoveredStar || selectedStar;
+  const ratedRole = currentUserRole === "client" ? "Worker" : "Client";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedStar) { setError("Please select a star rating."); return; }
+    if (!selectedStar) {
+      setError("Choose a star rating first.");
+      return;
+    }
 
     setLoading(true);
     setError(null);
-    const res = await submitRating({ jobId, ratedId, score: selectedStar, comment });
+
+    const res = await submitRating({
+      jobId,
+      ratedId,
+      score: selectedStar,
+      comment,
+    });
+
     setLoading(false);
 
     if (res.success) {
       setSubmitted(true);
-    } else {
-      setError(res.error ?? "Submission failed. Please try again.");
+      return;
     }
-  };
 
-  // ─── Success / Already Rated State ────────────────────────────────────────────
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
-        <motion.div
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", duration: 0.7 }}
-          className="w-24 h-24 bg-primary/10 rounded-[2rem] flex items-center justify-center mb-6"
-        >
-          <span className="material-symbols-outlined text-primary text-5xl filled">verified</span>
-        </motion.div>
-        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}>
-          <h1 className="text-2xl font-black text-on-surface mb-2">
-            {alreadyRated && !loading ? "Already Reviewed" : "Thank You!"}
-          </h1>
-          <p className="text-sm text-on-surface-variant max-w-xs">
-            {alreadyRated && !loading
-              ? "You've already submitted your review for this job."
-              : `Your review for ${ratedName} has been submitted successfully.`}
-          </p>
-          <button
-            onClick={() => router.push(dashboardHref)}
-            className="mt-8 px-8 py-4 bg-primary text-on-primary rounded-full font-black uppercase tracking-widest shadow-xl shadow-primary/30 active:scale-95 transition-all"
-          >
-            Back to Dashboard
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
+    setError(res.error ?? "Submission failed. Please try again.");
+  };
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur-xl border-b border-surface-variant px-6 h-16 flex items-center gap-4">
-        <button onClick={() => router.back()} className="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors">
-          <span className="material-symbols-outlined">arrow_back</span>
-        </button>
-        <div>
-          <h1 className="text-base font-black text-on-surface tracking-tight">Rate & Review</h1>
-          <p className="text-[10px] text-on-surface-variant font-medium truncate max-w-[220px]">{jobTitle}</p>
+      <header className="sticky top-0 z-30 border-b border-surface-variant bg-surface/95 px-4 backdrop-blur">
+        <div className="mx-auto flex h-14 max-w-3xl items-center gap-3">
+          <button
+            onClick={() => router.back()}
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-surface-variant text-on-surface-variant hover:bg-surface-container-high"
+            aria-label="Go back"
+          >
+            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          </button>
+          <div className="min-w-0">
+            <h1 className="truncate text-sm font-bold text-on-surface">Rate & Review</h1>
+            <p className="truncate text-xs text-on-surface-variant">{jobTitle}</p>
+          </div>
         </div>
       </header>
 
-      <main className="max-w-lg mx-auto px-4 pt-8 space-y-8">
-        {/* Reviewed Party Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-surface-container-lowest rounded-[2rem] p-6 border border-surface-variant flex items-center gap-5 shadow-sm"
-        >
-          <div className="w-16 h-16 rounded-[1.4rem] overflow-hidden bg-surface-container-high border-2 border-surface-container-highest flex items-center justify-center shrink-0">
-            {ratedAvatar ? (
-              <img src={ratedAvatar} alt={ratedName} className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-2xl font-black text-primary">{ratedName?.[0]}</span>
-            )}
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-black text-on-surface text-lg">{ratedName}</span>
-              {ratedVerified && (
-                <span className="material-symbols-outlined text-primary text-[18px] filled">verified</span>
+      <main className="mx-auto max-w-3xl space-y-4 px-4 py-6">
+        <section className="rounded-lg border border-surface-variant bg-surface-container-lowest p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-surface-variant bg-surface-container-high">
+              {ratedAvatar ? (
+                <img src={ratedAvatar} alt={ratedName} className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-lg font-bold text-primary">{ratedName?.[0] ?? "U"}</span>
               )}
             </div>
-            <span className={`inline-block mt-1 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
-              currentUserRole === 'client' ? 'bg-primary/10 text-primary' : 'bg-surface-container-high text-on-surface-variant'
-            }`}>
-              {currentUserRole === 'client' ? 'Worker' : 'Client'}
-            </span>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <p className="truncate text-sm font-bold text-on-surface">{ratedName}</p>
+                {ratedVerified && (
+                  <span className="material-symbols-outlined text-[16px] text-primary">verified</span>
+                )}
+              </div>
+              <p className="text-xs text-on-surface-variant">{ratedRole} on this completed job</p>
+            </div>
           </div>
-        </motion.div>
+        </section>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Star Rating */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-surface-container-lowest rounded-[2rem] p-8 border border-surface-variant shadow-sm text-center space-y-6"
-          >
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant mb-2">Your Rating</p>
-              <AnimatePresence mode="wait">
-                <motion.p
-                  key={activeStar}
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 8 }}
-                  className="text-3xl font-black text-on-surface h-10 flex items-center justify-center"
-                >
-                  {activeStar ? STAR_LABELS[activeStar] : "Tap a star"}
-                </motion.p>
-              </AnimatePresence>
+        {submitted ? (
+          <section className="rounded-lg border border-surface-variant bg-surface-container-lowest p-6 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <span className="material-symbols-outlined">done</span>
             </div>
-
-            {/* Stars */}
-            <div className="flex justify-center gap-3">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <motion.button
-                  key={star}
-                  type="button"
-                  whileTap={{ scale: 1.3 }}
-                  onMouseEnter={() => setHoveredStar(star)}
-                  onMouseLeave={() => setHoveredStar(0)}
-                  onClick={() => setSelectedStar(star)}
-                  className="focus:outline-none"
-                >
-                  <span className={`text-5xl transition-all duration-150 ${
-                    star <= activeStar
-                      ? "text-yellow-400 drop-shadow-[0_0_12px_rgba(250,204,21,0.5)]"
-                      : "text-surface-container-highest"
-                  }`}>
-                    ★
-                  </span>
-                </motion.button>
-              ))}
-            </div>
-
-            {/* Sub-label */}
-            <div className="flex justify-between px-2">
-              {["1", "2", "3", "4", "5"].map((n, i) => (
-                <span key={n} className="text-[9px] font-bold text-on-surface-variant opacity-40 w-10 text-center">{n}</span>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Comment */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="bg-surface-container-lowest rounded-[2rem] p-6 border border-surface-variant shadow-sm space-y-4"
-          >
-            <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Written Review</p>
-            <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              rows={5}
-              placeholder={`What was done well?\nWhat could be improved?`}
-              className="w-full bg-surface-container-low border-none rounded-2xl p-5 font-medium text-on-surface placeholder:text-on-surface-variant focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none text-sm"
-            />
-            <p className="text-[10px] text-on-surface-variant opacity-50 text-right">{comment.length} chars</p>
-          </motion.div>
-
-          {/* Photo Upload placeholder */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-surface-container-lowest rounded-[2rem] p-6 border border-surface-variant shadow-sm space-y-4"
-          >
-            <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Photos (Optional)</p>
+            <h2 className="mt-4 text-lg font-bold text-on-surface">
+              {alreadyRated ? "Already reviewed" : "Review submitted"}
+            </h2>
+            <p className="mx-auto mt-1 max-w-sm text-sm text-on-surface-variant">
+              {alreadyRated
+                ? "You have already submitted a review for this job."
+                : `Your review for ${ratedName} has been recorded.`}
+            </p>
             <button
-              type="button"
-              className="w-full py-8 border-2 border-dashed border-surface-container-highest rounded-2xl flex flex-col items-center gap-2 hover:bg-surface-container-low transition-colors group"
+              onClick={() => router.push(dashboardHref)}
+              className="mt-5 inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-bold text-on-primary"
             >
-              <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors text-3xl">add_photo_alternate</span>
-              <span className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Upload Before / After Photos</span>
-              <span className="text-[9px] text-on-surface-variant opacity-40">Supports JPG, PNG up to 5MB each</span>
+              Back to Dashboard
             </button>
-          </motion.div>
-
-          {/* Error */}
-          {error && (
-            <div className="p-4 bg-error/10 border border-error/20 text-error rounded-2xl text-xs font-bold flex items-center gap-3">
-              <span className="material-symbols-outlined text-[18px]">error</span>
-              {error}
+          </section>
+        ) : !canRate ? (
+          <section className="rounded-lg border border-surface-variant bg-surface-container-lowest p-6 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-surface-container-high text-on-surface-variant">
+              <span className="material-symbols-outlined">lock</span>
             </div>
-          )}
+            <h2 className="mt-4 text-lg font-bold text-on-surface">Review not available yet</h2>
+            <p className="mx-auto mt-1 max-w-sm text-sm text-on-surface-variant">
+              Reviews open after the job is completed and the payment has been released.
+            </p>
+            <button
+              onClick={() => router.push(dashboardHref)}
+              className="mt-5 inline-flex h-10 items-center justify-center rounded-lg border border-surface-variant px-4 text-sm font-bold text-on-surface hover:bg-surface-container-high"
+            >
+              Back to Dashboard
+            </button>
+          </section>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <section className="rounded-lg border border-surface-variant bg-surface-container-lowest p-4">
+              <p className="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Your rating</p>
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onMouseEnter={() => setHoveredStar(star)}
+                      onMouseLeave={() => setHoveredStar(0)}
+                      onClick={() => setSelectedStar(star)}
+                      className="flex h-10 w-10 items-center justify-center rounded-lg text-2xl transition hover:bg-surface-container-high"
+                      aria-label={`Rate ${star} out of 5`}
+                    >
+                      <span className={star <= activeStar ? "text-yellow-500" : "text-surface-container-highest"}>
+                        ★
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                <span className="min-w-24 text-right text-sm font-bold text-on-surface">
+                  {activeStar ? STAR_LABELS[activeStar] : "Select"}
+                </span>
+              </div>
+            </section>
 
-          {/* Submit */}
-          <motion.button
-            type="submit"
-            disabled={loading || !selectedStar}
-            whileTap={{ scale: 0.97 }}
-            className="w-full h-16 bg-primary text-on-primary rounded-full font-black uppercase tracking-widest flex items-center justify-center gap-3 shadow-2xl shadow-primary/30 disabled:opacity-40 transition-all"
-          >
-            {loading ? (
-              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <>
-                <span className="material-symbols-outlined filled">star</span>
-                Submit Review
-              </>
+            <section className="rounded-lg border border-surface-variant bg-surface-container-lowest p-4">
+              <label htmlFor="review" className="text-xs font-bold uppercase tracking-wide text-on-surface-variant">
+                Written review
+              </label>
+              <textarea
+                id="review"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                rows={5}
+                maxLength={1000}
+                placeholder="Share what went well and anything the other party should improve."
+                className="mt-3 w-full resize-none rounded-lg border border-surface-variant bg-surface-container-low p-3 text-sm text-on-surface outline-none transition placeholder:text-on-surface-variant focus:border-primary"
+              />
+              <p className="mt-2 text-right text-xs text-on-surface-variant">{comment.length}/1000</p>
+            </section>
+
+            {error && (
+              <div className="rounded-lg border border-error/30 bg-error/10 px-3 py-2 text-sm font-medium text-error">
+                {error}
+              </div>
             )}
-          </motion.button>
-        </form>
+
+            <button
+              type="submit"
+              disabled={loading || !selectedStar}
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-on-primary disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading ? (
+                <>
+                  <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-[18px]">star</span>
+                  Submit Review
+                </>
+              )}
+            </button>
+          </form>
+        )}
       </main>
     </div>
   );

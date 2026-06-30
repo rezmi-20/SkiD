@@ -2,6 +2,34 @@ import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 
+// ─── DEV ONLY: Environment Variable Check ────────────────────────────────────
+// Logs which vars are present and warns about missing ones at server startup.
+// ⚠️  REMOVE this block before deploying to production!
+if (process.env.NODE_ENV === "development") {
+  const requiredVars = [
+    "DATABASE_URL",
+    "NEON_AUTH_BASE_URL",
+    "NEON_AUTH_COOKIE_SECRET",
+    "NEXT_PUBLIC_APP_URL",
+    "CHAPA_SECRET_KEY",
+    "NEXT_PUBLIC_CHAPA_PUBLIC_KEY",
+  ];
+  console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("  🔑  DireSkill ENV Variable Check (dev only)");
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  requiredVars.forEach((key) => {
+    const val = process.env[key];
+    if (!val || val.includes("your_") || val.includes("_here")) {
+      console.warn(`  ⚠️  MISSING or PLACEHOLDER: ${key}`);
+    } else {
+      console.log(`  ✅  ${key} = ${val.substring(0, 20)}...`);
+    }
+  });
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-plus-jakarta",

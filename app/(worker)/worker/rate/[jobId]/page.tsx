@@ -22,6 +22,7 @@ export default async function WorkerRatingPage({ params }: { params: { jobId: st
       jobTitle={data.job.job_title}
       currentUserRole={data.currentUserRole ?? "worker"}
       alreadyRated={data.alreadyRated}
+      canRate={data.canRate}
       dashboardHref="/worker/dashboard"
     />
   );

@@ -21,7 +21,7 @@ export default async function ClientDashboardPage() {
     FROM contracts c
     JOIN jobs j ON c.job_id = j.id
     JOIN worker_profiles wp ON j.worker_id = wp.user_id
-    WHERE j.client_id = ${session.user.id} AND j.status = 'active'
+    WHERE j.client_id = ${session.user.id} AND j.status IN ('accepted', 'in_progress')
     ORDER BY c.created_at DESC
   `;
   

@@ -1,0 +1,124 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import AppShell from "@/components/ui/AppShell";
+import VerificationResubmitForm from "@/components/worker/VerificationResubmitForm";
+import { getProfileData } from "@/lib/actions/profile";
+import { useLanguage } from "@/context/LanguageContext";
+
+export default function PendingVerificationPage() {
+  const router = useRouter();
+  const { t } = useLanguage();
+  const [worker, setWorker] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getProfileData()
+      .then((data) => {
+        if (!data || data.role !== "worker") {
+          router.push("/login");
+        } else {
+          setWorker(data);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load worker profile:", err);
+        router.push("/login");
+      });
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-white">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-zinc-400 text-sm font-semibold tracking-wide animate-pulse">Loading Profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const isRejected = worker?.verification_status === "rejected";
+  const desc = isRejected ? t("verification.rejected.desc") : t("verification.pending.desc");
+  const parts = desc.split("{name}");
+
+  return (
+    <AppShell role="worker" userEmail={worker?.email}>
+      <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-white font-inter">
+        <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-[2.5rem] p-8 space-y-8 shadow-2xl relative overflow-hidden">
+          <div className={`absolute top-0 right-0 w-48 h-48 ${isRejected ? "bg-red-500/10" : "bg-green-500/10"} blur-[80px] pointer-events-none`} />
+          
+          <div className="flex flex-col items-center text-center space-y-4">
+            <div className={`w-16 h-16 ${isRejected ? "bg-red-400/10 border-red-400/20" : "bg-green-400/10 border-green-400/20"} border flex items-center justify-center rounded-3xl mb-2`}>
+              <span className={`material-symbols-outlined text-[36px] ${isRejected ? "text-red-400" : "text-green-400 animate-pulse"}`}>
+                {isRejected ? "gpp_bad" : "pending_actions"}
+              </span>
+            </div>
+            
+            <h1 className="text-2xl font-black tracking-tight text-white">
+              {isRejected ? t("verification.rejected.title") : t("verification.pending.title")}
+            </h1>
+            
+            <p className="text-sm text-zinc-400 leading-relaxed">
+              {parts[0]}
+              <span className={`font-bold ${isRejected ? "text-red-400" : "text-green-400"}`}>
+                {worker?.full_name || "Professional"}
+              </span>
+              {parts[1]}
+            </p>
+          </div>
+
+          <div className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl space-y-3">
+            <div className="flex justify-between items-center text-xs font-semibold">
+              <span className="text-zinc-500 uppercase tracking-wider">{t("verification.role")}</span>
+              <span className="text-white bg-zinc-800 px-2 py-0.5 rounded-md">{t("common.role.worker")}</span>
+            </div>
+            
+            <div className="flex justify-between items-center text-xs font-semibold">
+              <span className="text-zinc-500 uppercase tracking-wider">{t("verification.fayda_upload")}</span>
+              <span className={worker?.fayda_doc_url ? "text-green-400" : "text-red-400"}>
+                {worker?.fayda_doc_url ? t("verification.fayda_received") : t("verification.fayda_missing")}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center text-xs font-semibold">
+              <span className="text-zinc-500 uppercase tracking-wider">{t("verification.status")}</span>
+              <span className={`font-bold uppercase tracking-wide ${
+                isRejected ? "text-red-400" : "text-yellow-400"
+              }`}>
+                {worker?.verification_status === "rejected"
+                  ? t("verification.status.rejected")
+                  : worker?.verification_status === "approved"
+                  ? t("verification.status.approved")
+                  : t("verification.status.pending")}
+              </span>
+            </div>
+          </div>
+
+          {/* Resubmission form for rejected workers */}
+          {isRejected && (
+            <VerificationResubmitForm />
+          )}
+
+          {!isRejected && (
+            <div className="text-xs text-zinc-500 text-center leading-relaxed">
+              {t("verification.timeline_desc")}
+            </div>
+          )}
+
+          <div className="flex flex-col gap-3">
+            <Link 
+              href="/api/auth/sign-out" 
+              className="w-full h-12 bg-zinc-900 border border-zinc-850 hover:bg-zinc-800 text-zinc-300 rounded-full font-bold text-xs flex items-center justify-center transition-all active:scale-[0.98]"
+            >
+              {t("common.signout")}
+            </Link>
+          </div>
+        </div>
+      </div>
+    </AppShell>
+  );
+}

@@ -10,6 +10,8 @@ const jobSchema = z.object({
   budget: z.number().optional(),
 });
 
+import { sanitizeText } from "@/lib/sanitize";
+
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
@@ -26,9 +28,12 @@ export async function POST(req: NextRequest) {
 
     const { workerId, title, description, budget } = parsed.data;
 
+    const sanitizedTitle = sanitizeText(title);
+    const sanitizedDescription = description ? sanitizeText(description) : null;
+
     const rows = await sql`
        INSERT INTO jobs (client_id, worker_id, title, description, budget)
-       VALUES (${session.user.id}, ${workerId ?? null}, ${title}, ${description ?? null}, ${budget ?? null})
+       VALUES (${session.user.id}, ${workerId ?? null}, ${sanitizedTitle}, ${sanitizedDescription}, ${budget ?? null})
        RETURNING id`;
 
     return NextResponse.json({ message: "Job created successfully", jobId: rows[0].id }, { status: 201 });

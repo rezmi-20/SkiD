@@ -26,6 +26,18 @@ export default function ClientRegisterPage() {
     setIsLoading(true);
     setError("");
 
+    const password = formData.password;
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    const hasDigit = /[0-9]/.test(password);
+    const hasSpecial = /[^A-Za-z0-9]/.test(password);
+
+    if (password.length < 8 || !hasUppercase || !hasLowercase || !hasDigit || !hasSpecial) {
+      setError("Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const { authClient } = await import("@/lib/auth/client");
 

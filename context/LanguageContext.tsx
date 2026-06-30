@@ -17,7 +17,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     console.debug("[DIREDAWA-DIAG] LanguageProvider mounting");
     const savedLanguage = localStorage.getItem('direskill-lang') as Language;
-    if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'am')) {
+    if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'am' || savedLanguage === 'om')) {
       setLanguageState(savedLanguage);
     }
   }, []);
@@ -28,7 +28,11 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   };
 
   const t = (key: TranslationKey): string => {
-    return translations[language][key] || translations['en'][key] || key;
+    const langVal = translations[language]?.[key];
+    if (langVal !== undefined) return langVal;
+    const enVal = translations['en']?.[key];
+    if (enVal !== undefined) return enVal;
+    return key;
   };
 
   return (
