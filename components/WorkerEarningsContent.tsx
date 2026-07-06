@@ -10,6 +10,7 @@ interface Transaction {
   netAmount: number;
   status: string;
   chapaRef: string | null;
+  chapaReference: string | null;
   createdAt: string;
 }
 
@@ -120,6 +121,30 @@ export default function WorkerEarningsContent({ earnings }: WorkerEarningsConten
                   </p>
                   {tx.chapaRef && (
                     <p className="mt-1 truncate font-mono text-[11px] text-on-surface-variant">{tx.chapaRef}</p>
+                  )}
+                  {tx.status === "released" && (
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                      {tx.id && (
+                        <a
+                          href={`/api/payments/${tx.id}/receipt`}
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">download</span>
+                          Receipt PDF
+                        </a>
+                      )}
+                      {tx.chapaReference && (
+                        <a
+                          href={`https://chapa.link/payment-receipt/${tx.chapaReference}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-on-surface-variant hover:underline"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">receipt_long</span>
+                          Chapa Receipt
+                        </a>
+                      )}
+                    </div>
                   )}
                 </div>
 

@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  allowedDevOrigins: ['10.235.92.15'],
+  allowedDevOrigins: ['10.235.92.15', '*.trycloudflare.com'],
+  // PDFKit uses __dirname to locate font files. Next.js bundling breaks this
+  // by resolving __dirname to C:\ROOT. Marking it as external fixes the path.
+  serverExternalPackages: ['pdfkit'],
   async headers() {
     return [
       {

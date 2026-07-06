@@ -250,7 +250,7 @@ export const translations = {
     "contract.new.step1": "Your request will be sent to the worker for review.",
     "contract.new.step2": "The worker can accept or decline your request.",
     "contract.new.step3": "Once accepted, a contract will be created and you can begin.",
-    "contract.new.step4": "Payment is held in escrow until the job is completed.",
+    "contract.new.step4": "After completion, the client pays through Chapa; the platform records 5% commission and credits the worker.",
 
     "worker.jobs.title": "Job Requests",
     "worker.jobs.subtitle": "Incoming requests from clients",

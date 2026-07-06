@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { updateProfile } from "@/lib/actions/profile";
@@ -11,12 +11,22 @@ interface Props {
   role: "client" | "worker";
 }
 
+interface ChapaBank {
+  id?: number;
+  code?: string | number;
+  name?: string;
+}
+
 export default function SettingsContent({ initialData, role }: Props) {
   const router = useRouter();
   const { language, setLanguage } = useLanguage();
   const [isPending, setIsPending] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [payoutStatus, setPayoutStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [payoutMessage, setPayoutMessage] = useState("");
+  const [banks, setBanks] = useState<ChapaBank[]>([]);
+  const [banksLoading, setBanksLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: initialData.full_name || "",
     email: initialData.email || "",
@@ -29,10 +39,44 @@ export default function SettingsContent({ initialData, role }: Props) {
     hourlyRate: initialData.hourly_rate || 0,
     avatarUrl: initialData.avatar_url || "",
   });
+  const [payoutForm, setPayoutForm] = useState({
+    accountName: initialData.full_name || "",
+    accountNumber: initialData.bank_account || "",
+    bankCode: initialData.bank_code || "",
+    bankName: initialData.bank_name || "",
+  });
 
   const [activeSection, setActiveSection] = useState("personal");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const hasChapaSubaccount = Boolean(initialData.chapa_subaccount_id);
+
+  useEffect(() => {
+    if (role !== "worker") return;
+
+    let isMounted = true;
+    setBanksLoading(true);
+
+    fetch("/api/list-banks")
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Unable to load banks.");
+        return data.banks || [];
+      })
+      .then((bankList: ChapaBank[]) => {
+        if (isMounted) setBanks(bankList);
+      })
+      .catch((err) => {
+        if (isMounted) setPayoutMessage(err instanceof Error ? err.message : "Unable to load banks.");
+      })
+      .finally(() => {
+        if (isMounted) setBanksLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [role]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -76,9 +120,46 @@ export default function SettingsContent({ initialData, role }: Props) {
     }
   };
 
+  const handleCreateSubaccount = async () => {
+    if (hasChapaSubaccount || payoutStatus === "loading") return;
+
+    setPayoutStatus("loading");
+    setPayoutMessage("");
+
+    try {
+      const selectedBank = banks.find((bank) => String(bank.code ?? bank.id) === payoutForm.bankCode);
+      const res = await fetch("/api/create-subaccount", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          workerId: initialData.user_id,
+          accountName: payoutForm.accountName,
+          accountNumber: payoutForm.accountNumber,
+          bankCode: payoutForm.bankCode,
+          bankName: selectedBank?.name || payoutForm.bankName,
+          splitType: "percentage",
+          splitValue: 0.05,
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Unable to create Chapa subaccount.");
+      }
+
+      setPayoutStatus("success");
+      setPayoutMessage(data.message || "Chapa payout account connected.");
+      router.refresh();
+    } catch (err) {
+      setPayoutStatus("error");
+      setPayoutMessage(err instanceof Error ? err.message : "Unable to create Chapa subaccount.");
+    }
+  };
+
   const sections = [
     { id: "personal", label: "Personal Info", icon: "person" },
     ...(role === "worker" ? [{ id: "professional", label: "Professional", icon: "construction" }] : []),
+    ...(role === "worker" ? [{ id: "payout", label: "Payout", icon: "account_balance" }] : []),
     { id: "security", label: "Security", icon: "security" },
     { id: "notifications", label: "Preferences", icon: "notifications" },
   ];
@@ -299,6 +380,125 @@ export default function SettingsContent({ initialData, role }: Props) {
                        />
                     </div>
                   </div>
+                </motion.section>
+              )}
+
+              {activeSection === "payout" && role === "worker" && (
+                <motion.section
+                  key="payout"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="space-y-8"
+                >
+                  <div className="rounded-[2rem] border border-surface-container-highest bg-surface-container-low/50 p-6">
+                    <div className="flex items-start gap-4">
+                      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
+                        hasChapaSubaccount ? "bg-primary/10 text-primary" : "bg-surface-container-high text-on-surface-variant"
+                      }`}>
+                        <span className="material-symbols-outlined">
+                          {hasChapaSubaccount ? "verified" : "account_balance"}
+                        </span>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="text-sm font-black uppercase tracking-widest text-on-surface">
+                          Chapa Payout Account
+                        </h3>
+                        <p className="mt-1 text-xs leading-5 text-on-surface-variant">
+                          {hasChapaSubaccount
+                            ? "Your Chapa subaccount is connected. Client payments can now be split and released to you."
+                            : "Connect your bank account so clients can pay completed jobs through Chapa split payments."}
+                        </p>
+                        {hasChapaSubaccount && (
+                          <p className="mt-3 truncate font-mono text-[11px] text-primary">
+                            {initialData.chapa_subaccount_id}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {!hasChapaSubaccount && (
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+                            Account Name
+                          </label>
+                          <input
+                            type="text"
+                            value={payoutForm.accountName}
+                            onChange={(e) => setPayoutForm({ ...payoutForm, accountName: e.target.value })}
+                            className="h-14 w-full rounded-2xl border border-surface-container-highest bg-surface-container-lowest px-6 text-sm font-bold outline-none transition-all focus:ring-2 focus:ring-primary/20"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+                            Account Number
+                          </label>
+                          <input
+                            type="text"
+                            value={payoutForm.accountNumber}
+                            onChange={(e) => setPayoutForm({ ...payoutForm, accountNumber: e.target.value })}
+                            className="h-14 w-full rounded-2xl border border-surface-container-highest bg-surface-container-lowest px-6 text-sm font-bold outline-none transition-all focus:ring-2 focus:ring-primary/20"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+                          Bank
+                        </label>
+                        <select
+                          value={payoutForm.bankCode}
+                          onChange={(e) => {
+                            const selectedBank = banks.find((bank) => String(bank.code ?? bank.id) === e.target.value);
+                            setPayoutForm({
+                              ...payoutForm,
+                              bankCode: e.target.value,
+                              bankName: selectedBank?.name || "",
+                            });
+                          }}
+                          disabled={banksLoading}
+                          className="h-14 w-full appearance-none rounded-2xl border border-surface-container-highest bg-surface-container-lowest px-6 text-sm font-bold outline-none transition-all focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
+                        >
+                          <option value="">{banksLoading ? "Loading banks..." : "Select bank"}</option>
+                          {banks.map((bank) => {
+                            const code = String(bank.code ?? bank.id ?? "");
+                            if (!code) return null;
+
+                            return (
+                              <option key={code} value={code}>
+                                {bank.name || code}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleCreateSubaccount}
+                        disabled={payoutStatus === "loading" || !payoutForm.accountName || !payoutForm.accountNumber || !payoutForm.bankCode}
+                        className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 text-xs font-black uppercase tracking-widest text-on-primary transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        <span className={`material-symbols-outlined text-[18px] ${payoutStatus === "loading" ? "animate-spin" : ""}`}>
+                          {payoutStatus === "loading" ? "sync" : "add_card"}
+                        </span>
+                        {payoutStatus === "loading" ? "Connecting..." : "Connect Chapa Payout"}
+                      </button>
+                    </div>
+                  )}
+
+                  {payoutMessage && (
+                    <div className={`rounded-2xl border p-4 text-center text-xs font-bold ${
+                      payoutStatus === "error"
+                        ? "border-error/20 bg-error-container text-on-error-container"
+                        : "border-primary/20 bg-primary/10 text-primary"
+                    }`}>
+                      {payoutMessage}
+                    </div>
+                  )}
                 </motion.section>
               )}
 

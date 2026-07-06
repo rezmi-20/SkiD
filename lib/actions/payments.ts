@@ -12,6 +12,7 @@ export interface WorkerEarningsTransaction {
   netAmount: number;
   status: string;
   chapaRef: string | null;
+  chapaReference: string | null;
   createdAt: string;
 }
 
@@ -24,6 +25,7 @@ export interface ClientPaymentRecord {
   paymentId: string | null;
   paymentStatus: string;
   chapaRef: string | null;
+  chapaReference: string | null;
   total: number;
   commissionAmount: number;
   netAmount: number;
@@ -66,6 +68,7 @@ export async function getPaymentPageData(jobId: string) {
         p.id as payment_id,
         p.status as payment_status,
         p.chapa_ref as tx_ref,
+        p.chapa_reference,
         p.amount as paid_amount,
         p.commission_amount,
         p.net_amount
@@ -119,6 +122,7 @@ export async function getClientPayments(): Promise<ClientPaymentRecord[]> {
         p.net_amount,
         p.status as payment_status,
         p.chapa_ref,
+        p.chapa_reference,
         p.created_at as payment_created_at
       FROM jobs j
       LEFT JOIN worker_profiles wp ON j.worker_id = wp.user_id
@@ -141,6 +145,7 @@ export async function getClientPayments(): Promise<ClientPaymentRecord[]> {
         paymentId: row.payment_id,
         paymentStatus: row.payment_status ?? "unpaid",
         chapaRef: row.chapa_ref,
+        chapaReference: row.chapa_reference ?? null,
         total: Number(row.amount ?? row.budget ?? fallback.total),
         commissionAmount: Number(row.commission_amount ?? fallback.commission),
         netAmount: Number(row.net_amount ?? fallback.netAmount),
@@ -169,6 +174,7 @@ export async function getWorkerEarnings() {
         p.net_amount,
         p.status,
         p.chapa_ref,
+        p.chapa_reference,
         p.created_at,
         j.title as job_title,
         j.budget,
@@ -196,6 +202,7 @@ export async function getWorkerEarnings() {
         netAmount,
         status: row.status,
         chapaRef: row.chapa_ref,
+        chapaReference: row.chapa_reference ?? null,
         createdAt: row.created_at?.toISOString?.() ?? String(row.created_at),
       };
     });

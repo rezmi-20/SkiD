@@ -30,6 +30,17 @@ function formatMoney(value: number) {
   return `${Math.round(value).toLocaleString()} ETB`;
 }
 
+async function readPaymentResponse(res: Response) {
+  const text = await res.text();
+  if (!text) return {};
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(res.ok ? "Payment response was invalid." : `Payment request failed (${res.status}).`);
+  }
+}
+
 export default function PaymentPageContent({
   jobId,
   contractId,
@@ -56,6 +67,8 @@ export default function PaymentPageContent({
   const feePercent = Math.round(commissionRate * 100);
 
   const handlePay = async () => {
+    if (isProcessing) return;
+
     setStep("processing");
     setError(null);
 
@@ -65,23 +78,14 @@ export default function PaymentPageContent({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jobId, method: selectedMethod }),
       });
-      const initData = await initRes.json();
+      const initData = await readPaymentResponse(initRes) as { error?: string; txRef?: string; checkoutUrl?: string };
       if (!initRes.ok) throw new Error(initData.error || "Payment initiation failed");
+      if (!initData.txRef) throw new Error("Payment initiation did not return a transaction reference.");
+      if (!initData.checkoutUrl) throw new Error("Chapa did not return a checkout URL.");
 
       const ref = initData.txRef;
       setTxRef(ref);
-
-      const confirmRes = await fetch("/api/payments/chapa", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobId, txRef: ref }),
-      });
-      const confirmData = await confirmRes.json();
-      if (!confirmRes.ok) throw new Error(confirmData.error || "Payment confirmation failed");
-
-      setCompletedAt(confirmData.completedAt ?? new Date().toISOString());
-      setStep("paid");
-      router.refresh();
+      window.location.assign(initData.checkoutUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Payment failed");
       setStep("ready");
@@ -128,13 +132,13 @@ export default function PaymentPageContent({
                   <span className="material-symbols-outlined text-[16px] text-primary">verified</span>
                 )}
               </div>
-              <p className="text-xs text-on-surface-variant">Worker payout after platform commission</p>
+              <p className="text-xs text-on-surface-variant">Chapa payment with platform commission deducted</p>
             </div>
           </div>
 
           <div className="grid gap-2 border-t border-surface-variant pt-4">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-on-surface-variant">Total job budget</span>
+              <span className="text-on-surface-variant">Client pays via Chapa</span>
               <span className="font-semibold text-on-surface">{formatMoney(amount)}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
@@ -210,7 +214,7 @@ export default function PaymentPageContent({
           <div>
             <p className="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Payment status</p>
             <p className="mt-1 text-sm font-semibold text-on-surface">
-              {step === "paid" ? "Completed and released" : paymentStatus === "held" ? "Initiated, awaiting confirmation" : "Ready to pay"}
+              {step === "paid" ? "Paid to worker" : paymentStatus === "held" ? "Chapa payment started" : "Ready to pay"}
             </p>
           </div>
 
@@ -234,7 +238,7 @@ export default function PaymentPageContent({
           </div>
 
           <p className="border-t border-surface-variant pt-4 text-xs leading-5 text-on-surface-variant">
-            Test mode is active. The payment flow records the transaction and releases the simulated funds to the worker.
+            Test mode is active. The client payment passes through the platform, 5% is recorded as commission, and the remaining balance is credited to the worker.
           </p>
         </aside>
       </main>

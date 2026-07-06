@@ -16,6 +16,7 @@ const CLIENT_NAV: NavItem[] = [
   { key: "nav.discover", href: "/client/search", icon: "search" },
   { key: "nav.contracts", href: "/client/contracts", icon: "description" },
   { key: "nav.payments", href: "/client/payments", icon: "payments" },
+  { key: "nav.feed", href: "/client/community", icon: "forum" },
   { key: "nav.chat", href: "/client/messages", icon: "chat_bubble" },
   { key: "nav.profile", href: "/client/profile", icon: "person" },
 ];
@@ -25,6 +26,7 @@ const WORKER_NAV: NavItem[] = [
   { key: "nav.mygigs", href: "/worker/gigs", icon: "construction" },
   { key: "nav.contracts", href: "/worker/contracts", icon: "description" },
   { key: "nav.earnings", href: "/worker/earnings", icon: "account_balance_wallet" },
+  { key: "nav.feed", href: "/worker/community", icon: "forum" },
   { key: "nav.chat", href: "/worker/messages", icon: "chat_bubble" },
   { key: "nav.profile", href: "/worker/profile", icon: "person" },
 ];
@@ -36,7 +38,7 @@ export default function MobileNav({ role }: { role: "client" | "worker" }) {
 
   return (
     <nav className="md:hidden fixed bottom-4 left-3 right-3 z-50">
-      <div className="flex justify-around items-center h-16 bg-on-surface/95 backdrop-blur-xl border border-surface-container-highest/20 rounded-2xl px-1 shadow-2xl transition-all duration-300">
+      <div className="flex items-center h-16 gap-1 overflow-x-auto no-scrollbar bg-on-surface/95 backdrop-blur-xl border border-surface-container-highest/20 rounded-2xl px-1 shadow-2xl transition-all duration-300">
         {navItems.map((item) => {
           const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
           
@@ -44,7 +46,7 @@ export default function MobileNav({ role }: { role: "client" | "worker" }) {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center justify-center transition-all duration-300 relative group ${isActive ? "flex-[1.5]" : "flex-1"}`}
+              className={`flex min-w-[3.25rem] flex-1 flex-col items-center justify-center transition-all duration-300 relative group ${isActive ? "flex-[1.6]" : ""}`}
             >
               <div className={`
                 flex items-center gap-1.5 px-2.5 py-2 rounded-xl transition-all duration-300
@@ -66,3 +68,4 @@ export default function MobileNav({ role }: { role: "client" | "worker" }) {
     </nav>
   );
 }
+

@@ -45,7 +45,7 @@ export default async function ClientPaymentsPage() {
         <div className="flex items-center justify-between border-b border-surface-variant px-4 py-3">
           <div>
             <h2 className="text-sm font-bold text-on-surface">Payment Queue</h2>
-            <p className="text-xs text-on-surface-variant">Pay completed jobs and track released funds.</p>
+            <p className="text-xs text-on-surface-variant">Pay completed jobs through Chapa and track worker payouts.</p>
           </div>
           <span className="text-xs font-semibold text-on-surface-variant">{payments.length} records</span>
         </div>
@@ -58,7 +58,7 @@ export default async function ClientPaymentsPage() {
         ) : (
           <div className="divide-y divide-surface-variant">
             {payments.map((payment) => {
-              const canPay = payment.jobStatus === "completed" && payment.signedAt && payment.paymentStatus !== "released";
+              const canPay = payment.jobStatus === "completed" && payment.paymentStatus !== "released";
 
               return (
                 <article key={`${payment.jobId}-${payment.paymentId ?? "unpaid"}`} className="grid gap-3 px-4 py-4 lg:grid-cols-[1fr_130px_130px_130px] lg:items-center">
@@ -69,6 +69,30 @@ export default async function ClientPaymentsPage() {
                     </p>
                     {payment.chapaRef && (
                       <p className="mt-1 truncate font-mono text-[11px] text-on-surface-variant">{payment.chapaRef}</p>
+                    )}
+                    {payment.paymentStatus === "released" && (
+                      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                        {payment.paymentId && (
+                          <a
+                            href={`/api/payments/${payment.paymentId}/receipt`}
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">download</span>
+                            Receipt PDF
+                          </a>
+                        )}
+                        {payment.chapaReference && (
+                          <a
+                            href={`https://chapa.link/payment-receipt/${payment.chapaReference}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-on-surface-variant hover:underline"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">receipt_long</span>
+                            Chapa Receipt
+                          </a>
+                        )}
+                      </div>
                     )}
                   </div>
 

@@ -69,13 +69,21 @@ export default function LoginPage() {
           body: JSON.stringify({ phone: identifier }),
         });
 
-        if (!lookupRes.ok) {
-          setError("No account found with this phone number.");
+        const lookupData = await lookupRes.json().catch(() => ({}));
+
+        if (lookupRes.status === 409 && lookupData.error === "legacy_account") {
+          setError("This phone number is linked to an older account. Please log in with your email address instead.");
           setIsLoading(false);
           return;
         }
 
-        const { email } = await lookupRes.json();
+        if (!lookupRes.ok) {
+          setError("No account found with this phone number. Try using your email to log in.");
+          setIsLoading(false);
+          return;
+        }
+
+        const { email } = lookupData;
         emailToUse = email;
       }
 

@@ -29,8 +29,21 @@ export async function POST(req: NextRequest) {
 
     const storedEmail = result[0].email as string;
 
-    // Handle legacy accounts created with synthetic emails before the migration.
-    // For those accounts, the stored email IS the Neon Auth email (the synthetic one).
+    // Detect legacy accounts that were registered with synthetic emails
+    // (format: "phone-XXXX"). These accounts don't exist in Neon Auth and
+    // cannot be used with signIn.email(). Return a specific error so the
+    // user knows they need to reset or re-register.
+    if (storedEmail.startsWith("phone-")) {
+      return NextResponse.json(
+        {
+          error: "legacy_account",
+          message:
+            "This account was created before our authentication update. Please contact support or register again with your email.",
+        },
+        { status: 409 },
+      );
+    }
+
     // For new accounts, the stored email is the real email used with Neon Auth.
     return NextResponse.json({ email: storedEmail });
   } catch (error) {

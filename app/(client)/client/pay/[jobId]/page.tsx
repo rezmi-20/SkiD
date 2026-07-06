@@ -8,15 +8,16 @@ export const metadata = {
   description: "Securely complete your payment for a finished job.",
 };
 
-export default async function PaymentPage({ params }: { params: { jobId: string } }) {
+export default async function PaymentPage({ params }: { params: Promise<{ jobId: string }> }) {
   const session = await auth();
   if (!session || session.user.role !== "client") redirect("/client/dashboard");
 
-  const data = await getPaymentPageData(params.jobId);
+  const { jobId } = await params;
+  const data = await getPaymentPageData(jobId);
   if (!data) redirect("/client/contracts");
 
-  // Payment is only available after both parties signed and the worker completed the job.
-  if (!data.signed_at || data.job_status !== "completed") {
+  // Payment is available after the worker has completed the job.
+  if (data.job_status !== "completed") {
     redirect("/client/contracts");
   }
 
@@ -25,7 +26,7 @@ export default async function PaymentPage({ params }: { params: { jobId: string 
   return (
     <PaymentPageContent
       jobId={data.job_id}
-      contractId={data.contract_id}
+      contractId={data.contract_id ?? "No contract"}
       jobTitle={data.job_title}
       workerName={data.worker_name ?? "Worker"}
       workerAvatar={data.worker_avatar}

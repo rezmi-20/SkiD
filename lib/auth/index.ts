@@ -12,8 +12,13 @@ export const auth = async () => {
   let session = await getNeonSessionFromCookies(cookieStore);
 
   if (!session?.user) {
-    const result = await serverAuth.getSession();
-    session = result.data as typeof session;
+    try {
+      const result = await serverAuth.getSession();
+      session = result.data as typeof session;
+    } catch (err) {
+      console.warn("Neon Auth getSession failed", err);
+      return null;
+    }
   }
 
   if (!session?.user) return null;

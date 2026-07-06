@@ -36,7 +36,7 @@ export default function AppShell({ children, role, userEmail }: AppShellProps) {
       <div className="flex flex-col flex-grow min-w-0">
         {/* ── Top App Bar (Justified) ── */}
         <header className="sticky top-0 z-40 w-full bg-surface-container-lowest/80 backdrop-blur-xl border-b border-surface-container-highest shadow-sm">
-          <div className="max-w-[1400px] mx-auto px-4 md:px-8 h-16 md:h-20 flex items-center justify-between">
+          <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 h-16 md:h-20 flex items-center justify-between">
             
             {/* Left: Mobile Logo & Desktop Breadcrumbs/Page Title */}
             <div className="flex items-center gap-4">
@@ -100,7 +100,7 @@ export default function AppShell({ children, role, userEmail }: AppShellProps) {
 
         {/* ── Main Content Area ── */}
         <main className="flex-grow w-full overflow-x-hidden">
-          <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-6 md:py-10">
+          <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-6 md:py-8 xl:py-10">
             {children}
           </div>
         </main>
@@ -111,3 +111,4 @@ export default function AppShell({ children, role, userEmail }: AppShellProps) {
     </div>
   );
 }
+

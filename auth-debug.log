@@ -48,3 +48,5 @@
 [2026-06-24T10:58:19.526Z] [/api/auth/me] Cookie header received: AMP_MKTG_ae7b5071dc=JTdCJTIycmVmZXJyZXIlMjIlM0ElMjJodHRwJTNBJTJGJTJGbG9jYWxob3N0JTNBMzAwMCUyRiUyMiUyQyUyMnJlZmVycmluZ19kb21haW4lMjIlM0ElMjJsb2NhbGhvc3QlM0EzMDAwJTIyJTdE; __Secure-neon-auth.session_token=JmDOyjdBjmlL2Iqt4s7m5NKnDgoHVxxa.SlV1Bh%2FeXpzqxkiqCsZuG42SQs399%2BUD%2FDuHIXbJXzg%3D; __next_hmr_refresh_hash__=90; AMP_ae7b5071dc=JTdCJTIyZGV2aWNlSWQlMjIlM0ElMjI4NzEyMWRkNy04NGIwLTRhMGMtYmU2MS05MzM1NzBmODUxMzklMjIlMkMlMjJzZXNzaW9uSWQlMjIlM0ExNzgyMjk3OTg2MTQxJTJDJTIyb3B0T3V0JTIyJTNBZmFsc2UlN0Q=
 [2026-06-24T10:58:20.507Z] [/api/auth/me] Session extracted: undefined
 [2026-06-24T10:58:20.509Z] [/api/auth/me] Unauthorized: no session found
+
+

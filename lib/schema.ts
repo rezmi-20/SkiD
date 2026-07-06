@@ -77,6 +77,12 @@ export const workerProfiles = pgTable("worker_profiles", {
   experienceYears: integer("experience_years").default(0),
   availability: text("availability").default("available"),
   avatarUrl: text("avatar_url"),
+  chapaSubaccountId: text("chapa_subaccount_id").unique(),
+  bankAccount: text("bank_account"),
+  bankName: text("bank_name"),
+  bankCode: varchar("bank_code", { length: 50 }),
+  chapaSplitType: varchar("chapa_split_type", { length: 20 }).default("percentage"),
+  chapaSplitValue: doublePrecision("chapa_split_value").default(0.05),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -190,7 +196,12 @@ export const payments = pgTable("payments", {
   netAmount: integer("net_amount"),
   status: paymentStatusEnum("status").notNull().default("held"),
   chapaRef: varchar("chapa_ref", { length: 255 }),
+  chapaCheckoutUrl: text("chapa_checkout_url"),
+  chapaStatus: varchar("chapa_status", { length: 50 }),
+  chapaResponse: json("chapa_response"),
+  workerSubaccountId: text("worker_subaccount_id"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 // ─── Community Feed ────────────────────────────────────────────────────────────

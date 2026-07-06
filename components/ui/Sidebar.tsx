@@ -18,6 +18,7 @@ const CLIENT_NAV: NavItem[] = [
   { key: "nav.discover", href: "/client/search", icon: "search" },
   { key: "nav.contracts", href: "/client/contracts", icon: "description" },
   { key: "nav.payments", href: "/client/payments", icon: "payments" },
+  { key: "nav.feed", href: "/client/community", icon: "forum" },
   { key: "nav.chat", href: "/client/messages", icon: "chat_bubble" },
   { key: "nav.profile", href: "/client/profile", icon: "person" },
 ];
@@ -27,6 +28,7 @@ const WORKER_NAV: NavItem[] = [
   { key: "nav.mygigs", href: "/worker/gigs", icon: "construction" },
   { key: "nav.contracts", href: "/worker/contracts", icon: "description" },
   { key: "nav.earnings", href: "/worker/earnings", icon: "account_balance_wallet" },
+  { key: "nav.feed", href: "/worker/community", icon: "forum" },
   { key: "nav.chat", href: "/worker/messages", icon: "chat_bubble" },
   { key: "nav.profile", href: "/worker/profile", icon: "person" },
 ];
@@ -136,3 +138,4 @@ export default function Sidebar({ role, userEmail }: { role: "client" | "worker"
     </aside>
   );
 }
+

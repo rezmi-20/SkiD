@@ -65,11 +65,15 @@ async function getNeonSessionFromTokenCookie(
   if (!sessionTokenCookie) return null;
 
   try {
+    if (!process.env.NEON_AUTH_BASE_URL) {
+      console.warn("[AUTH_SESSION_TOKEN_FALLBACK_SKIPPED] NEON_AUTH_BASE_URL not set");
+      return null;
+    }
     const response = await fetch(`${process.env.NEON_AUTH_BASE_URL}/get-session`, {
       headers: {
         Cookie: `${sessionTokenCookie.name}=${sessionTokenCookie.value}`,
       },
-      signal: AbortSignal.timeout(3000),
+      signal: AbortSignal.timeout(5000),
     });
 
     if (!response.ok) {
