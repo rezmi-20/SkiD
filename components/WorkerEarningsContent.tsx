@@ -1,5 +1,7 @@
 "use client";
 
+import { getChapaReceiptUrl } from "@/lib/config";
+
 interface Transaction {
   id: string;
   jobId: string;
@@ -124,21 +126,12 @@ export default function WorkerEarningsContent({ earnings }: WorkerEarningsConten
                   )}
                   {tx.status === "released" && (
                     <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-                      {tx.id && (
-                        <a
-                          href={`/api/payments/${tx.id}/receipt`}
-                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
-                        >
-                          <span className="material-symbols-outlined text-[14px]">download</span>
-                          Receipt PDF
-                        </a>
-                      )}
                       {tx.chapaReference && (
                         <a
-                          href={`https://chapa.link/payment-receipt/${tx.chapaReference}`}
+                          href={getChapaReceiptUrl(tx.chapaReference)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-on-surface-variant hover:underline"
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
                         >
                           <span className="material-symbols-outlined text-[14px]">receipt_long</span>
                           Chapa Receipt

@@ -50,6 +50,7 @@ export const users = pgTable("users", {
   phone: varchar("phone", { length: 20 }),
   passwordHash: text("password_hash").notNull(),
   role: roleEnum("role").notNull().default("client"),
+  isSuspended: boolean("is_suspended").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => [
   index("user_email_idx").on(table.email),

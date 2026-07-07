@@ -12,22 +12,10 @@ import {
   YAxis,
 } from "recharts";
 import type { AdminPaymentReport } from "@/lib/actions/admin-payments";
+import { useLanguage } from "@/context/LanguageContext";
 
 function formatMoney(value: number) {
   return `${Math.round(value).toLocaleString()} ETB`;
-}
-
-function formatDate(value: string | null) {
-  if (!value) return "Not recorded";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Not recorded";
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-}
-
-function statusClass(status: string) {
-  if (status === "released") return "bg-primary/10 text-primary";
-  if (status === "refunded") return "bg-error/10 text-error";
-  return "bg-surface-container-high text-on-surface-variant";
 }
 
 function StatTile({
@@ -42,7 +30,7 @@ function StatTile({
   icon: string;
 }) {
   return (
-    <div className="rounded-lg border border-surface-variant bg-surface-container-lowest p-4">
+    <div className="rounded-lg border border-outline-variant bg-surface-container-lowest p-4 transition-colors duration-300 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">{label}</p>
@@ -58,50 +46,72 @@ function StatTile({
 }
 
 export default function AdminPaymentReportsContent({ report }: { report: AdminPaymentReport }) {
+  const { t } = useLanguage();
   const hasChartData = report.monthly.length > 0;
+
+  function formatDate(value: string | null) {
+    if (!value) return t("admin.report.notRecorded" as any);
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return t("admin.report.notRecorded" as any);
+    return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  }
+
+  function statusClass(status: string) {
+    if (status === "released") return "bg-primary/10 text-primary";
+    if (status === "refunded") return "bg-error/10 text-error";
+    return "bg-surface-container-high text-on-surface-variant";
+  }
 
   return (
     <div className="space-y-5">
       <div className="flex flex-col gap-2">
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">Payments</p>
-        <h1 className="text-2xl font-bold tracking-tight text-on-surface">Revenue Reports</h1>
+        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
+          {t("admin.report.payments" as any)}
+        </p>
+        <h1 className="text-2xl font-bold tracking-tight text-on-surface">
+          {t("admin.report.revenue" as any)}
+        </h1>
         <p className="max-w-2xl text-sm leading-6 text-on-surface-variant">
-          Track Chapa payment volume, platform commission, worker payouts, and downloadable receipts.
+          {t("admin.report.desc" as any)}
         </p>
       </div>
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatTile
-          label="Released Volume"
+          label={t("admin.report.released" as any)}
           value={formatMoney(report.totals.releasedVolume)}
-          detail={`${report.totals.releasedCount} successful payments`}
+          detail={`${report.totals.releasedCount} ${t("admin.report.successful" as any)}`}
           icon="paid"
         />
         <StatTile
-          label="Commission"
+          label={t("admin.report.commission" as any)}
           value={formatMoney(report.totals.commissionRevenue)}
-          detail="5% platform revenue"
+          detail={t("admin.report.commissionDesc" as any)}
           icon="account_balance"
         />
         <StatTile
-          label="Worker Payouts"
+          label={t("admin.report.payouts" as any)}
           value={formatMoney(report.totals.workerPayouts)}
-          detail="Sent through Chapa split payment"
+          detail={t("admin.report.payoutsDesc" as any)}
           icon="engineering"
         />
         <StatTile
-          label="Pending"
+          label={t("admin.report.pending" as any)}
           value={String(report.totals.pendingCount)}
-          detail={`${report.totals.refundedCount} refunded records`}
+          detail={`${report.totals.refundedCount} ${t("admin.report.refunded" as any)}`}
           icon="pending_actions"
         />
       </section>
 
-      <section className="rounded-lg border border-surface-variant bg-surface-container-lowest p-4">
+      <section className="rounded-lg border border-outline-variant bg-surface-container-lowest p-4 transition-colors duration-300 shadow-sm">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-sm font-bold text-on-surface">Monthly Payment Flow</h2>
-            <p className="text-xs text-on-surface-variant">Gross payment, commission, and worker share.</p>
+            <h2 className="text-sm font-bold text-on-surface">
+              {t("admin.report.flow" as any)}
+            </h2>
+            <p className="text-xs text-on-surface-variant">
+              {t("admin.report.flowDesc" as any)}
+            </p>
           </div>
         </div>
 
@@ -122,34 +132,40 @@ export default function AdminPaymentReportsContent({ report }: { report: AdminPa
                   }}
                 />
                 <Legend />
-                <Bar dataKey="grossVolume" name="Gross" fill="var(--md-sys-color-on-surface)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="commissionRevenue" name="Commission" fill="var(--md-sys-color-primary)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="workerPayouts" name="Worker share" fill="var(--md-sys-color-outline)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="grossVolume" name={t("admin.report.gross" as any)} fill="var(--md-sys-color-on-surface)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="commissionRevenue" name={t("admin.report.commission" as any)} fill="var(--md-sys-color-primary)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="workerPayouts" name={t("admin.report.workerShare" as any)} fill="var(--md-sys-color-outline)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
             <div className="flex h-full items-center justify-center rounded-lg bg-surface-container-low text-sm font-semibold text-on-surface-variant">
-              No payment data yet.
+              {t("admin.report.noData" as any)}
             </div>
           )}
         </div>
       </section>
 
-      <section className="rounded-lg border border-surface-variant bg-surface-container-lowest">
-        <div className="flex items-center justify-between border-b border-surface-variant px-4 py-3">
+      <section className="rounded-lg border border-outline-variant bg-surface-container-lowest transition-colors duration-300 shadow-sm">
+        <div className="flex items-center justify-between border-b border-outline-variant px-4 py-3">
           <div>
-            <h2 className="text-sm font-bold text-on-surface">Recent Payments</h2>
-            <p className="text-xs text-on-surface-variant">Latest Chapa payment records and receipts.</p>
+            <h2 className="text-sm font-bold text-on-surface">
+              {t("admin.report.recent" as any)}
+            </h2>
+            <p className="text-xs text-on-surface-variant">
+              {t("admin.report.recentDesc" as any)}
+            </p>
           </div>
-          <span className="text-xs font-semibold text-on-surface-variant">{report.payments.length} records</span>
+          <span className="text-xs font-semibold text-on-surface-variant">
+            {report.payments.length} {t("admin.report.records" as any)}
+          </span>
         </div>
 
         {report.payments.length === 0 ? (
           <div className="px-4 py-10 text-center text-sm font-semibold text-on-surface-variant">
-            No payments have been recorded yet.
+            {t("admin.report.none" as any)}
           </div>
         ) : (
-          <div className="divide-y divide-surface-variant">
+          <div className="divide-y divide-outline-variant">
             {report.payments.map((payment) => (
               <article
                 key={payment.paymentId}
@@ -166,17 +182,23 @@ export default function AdminPaymentReportsContent({ report }: { report: AdminPa
                 </div>
 
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Total</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">
+                    {t("admin.report.total" as any)}
+                  </p>
                   <p className="text-sm font-semibold text-on-surface">{formatMoney(payment.amount)}</p>
                 </div>
 
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Commission</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">
+                    {t("admin.report.commission" as any)}
+                  </p>
                   <p className="text-sm font-semibold text-on-surface">{formatMoney(payment.commissionAmount)}</p>
                 </div>
 
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">Status</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">
+                    {t("admin.report.status" as any)}
+                  </p>
                   <span className={`mt-1 inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold ${statusClass(payment.status)}`}>
                     {payment.status}
                   </span>
@@ -185,10 +207,10 @@ export default function AdminPaymentReportsContent({ report }: { report: AdminPa
                 <div className="lg:text-right">
                   <Link
                     href={`/api/payments/${payment.paymentId}/receipt`}
-                    className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-surface-variant px-3 text-xs font-bold text-on-surface hover:bg-surface-container-high"
+                    className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-outline-variant bg-surface-container text-on-surface hover:bg-surface-container-high px-3 text-xs font-bold transition-all active:scale-95 shadow-sm"
                   >
                     <span className="material-symbols-outlined text-[16px]">receipt_long</span>
-                    Receipt
+                    {t("admin.report.receipt" as any)}
                   </Link>
                 </div>
               </article>

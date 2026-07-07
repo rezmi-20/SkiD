@@ -28,9 +28,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   };
 
   const t = (key: TranslationKey): string => {
-    const langVal = translations[language]?.[key];
+    const langRecord = translations[language] as Record<string, string> | undefined;
+    const langVal = langRecord?.[key];
     if (langVal !== undefined) return langVal;
-    const enVal = translations['en']?.[key];
+    const enVal = (translations['en'] as Record<string, string>)?.[key];
     if (enVal !== undefined) return enVal;
     return key;
   };

@@ -30,29 +30,30 @@ function appUrl() {
   );
 }
 
-function appendPaymentParams(url: string, input: { txRef: string; jobId: string }) {
-  const paymentUrl = new URL(url, appUrl());
-  paymentUrl.searchParams.set("tx_ref", input.txRef);
-  paymentUrl.searchParams.set("job_id", input.jobId);
-  return paymentUrl.toString();
-}
-
-function paymentCallbackUrl(input: { txRef: string; jobId: string; browserOrigin: string }) {
-  const callbackBase =
-    process.env.NODE_ENV === "production" && process.env.CALLBACK_URL
-      ? process.env.CALLBACK_URL
-      : `${normalizeUrl(input.browserOrigin)}/payment-success`;
-
-  return appendPaymentParams(callbackBase, input);
-}
-
 function paymentWebhookUrl() {
-  return normalizeUrl(
-    process.env.WEBHOOK_URL ||
-    process.env.CHAPA_WEBHOOK_URL ||
-    process.env.CHAPA_CALLBACK_URL ||
+  const candidates = [
+    process.env.WEBHOOK_URL,
+    process.env.CHAPA_WEBHOOK_URL,
     `${appUrl()}/api/payment/webhook`,
-  );
+  ];
+
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+
+    try {
+      const url = new URL(candidate);
+      const isLocalhost = ["localhost", "127.0.0.1", "::1"].includes(url.hostname);
+      const isSuccessPage = url.pathname.includes("/payment-success");
+
+      if (url.protocol === "https:" && !isLocalhost && !isSuccessPage) {
+        return normalizeUrl(url.toString());
+      }
+    } catch {
+      console.warn("[CHAPA_WEBHOOK_URL_INVALID]", candidate);
+    }
+  }
+
+  return null;
 }
 
 function splitName(fullName: string | null | undefined) {
@@ -82,15 +83,9 @@ async function initializeSplitPayment(input: {
   subaccountId: string;
   splitType: "percentage" | "flat";
   splitValue: number;
-  browserOrigin: string;
 }) {
   const { firstName, lastName } = splitName(input.fullName);
   const phoneNumber = normalizeEthiopianPhone(input.phone);
-  const returnUrl = paymentCallbackUrl({
-    txRef: input.txRef,
-    jobId: input.jobId,
-    browserOrigin: input.browserOrigin,
-  });
   const callbackUrl = paymentWebhookUrl();
 
   if (!phoneNumber) {
@@ -103,8 +98,8 @@ async function initializeSplitPayment(input: {
 
   console.info("[CHAPA_PAYMENT_URLS]", {
     txRef: input.txRef,
-    callbackUrl,
-    returnUrl,
+    callbackUrl: callbackUrl || "(not sent)",
+    // No return_url: the Chapa-hosted receipt should not auto-redirect back to the app.
   });
 
   const data = await initializeChapaPayment({
@@ -115,7 +110,7 @@ async function initializeSplitPayment(input: {
     lastName,
     phoneNumber,
     callbackUrl,
-    returnUrl,
+    // returnUrl intentionally omitted: prevents Chapa receipt pages from auto-redirecting.
     title: "DireSkill",
     description: input.title,
     subaccountId: input.subaccountId,
@@ -142,7 +137,7 @@ export async function POST(req: NextRequest) {
     origin: req.nextUrl.origin,
     href: req.nextUrl.href,
     webhookUrl: process.env.WEBHOOK_URL || "(not set)",
-    callbackUrl: process.env.CALLBACK_URL || "(not set)",
+    browserReturnUrl: "(not sent)",
   });
   try {
     const session = await auth();
@@ -230,7 +225,6 @@ export async function POST(req: NextRequest) {
       subaccountId: job.chapa_subaccount_id,
       splitType,
       splitValue,
-      browserOrigin: req.nextUrl.origin,
     });
 
     const heldPayments = await sql`

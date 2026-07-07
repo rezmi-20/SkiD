@@ -105,3 +105,20 @@ export async function flagPost(postId: string, reason: string) {
     return { success: false };
   }
 }
+
+export async function removeCommunityPost(postId: string, isRemoved: boolean) {
+  const session = await auth();
+  if (session?.user?.role !== "admin") {
+    return { success: false, error: "Unauthorized" };
+  }
+  try {
+    await sql`UPDATE community_posts SET is_removed = ${isRemoved} WHERE id = ${postId}`;
+    revalidatePath("/admin/community");
+    revalidatePath("/community/feed");
+    return { success: true };
+  } catch (error) {
+    console.error("[REMOVE_POST_ERROR]", error);
+    return { success: false, error: "Database action failed" };
+  }
+}
+

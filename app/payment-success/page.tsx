@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
+import { getChapaReceiptUrl } from "@/lib/config";
 import { verifyAndReleasePayment, type PaymentProcessingResult } from "@/lib/payment-processing";
+
+
+
 
 export const metadata = {
   title: "Payment Status | DireSkill",
@@ -88,28 +92,17 @@ export default async function PaymentSuccessPage({
             </div>
           </div>
 
-          {result.success && (
+          {result.success && result.chapaReference && (
             <div className="mt-5 border-t border-surface-variant pt-5 flex flex-col gap-2">
-              {result.paymentId && (
-                <a
-                  href={`/api/payments/${result.paymentId}/receipt`}
-                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary hover:bg-primary/95 px-4 text-sm font-bold text-on-primary transition-colors duration-200"
-                >
-                  <span className="material-symbols-outlined text-[18px]">download</span>
-                  Download Payment Receipt (PDF)
-                </a>
-              )}
-              {result.chapaReference && (
-                <a
-                  href={`https://chapa.link/payment-receipt/${result.chapaReference}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-surface-variant hover:bg-surface-container-high px-4 text-sm font-bold text-on-surface transition-colors duration-200"
-                >
-                  <span className="material-symbols-outlined text-[18px]">receipt_long</span>
-                  View on Chapa
-                </a>
-              )}
+              <a
+                href={getChapaReceiptUrl(result.chapaReference)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary hover:bg-primary/95 px-4 text-sm font-bold text-on-primary transition-colors duration-200"
+              >
+                <span className="material-symbols-outlined text-[18px]">receipt_long</span>
+                Chapa Receipt
+              </a>
             </div>
           )}
         </section>

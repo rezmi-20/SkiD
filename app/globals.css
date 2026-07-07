@@ -42,28 +42,36 @@
 
 @layer base {
   :root, [data-theme='light'] {
-    /* ── LUMINA LIGHT ── */
+    /* ── LUMINA LIGHT (Proper layered palette) ── */
+    /* Main bg: pure white; Cards: slightly gray; Text: near-black */
     --md-sys-color-primary: #006e2a;
     --md-sys-color-on-primary: #ffffff;
     --md-sys-color-primary-container: #7ee38b;
     --md-sys-color-on-primary-container: #002108;
-    
-    --md-sys-color-background: #f3f4f6;
-    --md-sys-color-on-background: #191c1e;
-    
-    --md-sys-color-surface: #f3f4f6;
-    --md-sys-color-on-surface: #191c1e;
-    --md-sys-color-surface-variant: #dfe2e6;
-    --md-sys-color-on-surface-variant: #3f4a3e;
-    
-    --md-sys-color-surface-container-lowest: #ffffff;
-    --md-sys-color-surface-container-low: #edeff2;
-    --md-sys-color-surface-container: #e7e9ed;
-    --md-sys-color-surface-container-high: #e1e3e8;
-    --md-sys-color-surface-container-highest: #dbdee3;
 
-    --md-sys-color-outline: #72777f;
-    --md-sys-color-outline-variant: #c2c7cf;
+    /* Admin accent (Blue — separate from brand green) */
+    --admin-accent: #0066CC;
+    --admin-accent-light: #e8f0fe;
+    --admin-accent-text: #004499;
+
+    /* Layered backgrounds: White → Soft Gray → Slightly darker */
+    --md-sys-color-background: #FFFFFF;
+    --md-sys-color-on-background: #1A1A1A;
+
+    --md-sys-color-surface: #F5F7FA;
+    --md-sys-color-on-surface: #1A1A1A;
+    --md-sys-color-surface-variant: #E4E6EA;
+    --md-sys-color-on-surface-variant: #65676B;
+
+    /* Card layering: each level slightly darker than the one below */
+    --md-sys-color-surface-container-lowest: #FFFFFF;
+    --md-sys-color-surface-container-low: #F5F7FA;
+    --md-sys-color-surface-container: #EAECF0;
+    --md-sys-color-surface-container-high: #E0E3E9;
+    --md-sys-color-surface-container-highest: #D4D7DF;
+
+    --md-sys-color-outline: #65676B;
+    --md-sys-color-outline-variant: #C8CBD2;
     --md-sys-color-error: #ba1a1a;
     --md-sys-color-error-container: #ffdad6;
     --md-sys-color-on-error-container: #410002;
@@ -76,34 +84,42 @@
   }
 
   [data-theme='dark'], [data-theme='grayscale'] {
-    /* ── LUMINA DARK / GRAYSCALE ── */
+    /* ── LUMINA DARK (Proper layered palette — not inverted) ── */
+    /* Main bg: deep charcoal; Cards: elevated progressively lighter */
     --md-sys-color-primary: #77dc85;
     --md-sys-color-on-primary: #003912;
     --md-sys-color-primary-container: #00531e;
     --md-sys-color-on-primary-container: #93f99e;
-    
-    --md-sys-color-background: #0e1411;
-    --md-sys-color-on-background: #e1e3df;
-    
-    --md-sys-color-surface: #0e1411;
-    --md-sys-color-on-surface: #e1e3df;
-    --md-sys-color-surface-variant: #414941;
-    --md-sys-color-on-surface-variant: #c1c9be;
-    
-    --md-sys-color-surface-container-lowest: #090f0c;
-    --md-sys-color-surface-container-low: #171d19;
-    --md-sys-color-surface-container: #1b211d;
-    --md-sys-color-surface-container-high: #252b27;
-    --md-sys-color-surface-container-highest: #303631;
 
-    --md-sys-color-outline: #8b9389;
-    --md-sys-color-outline-variant: #414941;
+    /* Admin accent (Blue — pastel for dark bg, not harsh) */
+    --admin-accent: #4D9CFF;
+    --admin-accent-light: rgba(77, 156, 255, 0.12);
+    --admin-accent-text: #A8CFFF;
+
+    /* Layered backgrounds: Darkest → progressively lighter cards */
+    --md-sys-color-background: #121212;
+    --md-sys-color-on-background: #F0F2F5;
+
+    --md-sys-color-surface: #121212;
+    --md-sys-color-on-surface: #F0F2F5;
+    --md-sys-color-surface-variant: #333538;
+    --md-sys-color-on-surface-variant: #A0A5B1;
+
+    /* Card layering: each level lighter to show closer proximity */
+    --md-sys-color-surface-container-lowest: #0D0D0D;
+    --md-sys-color-surface-container-low: #1A1A1A;
+    --md-sys-color-surface-container: #1E1E1E;
+    --md-sys-color-surface-container-high: #252525;
+    --md-sys-color-surface-container-highest: #2E2E2E;
+
+    --md-sys-color-outline: #A0A5B1;
+    --md-sys-color-outline-variant: #3A3D42;
     --md-sys-color-error: #ffb4ab;
     --md-sys-color-error-container: #93000a;
     --md-sys-color-on-error-container: #ffdad6;
 
-    --md-sys-color-secondary-container: #45474c;
-    --md-sys-color-on-secondary-container: #e2e2e9;
+    --md-sys-color-secondary-container: #3A3D42;
+    --md-sys-color-on-secondary-container: #E2E2E9;
 
     --brand-logo: #77dc85;
     --img-grayscale: 1;
@@ -206,3 +222,66 @@ body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
 img { max-width: 100%; height: auto; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Custom Layout Utilities */
+:root {
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 0.75rem;
+  --spacing-base: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+}
+
+/* Compact Card Class */
+.card-compact {
+  background-color: var(--md-sys-color-surface-container-lowest);
+  border: 1px solid var(--md-sys-color-surface-variant);
+  border-radius: 0.5rem;
+}
+
+/* Custom Status Badges */
+.badge-success {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: rgba(4, 120, 87, 0.1);
+  color: #047857;
+}
+
+.badge-warning {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: rgba(217, 119, 6, 0.1);
+  color: #d97706;
+}
+
+.badge-danger {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+
+.badge-info {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+}
+

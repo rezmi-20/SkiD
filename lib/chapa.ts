@@ -33,8 +33,8 @@ export interface InitializeChapaPaymentInput {
   firstName: string;
   lastName: string;
   phoneNumber?: string | null;
-  callbackUrl: string;
-  returnUrl: string;
+  callbackUrl?: string | null;
+  returnUrl?: string | null;
   title: string;
   description: string;
   subaccountId?: string | null;
@@ -160,8 +160,8 @@ export async function initializeChapaPayment(input: InitializeChapaPaymentInput)
       last_name: input.lastName,
       phone_number: input.phoneNumber || undefined,
       tx_ref: input.txRef,
-      callback_url: input.callbackUrl,
-      return_url: input.returnUrl,
+      ...(input.callbackUrl ? { callback_url: input.callbackUrl } : {}),
+      ...(input.returnUrl ? { return_url: input.returnUrl } : {}),
       customization: {
         title: input.title,
         description: input.description,
