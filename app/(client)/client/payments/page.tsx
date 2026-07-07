@@ -74,9 +74,9 @@ export default async function ClientPaymentsPage() {
                     )}
                     {payment.paymentStatus === "released" && (
                       <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-                        {payment.chapaReference && (
+                        {payment.chapaRef && (
                           <a
-                            href={getChapaReceiptUrl(payment.chapaReference)}
+                            href={getChapaReceiptUrl(payment.chapaRef)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"

@@ -284,9 +284,9 @@ export default function PaymentPageContent({
                 <p className="text-sm font-bold text-primary">Payment Confirmed!</p>
                 <p className="text-xs text-on-surface-variant">The payment has been verified and released to the worker.</p>
               </div>
-              {confirmedData.chapaReference && (
+              {txRef && (
                 <a
-                  href={getChapaReceiptUrl(confirmedData.chapaReference)}
+                  href={getChapaReceiptUrl(txRef)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-surface-variant text-sm font-bold text-on-surface hover:bg-surface-container-high"

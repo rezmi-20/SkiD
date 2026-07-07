@@ -150,8 +150,26 @@ export async function createChapaSubaccount(input: CreateChapaSubaccountInput) {
   }
 }
 
+function isSafeCallbackUrl(value: string | null | undefined): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    // Never allow the in-app success page to be used as a Chapa redirect target.
+    if (url.pathname.includes("/payment-success")) return null;
+    if (["localhost", "127.0.0.1", "::1"].includes(url.hostname)) return null;
+    return value;
+  } catch {
+    return null;
+  }
+}
+
 export async function initializeChapaPayment(input: InitializeChapaPaymentInput) {
   try {
+    // Defensive: only ever send a real server-side webhook URL as callback_url.
+    // Never send a return_url — the Chapa-hosted receipt must not auto-redirect
+    // back into the app (e.g. to /payment-success).
+    const safeCallbackUrl = isSafeCallbackUrl(input.callbackUrl);
+
     const payload = {
       amount: String(input.amount),
       currency: "ETB",
@@ -160,8 +178,7 @@ export async function initializeChapaPayment(input: InitializeChapaPaymentInput)
       last_name: input.lastName,
       phone_number: input.phoneNumber || undefined,
       tx_ref: input.txRef,
-      ...(input.callbackUrl ? { callback_url: input.callbackUrl } : {}),
-      ...(input.returnUrl ? { return_url: input.returnUrl } : {}),
+      ...(safeCallbackUrl ? { callback_url: safeCallbackUrl } : {}),
       customization: {
         title: input.title,
         description: input.description,

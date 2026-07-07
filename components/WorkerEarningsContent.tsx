@@ -126,9 +126,9 @@ export default function WorkerEarningsContent({ earnings }: WorkerEarningsConten
                   )}
                   {tx.status === "released" && (
                     <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-                      {tx.chapaReference && (
+                      {tx.chapaRef && (
                         <a
-                          href={getChapaReceiptUrl(tx.chapaReference)}
+                          href={getChapaReceiptUrl(tx.chapaRef)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
