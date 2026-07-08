@@ -92,10 +92,10 @@ export default async function PaymentSuccessPage({
             </div>
           </div>
 
-          {result.success && result.txRef && (
+          {result.success && result.chapaReference && (
             <div className="mt-5 border-t border-surface-variant pt-5 flex flex-col gap-2">
               <a
-                href={getChapaReceiptUrl(result.txRef)}
+                href={getChapaReceiptUrl(result.chapaReference)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary hover:bg-primary/95 px-4 text-sm font-bold text-on-primary transition-colors duration-200"

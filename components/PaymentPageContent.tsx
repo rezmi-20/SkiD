@@ -138,10 +138,9 @@ export default function PaymentPageContent({
       setTxRef(ref);
 
       // Open Chapa in a NEW TAB — this page becomes the "waiting for confirmation" screen
-      window.open(initData.checkoutUrl, "_blank", "noopener,noreferrer");
+      window.location.assign(initData.checkoutUrl);
 
       // Start waiting for webhook to fire
-      setStep("awaiting");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Payment failed");
       setStep("ready");
@@ -284,9 +283,9 @@ export default function PaymentPageContent({
                 <p className="text-sm font-bold text-primary">Payment Confirmed!</p>
                 <p className="text-xs text-on-surface-variant">The payment has been verified and released to the worker.</p>
               </div>
-              {txRef && (
+              {confirmedData.chapaReference && (
                 <a
-                  href={getChapaReceiptUrl(txRef)}
+                  href={getChapaReceiptUrl(confirmedData.chapaReference)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-surface-variant text-sm font-bold text-on-surface hover:bg-surface-container-high"

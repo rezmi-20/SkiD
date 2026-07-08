@@ -7,6 +7,20 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
 
+function getLoginErrorMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error || "");
+
+  if (message.includes("502") || message.toLowerCase().includes("bad gateway")) {
+    return "The authentication service is temporarily unavailable. Please try again in a moment.";
+  }
+
+  if (message.toLowerCase().includes("fetch") || message.toLowerCase().includes("network")) {
+    return "Could not reach the authentication service. Please check your connection and try again.";
+  }
+
+  return "An unexpected error occurred. Please try again later.";
+}
+
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -32,18 +46,16 @@ export default function LoginPage() {
 
     const checkSession = async () => {
       try {
-        // First try client-side session check (reads cookie directly)
-        const { data: session } = await authClient.getSession();
+        const res = await fetch("/api/auth/me", {
+          credentials: "include",
+          cache: "no-store",
+        });
 
-        if (session?.user) {
-          // We have a session! Now get the role from our database
-          const res = await fetch("/api/auth/me", { credentials: "include" });
-          if (res.ok) {
-            const { role } = await res.json();
-            if (role === "client") router.replace("/client/search");
-            else if (role === "worker") router.replace("/worker/dashboard");
-            else if (role === "admin") router.replace("/admin/dashboard");
-          }
+        if (res.ok) {
+          const { role } = await res.json();
+          if (role === "client") router.replace("/client/search");
+          else if (role === "worker") router.replace("/worker/dashboard");
+          else if (role === "admin") router.replace("/admin/dashboard");
         }
       } catch (err) {
         console.error("Session check error", err);
@@ -98,6 +110,10 @@ export default function LoginPage() {
           router.push(`/otp-verification?email=${encodeURIComponent(emailToUse)}`);
           return;
         }
+        if (signInError.status === 502 || signInError.message?.toLowerCase().includes("bad gateway")) {
+          setError("The authentication service is temporarily unavailable. Please try again in a moment.");
+          return;
+        }
         setError("Invalid credentials. Please check your email/phone and password.");
       } else {
         // Small delay to ensure cookie is committed, then full navigation
@@ -105,9 +121,8 @@ export default function LoginPage() {
           window.location.href = "/auth/callback";
         }, 300);
       }
-    } catch (err: any) {
-      console.error("Login Error:", err);
-      setError("An unexpected error occurred. Please try again later.");
+    } catch (err) {
+      setError(getLoginErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
