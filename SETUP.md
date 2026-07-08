@@ -89,6 +89,24 @@ npm run dev
 
 > ⚠️ `.env.local` is **gitignored** and will NOT be on the new device after cloning. You must recreate it manually (see Section 5).
 
+### 4.1 Save and Push Changes
+
+When you make local updates and want to keep them in the repository:
+
+```bash
+git add .
+git commit -m "Describe your changes"
+git push origin main
+```
+
+The remote repository for this project is:
+
+```bash
+https://github.com/rezmi-20/SkiD.git
+```
+
+If you are working from a feature branch, replace `main` with your branch name.
+
 ---
 
 ## 5. Environment Variables
