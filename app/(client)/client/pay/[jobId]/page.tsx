@@ -16,12 +16,11 @@ export default async function PaymentPage({ params }: { params: Promise<{ jobId:
   const data = await getPaymentPageData(jobId);
   if (!data) redirect("/client/contracts");
 
-  // Payment is available after the worker has completed the job.
-  if (data.job_status !== "completed") {
+  if (!["completed", "payment_pending", "paid"].includes(data.job_status)) {
     redirect("/client/contracts");
   }
 
-  const alreadyPaid = data.payment_status === "released";
+  const alreadyPaid = data.payment_status === "released" || data.job_status === "paid";
 
   return (
     <PaymentPageContent

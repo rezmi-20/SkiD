@@ -36,8 +36,9 @@ export function PendingVerification({ workers, onAction }: PendingVerificationPr
   const [isPending, startTransition] = useTransition();
 
   const handleAction = (userId: string, approve: boolean) => {
+    const reason = approve ? undefined : window.prompt("Reason for rejection?") || undefined;
     startTransition(async () => {
-      const result = await toggleWorkerVerification(userId, approve);
+      const result = await toggleWorkerVerification(userId, approve, reason);
       if (result.success) {
         onAction?.(userId, approve);
       } else {

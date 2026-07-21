@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import StatusBadge from "@/components/ui/StatusBadge";
+import StatusBadge from "@/components/shell/StatusBadge";
 
 export interface WorkerJobCardData {
   id: string;
@@ -132,7 +132,7 @@ export default function JobCard({
                   type="button"
                   onClick={handleAccept}
                   disabled={!onAccept || loading !== null}
-                  title={!onAccept ? "Accept action will be enabled in Phase 2" : "Accept job"}
+                  title={!onAccept ? "Accept invitation is unavailable" : "Accept hiring invitation"}
                   className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-xs font-black uppercase tracking-widest text-on-primary disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {loading === "accept" ? (
@@ -140,13 +140,13 @@ export default function JobCard({
                   ) : (
                     <span className="material-symbols-outlined text-[18px]">check_circle</span>
                   )}
-                  Accept
+                  Accept Invitation
                 </button>
                 <button
                   type="button"
                   onClick={handleReject}
                   disabled={!onReject || loading !== null}
-                  title={!onReject ? "Reject action will be enabled in Phase 2" : "Reject job"}
+                  title={!onReject ? "Decline invitation is unavailable" : "Decline hiring invitation"}
                   className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-outline-variant bg-surface-container px-4 text-xs font-black uppercase tracking-widest text-on-surface-variant disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {loading === "reject" ? (
@@ -154,7 +154,7 @@ export default function JobCard({
                   ) : (
                     <span className="material-symbols-outlined text-[18px]">cancel</span>
                   )}
-                  Reject
+                  Decline
                 </button>
                 <Link
                   href="/worker/jobs"

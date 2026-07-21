@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import WorkerCard from "@/components/search/WorkerCard";
@@ -8,11 +8,17 @@ import SearchFilters from "@/components/search/SearchFilters";
 import { Worker, ViewMode, SearchFilters as FilterType } from "@/components/search/types";
 import { useLanguage } from "@/context/LanguageContext";
 import { useLocation } from "@/context/LocationContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Search, Map, List, AlertCircle, SearchX } from "lucide-react";
+import FadeContent from "@/components/ui/fade-content";
 
 // Dynamically import Map with no SSR
 const MapComponent = dynamic(() => import("@/components/search/MapComponent"), { 
     ssr: false,
-    loading: () => <div className="h-[calc(100vh-280px)] w-full bg-surface-container animate-pulse rounded-[2rem]" />
+    loading: () => <div className="h-[calc(100vh-280px)] w-full bg-muted animate-pulse rounded-2xl" />
 });
 
 export default function SearchPage() {
@@ -79,77 +85,84 @@ export default function SearchPage() {
   }, [filters, location]);
 
   return (
-    <div className="flex flex-col gap-8 pb-32 md:pb-8">
-      
+    <FadeContent blur duration={0.4} className="flex flex-col gap-6 pb-32 md:pb-8">
       {/* ── Page Header (Justified) ── */}
-      <section className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 w-fit mb-2">
-             <div className={`w-1.5 h-1.5 rounded-full ${location ? 'bg-primary animate-pulse' : 'bg-error'}`} />
-             <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
+      <section className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="flex items-center gap-1.5 bg-primary/10 text-primary border-none hover:bg-primary/15 py-0.5 px-2.5 rounded-full font-bold">
+              <span className={`w-1.5 h-1.5 rounded-full ${location ? 'bg-primary animate-pulse' : 'bg-destructive animate-pulse'}`} />
+              <span className="text-[10px] uppercase tracking-wider">
                 {locLoading ? "Locating..." : location ? `Nearby Kezira, DD` : "Location Required"}
-             </span>
+              </span>
+            </Badge>
           </div>
-          <h1 className="text-headline-lg text-on-background tracking-tight">
+          <h1 className="text-3xl font-extrabold tracking-tight">
             Discover Professionals
           </h1>
-          <p className="text-body-md text-on-surface-variant max-w-xl">
+          <p className="text-sm text-muted-foreground max-w-xl">
             Find and hire verified service experts in your local district.
           </p>
         </div>
 
         {/* Desktop View Toggle */}
-        <div className="hidden md:flex bg-surface-container rounded-2xl p-1 border border-surface-container-highest shadow-sm">
-           <button 
-             onClick={() => setViewMode("list")}
-             className={`flex items-center gap-2 px-6 py-2 rounded-xl text-label-md font-bold transition-all ${viewMode === "list" ? "bg-on-surface text-surface-container-lowest shadow-lg" : "text-on-surface-variant hover:text-on-surface"}`}
-           >
-             <span className="material-symbols-outlined text-[18px]">format_list_bulleted</span>
-             List
-           </button>
-           <button 
-             onClick={() => setViewMode("map")}
-             className={`flex items-center gap-2 px-6 py-2 rounded-xl text-label-md font-bold transition-all ${viewMode === "map" ? "bg-on-surface text-surface-container-lowest shadow-lg" : "text-on-surface-variant hover:text-on-surface"}`}
-           >
-             <span className="material-symbols-outlined text-[18px]">map</span>
-             Map
-           </button>
+        <div className="hidden md:flex bg-muted rounded-xl p-1 border border-border shadow-sm">
+          <Button 
+            onClick={() => setViewMode("list")}
+            variant={viewMode === "list" ? "secondary" : "ghost"}
+            size="sm"
+            className="flex items-center gap-1.5 rounded-lg text-xs font-bold"
+          >
+            <List size={14} />
+            List
+          </Button>
+          <Button 
+            onClick={() => setViewMode("map")}
+            variant={viewMode === "map" ? "secondary" : "ghost"}
+            size="sm"
+            className="flex items-center gap-1.5 rounded-lg text-xs font-bold"
+          >
+            <Map size={14} />
+            Map
+          </Button>
         </div>
       </section>
 
       {/* ── Search & Results Layout ── */}
-      <div className="flex flex-col lg:flex-row gap-8 items-start">
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
         
         {/* Sidebar Filters */}
-        <aside className="w-full lg:w-80 shrink-0 lg:sticky lg:top-28">
-           <SearchFilters 
-             filters={filters} 
-             setFilters={setFilters} 
-             viewMode={viewMode}
-             setViewMode={setViewMode}
-             resultsCount={workers.length}
-           />
+        <aside className="w-full lg:w-80 shrink-0 lg:sticky lg:top-20">
+          <SearchFilters 
+            filters={filters} 
+            setFilters={setFilters} 
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            resultsCount={workers.length}
+          />
         </aside>
 
         {/* Results Main Area */}
         <main className="flex-grow w-full min-w-0 flex flex-col gap-6">
           {/* Smart Search Bar */}
           <div className="relative group w-full max-w-2xl">
-            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary text-[22px]">search</span>
-            <input 
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+            <Input 
               type="text"
               placeholder="Search by name, skill, or service..."
               value={filters.query}
               onChange={(e) => setFilters({ ...filters, query: e.target.value })}
-              className="w-full bg-surface-container-low border border-surface-container-highest focus:ring-2 focus:ring-primary/20 text-on-surface rounded-2xl py-4 pl-12 pr-4 transition-all group-hover:bg-surface-container-high placeholder:text-on-surface-variant/40 outline-none"
+              className="w-full pl-10 h-11 bg-card border-border rounded-xl"
             />
           </div>
 
           {error && (
-            <div className="p-4 bg-error-container/20 border border-error/20 rounded-2xl text-error text-sm flex items-center gap-3">
-              <span className="material-symbols-outlined">warning</span>
-              {error}
-            </div>
+            <Card className="border-destructive/30 bg-destructive/10 text-destructive rounded-xl">
+              <CardContent className="p-4 flex items-center gap-3">
+                <AlertCircle size={16} />
+                <span className="text-sm font-medium">{error}</span>
+              </CardContent>
+            </Card>
           )}
 
           <AnimatePresence mode="wait">
@@ -167,18 +180,25 @@ export default function SearchPage() {
                   ))
                 ) : (
                   !loading && (
-                    <div className="col-span-full py-20 bg-surface-container-lowest rounded-3xl border border-dashed border-surface-container-highest flex flex-col items-center justify-center text-center px-6">
-                      <div className="w-16 h-16 bg-surface-container rounded-full flex items-center justify-center mb-4">
-                        <span className="material-symbols-outlined text-on-surface-variant/40 text-[32px]">search_off</span>
-                      </div>
-                      <h3 className="text-headline-md text-on-surface">No results found</h3>
-                      <p className="text-body-md text-on-surface-variant max-w-xs mt-2">Try adjusting your filters or searching for something else.</p>
-                    </div>
+                    <Card className="border border-dashed border-border p-12 text-center bg-card shadow-sm">
+                      <CardContent className="space-y-4">
+                        <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center mx-auto text-muted-foreground">
+                          <SearchX size={22} />
+                        </div>
+                        <div className="max-w-xs mx-auto space-y-1">
+                          <p className="font-semibold text-sm">No results found</p>
+                          <p className="text-xs text-muted-foreground">
+                            Try adjusting your filters or searching for something else.
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
                   )
                 )}
+                
                 {loading && (
                   Array(4).fill(0).map((_, i) => (
-                    <div key={i} className="h-40 bg-surface-container-low animate-pulse rounded-2xl" />
+                    <div key={i} className="h-32 bg-muted animate-pulse rounded-2xl" />
                   ))
                 )}
               </motion.div>
@@ -188,7 +208,7 @@ export default function SearchPage() {
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
-                className="h-[600px] w-full rounded-3xl overflow-hidden border border-surface-container-highest shadow-inner"
+                className="h-[600px] w-full rounded-2xl overflow-hidden border border-border shadow-inner"
               >
                 <MapComponent workers={workers} />
               </motion.div>
@@ -196,6 +216,6 @@ export default function SearchPage() {
           </AnimatePresence>
         </main>
       </div>
-    </div>
+    </FadeContent>
   );
 }

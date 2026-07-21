@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createJob } from "@/lib/actions/jobs";
+import { getContractSetupStatus } from "@/lib/actions/contract-setup";
 import { useLanguage } from "@/context/LanguageContext";
 
 interface WorkerInfo {
@@ -22,6 +23,7 @@ export default function NewContractPage() {
 
   const [worker, setWorker] = useState<WorkerInfo | null>(null);
   const [loadingWorker, setLoadingWorker] = useState(!!workerId);
+  const [checkingSetup, setCheckingSetup] = useState(true);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -31,6 +33,19 @@ export default function NewContractPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // Load worker info when workerId present
+  useEffect(() => {
+    getContractSetupStatus()
+      .then((status) => {
+        if (!status.completed) {
+          router.replace(status.setupHref);
+          return;
+        }
+        setCheckingSetup(false);
+      })
+      .catch(() => setCheckingSetup(false));
+  }, [router]);
 
   // Load worker info when workerId present
   useEffect(() => {
@@ -44,6 +59,14 @@ export default function NewContractPage() {
       .catch(() => setWorker(null))
       .finally(() => setLoadingWorker(false));
   }, [workerId]);
+
+  if (checkingSetup) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="h-8 w-8 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,13 +88,13 @@ export default function NewContractPage() {
       if (result.success) {
         setSuccess(true);
         setTimeout(() => {
-          if (result.contractId) {
-            router.push(`/client/contracts`);
-          } else {
-            router.push("/client/dashboard");
-          }
+          router.push("/client/dashboard");
         }, 1500);
       } else {
+        if (result.code === "CONTRACT_SETUP_REQUIRED") {
+          router.push("/client/contract-setup");
+          return;
+        }
         setError(result.error || t("contract.new.err_unexpected"));
       }
     } catch {

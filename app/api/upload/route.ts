@@ -43,18 +43,6 @@ async function uploadSigned(file: File, cloudName: string, apiKey: string, apiSe
   });
 }
 
-async function uploadUnsigned(file: File, cloudName: string) {
-  const uploadData = new FormData();
-  uploadData.append("file", file);
-  uploadData.append("upload_preset", "direskill_unsigned");
-  uploadData.append("folder", "direskill/uploads");
-
-  return fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-    method: "POST",
-    body: uploadData,
-  });
-}
-
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
@@ -73,13 +61,11 @@ export async function POST(req: NextRequest) {
     }
 
     const { cloudName, apiKey, apiSecret } = getCloudinaryConfig();
-    if (!cloudName) {
-      return NextResponse.json({ error: "Cloudinary cloud name is not configured" }, { status: 500 });
+    if (!cloudName || !apiKey || !apiSecret) {
+      return NextResponse.json({ error: "Secure upload storage is not configured" }, { status: 500 });
     }
 
-    const res = apiKey && apiSecret
-      ? await uploadSigned(file, cloudName, apiKey, apiSecret)
-      : await uploadUnsigned(file, cloudName);
+    const res = await uploadSigned(file, cloudName, apiKey, apiSecret);
 
     if (!res.ok) {
       const err = await res.json().catch(() => null);

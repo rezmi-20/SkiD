@@ -11,7 +11,6 @@ export async function GET(
     const rows = await sql`
       SELECT
         u.id,
-        u.email,
         wp.full_name,
         wp.bio,
         wp.skills,
@@ -25,18 +24,29 @@ export async function GET(
       FROM users u
       JOIN worker_profiles wp ON u.id = wp.user_id
       LEFT JOIN ratings r ON u.id = r.rated_id
-      WHERE u.id = ${id} AND u.role = 'worker'
-      GROUP BY u.id, u.email, wp.full_name, wp.bio, wp.skills, wp.latitude, wp.longitude, wp.hourly_rate, wp.avatar_url, wp.is_verified`;
+      WHERE u.id = ${id}
+        AND u.role = 'worker'
+        AND u.is_suspended = false
+        AND wp.is_verified = true
+      GROUP BY u.id, wp.full_name, wp.bio, wp.skills, wp.latitude, wp.longitude, wp.hourly_rate, wp.avatar_url, wp.is_verified`;
 
     if (rows.length === 0) {
       return NextResponse.json({ error: "Worker not found" }, { status: 404 });
     }
 
     const reviews = await sql`
-       SELECT r.score, r.comment, r.created_at, u.email as rater_email
+       SELECT
+         r.score,
+         r.comment,
+         r.created_at,
+         COALESCE(cp.full_name, 'Verified client') as reviewer_name,
+         cp.avatar_url as reviewer_avatar
        FROM ratings r
-       JOIN users u ON r.rater_id = u.id
+       JOIN jobs j ON r.job_id = j.id
+       LEFT JOIN client_profiles cp ON r.rater_id = cp.user_id
        WHERE r.rated_id = ${id}
+         AND r.is_flagged = false
+         AND j.status IN ('paid', 'closed')
        ORDER BY r.created_at DESC LIMIT 20`;
 
     return NextResponse.json({ worker: rows[0], reviews });

@@ -1,0 +1,12 @@
+ALTER TABLE contracts
+ADD COLUMN IF NOT EXISTS status VARCHAR(50) NOT NULL DEFAULT 'DRAFT';
+
+UPDATE contracts
+SET status = CASE
+  WHEN signed_at IS NOT NULL THEN 'ACTIVE'
+  WHEN client_signed_at IS NOT NULL AND worker_signed_at IS NOT NULL THEN 'FULLY_SIGNED'
+  WHEN client_signed_at IS NOT NULL THEN 'CLIENT_SIGNED'
+  WHEN worker_signed_at IS NOT NULL THEN 'WORKER_SIGNED'
+  ELSE 'DRAFT'
+END
+WHERE status IS NULL OR status = 'DRAFT';

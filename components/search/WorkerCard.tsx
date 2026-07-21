@@ -4,6 +4,12 @@ import { motion } from "framer-motion";
 import { Worker } from "./types";
 import { useLanguage } from "@/context/LanguageContext";
 import Link from "next/link";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { Star, ShieldCheck, ArrowRight, MapPin, BadgeDollarSign, Wrench } from "lucide-react";
 
 interface WorkerCardProps {
   worker: Worker;
@@ -11,78 +17,98 @@ interface WorkerCardProps {
 
 export default function WorkerCard({ worker }: WorkerCardProps) {
   const { t } = useLanguage();
+  const initials = worker.name ? worker.name.slice(0, 2).toUpperCase() : "WP";
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="group relative bg-surface-container-lowest border border-surface-container-highest rounded-2xl md:rounded-[2rem] p-4 md:p-6 transition-all duration-300 shadow-sm hover:shadow-md hover:border-primary/20 overflow-hidden"
+      transition={{ duration: 0.3 }}
+      className="w-full"
     >
-      <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8 justify-between">
-        
-        {/* Main Info Section */}
-        <div className="flex items-start md:items-center gap-4 md:gap-6 flex-grow min-w-0">
-          
-          {/* Avatar with Status */}
-          <div className="relative shrink-0">
-             <div className="w-16 h-16 md:w-24 md:h-24 rounded-2xl md:rounded-[2rem] overflow-hidden border-2 border-surface bg-surface-container-high shadow-sm flex items-center justify-center transition-transform group-hover:scale-105 duration-500">
-                {worker.photo ? (
-                  <img 
-                    src={worker.photo} 
-                    className="w-full h-full object-cover" 
-                    alt={worker.name} 
-                  />
-                ) : (
-                  <span className="material-symbols-outlined text-on-surface-variant text-[32px] md:text-[48px]">person</span>
+      <Card className="border border-border bg-card shadow-sm hover:shadow-md hover:border-primary/30 transition-all rounded-xl overflow-hidden group">
+        <CardContent className="p-5 flex flex-col justify-between">
+          <div className="flex flex-col gap-4">
+            
+            {/* Header info with Avatar */}
+            <div className="flex items-center gap-3">
+              <div className="relative shrink-0">
+                <Avatar className="w-12 h-12 border border-border shadow-sm group-hover:scale-105 duration-300 transition-transform">
+                  {worker.photo && <AvatarImage src={worker.photo} alt={worker.name} className="object-cover" />}
+                  <AvatarFallback className="bg-muted text-muted-foreground font-bold text-sm">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                {worker.isVerified && (
+                  <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full border border-card p-0.5 shadow flex items-center justify-center" title="Verified Professional">
+                    <ShieldCheck size={12} className="stroke-[2.5]" />
+                  </div>
                 )}
-             </div>
-             {worker.isVerified && (
-               <div className="absolute -bottom-1 -right-1 w-6 h-6 md:w-8 md:h-8 bg-primary text-on-primary rounded-full border-2 md:border-4 border-surface-container-lowest flex items-center justify-center shadow-sm">
-                  <span className="material-symbols-outlined text-[14px] md:text-[18px] filled">verified</span>
-               </div>
-             )}
-          </div>
-          
-          {/* Metadata */}
-          <div className="flex-grow min-w-0 space-y-1.5 md:space-y-3">
-             <div className="flex flex-col gap-0.5">
-                <div className="flex items-center gap-2">
-                   <h3 className="text-headline-md md:text-headline-lg text-on-surface truncate group-hover:text-primary transition-colors">
-                     {worker.name}
-                   </h3>
-                </div>
-                <div className="flex items-center gap-2">
-                   <div className="flex items-center gap-1 bg-primary/10 px-2 py-0.5 rounded-full">
-                      <span className="material-symbols-outlined text-[14px] text-primary filled">star</span>
-                      <span className="text-label-sm font-bold text-primary">{worker.rating}</span>
-                   </div>
-                   <span className="text-label-sm text-on-surface-variant uppercase tracking-widest opacity-60">
-                      {worker.distance === "N/A" ? "Location N/A" : `${worker.distance} km away`}
-                   </span>
-                </div>
-             </div>
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">
+                  {worker.name}
+                </h3>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Verified Contractor
+                </p>
+              </div>
+              
+              <Badge variant="outline" className="flex items-center gap-0.5 bg-primary/10 text-primary border-primary/20 hover:bg-primary/15 py-0.5 px-2 rounded-full font-bold">
+                <Star size={11} className="fill-primary stroke-none" />
+                <span className="text-[10px]">{worker.rating.toFixed(1)}</span>
+              </Badge>
+            </div>
 
-             <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
-                {worker.skills?.slice(0, 3).map(skill => (
-                  <span key={skill} className="px-3 py-1 bg-surface-container-low border border-surface-container-highest rounded-lg text-label-sm text-on-surface-variant uppercase tracking-widest group-hover:bg-primary/5 group-hover:text-primary group-hover:border-primary/10 transition-all">
-                     {skill}
-                  </span>
-                ))}
-             </div>
-          </div>
-        </div>
+            <Separator className="bg-border/60" />
 
-        {/* Action Button */}
-        <div className="shrink-0 md:pl-4 border-t md:border-t-0 md:border-l border-surface-container-highest pt-4 md:pt-0">
-           <Link 
-             href={`/client/worker/${worker.id}`} 
-             className="flex items-center justify-center w-full md:w-48 h-12 md:h-14 bg-on-surface text-surface-container-lowest text-label-md font-bold uppercase tracking-widest rounded-2xl transition-all hover:bg-primary shadow-sm hover:shadow-lg active:scale-[0.98] group/btn"
-           >
-              <span>View Profile</span>
-              <span className="material-symbols-outlined ml-2 text-[20px] group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
-           </Link>
-        </div>
-      </div>
+            {/* Key-Value Details list vibe */}
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between items-center py-0.5">
+                <span className="text-muted-foreground font-medium flex items-center gap-1.5"><Wrench size={13} /> Specialization:</span>
+                <span className="font-semibold text-foreground text-right">{worker.skill}</span>
+              </div>
+              <div className="flex justify-between items-center py-0.5">
+                <span className="text-muted-foreground font-medium flex items-center gap-1.5"><MapPin size={13} /> Distance:</span>
+                <span className="font-semibold text-foreground text-right">
+                  {worker.distance === "N/A" ? "Location unavailable" : `${worker.distance} km away`}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-0.5">
+                <span className="text-muted-foreground font-medium flex items-center gap-1.5"><BadgeDollarSign size={13} /> Hourly Rate:</span>
+                <span className="font-bold text-foreground text-right">Standard / Dynamic</span>
+              </div>
+            </div>
+
+            <Separator className="bg-border/60" />
+
+            {/* Skills Badges */}
+            <div className="flex flex-wrap items-center gap-1">
+              {worker.skills?.slice(0, 4).map((skill) => (
+                <Badge 
+                  key={skill} 
+                  variant="outline" 
+                  className="px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground border-border bg-muted/40 rounded-md"
+                >
+                  {skill}
+                </Badge>
+              ))}
+            </div>
+
+          </div>
+
+          {/* Action Button Row */}
+          <div className="pt-4 flex justify-end">
+            <Button asChild size="sm" className="w-full sm:w-auto rounded-xl font-bold uppercase tracking-wider text-[10px] h-9 shadow-sm" variant="outline">
+              <Link href={`/client/worker/${worker.id}`} className="flex items-center justify-center gap-1.5">
+                <span>View Profile</span>
+                <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </Button>
+          </div>
+
+        </CardContent>
+      </Card>
     </motion.div>
   );
 }

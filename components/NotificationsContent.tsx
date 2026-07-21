@@ -17,6 +17,13 @@ const TYPE_CONFIG: Record<string, { icon: string; color: string; bg: string }> =
   fayda_rejected:     { icon: "shield_with_heart", color: "text-error",   bg: "bg-error/10" },
   new_review:         { icon: "star",            color: "text-yellow-400", bg: "bg-yellow-400/10" },
   payment_confirmed:  { icon: "payments",        color: "text-green-400",  bg: "bg-green-400/10" },
+  payment_failed:     { icon: "error",           color: "text-error",      bg: "bg-error/10" },
+  contract_terms_submitted: { icon: "contract",  color: "text-primary",    bg: "bg-primary/10" },
+  contract_terms_accepted:  { icon: "check_circle", color: "text-green-400", bg: "bg-green-400/10" },
+  contract_terms_rejected:  { icon: "cancel",    color: "text-error",      bg: "bg-error/10" },
+  completion_requested: { icon: "task_alt",      color: "text-primary",    bg: "bg-primary/10" },
+  completion_accepted:  { icon: "verified",      color: "text-green-400",  bg: "bg-green-400/10" },
+  completion_rejected:  { icon: "undo",          color: "text-error",      bg: "bg-error/10" },
   post_liked:         { icon: "thumb_up",        color: "text-primary",    bg: "bg-primary/10" },
   post_commented:     { icon: "forum",           color: "text-blue-400",   bg: "bg-blue-400/10" },
 };

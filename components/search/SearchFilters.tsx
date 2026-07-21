@@ -3,6 +3,20 @@
 import { motion } from "framer-motion";
 import { ViewMode, SearchFilters as FilterType } from "./types";
 import { useLanguage } from "@/context/LanguageContext";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { 
+  SlidersHorizontal, 
+  Map, 
+  List, 
+  Star, 
+  Compass, 
+  RotateCcw,
+  Sparkles,
+  Layers
+} from "lucide-react";
 
 interface SearchFiltersProps {
   filters: FilterType;
@@ -24,116 +38,128 @@ export default function SearchFilters({
   const { t } = useLanguage();
 
   return (
-    <div className="bg-surface-container-lowest border border-surface-container-highest rounded-[2rem] p-6 md:p-8 space-y-8 shadow-sm">
-      <div className="flex items-center justify-between">
-        <h3 className="text-headline-md text-on-surface">Refine Search</h3>
-        <span className="text-label-sm text-on-surface-variant uppercase tracking-widest opacity-60">
-          {resultsCount} Found
-        </span>
-      </div>
-
-      {/* View Toggle (Mobile Only - Desktop has it in header) */}
-      <div className="md:hidden flex bg-surface-container rounded-2xl p-1 border border-surface-container-highest">
-         <button 
-           onClick={() => setViewMode("list")}
-           className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-label-md font-bold transition-all ${viewMode === "list" ? "bg-on-surface text-surface-container-lowest" : "text-on-surface-variant"}`}
-         >
-           <span className="material-symbols-outlined text-[18px]">format_list_bulleted</span>
-           List
-         </button>
-         <button 
-           onClick={() => setViewMode("map")}
-           className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-label-md font-bold transition-all ${viewMode === "map" ? "bg-on-surface text-surface-container-lowest" : "text-on-surface-variant"}`}
-         >
-           <span className="material-symbols-outlined text-[18px]">map</span>
-           Map
-         </button>
-      </div>
-
-      {/* Category Section */}
-      <div className="space-y-4">
+    <Card className="border border-border bg-card shadow-sm rounded-xl overflow-hidden">
+      <CardContent className="p-5 space-y-5">
+        
+        {/* Header Title Block */}
         <div className="flex items-center justify-between">
-           <span className="text-label-sm text-on-surface-variant uppercase tracking-widest font-bold">Category</span>
-           <span className="material-symbols-outlined text-outline-variant text-[20px]">category</span>
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal size={14} className="text-primary" />
+            <h3 className="font-bold text-xs uppercase tracking-widest text-muted-foreground">Refine Search</h3>
+          </div>
+          <Badge variant="outline" className="rounded-full text-[9px] font-bold border-border bg-muted/50 px-2 py-0.5">
+            {resultsCount} Found
+          </Badge>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setFilters({ ...filters, category: cat === "All" ? "" : cat })}
-              className={`px-4 py-2 rounded-xl text-label-sm font-bold uppercase tracking-widest transition-all shadow-sm border
-                ${(filters.category === cat || (cat === "All" && !filters.category))
-                  ? "bg-on-surface text-surface-container-lowest border-on-surface"
-                  : "bg-surface-container-low text-on-surface-variant border-surface-container-highest hover:bg-surface-container-high hover:text-on-surface"
-                }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      </div>
 
-      {/* Rating Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-           <span className="text-label-sm text-on-surface-variant uppercase tracking-widest font-bold">Minimum Rating</span>
-           <div className="flex items-center gap-1 text-primary">
-              <span className="material-symbols-outlined text-[18px] filled">star</span>
-              <span className="text-label-md font-bold">{filters.minRating || 3.0}</span>
-           </div>
+        <Separator className="bg-border" />
+
+        {/* View Toggle (Mobile Only - Desktop has it in header) */}
+        <div className="md:hidden flex bg-muted rounded-xl p-1 border border-border">
+          <Button 
+            onClick={() => setViewMode("list")}
+            variant={viewMode === "list" ? "secondary" : "ghost"}
+            size="sm"
+            className="flex-1 flex items-center justify-center gap-1.5 rounded-lg text-xs font-bold"
+          >
+            <List size={13} />
+            List
+          </Button>
+          <Button 
+            onClick={() => setViewMode("map")}
+            variant={viewMode === "map" ? "secondary" : "ghost"}
+            size="sm"
+            className="flex-1 flex items-center justify-center gap-1.5 rounded-lg text-xs font-bold"
+          >
+            <Map size={13} />
+            Map
+          </Button>
         </div>
-        <div className="relative pt-2">
-           <input 
-             type="range" min="3" max="5" step="0.1" 
-             value={filters.minRating || 3.0}
-             onChange={(e) => setFilters({ ...filters, minRating: parseFloat(e.target.value) })}
-             className="w-full h-2 bg-surface-container rounded-full appearance-none cursor-pointer accent-primary border border-surface-container-highest"
-           />
-           <div className="flex justify-between mt-2 text-[10px] font-bold text-outline uppercase tracking-widest">
+
+        {/* Category Details Block style */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">
+            <span className="flex items-center gap-1.5"><Layers size={12} /> Service Category</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {CATEGORIES.map((cat) => {
+              const isSelected = filters.category === cat || (cat === "All" && !filters.category);
+              return (
+                <Button
+                  key={cat}
+                  onClick={() => setFilters({ ...filters, category: cat === "All" ? "" : cat })}
+                  variant={isSelected ? "default" : "outline"}
+                  size="xs"
+                  className="rounded-lg text-[9px] uppercase font-bold tracking-wider px-2.5 h-7"
+                >
+                  {cat}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+
+        <Separator className="bg-border" />
+
+        {/* Details Slider: Rating */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">
+            <span className="flex items-center gap-1.5"><Star size={12} /> Min Rating</span>
+            <Badge variant="outline" className="flex items-center gap-0.5 border-primary/20 bg-primary/10 text-primary py-0 px-2 rounded font-bold text-[9px]">
+              <span>{(filters.minRating || 3.0).toFixed(1)}</span>
+            </Badge>
+          </div>
+          <div className="relative pt-1 px-1">
+            <input 
+              type="range" min="3" max="5" step="0.1" 
+              value={filters.minRating || 3.0}
+              onChange={(e) => setFilters({ ...filters, minRating: parseFloat(e.target.value) })}
+              className="w-full h-1 bg-muted rounded-full appearance-none cursor-pointer accent-primary border border-border"
+            />
+            <div className="flex justify-between mt-1 text-[8px] font-bold text-muted-foreground tracking-wider uppercase">
               <span>3.0</span>
               <span>5.0</span>
-           </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Distance Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-           <span className="text-label-sm text-on-surface-variant uppercase tracking-widest font-bold">Max Distance</span>
-           <div className="flex items-center gap-1 text-on-surface">
-              <span className="material-symbols-outlined text-[18px]">distance</span>
-              <span className="text-label-md font-bold">{filters.maxDistance}km</span>
-           </div>
-        </div>
-        <div className="relative pt-2">
-           <input 
-             type="range" min="1" max="50" step="1"
-             value={filters.maxDistance}
-             onChange={(e) => setFilters({ ...filters, maxDistance: parseInt(e.target.value) })}
-             className="w-full h-2 bg-surface-container rounded-full appearance-none cursor-pointer accent-primary border border-surface-container-highest"
-           />
-           <div className="flex justify-between mt-2 text-[10px] font-bold text-outline uppercase tracking-widest">
+        <Separator className="bg-border" />
+
+        {/* Details Slider: Distance */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">
+            <span className="flex items-center gap-1.5"><Compass size={12} /> Max Distance</span>
+            <Badge variant="outline" className="flex items-center gap-0.5 border-border bg-muted py-0 px-2 rounded font-bold text-[9px]">
+              <span>{filters.maxDistance}km</span>
+            </Badge>
+          </div>
+          <div className="relative pt-1 px-1">
+            <input 
+              type="range" min="1" max="50" step="1"
+              value={filters.maxDistance}
+              onChange={(e) => setFilters({ ...filters, maxDistance: parseInt(e.target.value) })}
+              className="w-full h-1 bg-muted rounded-full appearance-none cursor-pointer accent-primary border border-border"
+            />
+            <div className="flex justify-between mt-1 text-[8px] font-bold text-muted-foreground tracking-wider uppercase">
               <span>1km</span>
               <span>50km</span>
-           </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Availability Toggle */}
-      <div className="flex items-center justify-between pt-4 border-t border-surface-container">
-        <span className="text-label-sm text-on-surface-variant uppercase tracking-widest font-bold">Online Only</span>
-        <button className="w-12 h-6 bg-surface-container-high rounded-full relative p-1 border border-surface-container-highest transition-all">
-           <div className="w-4 h-4 bg-outline-variant rounded-full shadow-sm" />
-        </button>
-      </div>
+        <Separator className="bg-border" />
 
-      {/* Clear Filters */}
-      <button 
-        onClick={() => setFilters({ query: "", category: "", minRating: 0, maxDistance: 100, sortBy: "Nearest" })}
-        className="w-full py-3 rounded-2xl bg-surface-container text-on-surface-variant text-label-md font-bold uppercase tracking-widest hover:bg-surface-container-high hover:text-on-surface transition-all border border-surface-container-highest"
-      >
-        Reset Filters
-      </button>
-    </div>
+        {/* Reset Filters */}
+        <Button 
+          onClick={() => setFilters({ query: "", category: "", minRating: 0, maxDistance: 100, sortBy: "Nearest" })}
+          variant="outline"
+          size="sm"
+          className="w-full rounded-xl text-[10px] font-bold uppercase tracking-wider h-10 border-border"
+        >
+          <RotateCcw size={12} className="mr-1.5" />
+          Reset Filters
+        </Button>
+      </CardContent>
+    </Card>
   );
 }

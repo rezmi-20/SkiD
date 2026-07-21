@@ -2,6 +2,7 @@
 import ContractDetails from "@/components/ContractDetails";
 import { auth } from "@/lib/auth";
 import { notFound, redirect } from "next/navigation";
+import { getContractSetupStatus } from "@/lib/actions/contract-setup";
 
 export default async function RoleContractDetailsPage({
   params,
@@ -14,6 +15,11 @@ export default async function RoleContractDetailsPage({
   }
 
   const { id } = await params;
+  const setup = await getContractSetupStatus(session.user.id);
+  if (!setup.completed) {
+    redirect(setup.setupHref);
+  }
+
   const contract = await getContractForSigning(id);
 
   if (!contract) {

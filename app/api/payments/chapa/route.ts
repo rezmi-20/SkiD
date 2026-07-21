@@ -56,6 +56,10 @@ function paymentWebhookUrl() {
   return null;
 }
 
+function paymentReturnUrl(jobId: string, txRef: string) {
+  return `${appUrl()}/payment-success?job_id=${encodeURIComponent(jobId)}&tx_ref=${encodeURIComponent(txRef)}`;
+}
+
 function splitName(fullName: string | null | undefined) {
   const parts = String(fullName || "DireSkill Client").trim().split(/\s+/);
   return {
@@ -83,6 +87,7 @@ async function initializeSplitPayment(input: {
   subaccountId: string;
   splitType: "percentage" | "flat";
   splitValue: number;
+  returnUrl: string | null;
 }) {
   const { firstName, lastName } = splitName(input.fullName);
   const phoneNumber = normalizeEthiopianPhone(input.phone);
@@ -110,7 +115,7 @@ async function initializeSplitPayment(input: {
     lastName,
     phoneNumber,
     callbackUrl,
-    // returnUrl intentionally omitted: prevents Chapa receipt pages from auto-redirecting.
+    returnUrl: input.returnUrl,
     title: "DireSkill",
     description: input.title,
     subaccountId: input.subaccountId,
@@ -155,9 +160,12 @@ export async function POST(req: NextRequest) {
         j.id,
         j.title,
         j.status,
-        j.budget,
         j.client_id,
         j.worker_id,
+        COALESCE(c.payment_amount, j.budget) as payment_amount,
+        c.id as contract_id,
+        c.status as contract_status,
+        c.signed_at,
         u.email as client_email,
         u.phone as client_phone,
         cp.full_name as client_name,
@@ -169,6 +177,7 @@ export async function POST(req: NextRequest) {
       JOIN users u ON j.client_id = u.id
       LEFT JOIN client_profiles cp ON j.client_id = cp.user_id
       LEFT JOIN worker_profiles wp ON j.worker_id = wp.user_id
+      LEFT JOIN contracts c ON c.job_id = j.id
       WHERE j.id = ${jobId} AND j.client_id = ${session.user.id}
       LIMIT 1
     `;
@@ -178,8 +187,12 @@ export async function POST(req: NextRequest) {
     }
 
     const job = jobs[0];
-    if (job.status !== "completed") {
-      return NextResponse.json({ error: "Payment is only available after the job is completed." }, { status: 409 });
+    if (!["completed", "payment_pending"].includes(job.status)) {
+      return NextResponse.json({ error: "Payment is only available after client-confirmed completion." }, { status: 409 });
+    }
+
+    if (!job.contract_id || !job.signed_at || job.contract_status !== "ACTIVE") {
+      return NextResponse.json({ error: "Payment requires a fully signed active contract." }, { status: 409 });
     }
 
     if (!job.worker_id) {
@@ -193,25 +206,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!job.budget || Number(job.budget) <= 0) {
+    if (!job.payment_amount || Number(job.payment_amount) <= 0) {
       return NextResponse.json({ error: "This job does not have a payable budget." }, { status: 409 });
     }
 
     const releasedPayments = await sql`
       SELECT id FROM payments
-      WHERE job_id = ${jobId} AND status = 'released'
+      WHERE job_id = ${jobId} AND status IN ('released', 'held')
       LIMIT 1
     `;
 
     if (releasedPayments.length > 0) {
-      return NextResponse.json({ error: "This job has already been paid." }, { status: 409 });
+      return NextResponse.json({ error: "This job already has an active or successful payment." }, { status: 409 });
     }
 
     const timestamp = Date.now();
     const random = Math.floor(Math.random() * 100000);
     const txRef = `DIRESKILL-${timestamp}-${random}`;
     const paymentMethod = method || "telebirr";
-    const breakdown = getPaymentBreakdown(Number(job.budget));
+    const breakdown = getPaymentBreakdown(Number(job.payment_amount));
     const splitType = job.chapa_split_type === "flat" ? "flat" : "percentage";
     const splitValue = Number(job.chapa_split_value ?? breakdown.commissionRate);
     const { checkoutUrl, chapaResponse } = await initializeSplitPayment({
@@ -225,6 +238,7 @@ export async function POST(req: NextRequest) {
       subaccountId: job.chapa_subaccount_id,
       splitType,
       splitValue,
+      returnUrl: paymentReturnUrl(jobId, txRef),
     });
 
     const heldPayments = await sql`
@@ -235,48 +249,64 @@ export async function POST(req: NextRequest) {
     `;
 
     if (heldPayments.length > 0) {
-      await sql`
-        UPDATE payments
-        SET amount = ${breakdown.total},
-            commission_amount = ${breakdown.commission},
-            net_amount = ${breakdown.netAmount},
-            chapa_ref = ${txRef},
-            chapa_checkout_url = ${checkoutUrl},
-            chapa_status = ${chapaResponse.status},
-            chapa_response = ${JSON.stringify(chapaResponse)},
-            worker_subaccount_id = ${job.chapa_subaccount_id},
-            updated_at = now()
-        WHERE id = ${heldPayments[0].id}
-      `;
+      await sql.transaction([
+        sql`
+          UPDATE payments
+          SET amount = ${breakdown.total},
+              commission_amount = ${breakdown.commission},
+              net_amount = ${breakdown.netAmount},
+              chapa_ref = ${txRef},
+              chapa_checkout_url = ${checkoutUrl},
+              chapa_status = ${chapaResponse.status},
+              chapa_response = ${JSON.stringify(chapaResponse)},
+              worker_subaccount_id = ${job.chapa_subaccount_id},
+              updated_at = now()
+          WHERE id = ${heldPayments[0].id}
+        `,
+        sql`
+          UPDATE jobs
+          SET status = 'payment_pending', updated_at = NOW()
+          WHERE id = ${jobId}
+            AND status = 'completed'
+        `,
+      ]);
     } else {
-      await sql`
-        INSERT INTO payments (
-          job_id,
-          amount,
-          commission_amount,
-          net_amount,
-          status,
-          chapa_ref,
-          chapa_checkout_url,
-          chapa_status,
-          chapa_response,
-          worker_subaccount_id,
-          updated_at
-        )
-        VALUES (
-          ${jobId},
-          ${breakdown.total},
-          ${breakdown.commission},
-          ${breakdown.netAmount},
-          'held',
-          ${txRef},
-          ${checkoutUrl},
-          ${chapaResponse.status},
-          ${JSON.stringify(chapaResponse)},
-          ${job.chapa_subaccount_id},
-          now()
-        )
-      `;
+      await sql.transaction([
+        sql`
+          INSERT INTO payments (
+            job_id,
+            amount,
+            commission_amount,
+            net_amount,
+            status,
+            chapa_ref,
+            chapa_checkout_url,
+            chapa_status,
+            chapa_response,
+            worker_subaccount_id,
+            updated_at
+          )
+          VALUES (
+            ${jobId},
+            ${breakdown.total},
+            ${breakdown.commission},
+            ${breakdown.netAmount},
+            'held',
+            ${txRef},
+            ${checkoutUrl},
+            ${chapaResponse.status},
+            ${JSON.stringify(chapaResponse)},
+            ${job.chapa_subaccount_id},
+            now()
+          )
+        `,
+        sql`
+          UPDATE jobs
+          SET status = 'payment_pending', updated_at = NOW()
+          WHERE id = ${jobId}
+            AND status = 'completed'
+        `,
+      ]);
     }
 
     await logAuditAction(session.user.id, "payment_initiated", {

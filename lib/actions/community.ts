@@ -41,15 +41,7 @@ export async function createCommunityPost(data: { title: string; content: string
 
   const userId = session.user.id;
 
-  // Check if user is verified (Requirement: Only verified users can post)
-  const workerVerified = await sql`SELECT is_verified FROM worker_profiles WHERE user_id = ${userId}`;
-  const clientVerified = await sql`SELECT is_verified FROM client_profiles WHERE user_id = ${userId}`;
-  
-  const isVerified = (workerVerified[0]?.is_verified) || (clientVerified[0]?.is_verified);
-
-  if (!isVerified) {
-    return { success: false, error: "Only Fayda verified users can share tips in the community feed." };
-  }
+  // Verification check removed so any registered user can post in the community feed.
 
   try {
     await sql`
@@ -121,4 +113,23 @@ export async function removeCommunityPost(postId: string, isRemoved: boolean) {
     return { success: false, error: "Database action failed" };
   }
 }
+
+export async function votePostUseful(postId: string, type: 'useful' | 'not_useful') {
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, error: "Unauthorized" };
+
+  try {
+    if (type === 'useful') {
+      await sql`UPDATE community_posts SET useful_count = useful_count + 1 WHERE id = ${postId}`;
+    } else {
+      await sql`UPDATE community_posts SET not_useful_count = not_useful_count + 1 WHERE id = ${postId}`;
+    }
+    revalidatePath("/community/feed");
+    return { success: true };
+  } catch (error) {
+    console.error("[VOTE_POST_ERROR]", error);
+    return { success: false };
+  }
+}
+
 

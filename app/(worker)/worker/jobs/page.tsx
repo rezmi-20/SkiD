@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { getWorkerJobs, acceptJob, rejectJob } from "@/lib/actions/jobs";
 import JobCard from "@/components/worker/JobCard";
 import { useLanguage } from "@/context/LanguageContext";
@@ -19,6 +20,7 @@ interface Job {
 
 export default function WorkerJobsPage() {
   const { t } = useLanguage();
+  const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,6 +45,8 @@ export default function WorkerJobsPage() {
       setJobs((prev) =>
         prev.map((j) => (j.id === jobId ? { ...j, status: "accepted" } : j))
       );
+    } else if (result.code === "CONTRACT_SETUP_REQUIRED") {
+      router.push("/worker/contract-setup");
     }
   };
 

@@ -31,6 +31,7 @@ export default function SettingsContent({ initialData, role }: Props) {
     fullName: initialData.full_name || "",
     email: initialData.email || "",
     phone: initialData.phone || "",
+    faydaFanNumber: "",
     bio: initialData.bio || "",
     skills: initialData.skills || [],
     gender: initialData.gender || "",
@@ -295,6 +296,21 @@ export default function SettingsContent({ initialData, role }: Props) {
                          value={formData.phone}
                          onChange={e => setFormData({...formData, phone: e.target.value})}
                          className="w-full h-14 bg-surface-container-lowest border border-surface-container-highest rounded-2xl px-6 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-bold text-sm"
+                       />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">Fayda FAN Number</label>
+                       <input
+                         type="text"
+                         value={initialData.is_verified ? initialData.masked_fayda_fan_number || "" : formData.faydaFanNumber}
+                         onChange={e => setFormData({...formData, faydaFanNumber: e.target.value})}
+                         disabled={initialData.is_verified}
+                         placeholder={initialData.is_verified ? initialData.masked_fayda_fan_number || "Not recorded" : "Enter your full FAN number"}
+                         className={`w-full h-14 border rounded-2xl px-6 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-bold text-sm ${
+                           initialData.is_verified
+                            ? "bg-surface-container-low border-primary/20 text-on-surface opacity-80 cursor-not-allowed"
+                            : "bg-surface-container-lowest border-surface-container-highest"
+                         }`}
                        />
                     </div>
                     <div className="space-y-2">

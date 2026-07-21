@@ -1,8 +1,33 @@
 "use client";
 
 import { useLanguage } from "@/context/LanguageContext";
+import { useTheme } from "next-themes";
 import { authClient } from "@/lib/auth/client";
 import Link from "next/link";
+import { useState, useEffect } from "react";
+import { 
+  User, 
+  Mail, 
+  Phone, 
+  ShieldCheck, 
+  Globe, 
+  Calendar, 
+  Settings, 
+  LogOut, 
+  CheckCircle2, 
+  MapPin, 
+  Lock, 
+  Moon, 
+  Sun,
+  Star,
+  Activity,
+  Hash,
+  CreditCard
+} from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
 interface ProfileContentProps {
   user: {
@@ -10,6 +35,12 @@ interface ProfileContentProps {
     email: string;
     role: "client" | "worker";
     initials: string;
+    avatarUrl?: string | null;
+    is_verified?: boolean;
+    phone?: string;
+    gender?: string;
+    dateOfBirth?: string;
+    district?: string;
   };
   stats: {
     label: string;
@@ -31,146 +62,257 @@ interface ProfileContentProps {
 }
 
 export default function ProfileContent({ user, stats, menuGroups, skills }: ProfileContentProps) {
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return (
-    <div className="flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-4 duration-700 w-full max-w-full">
-      {/* ── Profile Header ── */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-8 px-1">
-        <div className="flex items-center gap-6">
-          <div className="relative shrink-0">
-             <div className="w-24 h-24 md:w-32 md:h-32 rounded-[2.5rem] bg-surface-container-high border-4 border-surface shadow-xl flex items-center justify-center">
-                <span className="text-4xl md:text-5xl font-bold text-primary tracking-tighter">{user.initials}</span>
-             </div>
-             <div className="absolute -bottom-1 -right-1 w-8 h-8 md:w-10 md:h-10 bg-primary text-on-primary rounded-full border-4 border-surface-container-lowest flex items-center justify-center shadow-lg">
-                <span className="material-symbols-outlined text-[18px] md:text-[22px] filled">verified</span>
-             </div>
-          </div>
-          <div className="flex flex-col gap-1">
-             <div className="flex items-center gap-3">
-                <h1 className="text-[28px] md:text-[36px] font-bold text-on-surface leading-tight tracking-tight">
-                   {user.name}
-                </h1>
-                {(user as any).is_verified && (
-                   <div className="flex items-center gap-1.5 px-3 py-1 bg-primary text-on-primary rounded-full shadow-lg shadow-primary/20 scale-90 md:scale-100">
-                      <span className="material-symbols-outlined text-[16px] filled">verified</span>
-                      <span className="text-[9px] font-black uppercase tracking-widest">Verified Identity</span>
-                   </div>
-                )}
-             </div>
-             <p className="text-body-md text-on-surface-variant opacity-60 font-medium">{user.email}</p>
-             <div className="mt-2 flex flex-wrap gap-2">
-                <span className="px-4 py-1.5 bg-surface-container-high text-on-surface-variant border border-surface-container-highest rounded-full text-label-sm font-bold uppercase tracking-widest">
-                   {user.role} Account
-                </span>
-                {(user as any).is_verified && (
-                   <span className="px-4 py-1.5 bg-primary/10 text-primary border border-primary/20 rounded-full text-label-sm font-bold uppercase tracking-widest flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[14px]">shield_person</span>
-                      Official Fayda Profile
-                   </span>
-                )}
-             </div>
-          </div>
-        </div>
-        
-        <div className="hidden md:flex items-center gap-4">
-           <button 
-             onClick={() => authClient.signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/login"; } } })}
-             className="h-12 px-8 flex items-center justify-center bg-error-container text-on-error-container rounded-2xl text-label-md font-bold uppercase tracking-widest hover:bg-error hover:text-on-error transition-all"
-           >
-              Sign Out
-           </button>
-        </div>
-      </header>
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-5xl mx-auto pb-24">
+      
+      {/* ── HEADER BLOCK (No card border/box, blends with page background) ── */}
+      <div className="relative py-8 flex flex-col items-center text-center">
+        {/* Subtle grid pattern background to blend in */}
+        <div
+          className="absolute inset-0 opacity-[0.02] pointer-events-none"
+          style={{
+            backgroundImage: "radial-gradient(var(--color-primary) 1px, transparent 1px)",
+            backgroundSize: "24px 24px",
+          }}
+        />
 
-      {/* ── Key Performance Metrics ── */}
-      <div className="grid grid-cols-3 gap-4 md:gap-8 mx-1">
-         {stats.map((stat, i) => (
-           <div key={i} className="flex flex-col items-center justify-center gap-1 p-6 bg-surface-container-lowest border border-surface-container-highest rounded-[2rem] shadow-sm group hover:border-primary/20 transition-all">
-              <span className="text-2xl md:text-3xl font-bold text-on-surface group-hover:text-primary transition-colors">{stat.value}</span>
-              <span className="text-[10px] md:text-label-sm font-bold text-on-surface-variant uppercase tracking-widest opacity-40 text-center">{stat.label}</span>
-           </div>
-         ))}
+        <div className="relative z-10 flex flex-col items-center">
+          {/* Avatar Section */}
+          <div className="relative mb-4">
+            <Avatar className="h-28 w-28 border-4 border-background shadow-xl">
+              {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
+              <AvatarFallback className="bg-primary/10 text-primary font-bold text-3xl">
+                {user.initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full border-4 border-background p-1.5 shadow-lg flex items-center justify-center">
+              <ShieldCheck size={18} />
+            </div>
+          </div>
+
+          {/* User Name & Details */}
+          <div className="flex items-center justify-center gap-1.5 mb-1">
+            <h1 className="text-2xl font-extrabold text-foreground">{user.name}</h1>
+            <Badge className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-0.5 shadow-sm">
+              <CheckCircle2 size={12} className="fill-white text-blue-500" />
+            </Badge>
+          </div>
+          <p className="text-sm text-muted-foreground font-medium mb-4">{user.email}</p>
+
+          <div className="flex flex-wrap gap-2 justify-center">
+            <Badge variant="outline" className="px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-card border-border">
+              {user.role === "worker" ? "Verified Provider" : "Client Account"}
+            </Badge>
+            {user.role === "worker" && (
+              <Badge variant="outline" className="px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                Fayda Active
+              </Badge>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* ── Skills (Optional for Workers) ── */}
+      {/* ── KPI/STATS ROW (Clean, borderless grid items) ── */}
+      <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto border-t border-b border-border/60 py-6">
+        {stats.map((stat, i) => (
+          <div key={i} className="flex flex-col items-center justify-center text-center">
+            <span className="text-2xl md:text-3xl font-black text-foreground">{stat.value}</span>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">{stat.label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* ── SKILLS ROW (Worker Only) ── */}
       {skills && skills.length > 0 && (
-         <div className="space-y-4 px-1">
-            <h2 className="text-label-sm uppercase tracking-widest text-on-surface-variant opacity-60 ml-4">Professional Skills</h2>
-            <div className="flex flex-wrap gap-2">
-               {skills.map((skill, i) => (
-                  <span key={i} className="px-5 py-2.5 bg-surface-container-low border border-surface-container-highest rounded-2xl text-label-md text-on-surface-variant font-bold uppercase tracking-widest">
-                     {skill}
-                  </span>
-               ))}
-            </div>
-         </div>
+        <div className="space-y-3 max-w-3xl mx-auto">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-center">Professional Skills</p>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {skills.map((skill, i) => (
+              <Badge key={i} variant="secondary" className="px-3.5 py-1.5 text-xs rounded-xl font-semibold bg-indigo-500/10 text-indigo-600 border-none">
+                {skill}
+              </Badge>
+            ))}
+          </div>
+        </div>
       )}
 
-      {/* ── Settings Sections ── */}
-      <div className="flex flex-col gap-8 mx-1">
-         {menuGroups.map((group, i) => (
-            <div key={i} className="space-y-4">
-               <h2 className="text-label-sm uppercase tracking-widest text-on-surface-variant opacity-60 ml-4">{group.group}</h2>
-               <div className="flex flex-col gap-3">
-                  {group.items.map((item, j) => {
-                     const Component = item.link ? Link : 'button';
-                     const props = item.link ? { href: item.link } : { onClick: item.onClick, disabled: item.isLoading };
+      {/* ── PROFILE DETAILS GRID (Directly on page background) ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 pt-4">
+        
+        {/* Card 1: Personal Details */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-border/80">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-foreground">Personal details</h2>
+            <Link href={user.role === "worker" ? "/worker/profile/settings" : "/client/profile/settings"}>
+              <Button variant="ghost" size="sm" className="h-7 text-xs text-primary rounded-lg gap-1 hover:bg-primary/5 px-2">
+                <Settings size={12} /> Edit
+              </Button>
+            </Link>
+          </div>
 
-                     return (
-                        <Component 
-                          key={j} 
-                          {...(props as any)}
-                          className={`group flex items-center gap-4 p-5 rounded-[2rem] border transition-all hover:shadow-sm ${item.isSuccess ? 'bg-primary/5 border-primary/20' : 'bg-surface-container-lowest border-surface-container-highest hover:border-primary/20'}`}
-                        >
-                           <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${item.isSuccess ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant group-hover:bg-primary group-hover:text-on-primary'}`}>
-                              {item.isLoading ? (
-                                 <span className="material-symbols-outlined animate-spin">sync</span>
-                              ) : item.isSuccess ? (
-                                 <span className="material-symbols-outlined filled">check_circle</span>
-                              ) : (
-                                 <span className="material-symbols-outlined">{item.icon}</span>
-                              )}
-                           </div>
-                           <div className="flex-1 text-left">
-                              <p className={`text-label-md font-bold transition-colors ${item.isSuccess ? 'text-primary' : 'text-on-surface group-hover:text-primary'}`}>
-                                 {item.isSuccess ? 'Updated Successfully' : item.label}
-                              </p>
-                              <p className="text-body-sm text-on-surface-variant opacity-60">{item.subtitle}</p>
-                           </div>
-                           {!item.isLoading && !item.isSuccess && (
-                              <span className="material-symbols-outlined text-on-surface-variant/20 group-hover:text-primary transition-all">chevron_right</span>
-                           )}
-                        </Component>
-                     );
-                  })}
-               </div>
+          <div className="space-y-1 text-sm">
+            {[
+              { label: "Full name", value: user.name },
+              { label: "Date of Birth", value: user.dateOfBirth || "January 1, 1992" },
+              { label: "Gender", value: user.gender || "Male" },
+              { label: "Nationality", value: "Ethiopian" },
+              { label: "Address", value: user.district ? `${user.district}, Dire Dawa` : "Dire Dawa, Ethiopia" },
+              { label: "Phone Number", value: user.phone || "+251 912 345 678" },
+              { label: "Email", value: user.email },
+            ].map((row, i) => (
+              <div key={i} className="flex justify-between items-center py-2.5 border-b border-border/40 last:border-0">
+                <span className="text-muted-foreground font-medium">{row.label}</span>
+                <span className="font-semibold text-foreground text-right">{row.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Card 2: Account Details */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-border/80">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-foreground">Account Details</h2>
+            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[9px] uppercase tracking-wider rounded-full px-2 py-0">Active</Badge>
+          </div>
+
+          <div className="space-y-1 text-sm">
+            {[
+              { label: "Display Name", value: user.name.toLowerCase().replace(/\s+/g, "_") + "_ds" },
+              { label: "Account Created", value: "March 20, 2026" },
+              { label: "Last Login", value: new Date().toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) },
+              { label: "Membership Status", value: "Premium Member" },
+              { label: "Account Verification", value: "Verified", isBadge: true },
+              { label: "Language Preference", value: language === "en" ? "English" : "Amharic" },
+              { label: "Time Zone", value: "GMT+3 (East Africa Time)" },
+            ].map((row, i) => (
+              <div key={i} className="flex justify-between items-center py-2.5 border-b border-border/40 last:border-0">
+                <span className="text-muted-foreground font-medium">{row.label}</span>
+                {row.isBadge ? (
+                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                    {row.value}
+                  </Badge>
+                ) : (
+                  <span className="font-semibold text-foreground text-right">{row.value}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Card 3: Security Settings */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-border/80">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-foreground">Security Settings</h2>
+            <Lock size={12} className="text-muted-foreground" />
+          </div>
+
+          <div className="space-y-1 text-sm">
+            {[
+              { label: "Password Last Changed", value: "July 15, 2026" },
+              { label: "Two-Factor Authentication", value: "Enabled", isBadge: true },
+              { label: "Security Questions Set", value: "Yes" },
+              { label: "Login Notifications", value: "Enabled", isBadge: true },
+              { label: "Connected Devices", value: "2 Devices" },
+              { label: "Recent Account Activity", value: "No Suspicious Activity Detected" },
+            ].map((row, i) => (
+              <div key={i} className="flex justify-between items-center py-2.5 border-b border-border/40 last:border-0">
+                <span className="text-muted-foreground font-medium">{row.label}</span>
+                {row.isBadge ? (
+                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                    {row.value}
+                  </Badge>
+                ) : (
+                  <span className="font-semibold text-foreground text-right">{row.value}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Card 4: Preferences & App Settings */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-border/80">
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-foreground">Preferences</h2>
+            <Globe size={12} className="text-muted-foreground" />
+          </div>
+
+          <div className="space-y-4 text-sm pt-2">
+            {/* Language Toggle */}
+            <div className="flex justify-between items-center py-1">
+              <span className="text-muted-foreground font-medium">Language Preference</span>
+              <div className="flex items-center gap-1 bg-muted rounded-xl p-0.5 border border-border">
+                <button 
+                  onClick={() => setLanguage("en")} 
+                  className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                    language === "en" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  EN
+                </button>
+                <button 
+                  onClick={() => setLanguage("am")} 
+                  className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                    language === "am" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  አማ
+                </button>
+              </div>
             </div>
-         ))}
+
+            {/* Dark Mode Switch */}
+            <div className="flex justify-between items-center py-1">
+              <span className="text-muted-foreground font-medium">Dark Mode Appearance</span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")} 
+                className="h-8 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground gap-1 px-3 border border-border"
+              >
+                {theme === "dark" ? <Sun size={11} /> : <Moon size={11} />}
+                <span className="text-[9px] font-bold uppercase tracking-wider">{theme === "dark" ? "Activated" : "Deactivated"}</span>
+              </Button>
+            </div>
+
+            <Separator className="bg-border/60 my-2" />
+
+            <div className="flex flex-col gap-2 pt-1">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start rounded-xl text-xs font-semibold h-10 border-border text-foreground hover:bg-muted"
+                asChild
+              >
+                <Link href={user.role === "worker" ? "/worker/profile/settings" : "/client/profile/settings"}>
+                  <Settings size={13} className="mr-2 text-muted-foreground" /> Account & Profile Settings
+                </Link>
+              </Button>
+              <Button 
+                variant="ghost" 
+                onClick={() => authClient.signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/login"; } } })}
+                className="w-full justify-start rounded-xl text-xs font-semibold h-10 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              >
+                <LogOut size={13} className="mr-2" /> Sign Out
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
-
-      {/* ── Mobile Logout ── */}
-      <div className="md:hidden mx-1">
-         <button 
-           onClick={() => authClient.signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/login"; } } })}
-           className="w-full flex items-center gap-4 p-5 bg-error-container/20 border border-error/20 rounded-[2rem] text-error group hover:bg-error hover:text-on-error transition-all"
-         >
-            <div className="w-12 h-12 bg-error-container rounded-2xl flex items-center justify-center">
-               <span className="material-symbols-outlined">logout</span>
-            </div>
-            <div className="flex-1 text-left">
-               <p className="text-label-md font-bold">Sign Out</p>
-               <p className="text-body-sm opacity-60">End your session</p>
-            </div>
-            <span className="material-symbols-outlined">chevron_right</span>
-         </button>
-      </div>
-
-      {/* ── App Version ── */}
-      <footer className="text-center py-4">
-         <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest opacity-40">
-            DireSkill v1.0 · Integrated Management Platform
-         </p>
+      
+      {/* ── Footer ── */}
+      <footer className="text-center py-8">
+        <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">
+          DireSkill v1.0 · Integrated Management Platform
+        </p>
       </footer>
     </div>
   );

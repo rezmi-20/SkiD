@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS contract_setups (
+  user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  pin_hash TEXT NOT NULL,
+  accepted_policy BOOLEAN NOT NULL DEFAULT FALSE,
+  accepted_signature_use BOOLEAN NOT NULL DEFAULT FALSE,
+  completed_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);

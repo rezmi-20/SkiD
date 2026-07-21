@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
+import DireSkillLogo from "@/components/shell/DireSkillLogo";
 import {
   LayoutDashboard, Users, ShieldCheck, Briefcase,
   FileText, DollarSign, Scale, Megaphone,
@@ -63,15 +64,12 @@ export function Sidebar({ userEmail, isSuperAdmin = false }: SidebarProps) {
         ${collapsed ? "w-[68px]" : "w-[220px]"}`}
     >
       {/* Brand */}
-      <div className={`flex items-center gap-2 px-4 h-[60px] border-b border-outline-variant ${collapsed ? "justify-center" : ""}`}>
-        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
-          <span className="text-on-primary font-black text-sm">D</span>
-        </div>
-        {!collapsed && (
-          <span className="font-black text-sm uppercase tracking-widest text-on-surface truncate">
-            DireAdmin
-          </span>
-        )}
+      <div className={`flex items-center gap-2 px-3 h-[60px] border-b border-outline-variant ${collapsed ? "justify-center" : ""}`}>
+        <DireSkillLogo
+          variant="color"
+          iconSize={32}
+          showWordmark={!collapsed}
+        />
       </div>
 
       {/* Super Admin Banner (only when not collapsed) */}

@@ -17,6 +17,13 @@ export type NotificationType =
   | "new_review"
   | "payment_initiated"
   | "payment_confirmed"
+  | "payment_failed"
+  | "contract_terms_submitted"
+  | "contract_terms_accepted"
+  | "contract_terms_rejected"
+  | "completion_requested"
+  | "completion_accepted"
+  | "completion_rejected"
   | "post_liked"
   | "post_commented";
 

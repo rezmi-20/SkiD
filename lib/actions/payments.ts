@@ -55,7 +55,7 @@ export async function getPaymentPageData(jobId: string) {
         j.id as job_id,
         j.title as job_title,
         j.status as job_status,
-        j.budget,
+        COALESCE(c.payment_amount, j.budget) as budget,
         j.client_id,
         j.worker_id,
         wp.full_name as worker_name,
@@ -65,6 +65,8 @@ export async function getPaymentPageData(jobId: string) {
         cp.full_name as client_name,
         c.id as contract_id,
         c.signed_at,
+        c.status as contract_status,
+        c.payment_amount,
         p.id as payment_id,
         p.status as payment_status,
         p.chapa_ref as tx_ref,
@@ -85,11 +87,11 @@ export async function getPaymentPageData(jobId: string) {
     if (rows.length === 0) return null;
 
     const row = rows[0];
-    const calculated = getPaymentBreakdown(row.budget ?? row.paid_amount);
+    const calculated = getPaymentBreakdown(row.payment_amount ?? row.paid_amount ?? row.budget);
 
     return {
       ...row,
-      payment_total: row.paid_amount ?? calculated.total,
+      payment_total: row.paid_amount ?? row.payment_amount ?? calculated.total,
       commission_amount: row.commission_amount ?? calculated.commission,
       net_amount: row.net_amount ?? calculated.netAmount,
       commission_rate: calculated.commissionRate,
@@ -129,7 +131,7 @@ export async function getClientPayments(): Promise<ClientPaymentRecord[]> {
       LEFT JOIN contracts c ON c.job_id = j.id
       LEFT JOIN payments p ON p.job_id = j.id
       WHERE j.client_id = ${session.user.id}
-        AND (j.status = 'completed' OR p.id IS NOT NULL)
+        AND (j.status IN ('completed', 'payment_pending', 'paid', 'closed') OR p.id IS NOT NULL)
       ORDER BY COALESCE(p.created_at, j.updated_at) DESC
     `;
 

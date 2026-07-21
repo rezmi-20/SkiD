@@ -136,11 +136,12 @@ export default function PaymentPageContent({
 
       const ref = initData.txRef;
       setTxRef(ref);
+      setStep("awaiting");
 
-      // Open Chapa in a NEW TAB — this page becomes the "waiting for confirmation" screen
-      window.location.assign(initData.checkoutUrl);
-
-      // Start waiting for webhook to fire
+      const checkoutWindow = window.open(initData.checkoutUrl, "_blank", "noopener,noreferrer");
+      if (!checkoutWindow) {
+        window.location.href = initData.checkoutUrl;
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Payment failed");
       setStep("ready");
@@ -151,18 +152,22 @@ export default function PaymentPageContent({
   const handleManualVerify = async () => {
     if (!txRef) return;
     try {
-      const res = await fetch(`/api/payments/status?txRef=${encodeURIComponent(txRef)}`);
+      const res = await fetch("/api/payments/chapa", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobId, txRef }),
+      });
       const data = await res.json();
-      if (data.status === "released") {
+      if (res.ok && (data.status === "released" || data.success)) {
         stopPolling();
         setConfirmedData({
-          paymentId: data.paymentId,
+          paymentId: data.paymentId || data.payment_id,
           chapaReference: data.chapaReference,
-          breakdown: data.breakdown,
+          breakdown: data.breakdown || { amount, commissionAmount, netAmount },
         });
         setStep("confirmed");
       } else {
-        setError("Payment not confirmed yet. Please complete the payment in the Chapa tab, then try again.");
+        setError(data.error || "Payment not confirmed yet. Please complete the payment in the Chapa tab, then try again.");
       }
     } catch {
       setError("Could not check payment status. Please try again.");

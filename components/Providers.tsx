@@ -28,9 +28,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     );
   }
 
-  console.debug("[DIREDAWA-DIAG] Providers rendering");
   return (
-    <ThemeProvider attribute="data-theme" defaultTheme="grayscale" themes={["light", "dark", "grayscale"]}>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
       <LanguageProvider>
         <LocationProvider>
           <MessagingProvider>

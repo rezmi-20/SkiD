@@ -102,6 +102,7 @@ export async function verifyAndReleasePayment({
       p.status as payment_status,
       p.chapa_ref,
       p.chapa_reference,
+      j.status as job_status,
       j.title as job_title,
       j.client_id,
       j.worker_id
@@ -151,6 +152,13 @@ export async function verifyAndReleasePayment({
         console.warn("[PAYMENT_VERIFY_ALREADY_RELEASED_REF_FETCH_FAILED]", err);
       }
     }
+
+    await sql`
+      UPDATE jobs
+      SET status = 'paid', updated_at = NOW()
+      WHERE id = ${payment.job_id}
+        AND status IN ('completed', 'payment_pending')
+    `;
 
     return {
       success: true,
@@ -214,6 +222,14 @@ export async function verifyAndReleasePayment({
       verifiedStatus,
     });
 
+    await createNotification({
+      userId: payment.client_id,
+      type: "payment_failed",
+      title: "Payment Verification Failed",
+      body: `Payment verification for "${payment.job_title}" did not match Chapa records.`,
+      linkHref: `/client/pay/${payment.job_id}`,
+    });
+
     return {
       success: false,
       idempotent: false,
@@ -226,17 +242,25 @@ export async function verifyAndReleasePayment({
     };
   }
 
-  const releasedRows = await sql`
-    UPDATE payments
-    SET status = 'released',
-        chapa_reference = ${verifiedData?.reference || null},
-        chapa_status = ${String(verifiedStatus)},
-        chapa_response = ${JSON.stringify(verified)},
-        updated_at = now()
-    WHERE id = ${payment.payment_id}
-      AND status <> 'released'
-    RETURNING id
-  `;
+  const [releasedRows] = await sql.transaction([
+    sql`
+      UPDATE payments
+      SET status = 'released',
+          chapa_reference = ${verifiedData?.reference || null},
+          chapa_status = ${String(verifiedStatus)},
+          chapa_response = ${JSON.stringify(verified)},
+          updated_at = now()
+      WHERE id = ${payment.payment_id}
+        AND status <> 'released'
+      RETURNING id
+    `,
+    sql`
+      UPDATE jobs
+      SET status = 'paid', updated_at = NOW()
+      WHERE id = ${payment.job_id}
+        AND status IN ('completed', 'payment_pending')
+    `,
+  ]);
 
   const idempotent = releasedRows.length === 0;
 

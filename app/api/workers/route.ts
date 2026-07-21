@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
-import { auth } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
   try {
@@ -15,8 +14,6 @@ export async function GET(req: NextRequest) {
     const hasCoords = !isNaN(userLat) && !isNaN(userLng);
     const params: (string | number)[] = [];
     
-    console.log("[WORKERS_GET] Start", { queryStr, category, userLat, userLng, hasCoords });
-
     let distanceSql = "0";
     if (hasCoords) {
       params.push(userLat, userLng);
@@ -42,7 +39,6 @@ export async function GET(req: NextRequest) {
       )
       SELECT
         u.id,
-        u.email,
         wp.full_name,
         wp.bio,
         wp.skills,
@@ -58,6 +54,8 @@ export async function GET(req: NextRequest) {
       JOIN worker_profiles wp ON u.id = wp.user_id
       LEFT JOIN worker_ratings wr ON u.id = wr.rated_id
       WHERE u.role = 'worker'
+        AND u.is_suspended = false
+        AND wp.is_verified = true
     `;
 
     // Query filtering (Name OR Skill)
@@ -83,7 +81,8 @@ export async function GET(req: NextRequest) {
 
     // Distance filtering
     if (hasCoords && maxDist < 100) {
-      query += ` AND (wp.latitude IS NULL OR ${distanceSql} <= ${maxDist})`;
+      params.push(maxDist);
+      query += ` AND wp.latitude IS NOT NULL AND wp.longitude IS NOT NULL AND ${distanceSql} <= $${params.length}`;
     }
 
     // Rating filter
@@ -99,17 +98,11 @@ export async function GET(req: NextRequest) {
       query += ` ORDER BY avg_rating DESC LIMIT 50`;
     }
 
-    console.log("[WORKERS_GET] Executing Query");
     const workers = await sql.query(query, params);
-    console.log(`[WORKERS_GET] Success: ${workers.length} found`);
 
     return NextResponse.json({ workers });
   } catch (error) {
     console.error("[WORKERS_GET_CRITICAL_ERROR]", error);
-    return NextResponse.json({ 
-      error: "Internal server error", 
-      details: error instanceof Error ? error.message : "SQL execution failed",
-      stack: process.env.NODE_ENV === 'development' ? (error as any).stack : undefined
-    }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

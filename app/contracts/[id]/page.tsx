@@ -1,8 +1,9 @@
-﻿import { getContractForSigning } from "@/lib/actions/contracts";
+import { getContractForSigning } from "@/lib/actions/contracts";
 import ContractDetails from "@/components/ContractDetails";
 import { auth } from "@/lib/auth";
 import { notFound, redirect } from "next/navigation";
-import AppShell from "@/components/ui/AppShell";
+import AppShell from "@/components/shell/AppShell";
+import { getContractSetupStatus } from "@/lib/actions/contract-setup";
 
 export default async function ContractDetailsPage({
   params,
@@ -15,6 +16,11 @@ export default async function ContractDetailsPage({
   }
 
   const { id } = await params;
+  const setup = await getContractSetupStatus(session.user.id);
+  if (!setup.completed) {
+    redirect(setup.setupHref);
+  }
+
   const contract = await getContractForSigning(id);
 
   if (!contract) {
@@ -22,7 +28,12 @@ export default async function ContractDetailsPage({
   }
 
   return (
-    <AppShell role={session.user.role as "client" | "worker"} userEmail={session.user.email}>
+    <AppShell
+      role={session.user.role as "client" | "worker"}
+      userEmail={session.user.email}
+      contractSetupComplete={setup.completed}
+      contractSetupHref={setup.setupHref}
+    >
       <ContractDetails contract={contract} userId={session.user.id} />
     </AppShell>
   );

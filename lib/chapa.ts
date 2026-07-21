@@ -163,12 +163,25 @@ function isSafeCallbackUrl(value: string | null | undefined): string | null {
   }
 }
 
+function isSafeReturnUrl(value: string | null | undefined): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    if (["localhost", "127.0.0.1", "::1"].includes(url.hostname)) return null;
+    if (!url.pathname.includes("/payment-success")) return null;
+    return value;
+  } catch {
+    return null;
+  }
+}
+
 export async function initializeChapaPayment(input: InitializeChapaPaymentInput) {
   try {
     // Defensive: only ever send a real server-side webhook URL as callback_url.
     // Never send a return_url — the Chapa-hosted receipt must not auto-redirect
     // back into the app (e.g. to /payment-success).
     const safeCallbackUrl = isSafeCallbackUrl(input.callbackUrl);
+    const safeReturnUrl = isSafeReturnUrl(input.returnUrl);
 
     const payload = {
       amount: String(input.amount),
@@ -179,6 +192,7 @@ export async function initializeChapaPayment(input: InitializeChapaPaymentInput)
       phone_number: input.phoneNumber || undefined,
       tx_ref: input.txRef,
       ...(safeCallbackUrl ? { callback_url: safeCallbackUrl } : {}),
+      ...(safeReturnUrl ? { return_url: safeReturnUrl } : {}),
       customization: {
         title: input.title,
         description: input.description,

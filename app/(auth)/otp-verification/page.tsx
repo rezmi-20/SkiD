@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import DireSkillLogo from "@/components/shell/DireSkillLogo";
 
 export default function OTPVerificationPage() {
   const [digits, setDigits] = useState(["", "", "", "", "", ""]);
@@ -28,7 +29,6 @@ export default function OTPVerificationPage() {
       const { data: session } = await authClient.getSession();
       // Only redirect if they are actually verified AND it's a valid session
       if (session?.user?.emailVerified) {
-        console.log("[OTP] User already verified, moving to login");
         router.push("/login?verified=true");
       }
     };
@@ -125,14 +125,8 @@ export default function OTPVerificationPage() {
         </div>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-green-500/15 blur-[120px] pointer-events-none rounded-full z-0 mix-blend-screen" />
 
-        <div className="absolute top-12 left-12 flex items-center gap-3 z-20">
-          <div className="w-12 h-12 bg-white flex items-center justify-center rounded-2xl shadow-lg shadow-white/5">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-[#09090b]">
-              <path d="M 11 2 C 3 2 1 10 1 15 L 7 15 C 7 11 9 8 11 8 Z" />
-              <path d="M 13 22 C 21 22 23 14 23 9 L 17 9 C 17 13 15 16 13 16 Z" />
-            </svg>
-          </div>
-          <span className="text-2xl font-bold tracking-tight text-white">Dire<span className="text-green-400">Skill</span></span>
+        <div className="absolute top-12 left-12 z-20">
+          <DireSkillLogo variant="light" iconSize={44} />        
         </div>
 
         <div className="relative z-10 flex flex-col items-center text-center">
@@ -159,13 +153,7 @@ export default function OTPVerificationPage() {
 
           {/* Mobile Logo */}
           <div className="lg:hidden flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 bg-white flex items-center justify-center rounded-xl">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-[#09090b]">
-                <path d="M 11 2 C 3 2 1 10 1 15 L 7 15 C 7 11 9 8 11 8 Z" />
-                <path d="M 13 22 C 21 22 23 14 23 9 L 17 9 C 17 13 15 16 13 16 Z" />
-              </svg>
-            </div>
-            <span className="text-xl font-bold tracking-tight text-white">Dire<span className="text-green-400">Skill</span></span>
+            <DireSkillLogo variant="light" iconSize={40} />
           </div>
 
           {/* Icon */}

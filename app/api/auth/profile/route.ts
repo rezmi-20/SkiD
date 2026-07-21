@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { sql } from "@/lib/db";
 import { sanitizeText } from "@/lib/sanitize";
+import { isTrustedUploadReference } from "@/lib/security";
 
 const passwordSchema = z
   .string()
@@ -60,6 +61,10 @@ export async function POST(req: NextRequest) {
       const { dateOfBirth, gender, district, skills, faydaDocUrl, bio } = parsed.data;
       const sanitizedBio = bio ? sanitizeText(bio) : null;
       const sanitizedDistrict = district ? sanitizeText(district) : null;
+
+      if (faydaDocUrl && !isTrustedUploadReference(faydaDocUrl, { allowDataImage: true })) {
+        return NextResponse.json({ error: "Invalid Fayda document reference" }, { status: 400 });
+      }
 
       await sql`
         INSERT INTO worker_profiles (user_id, full_name, date_of_birth, gender, district, skills, fayda_doc_url, bio, verification_status)

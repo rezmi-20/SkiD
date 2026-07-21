@@ -4,6 +4,7 @@ import { sql } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "@/lib/actions/notifications";
+import { sanitizeText } from "@/lib/sanitize";
 
 type RatingActionResult =
   | { success: true }
@@ -12,6 +13,12 @@ type RatingActionResult =
       error: string;
       code?: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "INVALID_STATE" | "DUPLICATE" | "UNKNOWN";
     };
+
+const RATEABLE_JOB_STATUSES = ["paid", "closed"] as const;
+
+function isRateableJobStatus(status: string | null | undefined) {
+  return RATEABLE_JOB_STATUSES.includes(status as (typeof RATEABLE_JOB_STATUSES)[number]);
+}
 
 async function logAuditAction(userId: string, action: string, details: Record<string, unknown>) {
   try {
@@ -80,7 +87,7 @@ export async function getRatingPageData(jobId: string) {
       ratedVerified: isClient ? job.worker_verified : job.client_verified,
       alreadyRated: existing.length > 0,
       currentUserRole: role,
-      canRate: job.status === "completed" && job.payment_status === "released",
+      canRate: isRateableJobStatus(job.status) && job.payment_status === "released",
     };
   } catch (error) {
     console.error("[GET_RATING_PAGE_DATA_ERROR]", error);
@@ -166,10 +173,10 @@ async function rateForRole(
       return { success: false, error: "You don't have permission", code: "FORBIDDEN" };
     }
 
-    if (job.status !== "completed" || job.payment_status !== "released") {
+    if (!isRateableJobStatus(job.status) || job.payment_status !== "released") {
       return {
         success: false,
-        error: "Reviews are available after the completed job has been paid.",
+        error: "Reviews are available after the job has been paid.",
         code: "INVALID_STATE",
       };
     }
@@ -191,8 +198,26 @@ async function rateForRole(
 
     await sql`
       INSERT INTO ratings (job_id, rater_id, rated_id, score, comment)
-      VALUES (${jobId}, ${session.user.id}, ${ratedId}, ${score}, ${reviewText?.trim() || null})
+      VALUES (${jobId}, ${session.user.id}, ${ratedId}, ${score}, ${sanitizeText(reviewText || "") || null})
     `;
+
+    const submittedDirections = await sql`
+      SELECT COUNT(*)::int as count
+      FROM ratings
+      WHERE job_id = ${jobId}
+        AND (
+          (rater_id = ${job.client_id} AND rated_id = ${job.worker_id})
+          OR (rater_id = ${job.worker_id} AND rated_id = ${job.client_id})
+        )
+    `;
+
+    if (Number(submittedDirections[0]?.count || 0) >= 2) {
+      await sql`
+        UPDATE jobs
+        SET status = 'closed', updated_at = NOW()
+        WHERE id = ${jobId} AND status = 'paid'
+      `;
+    }
 
     await logAuditAction(session.user.id, "rating_submitted", {
       jobId,

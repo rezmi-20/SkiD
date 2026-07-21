@@ -17,15 +17,17 @@ export type NeonCachedSession = {
   [key: string]: unknown;
 };
 
-const SESSION_COOKIE_SECRET =
-  process.env.NEON_AUTH_COOKIE_SECRET ||
-  "fallback_secret_must_be_at_least_32_characters_long";
+const SESSION_COOKIE_SECRET = process.env.NEON_AUTH_COOKIE_SECRET;
 const SESSION_DATA_COOKIE_NAME = "neon-auth.local.session_data";
 
 export async function verifyNeonSessionDataCookie(
   value?: string | null
 ): Promise<NeonCachedSession | null> {
   if (!value) return null;
+  if (!SESSION_COOKIE_SECRET) {
+    console.warn("[AUTH_SESSION_COOKIE_SECRET_MISSING]");
+    return null;
+  }
 
   try {
     const { payload } = await jwtVerify(

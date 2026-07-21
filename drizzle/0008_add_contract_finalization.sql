@@ -1,0 +1,4 @@
+ALTER TABLE contracts
+ADD COLUMN IF NOT EXISTS finalized_at TIMESTAMP,
+ADD COLUMN IF NOT EXISTS finalized_by UUID REFERENCES users(id),
+ADD COLUMN IF NOT EXISTS finalized_snapshot JSON;

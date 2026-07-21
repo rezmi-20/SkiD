@@ -61,7 +61,7 @@ export default function GigsPage() {
       const result = await completeJob(jobId);
       if (result.success) {
         setGigs((prev) =>
-          prev.map((g) => (g.id === jobId ? { ...g, status: "completed" } : g))
+          prev.map((g) => (g.id === jobId ? { ...g, status: "completion_requested" } : g))
         );
       } else {
         alert(result.error);
@@ -76,7 +76,7 @@ export default function GigsPage() {
   // Filter gigs by status groups
   const activeGigs = gigs.filter((g) => g.status === "in_progress");
   const acceptedGigs = gigs.filter((g) => g.status === "active" || g.status === "accepted");
-  const completedGigs = gigs.filter((g) => g.status === "completed");
+  const completedGigs = gigs.filter((g) => ["completion_requested", "completed", "payment_pending", "paid", "closed"].includes(g.status));
 
   const activeCount = activeGigs.length;
   const acceptedCount = acceptedGigs.length;
@@ -260,7 +260,7 @@ export default function GigsPage() {
       )}
 
       {/* ── Empty state if no gigs ── */}
-      {!loading && gigs.filter(g => ["active", "accepted", "in_progress", "completed"].includes(g.status)).length === 0 && (
+      {!loading && gigs.filter(g => ["active", "accepted", "in_progress", "completion_requested", "completed", "payment_pending", "paid", "closed"].includes(g.status)).length === 0 && (
         <div className="relative overflow-hidden bg-surface-container-low border border-dashed border-outline rounded-[2.5rem] py-20 flex flex-col items-center justify-center gap-6 text-center">
           <div className="w-20 h-20 bg-surface-container-high border border-outline-variant rounded-3xl flex items-center justify-center">
              <span className="material-symbols-outlined text-on-surface-variant opacity-20 text-[36px]">construction</span>

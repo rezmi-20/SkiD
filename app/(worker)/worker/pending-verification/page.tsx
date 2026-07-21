@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import AppShell from "@/components/ui/AppShell";
+import AppShell from "@/components/shell/AppShell";
 import VerificationResubmitForm from "@/components/worker/VerificationResubmitForm";
 import { getProfileData } from "@/lib/actions/profile";
 import { useLanguage } from "@/context/LanguageContext";

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260" width="100%" height="100%">
+  <defs>
+    <!-- Clip path for diagonal cuts at ends of S -->
+    <clipPath id="logo-clip">
+      <path d="M 0,0 H 200 V 200 H 0 Z
+               M 35,186 L 53,168 L 35,168 Z
+               M 167,81 L 185,63 L 167,63 Z"
+            clip-rule="evenodd" />
+    </clipPath>
+  </defs>
+
+  <!-- DS Monogram -->
+  <g clip-path="url(#logo-clip)" fill="none" stroke="currentColor" stroke-width="16" stroke-linejoin="miter" stroke-linecap="square">
+    <!-- D -->
+    <path d="M 70,135 L 70,45 L 110,45 A 45,45 0 0,1 110,135 Z" />
+    <!-- S -->
+    <path d="M 45,178 L 105,178 C 135,178 145,158 140,138 C 130,118 85,118 70,103 C 70,83 85,73 110,73 L 175,73" />
+  </g>
+
+  <!-- DIRESKILL text below monogram -->
+  <text
+    x="100"
+    y="236"
+    text-anchor="middle"
+    font-family="'Inter', 'Segoe UI', Helvetica, Arial, sans-serif"
+    font-size="22"
+    font-weight="800"
+    letter-spacing="5"
+    fill="currentColor"
+  >DIRESKILL</text>
+</svg>

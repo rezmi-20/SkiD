@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import DireSkillLogo from "@/components/shell/DireSkillLogo";
 
 interface AuthWrapperProps {
   children: React.ReactNode;
@@ -43,11 +44,8 @@ export default function AuthWrapper({
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 blur-[120px] pointer-events-none rounded-full z-0 mix-blend-screen" />
         
         {/* Logo */}
-        <div className="absolute top-12 left-12 flex items-center gap-3 z-20">
-          <div className="w-12 h-12 bg-on-surface text-surface flex items-center justify-center rounded-2xl shadow-xl">
-             <span className="material-symbols-outlined text-[24px] filled">bolt</span>
-          </div>
-          <span className="text-2xl font-bold tracking-tight text-on-surface">Dire<span className="text-primary">Skill</span></span>
+        <div className="absolute top-12 left-12 z-20">
+          <DireSkillLogo variant="color" iconSize={44} />
         </div>
 
         <div className="relative z-10 flex flex-col items-center text-center">
@@ -80,10 +78,7 @@ export default function AuthWrapper({
           {/* Header Section */}
           <div className="flex flex-col items-center mb-10 space-y-6 w-full">
             <div className="lg:hidden flex items-center gap-3 mb-2">
-              <div className="w-14 h-14 bg-on-surface text-surface flex items-center justify-center rounded-2xl shadow-xl">
-                <span className="material-symbols-outlined text-[28px] filled">bolt</span>
-              </div>
-              <span className="text-[28px] font-bold tracking-tight text-on-surface">Dire<span className="text-primary">Skill</span></span>
+              <DireSkillLogo variant="color" iconSize={44} />
             </div>
             
             <div className="text-center space-y-2">

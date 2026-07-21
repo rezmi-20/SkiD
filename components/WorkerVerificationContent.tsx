@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useState } from "react";
 
 interface WorkerVerificationContentProps {
   worker: {
@@ -9,13 +10,14 @@ interface WorkerVerificationContentProps {
     full_name: string;
     email: string;
     phone: string;
+    fayda_fan_number?: string | null;
     district: string;
     skills: string[];
     fayda_doc_url: string;
     is_verified: boolean;
   };
   onApprove: () => void;
-  onReject: () => void;
+  onReject: (reason: string) => void;
 }
 
 export default function WorkerVerificationContent({
@@ -23,6 +25,8 @@ export default function WorkerVerificationContent({
   onApprove,
   onReject
 }: WorkerVerificationContentProps) {
+  const [rejectReason, setRejectReason] = useState("");
+
   return (
     <div className="max-w-4xl mx-auto space-y-12 pb-32">
       
@@ -71,6 +75,7 @@ export default function WorkerVerificationContent({
                 { label: "Legal Name", value: worker.full_name },
                 { label: "Email Index", value: worker.email },
                 { label: "Phone Node", value: `+251 ${worker.phone}` },
+                { label: "Fayda FAN", value: worker.fayda_fan_number || "Not recorded" },
                 { label: "District", value: worker.district || "Unspecified" },
               ].map((item) => (
                 <div key={item.label}>
@@ -125,6 +130,13 @@ export default function WorkerVerificationContent({
           </motion.section>
 
           {/* Action Bar */}
+          <textarea
+            value={rejectReason}
+            onChange={(event) => setRejectReason(event.target.value)}
+            rows={3}
+            placeholder="Rejection reason, shown to the worker if rejected"
+            className="w-full rounded-2xl border border-surface-container-highest bg-surface-container-low px-4 py-3 text-sm font-medium text-on-surface outline-none focus:border-secondary"
+          />
           <div className="flex flex-col sm:flex-row gap-4">
              <button 
                 onClick={onApprove}
@@ -136,7 +148,7 @@ export default function WorkerVerificationContent({
              </button>
 
              <button 
-                onClick={onReject}
+                onClick={() => onReject(rejectReason)}
                 className="px-10 h-16 bg-surface-container-high border border-surface-container-highest text-secondary rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-surface-container-highest active:scale-[0.98] transition-all flex items-center justify-center gap-3"
              >
                 <span className="material-symbols-outlined">block</span>

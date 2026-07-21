@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <!-- Gradients for modern logo -->
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f62ac" />
+      <stop offset="100%" stop-color="#2563eb" />
+    </linearGradient>
+    <linearGradient id="lightBlueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#60a5fa" />
+    </linearGradient>
+    
+    <!-- Stamp texture filter for realistic ink look -->
+    <filter id="stamp-texture" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="4" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="displaced" />
+      <!-- Add a slight blur and merge to simulate ink bleeding -->
+      <feGaussianBlur in="displaced" stdDeviation="0.4" result="blurred" />
+      <feMerge>
+        <feMergeNode in="blurred" />
+        <feMergeNode in="SourceGraphic" opacity="0.3" />
+      </feMerge>
+    </filter>
+
+    <!-- Clip path for the diagonal cuts at the ends of S (aligned with new S position) -->
+    <clipPath id="monogram-clip">
+      <path d="M 0,0 H 400 V 400 H 0 Z 
+               M 120,266 L 138,248 L 120,248 Z 
+               M 252,161 L 270,143 L 252,143 Z" 
+            clip-rule="evenodd" />
+    </clipPath>
+
+    <!-- Paths for circular text -->
+    <!-- Top text path: Clockwise arc from left to right -->
+    <path id="topTextPath" d="M 58,200 A 142,142 0 0,1 342,200" fill="none" />
+    <!-- Bottom text path: Counter-clockwise arc from left to right (to keep text upright) -->
+    <path id="bottomTextPath" d="M 42,200 A 158,158 0 0,0 358,200" fill="none" />
+  </defs>
+
+  <!-- Group with stamp filter applied -->
+  <g filter="url(#stamp-texture)">
+    <!-- Outer concentric circles -->
+    <circle cx="200" cy="200" r="185" stroke="#0f62ac" stroke-width="3" fill="none" />
+    <circle cx="200" cy="200" r="176" stroke="#0f62ac" stroke-width="1.5" fill="none" />
+    
+    <!-- Inner border separating text and center logo -->
+    <circle cx="200" cy="200" r="120" stroke="#0f62ac" stroke-width="3" fill="none" />
+
+    <!-- Separator Dots (Left and Right) -->
+    <circle cx="48" cy="200" r="6" fill="#0f62ac" />
+    <circle cx="352" cy="200" r="6" fill="#0f62ac" />
+
+    <!-- Top Text: Amharic (ድሬስኪል የሰለጠኑ ሠራተኞች አገናኝ) -->
+    <text font-family="'Inter', 'Noto Sans Ethiopic', 'Segoe UI', sans-serif" font-size="16" font-weight="bold" fill="#0f62ac" letter-spacing="1.5">
+      <textPath href="#topTextPath" startOffset="50%" text-anchor="middle">
+        ድሬስኪል የሰለጠኑ ሠራተኞች አገናኝ
+      </textPath>
+    </text>
+
+    <!-- Bottom Text: English (Skilled Worker Connector Platform) -->
+    <text font-family="'Inter', 'Segoe UI', sans-serif" font-size="15" font-weight="bold" fill="#0f62ac" letter-spacing="1.5">
+      <textPath href="#bottomTextPath" startOffset="50%" text-anchor="middle">
+        Skilled Worker Connector Platform
+      </textPath>
+    </text>
+
+    <!-- Center Section: Stylized 'DS' Monogram Logo (S shifted down-right to perfectly match the reference) -->
+    <g transform="translate(0, -10)" clip-path="url(#monogram-clip)">
+      <!-- Monogram D -->
+      <path d="M 155,215 L 155,125 L 195,125 A 45,45 0 0,1 195,215 Z" 
+            fill="none" stroke="url(#blueGrad)" stroke-width="16" stroke-linejoin="miter" stroke-linecap="square" />
+      
+      <!-- Monogram S (shifted down-right so it resides in the lower-right region of D, leaving the top-left space open) -->
+      <path d="M 130,258 L 190,258 C 220,258 230,238 225,218 C 215,198 170,198 155,183 C 155,163 170,153 195,153 L 260,153" 
+            fill="none" stroke="url(#blueGrad)" stroke-width="16" stroke-linejoin="miter" stroke-linecap="square" />
+    </g>
+
+    <!-- Centered Brand Name below the Monogram (No Phone Number) -->
+    <text x="200" y="278" font-family="'Inter', 'Segoe UI', sans-serif" font-size="19" font-weight="900" fill="#0f62ac" text-anchor="middle" letter-spacing="3.5">
+      DIRESKILL
+    </text>
+  </g>
+</svg>

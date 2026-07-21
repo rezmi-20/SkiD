@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { toggleWorkerVerification } from "@/lib/actions/admin";
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,13 +10,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { workerId, isVerified } = await req.json();
+    const { workerId, isVerified, reason } = await req.json();
 
     if (!workerId) {
       return NextResponse.json({ error: "Worker ID is required" }, { status: 400 });
     }
 
-    await sql`UPDATE worker_profiles SET is_verified = ${isVerified ?? true} WHERE user_id = ${workerId}`;
+    await toggleWorkerVerification(workerId, isVerified ?? true, reason);
 
     return NextResponse.json({ message: "Worker verification status updated" });
   } catch (error) {

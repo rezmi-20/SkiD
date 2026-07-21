@@ -3,6 +3,7 @@
 import { sql } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { areTrustedUploadReferences } from "@/lib/security";
 
 export async function createDispute(data: {
   jobId: string;
@@ -28,6 +29,10 @@ export async function createDispute(data: {
     }
 
     // 3. Insert dispute
+    if (data.evidenceUrls && !areTrustedUploadReferences(data.evidenceUrls)) {
+      throw new Error("Invalid evidence attachment reference");
+    }
+
     const evidence = data.evidenceUrls ? data.evidenceUrls : null;
     const result = await sql`
       INSERT INTO disputes (job_id, client_id, worker_id, description, evidence_urls, status)

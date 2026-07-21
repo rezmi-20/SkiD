@@ -35,7 +35,7 @@ For local development and platform management, use the following administrator c
 
 | Role      | Email                  | Password   |
 | --------- | ---------------------- | ---------- |
-| **Admin** | `admin@dire-skill.com` | `admin123` |
+| **Admin** | `<ADMIN_EMAIL>`        | `<ADMIN_PASSWORD>` |
 
 ---
 
@@ -115,11 +115,11 @@ Create a file named **`.env.local`** in the project root with exactly these valu
 
 ```env
 # Neon PostgreSQL — serverless DB hosted on neon.tech
-DATABASE_URL=postgresql://neondb_owner:npg_uH9bUs3KmtLP@ep-mute-meadow-anqyrcz7-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+DATABASE_URL=<YOUR_DATABASE_URL>
 
-# Neon Auth (Better Auth) configuration (Optional for local fallback, but recommended)
-NEON_AUTH_BASE_URL=https://auth.neon.tech
-NEON_AUTH_COOKIE_SECRET=your_secret_here
+# Neon Auth (Better Auth) configuration
+NEON_AUTH_BASE_URL=<YOUR_NEON_AUTH_BASE_URL>
+NEON_AUTH_COOKIE_SECRET=<YOUR_NEON_AUTH_COOKIE_SECRET>
 ```
 
 > ⚠️ **IMPORTANT NOTE FOR NEW DEVICES:** Because `.env.local` is gitignored, it does not get pulled automatically. You **must** create it manually in the root of the directory on your new device for the database connection to work.
@@ -131,7 +131,7 @@ NEON_AUTH_COOKIE_SECRET=your_secret_here
 If you can see the web app running but it hangs, shows a blank screen, or fails on registration/login due to a database error, follow these verification steps:
 
 1. **Verify `.env.local` Existence**: Ensure the `.env.local` file is in the root directory (same folder as `package.json`, NOT inside the `app` or `lib` folder).
-2. **Verify Environment Variables**: Make sure the keys are exactly `DATABASE_URL` with the connection string provided in Section 5 above (without spaces, double quotes, or trailing slashes).
+2. **Verify Environment Variables**: Make sure the keys are exactly `DATABASE_URL`, `NEON_AUTH_BASE_URL`, and `NEON_AUTH_COOKIE_SECRET`, with real values stored in your environment manager.
 3. **Restart the Dev Server**: Next.js does **not** hot-reload changes in `.env.local`. You **must** stop the server (`Ctrl + C`) and restart it using `npm run dev` to load the new values.
 4. **Neon IP Allowlist Block**:
    - If your database dashboard has an IP Allowlist turned on, it will reject requests from your new machine's IP address.
@@ -284,7 +284,7 @@ SklD/
 │   ├── contracts/              ← Contracts Hub
 │   │   └── [id]/               ← Digital Contract view
 │   │
-│   ├── diag/                   ← Diagnostic tools
+│   ├── diag/                   ← Disabled diagnostic route (returns 404)
 │   │
 │   └── api/
 │       ├── auth/[...nextauth]/ ← NextAuth route handler

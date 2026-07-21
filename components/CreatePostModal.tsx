@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { createCommunityPost } from "@/lib/actions/community";
+import { ImagePlus, X, Send } from "lucide-react";
 
 const CATEGORIES = ["Plumbing", "Electrical", "Painting", "DIY", "Gardening"];
 
@@ -14,7 +15,9 @@ export default function CreatePostModal({ onClose, onSuccess }: { onClose: () =>
     mediaUrl: ""
   });
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +33,32 @@ export default function CreatePostModal({ onClose, onSuccess }: { onClose: () =>
       setError(res.error || "Failed to post");
     }
     setLoading(false);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      const body = new FormData();
+      body.append("file", file);
+
+      const res = await fetch("/api/upload", { method: "POST", body });
+      const data = await res.json();
+
+      if (res.ok && data.url) {
+        setFormData((prev) => ({ ...prev, mediaUrl: data.url }));
+      } else {
+        setError(data.error || "Failed to upload image");
+      }
+    } catch (err) {
+      setError("An error occurred during image upload.");
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -49,54 +78,54 @@ export default function CreatePostModal({ onClose, onSuccess }: { onClose: () =>
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="relative w-full max-w-xl bg-surface rounded-t-[3rem] sm:rounded-[3rem] p-8 shadow-2xl flex flex-col gap-6"
+        className="relative w-full max-w-xl bg-card border border-border rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl flex flex-col gap-5"
       >
         <div className="flex items-center justify-between">
-          <button onClick={onClose} className="text-on-surface-variant font-bold text-sm">Cancel</button>
-          <h2 className="text-lg font-black tracking-tight">New Tip</h2>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground font-semibold text-sm">Cancel</button>
+          <h2 className="text-base font-extrabold tracking-tight uppercase">New Community Post</h2>
           <div className="w-10" />
         </div>
 
         {error && (
-          <div className="p-4 bg-error-container text-on-error-container rounded-2xl text-xs font-bold flex items-center gap-3">
-             <span className="material-symbols-outlined text-[18px]">error</span>
+          <div className="p-4 bg-destructive/10 text-destructive border border-destructive/20 rounded-xl text-xs font-bold flex items-center gap-3">
              {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-3">
             <input 
               type="text" 
-              placeholder="Post Title (e.g. How to fix a leaky faucet)"
+              placeholder="Post Title (e.g. Tips for repairing leaky pipes)"
               value={formData.title}
               onChange={e => setFormData({...formData, title: e.target.value})}
               required
-              className="w-full h-14 bg-surface-container-low border-none rounded-2xl px-6 font-bold text-on-surface placeholder:text-on-surface-variant focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+              className="w-full h-12 bg-background border border-border rounded-xl px-4 font-bold text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
             />
 
             <textarea 
-              placeholder="Share your practical tip or solution..."
+              placeholder="What knowledge would you like to share today?"
               value={formData.content}
               onChange={e => setFormData({...formData, content: e.target.value})}
               required
-              rows={5}
-              className="w-full bg-surface-container-low border-none rounded-2xl p-6 font-medium text-on-surface placeholder:text-on-surface-variant focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
+              rows={4}
+              className="w-full bg-background border border-border rounded-xl p-4 font-medium text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none text-sm leading-relaxed"
             />
           </div>
 
-          <div className="space-y-3">
-            <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-2">Select Category</label>
-            <div className="flex flex-wrap gap-2">
+          {/* Category selection */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Select Category</label>
+            <div className="flex flex-wrap gap-1.5">
               {CATEGORIES.map(cat => (
                 <button
                   key={cat}
                   type="button"
                   onClick={() => setFormData({...formData, category: cat})}
-                  className={`px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
+                  className={`px-4 py-2 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${
                     formData.category === cat 
-                      ? "bg-primary text-on-primary shadow-lg shadow-primary/20" 
-                      : "bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest"
+                      ? "bg-primary text-primary-foreground shadow-sm" 
+                      : "bg-muted text-muted-foreground hover:bg-border"
                   }`}
                 >
                   {cat}
@@ -105,26 +134,57 @@ export default function CreatePostModal({ onClose, onSuccess }: { onClose: () =>
             </div>
           </div>
 
-          {/* Multimedia Placeholder */}
-          <button 
-            type="button"
-            className="w-full py-6 border-2 border-dashed border-surface-container-highest rounded-2xl flex flex-col items-center gap-2 hover:bg-surface-container-low transition-colors group"
-          >
-            <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">add_photo_alternate</span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Add Photo or Video</span>
-          </button>
+          {/* Image Uploader */}
+          <div className="space-y-2">
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden" 
+              accept="image/*" 
+              onChange={handleImageUpload} 
+            />
+
+            {formData.mediaUrl ? (
+              <div className="relative rounded-xl overflow-hidden border border-border bg-muted h-40 group">
+                <img src={formData.mediaUrl} alt="Upload preview" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setFormData((prev) => ({ ...prev, mediaUrl: "" }))}
+                  className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <button 
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="w-full py-6 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-1.5 hover:bg-muted/40 transition-colors group"
+              >
+                {uploading ? (
+                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <ImagePlus size={18} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors">Attach Photo</span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
 
           <button 
             type="submit"
-            disabled={loading}
-            className="w-full h-16 bg-primary text-on-primary rounded-full font-black uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-primary/30 active:scale-95 transition-all disabled:opacity-50"
+            disabled={loading || uploading}
+            className="w-full h-12 bg-primary text-primary-foreground rounded-xl font-bold uppercase tracking-widest flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] transition-all disabled:opacity-50 text-xs"
           >
             {loading ? (
-              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
             ) : (
               <>
                 Post Tip
-                <span className="material-symbols-outlined">send</span>
+                <Send size={13} />
               </>
             )}
           </button>

@@ -3,6 +3,20 @@
 import { sql } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { isTrustedUploadReference } from "@/lib/security";
+
+function normalizeFaydaFan(value: unknown) {
+  const fan = typeof value === "string" ? value.trim().toUpperCase() : "";
+  if (!fan) return null;
+  return fan.replace(/[^A-Z0-9-]/g, "").slice(0, 64);
+}
+
+function maskFaydaFan(value: unknown) {
+  const fan = String(value || "").trim();
+  if (!fan) return null;
+  if (fan.length <= 6) return `${fan.slice(0, 2)}••${fan.slice(-2)}`;
+  return `${fan.slice(0, 6)}••••••••${fan.slice(-2)}`;
+}
 
 export async function getProfileData() {
   const session = await auth();
@@ -24,9 +38,19 @@ export async function getProfileData() {
       profile = rows[0];
     }
 
+    const fullFanNumber = profile?.fayda_fan_number;
+    const safeProfile = profile
+      ? {
+          ...profile,
+          fayda_fan_number: undefined,
+          masked_fayda_fan_number: maskFaydaFan(fullFanNumber),
+          has_fayda_fan_number: Boolean(fullFanNumber),
+        }
+      : profile;
+
     return {
       ...user,
-      ...profile,
+      ...safeProfile,
       role
     };
   } catch (error) {
@@ -62,6 +86,7 @@ export async function updateProfile(data: any) {
     }
 
     const isVerified = currentProfile?.is_verified || false;
+    const faydaFanNumber = normalizeFaydaFan(data.faydaFanNumber);
 
     // 2. Update Users table (email/phone always editable for now, or follow system rules)
     if (data.email || data.phone) {
@@ -86,7 +111,8 @@ export async function updateProfile(data: any) {
           gender = ${data.gender},
           date_of_birth = ${data.dateOfBirth},
           district = ${data.district},
-          hourly_rate = ${data.hourlyRate}
+          hourly_rate = ${data.hourlyRate},
+          fayda_fan_number = COALESCE(${faydaFanNumber}, fayda_fan_number)
         WHERE user_id = ${targetUserId}
       `;
     } else {
@@ -94,7 +120,8 @@ export async function updateProfile(data: any) {
         UPDATE client_profiles 
         SET 
           full_name = ${isVerified ? currentProfile.full_name : data.fullName},
-          avatar_url = ${isVerified ? currentProfile.avatar_url : data.avatarUrl}
+          avatar_url = ${isVerified ? currentProfile.avatar_url : data.avatarUrl},
+          fayda_fan_number = COALESCE(${faydaFanNumber}, fayda_fan_number)
         WHERE user_id = ${targetUserId}
       `;
     }
@@ -112,6 +139,10 @@ export async function resubmitVerification(faydaDocUrl: string) {
   const session = await auth();
   if (!session?.user?.id || session.user.role !== "worker") {
     return { success: false, error: "Unauthorized" };
+  }
+
+  if (!isTrustedUploadReference(faydaDocUrl, { allowDataImage: true })) {
+    return { success: false, error: "Invalid Fayda document reference" };
   }
 
   try {

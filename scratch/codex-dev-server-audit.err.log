@@ -1,0 +1,14 @@
+⚠ Port 3000 is in use by process 19580, using available port 3001 instead.
+⨯ Another next dev server is already running.
+
+- Local:        http://localhost:3000
+- PID:          19580
+- Dir:          C:\Users\Remedan\Documents\Final year project Implementation\SkiD
+- Log:          .next\dev\logs\next-development.log
+
+Run taskkill /PID 19580 /F to stop it.
+npm notice
+npm notice New minor version of npm available! 11.6.2 -> 11.18.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.18.0
+npm notice To update run: npm install -g npm@11.18.0
+npm notice

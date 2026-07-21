@@ -1,17 +1,25 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useLocation } from "@/context/LocationContext";
-import { useState } from "react";
 import { authClient } from "@/lib/auth/client";
+import { getProfileData } from "@/lib/actions/profile";
 import ProfileContent from "@/components/ProfileContent";
 
 export default function WorkerProfilePage() {
   const { data: session } = authClient.useSession();
   const { refreshLocation, loading: locLoading } = useLocation();
   const [justUpdated, setJustUpdated] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
 
-  const name = session?.user?.name || "Professional";
-  const email = session?.user?.email || "worker@direskilld.com";
+  useEffect(() => {
+    getProfileData().then(data => {
+      if (data) setProfile(data);
+    });
+  }, []);
+
+  const name = profile?.full_name || session?.user?.name || "Professional";
+  const email = profile?.email || session?.user?.email || "worker@direskilld.com";
   const initials = name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
 
   const handleUpdateLocation = () => {
@@ -44,40 +52,25 @@ export default function WorkerProfilePage() {
           isLoading: locLoading,
           isSuccess: justUpdated,
         },
-        {
-          label: "Credentials & Certifications",
-          subtitle: "Manage your professional documents",
-          icon: "verified_user",
-        },
-        {
-          label: "Earnings Vault",
-          subtitle: "View payment & withdrawal history",
-          icon: "account_balance_wallet",
-        },
-      ],
-    },
-    {
-      group: "Support",
-      items: [
-        {
-          label: "Contact Admin",
-          subtitle: "Reach out to DireSkill support team",
-          icon: "support_agent",
-        },
-        {
-          label: "Privacy & Settings",
-          subtitle: "Account security and preferences",
-          icon: "settings",
-        },
       ],
     },
   ];
 
-  const skills = ["Pipe Installation", "Leak Repair", "Solar Water Heaters", "Drain Unclogging"];
+  const skills = profile?.skills || ["Pipe Installation", "Leak Repair", "Solar Water Heaters", "Drain Unclogging"];
 
   return (
     <ProfileContent 
-      user={{ name, email, role: "worker", initials }}
+      user={{ 
+        name, 
+        email, 
+        role: "worker", 
+        initials,
+        avatarUrl: profile?.avatar_url || session?.user?.image || "/default-avatar.svg",
+        phone: profile?.phone,
+        gender: profile?.gender,
+        dateOfBirth: profile?.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString() : undefined,
+        district: profile?.district
+      }}
       stats={stats}
       menuGroups={menuGroups}
       skills={skills}

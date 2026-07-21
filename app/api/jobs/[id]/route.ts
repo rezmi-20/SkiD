@@ -1,6 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { updateJobStatus } from "@/lib/actions/jobs";
+import { z } from "zod";
+
+const patchSchema = z.object({
+  status: z.enum([
+    "pending",
+    "accepted",
+    "active",
+    "in_progress",
+    "completion_requested",
+    "completed",
+    "payment_pending",
+    "paid",
+    "closed",
+    "rejected",
+    "cancelled",
+    "disputed",
+  ]),
+});
 
 export async function GET(
   req: NextRequest,
@@ -36,23 +55,20 @@ export async function PATCH(
     const session = await auth();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { status } = await req.json();
-    if (!status) return NextResponse.json({ error: "Status is required" }, { status: 400 });
-
-    const jobs = await sql`SELECT * FROM jobs WHERE id = ${id}`;
-    if (jobs.length === 0) return NextResponse.json({ error: "Job not found" }, { status: 404 });
-
-    const job = jobs[0];
-
-    // Basic permission logic
-    if (session.user.role === "worker" && job.worker_id !== session.user.id) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-    if (session.user.role === "client" && job.client_id !== session.user.id) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const parsed = patchSchema.safeParse(await req.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid status", details: parsed.error.flatten() }, { status: 400 });
     }
 
-    await sql`UPDATE jobs SET status = ${status}, updated_at = NOW() WHERE id = ${id}`;
+    const result = await updateJobStatus(id, parsed.data.status);
+    if (!result.success) {
+      const statusCode =
+        result.error === "Unauthorized" ? 401 :
+        result.error === "Forbidden" ? 403 :
+        result.error === "Job not found" ? 404 :
+        409;
+      return NextResponse.json({ error: result.error }, { status: statusCode });
+    }
 
     return NextResponse.json({ message: "Job status updated" });
   } catch (error) {

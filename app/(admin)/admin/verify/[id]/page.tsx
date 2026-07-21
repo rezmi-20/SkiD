@@ -32,9 +32,9 @@ export default async function WorkerVerificationPage({ params }: { params: { id:
     redirect("/admin/dashboard");
   };
 
-  const handleReject = async () => {
+  const handleReject = async (reason: string) => {
     "use server";
-    await toggleWorkerVerification(worker.user_id, false);
+    await toggleWorkerVerification(worker.user_id, false, reason);
     redirect("/admin/dashboard");
   };
 
