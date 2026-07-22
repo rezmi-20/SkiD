@@ -1,21 +1,60 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { getUnreadCount } from "@/lib/actions/notifications";
+import { useEffect, useRef, useState } from "react";
 import { Bell, BellDot } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export default function NotificationBell({ role }: { role: "client" | "worker" }) {
   const [count, setCount] = useState(0);
+  const inFlightRef = useRef(false);
+  const abortRef = useRef<AbortController | null>(null);
   const href = role === "client" ? "/client/notifications" : "/worker/notifications";
 
   useEffect(() => {
-    getUnreadCount().then(setCount);
-    const interval = setInterval(() => getUnreadCount().then(setCount), 30_000);
-    return () => clearInterval(interval);
-  }, []);
+    let active = true;
+
+    async function loadUnreadCount() {
+      if (inFlightRef.current) return;
+
+      inFlightRef.current = true;
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      try {
+        const response = await fetch("/api/notifications/unread-count", {
+          credentials: "include",
+          cache: "no-store",
+          signal: controller.signal,
+        });
+
+        if (!active || !response.ok) return;
+
+        const data = await response.json().catch(() => null);
+        if (typeof data?.count === "number") {
+          setCount(data.count);
+        }
+      } catch {
+        // Keep the last known count during transient auth/network failures.
+      } finally {
+        if (abortRef.current === controller) {
+          abortRef.current = null;
+        }
+        inFlightRef.current = false;
+      }
+    }
+
+    loadUnreadCount();
+    const interval = window.setInterval(loadUnreadCount, 60_000);
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      abortRef.current?.abort();
+    };
+  }, [role]);
 
   return (
     <Link

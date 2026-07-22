@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { getChapaReceiptUrl } from "@/lib/config";
 import { getClientPayments } from "@/lib/actions/payments";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -135,16 +134,16 @@ export default async function ClientPaymentsPage() {
                             {payment.chapaRef && (
                               <p className="font-mono text-[9px] text-on-surface-variant opacity-50 truncate">{payment.chapaRef}</p>
                             )}
-                            {payment.paymentStatus === "released" && payment.chapaReference && (
+                            {payment.paymentStatus === "released" && payment.paymentId && (
                               <div className="pt-1">
                                 <a
-                                  href={getChapaReceiptUrl(payment.chapaReference)}
+                                  href={`/api/payments/${payment.paymentId}/receipt`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-primary hover:underline"
                                 >
                                   <Receipt size={12} />
-                                  <span>Chapa Receipt</span>
+                                  <span>PDF Receipt</span>
                                 </a>
                               </div>
                             )}

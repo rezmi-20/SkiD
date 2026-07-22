@@ -37,6 +37,19 @@ const checks = [
       /rejectContractTerms/,
       /contract\.terms_status !== "accepted"/,
       /activateContractAfterFullSignature/,
+      /Both client and worker must complete identity verification before signing this contract\./,
+      /COALESCE\(cp\.is_verified, false\) as client_verified/,
+      /COALESCE\(wp\.is_verified, false\) as worker_verified/,
+      /!contract\.client_verified \|\| !contract\.worker_verified/,
+    ],
+  },
+  {
+    file: "components/ContractDetails.tsx",
+    patterns: [
+      /Identity Verification/,
+      /VerificationStatusRow/,
+      /bothPartiesVerified/,
+      /disabled=\{isSigning \|\| !hasAllSignatureConsent \|\| !bothPartiesVerified\}/,
     ],
   },
   {
@@ -64,8 +77,31 @@ const checks = [
     patterns: [
       /RATEABLE_JOB_STATUSES = \["paid", "closed"\]/,
       /payment_status !== "released"/,
+      /ratingTargetForRole/,
+      /rated_id = \$\{ratedId\}/,
+      /Self-rating is not allowed\./,
       /sanitizeText\(reviewText/,
       /UPDATE jobs[\s\S]*SET status = 'closed'/,
+    ],
+  },
+  {
+    file: "app/(client)/client/rate/[jobId]/page.tsx",
+    patterns: [
+      /params: Promise<\{ jobId: string \}>/,
+      /const \{ jobId \} = await params/,
+    ],
+  },
+  {
+    file: "app/(worker)/worker/rate/[jobId]/page.tsx",
+    patterns: [
+      /params: Promise<\{ jobId: string \}>/,
+      /const \{ jobId \} = await params/,
+    ],
+  },
+  {
+    file: "components/ContractsPageContent.tsx",
+    patterns: [
+      /canRatePartner = isCompleted && !contract\.user_has_rated/,
     ],
   },
   {

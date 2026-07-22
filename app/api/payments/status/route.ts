@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
       SELECT
         p.id         AS payment_id,
         p.status,
+        p.chapa_status,
         p.chapa_reference,
         p.job_id,
         p.amount,
@@ -56,6 +57,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       status: payment.status,
+      verificationStatus: payment.status === "held" ? "pending_verification" : payment.chapa_status,
       paymentId: payment.payment_id,
       chapaReference: payment.chapa_reference ?? null,
       jobId: payment.job_id,

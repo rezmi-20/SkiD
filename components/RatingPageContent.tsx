@@ -63,6 +63,7 @@ export default function RatingPageContent({
 
     if (res.success) {
       setSubmitted(true);
+      router.refresh();
       return;
     }
 

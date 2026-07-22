@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { isAuthSessionUnavailableError } from "@/lib/auth/session-cookie";
 import { redirect } from "next/navigation";
 import { isSuperAdmin } from "@/lib/config";
 import { Sidebar } from "@/components/admin/Sidebar";
@@ -9,7 +10,19 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
+  let session;
+  try {
+    session = await auth();
+  } catch (error) {
+    if (isAuthSessionUnavailableError(error)) {
+      return (
+        <div className="min-h-screen bg-background p-6 text-on-background">
+          Authentication is temporarily unavailable. Please refresh this page in a moment.
+        </div>
+      );
+    }
+    throw error;
+  }
 
   if (!session || session.user.role !== "admin") {
     redirect("/login");

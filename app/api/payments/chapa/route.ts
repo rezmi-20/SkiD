@@ -214,13 +214,26 @@ export async function POST(req: NextRequest) {
     }
 
     const releasedPayments = await sql`
-      SELECT id FROM payments
+      SELECT id, status, chapa_ref, chapa_checkout_url FROM payments
       WHERE job_id = ${jobId} AND status IN ('released', 'held')
+      ORDER BY created_at DESC
       LIMIT 1
     `;
 
     if (releasedPayments.length > 0) {
-      return NextResponse.json({ error: "This job already has an active or successful payment." }, { status: 409 });
+      const existingPayment = releasedPayments[0];
+      const isHeld = existingPayment.status === "held";
+      return NextResponse.json(
+        {
+          error: isHeld
+            ? "This job already has a payment pending verification. Complete it in Chapa, then use Check Status to verify it."
+            : "This job already has a successful payment. Duplicate payment is not allowed.",
+          status: isHeld ? "pending_verification" : "released",
+          txRef: existingPayment.chapa_ref ?? null,
+          checkoutUrl: isHeld ? existingPayment.chapa_checkout_url ?? null : null,
+        },
+        { status: 409 },
+      );
     }
 
     const timestamp = Date.now();
@@ -260,7 +273,7 @@ export async function POST(req: NextRequest) {
               net_amount = ${breakdown.netAmount},
               chapa_ref = ${txRef},
               chapa_checkout_url = ${checkoutUrl},
-              chapa_status = ${chapaResponse.status},
+              chapa_status = 'pending_verification',
               chapa_response = ${JSON.stringify(chapaResponse)},
               worker_subaccount_id = ${job.chapa_subaccount_id},
               updated_at = now()
@@ -297,7 +310,7 @@ export async function POST(req: NextRequest) {
             'held',
             ${txRef},
             ${checkoutUrl},
-            ${chapaResponse.status},
+            'pending_verification',
             ${JSON.stringify(chapaResponse)},
             ${job.chapa_subaccount_id},
             now()

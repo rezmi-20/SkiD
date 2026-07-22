@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { isAuthSessionUnavailableError } from "@/lib/auth/session-cookie";
 import { sql } from "@/lib/db";
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
+    const optional = req.nextUrl.searchParams.get("optional") === "1";
     const session = await auth();
 
     if (!session?.user) {
+      if (optional) {
+        return NextResponse.json({ authenticated: false }, { status: 200 });
+      }
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -28,6 +33,12 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error) {
+    if (isAuthSessionUnavailableError(error)) {
+      return NextResponse.json(
+        { error: "Authentication service temporarily unavailable" },
+        { status: 503 }
+      );
+    }
     console.error("[AUTH_ME_ERROR]", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

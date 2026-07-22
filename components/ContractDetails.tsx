@@ -64,6 +64,20 @@ function SignatureRow({ label, name, signedAt }: { label: string; name: string |
   );
 }
 
+function VerificationStatusRow({ label, verified }: { label: string; verified: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant bg-surface-container p-3">
+      <span className="text-sm font-bold text-on-surface">{label}</span>
+      <span className={`inline-flex items-center gap-1.5 text-xs font-black ${verified ? "text-primary" : "text-error"}`}>
+        <span className="material-symbols-outlined text-[16px]">
+          {verified ? "check_circle" : "cancel"}
+        </span>
+        {verified ? "Verified" : "Not verified"}
+      </span>
+    </div>
+  );
+}
+
 function DocumentEvidenceCard({
   pdfUrl,
   documentHash,
@@ -321,6 +335,9 @@ export default function ContractDetails({ contract, userId }: Props) {
     (isClient && contractStatus === "WORKER_SIGNED") ||
     (!isClient && contractStatus === "CLIENT_SIGNED");
   const hasAllSignatureConsent = Object.values(signatureConsent).every(Boolean);
+  const clientVerified = !!contract.client_verified;
+  const workerVerified = !!contract.worker_verified;
+  const bothPartiesVerified = clientVerified && workerVerified;
   const canEditDraft = isClient && contractStatus === "DRAFT";
   const canWorkerReviewTerms = !isClient && contractStatus === "DRAFT" && termsStatus === "submitted";
   const canFinalizeDraft = canEditDraft && termsStatus === "accepted";
@@ -694,6 +711,17 @@ export default function ContractDetails({ contract, userId }: Props) {
           <SignatureRow label="Worker" name={contract.worker_name} signedAt={contract.worker_signed_at} />
 
           <div className="rounded-lg border border-outline-variant bg-surface-container-lowest p-5">
+            <div className="mb-4 space-y-3 rounded-lg border border-outline-variant bg-surface-container-lowest p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Identity Verification</p>
+              <VerificationStatusRow label="Client" verified={clientVerified} />
+              <VerificationStatusRow label="Worker" verified={workerVerified} />
+              {!bothPartiesVerified && (
+                <p className="text-xs font-bold leading-5 text-error">
+                  Both client and worker must complete identity verification before signing this contract.
+                </p>
+              )}
+            </div>
+
             {canClientReviewCompletion && (
               <div className="mb-4 space-y-3 rounded-lg border border-primary/30 bg-primary/10 p-4">
                 <p className="text-[10px] font-black uppercase tracking-widest text-primary">Completion Review</p>
@@ -735,6 +763,10 @@ export default function ContractDetails({ contract, userId }: Props) {
               <div className="rounded-lg border border-secondary/30 bg-secondary/10 p-4 text-sm font-bold text-secondary">
                 This is a contract draft. The client can edit and finalize it in the next workflow step before either party signs.
               </div>
+            ) : !bothPartiesVerified && canSign && !userHasSigned ? (
+              <div className="rounded-lg border border-error/30 bg-error/10 p-4 text-sm font-bold text-error">
+                Both client and worker must complete identity verification before signing this contract.
+              </div>
             ) : !canSign ? (
               <div className="rounded-lg border border-outline-variant bg-surface-container p-4 text-sm font-bold text-on-surface-variant">
                 This contract is not ready for your signature yet.
@@ -768,7 +800,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                 <button
                   type="button"
                   onClick={() => setIsPinModalOpen(true)}
-                  disabled={isSigning || !hasAllSignatureConsent}
+                  disabled={isSigning || !hasAllSignatureConsent || !bothPartiesVerified}
                   className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-xs font-black uppercase tracking-widest text-on-primary disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <span className="material-symbols-outlined text-[18px]">draw</span>

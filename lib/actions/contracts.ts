@@ -15,6 +15,9 @@ type ContractActionResult =
       code?: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "INVALID_STATE" | "DUPLICATE" | "CONTRACT_SETUP_REQUIRED" | "UNKNOWN";
     };
 
+const BOTH_PARTIES_VERIFIED_MESSAGE =
+  "Both client and worker must complete identity verification before signing this contract.";
+
 interface ContractDraftInput {
   jobTitle: string;
   jobDescription: string;
@@ -467,7 +470,13 @@ export async function getUserContracts() {
           COALESCE(c.payment_amount, j.budget) as budget,
           wp.full_name as partner_name,
           wp.avatar_url as partner_avatar,
-          wp.is_verified as partner_verified
+          wp.is_verified as partner_verified,
+          EXISTS (
+            SELECT 1 FROM ratings r
+            WHERE r.job_id = j.id
+              AND r.rater_id = ${userId}
+              AND r.rated_id = j.worker_id
+          ) as user_has_rated
         FROM contracts c
         JOIN jobs j ON c.job_id = j.id
         LEFT JOIN worker_profiles wp ON j.worker_id = wp.user_id
@@ -491,7 +500,14 @@ export async function getUserContracts() {
           j.status as job_status,
           COALESCE(c.payment_amount, j.budget) as budget,
           cp.full_name as partner_name,
-          cp.avatar_url as partner_avatar
+          cp.avatar_url as partner_avatar,
+          cp.is_verified as partner_verified,
+          EXISTS (
+            SELECT 1 FROM ratings r
+            WHERE r.job_id = j.id
+              AND r.rater_id = ${userId}
+              AND r.rated_id = j.client_id
+          ) as user_has_rated
         FROM contracts c
         JOIN jobs j ON c.job_id = j.id
         LEFT JOIN client_profiles cp ON j.client_id = cp.user_id
@@ -535,6 +551,7 @@ export async function getContractForSigning(contractId: string) {
         wp.is_verified as worker_verified,
         cp.full_name as client_name,
         cp.avatar_url as client_avatar,
+        cp.is_verified as client_verified,
         u_client.phone as client_phone
       FROM contracts c
       JOIN jobs j ON c.job_id = j.id
@@ -643,9 +660,13 @@ async function signContractForRole(
         j.client_id,
         j.worker_id,
         j.title as job_title,
-        j.status as job_status
+        j.status as job_status,
+        COALESCE(cp.is_verified, false) as client_verified,
+        COALESCE(wp.is_verified, false) as worker_verified
       FROM contracts c
       JOIN jobs j ON c.job_id = j.id
+      LEFT JOIN client_profiles cp ON j.client_id = cp.user_id
+      LEFT JOIN worker_profiles wp ON j.worker_id = wp.user_id
       WHERE c.id = ${contractId}
       LIMIT 1
     `;
@@ -682,6 +703,14 @@ async function signContractForRole(
       return {
         success: false,
         error: `Cannot sign while job is in ${contract.job_status} state`,
+        code: "INVALID_STATE",
+      };
+    }
+
+    if (!contract.client_verified || !contract.worker_verified) {
+      return {
+        success: false,
+        error: BOTH_PARTIES_VERIFIED_MESSAGE,
         code: "INVALID_STATE",
       };
     }

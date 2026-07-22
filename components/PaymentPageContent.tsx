@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { getChapaReceiptUrl } from "@/lib/config";
 
 type Step = "ready" | "processing" | "awaiting" | "confirmed" | "paid";
 
@@ -18,7 +17,9 @@ interface PaymentPageContentProps {
   netAmount: number;
   commissionRate: number;
   paymentStatus: string;
+  chapaStatus?: string | null;
   alreadyPaid: boolean;
+  paymentId?: string | null;
   existingTxRef?: string;
 }
 
@@ -55,11 +56,14 @@ export default function PaymentPageContent({
   netAmount,
   commissionRate,
   paymentStatus,
+  chapaStatus,
   alreadyPaid,
+  paymentId,
   existingTxRef,
 }: PaymentPageContentProps) {
   const router = useRouter();
-  const [step, setStep] = useState<Step>(alreadyPaid ? "paid" : "ready");
+  const hasPendingVerification = !alreadyPaid && paymentStatus === "held" && !!existingTxRef;
+  const [step, setStep] = useState<Step>(alreadyPaid ? "paid" : hasPendingVerification ? "awaiting" : "ready");
   const [selectedMethod, setSelectedMethod] = useState(PAYMENT_METHODS[0].id);
   const [txRef, setTxRef] = useState(existingTxRef ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -130,6 +134,12 @@ export default function PaymentPageContent({
         txRef?: string;
         checkoutUrl?: string;
       };
+      if (!initRes.ok && initRes.status === 409 && initData.txRef) {
+        setTxRef(initData.txRef);
+        setStep("awaiting");
+        setError(initData.error || "A payment is already pending verification. Complete it in Chapa, then check status here.");
+        return;
+      }
       if (!initRes.ok) throw new Error(initData.error || "Payment initiation failed");
       if (!initData.txRef) throw new Error("Payment initiation did not return a transaction reference.");
       if (!initData.checkoutUrl) throw new Error("Chapa did not return a checkout URL.");
@@ -192,7 +202,7 @@ export default function PaymentPageContent({
             </div>
           </div>
           <span className="rounded-full border border-surface-variant px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-on-surface-variant">
-            {step === "paid" || step === "confirmed" ? "Released" : step === "awaiting" ? "Pending" : paymentStatus === "held" ? "Initiated" : "Pending"}
+            {step === "paid" || step === "confirmed" ? "Released" : step === "awaiting" || hasPendingVerification ? "Pending Verification" : paymentStatus === "held" ? "Initiated" : "Pending"}
           </span>
         </div>
       </header>
@@ -288,15 +298,15 @@ export default function PaymentPageContent({
                 <p className="text-sm font-bold text-primary">Payment Confirmed!</p>
                 <p className="text-xs text-on-surface-variant">The payment has been verified and released to the worker.</p>
               </div>
-              {confirmedData.chapaReference && (
+              {confirmedData.paymentId && (
                 <a
-                  href={getChapaReceiptUrl(confirmedData.chapaReference)}
+                  href={`/api/payments/${confirmedData.paymentId}/receipt`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-surface-variant text-sm font-bold text-on-surface hover:bg-surface-container-high"
                 >
                   <span className="material-symbols-outlined text-[18px]">receipt_long</span>
-                  Chapa Receipt
+                  Download PDF Receipt
                 </a>
               )}
               <button
@@ -358,7 +368,7 @@ export default function PaymentPageContent({
               {step === "paid" || step === "confirmed"
                 ? "Paid to worker"
                 : step === "awaiting"
-                ? "Waiting for Chapa confirmation"
+                ? "Pending verification"
                 : paymentStatus === "held"
                 ? "Chapa payment started"
                 : "Ready to pay"}
@@ -374,6 +384,12 @@ export default function PaymentPageContent({
               <div className="flex justify-between gap-3">
                 <span className="text-on-surface-variant">Chapa ref</span>
                 <span className="truncate font-mono text-xs text-on-surface">{txRef}</span>
+              </div>
+            )}
+            {chapaStatus && (
+              <div className="flex justify-between gap-3">
+                <span className="text-on-surface-variant">Verification</span>
+                <span className="truncate text-xs font-semibold capitalize text-on-surface">{String(chapaStatus).replaceAll("_", " ")}</span>
               </div>
             )}
           </div>

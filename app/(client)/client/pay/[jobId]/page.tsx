@@ -35,7 +35,9 @@ export default async function PaymentPage({ params }: { params: Promise<{ jobId:
       netAmount={data.net_amount ?? 0}
       commissionRate={data.commission_rate ?? 0.05}
       paymentStatus={data.payment_status ?? "unpaid"}
+      chapaStatus={data.chapa_status ?? null}
       alreadyPaid={alreadyPaid}
+      paymentId={data.payment_id ?? null}
       existingTxRef={data.tx_ref}
     />
   );

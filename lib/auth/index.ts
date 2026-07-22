@@ -2,13 +2,19 @@
 import { auth as serverAuth } from "./server";
 import { sql } from "../db";
 import { cookies } from "next/headers";
-import { getNeonSessionFromCookies } from "./session-cookie";
+import {
+  AuthSessionUnavailableError,
+  getNeonSessionFromCookies,
+  isAuthSessionUnavailableError,
+} from "./session-cookie";
 
 // Server pages, layouts, and API routes should use this wrapper instead of
 // calling serverAuth.getSession() directly. The Neon Auth beta can miss secure
 // session-token cookies, but the signed session-data cookie is still reliable.
 export const auth = async () => {
   const cookieStore = await cookies();
+  const allCookies = cookieStore.getAll();
+  const hasAuthCookie = allCookies.some((cookie) => cookie.name.includes("neon-auth"));
   let session = await getNeonSessionFromCookies(cookieStore);
 
   if (!session?.user) {
@@ -17,6 +23,9 @@ export const auth = async () => {
       session = result.data as typeof session;
     } catch (err) {
       console.warn("Neon Auth getSession failed", err);
+      if (hasAuthCookie || isAuthSessionUnavailableError(err)) {
+        throw new AuthSessionUnavailableError();
+      }
       return null;
     }
   }

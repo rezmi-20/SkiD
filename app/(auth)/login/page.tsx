@@ -46,19 +46,22 @@ export default function LoginPage() {
 
     const checkSession = async () => {
       try {
-        const res = await fetch("/api/auth/me", {
+        const res = await fetch("/api/auth/me?optional=1", {
           credentials: "include",
           cache: "no-store",
         });
 
         if (res.ok) {
-          const { role } = await res.json();
+          const { authenticated, role } = await res.json();
+          if (authenticated === false) return;
           if (role === "client") router.replace("/client/search");
           else if (role === "worker") router.replace("/worker/dashboard");
           else if (role === "admin") router.replace("/admin/dashboard");
+        } else if (res.status >= 500) {
+          setError("The authentication service is temporarily unavailable. Please try again in a moment.");
         }
       } catch (err) {
-        console.error("Session check error", err);
+        setError(getLoginErrorMessage(err));
       }
     };
     checkSession();

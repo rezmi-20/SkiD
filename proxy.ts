@@ -1,4 +1,5 @@
 import { getNeonSessionFromCookies } from "@/lib/auth/session-cookie";
+import { isAuthSessionUnavailableError } from "@/lib/auth/session-cookie";
 import { NextResponse, NextRequest } from "next/server";
 import { sql } from "@/lib/db";
 
@@ -68,7 +69,14 @@ export default async function proxy(req: NextRequest) {
   } catch (error) {
     console.error("[PROXY_ERROR]", error);
     if (pathname.startsWith("/client") || pathname.startsWith("/worker") || pathname.startsWith("/admin")) {
-      return NextResponse.redirect(new URL("/login", req.url));
+      if (isAuthSessionUnavailableError(error)) {
+        return new NextResponse("Authentication service temporarily unavailable. Please refresh and try again.", {
+          status: 503,
+        });
+      }
+      return new NextResponse("Unable to verify access. Please refresh and try again.", {
+        status: 503,
+      });
     }
     return NextResponse.next();
   }

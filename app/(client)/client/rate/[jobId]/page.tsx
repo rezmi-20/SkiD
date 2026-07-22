@@ -7,8 +7,9 @@ export const metadata = {
   description: "Leave a review and rating for your completed job.",
 };
 
-export default async function ClientRatingPage({ params }: { params: { jobId: string } }) {
-  const data = await getRatingPageData(params.jobId);
+export default async function ClientRatingPage({ params }: { params: Promise<{ jobId: string }> }) {
+  const { jobId } = await params;
+  const data = await getRatingPageData(jobId);
 
   if (!data) redirect("/client/contracts");
 

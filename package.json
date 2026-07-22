@@ -1,6 +1,8 @@
 {
   "scripts": {
     "check:auth": "node scripts/check-auth-consistency.mjs",
+    "check:auth:runtime": "node scripts/check-auth-runtime-stability.mjs",
+    "check:auth:session-lifetime": "node scripts/check-auth-session-lifetime.mjs",
     "check:workflow": "node scripts/verify-core-workflow-rules.mjs",
     "db:verify:core": "node scripts/verify-core-mvp-database.mjs",
     "db:migrate:core": "node scripts/apply-core-mvp-migration.mjs",

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Download, CreditCard, ArrowUpRight, Receipt, Briefcase, Building2, Clock, Landmark, TrendingUp } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { getChapaReceiptUrl } from "@/lib/config";
 import FadeContent from "@/components/ui/fade-content";
 import { Separator } from "@/components/ui/separator";
 
@@ -248,16 +247,16 @@ export default function WorkerEarningsContent({ earnings }: WorkerEarningsConten
                   {tx.chapaRef && (
                     <p className="mt-1 truncate font-mono text-[10px] text-on-surface-variant opacity-50">{tx.chapaRef}</p>
                   )}
-                  {tx.status === "released" && tx.chapaReference && (
+                  {tx.status === "released" && tx.id && (
                     <div className="mt-2">
                       <a
-                        href={getChapaReceiptUrl(tx.chapaReference)}
+                        href={`/api/payments/${tx.id}/receipt`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-primary hover:underline"
                       >
                         <Receipt className="w-3.5 h-3.5" />
-                        Chapa Receipt
+                        PDF Receipt
                       </a>
                     </div>
                   )}

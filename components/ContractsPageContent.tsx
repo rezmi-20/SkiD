@@ -121,6 +121,7 @@ export default function ContractsPageContent({ contracts = [], role }: Props) {
             {filteredContracts.map((contract, index) => {
               const status = contract.contract_status || contract.job_status;
               const isCompleted = ["paid", "closed"].includes(contract.job_status);
+              const canRatePartner = isCompleted && !contract.user_has_rated;
               const isDisputed = contract.job_status === 'disputed';
               const isDraft = status === "DRAFT";
               const isPending = !contract.signed_at;
@@ -219,7 +220,7 @@ export default function ContractsPageContent({ contracts = [], role }: Props) {
                         )}
                       </div>
 
-                      {isCompleted && (
+                      {canRatePartner && (
                         <Button variant="outline" size="sm" className="w-full rounded-xl text-xs font-bold uppercase tracking-wider h-10 text-primary border-primary/20 hover:bg-primary/5 active:scale-95 duration-150" asChild>
                           <Link href={role === 'client' ? `/client/rate/${contract.job_id}` : `/worker/rate/${contract.job_id}`}>
                             <Star size={12} className="mr-1.5 fill-primary stroke-none" />

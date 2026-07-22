@@ -20,6 +20,10 @@ function isRateableJobStatus(status: string | null | undefined) {
   return RATEABLE_JOB_STATUSES.includes(status as (typeof RATEABLE_JOB_STATUSES)[number]);
 }
 
+function ratingTargetForRole(job: { client_id: string; worker_id: string | null }, role: "client" | "worker") {
+  return role === "client" ? job.worker_id : job.client_id;
+}
+
 async function logAuditAction(userId: string, action: string, details: Record<string, unknown>) {
   try {
     await sql`
@@ -73,15 +77,20 @@ export async function getRatingPageData(jobId: string) {
     const isWorker = role === "worker" && job.worker_id === userId;
     if (!isClient && !isWorker) return null;
 
+    const ratedId = ratingTargetForRole(job, isClient ? "client" : "worker");
+    if (!ratedId || ratedId === userId) return null;
+
     const existing = await sql`
       SELECT id FROM ratings
-      WHERE job_id = ${jobId} AND rater_id = ${userId}
+      WHERE job_id = ${jobId}
+        AND rater_id = ${userId}
+        AND rated_id = ${ratedId}
       LIMIT 1
     `;
 
     return {
       job,
-      ratedId: isClient ? job.worker_id : job.client_id,
+      ratedId,
       ratedName: isClient ? job.worker_name : job.client_name,
       ratedAvatar: isClient ? job.worker_avatar : job.client_avatar,
       ratedVerified: isClient ? job.worker_verified : job.client_verified,
@@ -191,9 +200,13 @@ async function rateForRole(
       return { success: false, error: "You have already submitted a review for this job.", code: "DUPLICATE" };
     }
 
-    const ratedId = isClientRatingWorker ? job.worker_id : job.client_id;
+    const ratedId = ratingTargetForRole(job, role);
     if (!ratedId) {
       return { success: false, error: "The other party could not be found.", code: "INVALID_STATE" };
+    }
+
+    if (ratedId === session.user.id) {
+      return { success: false, error: "Self-rating is not allowed.", code: "INVALID_STATE" };
     }
 
     await sql`

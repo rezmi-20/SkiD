@@ -69,6 +69,7 @@ export async function getPaymentPageData(jobId: string) {
         c.payment_amount,
         p.id as payment_id,
         p.status as payment_status,
+        p.chapa_status,
         p.chapa_ref as tx_ref,
         p.chapa_reference,
         p.amount as paid_amount,

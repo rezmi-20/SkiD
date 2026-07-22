@@ -1,5 +1,16 @@
 import { jwtVerify } from "jose";
 
+export class AuthSessionUnavailableError extends Error {
+  constructor(message = "Authentication service temporarily unavailable") {
+    super(message);
+    this.name = "AuthSessionUnavailableError";
+  }
+}
+
+export function isAuthSessionUnavailableError(error: unknown) {
+  return error instanceof AuthSessionUnavailableError;
+}
+
 export type NeonCachedSession = {
   session?: {
     userId?: string;
@@ -80,6 +91,11 @@ async function getNeonSessionFromTokenCookie(
 
     if (!response.ok) {
       console.warn("[AUTH_SESSION_TOKEN_FETCH_FAILED]", response.status, response.statusText);
+      if (response.status >= 500) {
+        throw new AuthSessionUnavailableError(
+          `Authentication service returned ${response.status}`
+        );
+      }
       return null;
     }
 
@@ -88,7 +104,10 @@ async function getNeonSessionFromTokenCookie(
 
     return session as NeonCachedSession;
   } catch (error) {
+    if (isAuthSessionUnavailableError(error)) {
+      throw error;
+    }
     console.warn("[AUTH_SESSION_TOKEN_FALLBACK_FAILED]", error);
-    return null;
+    throw new AuthSessionUnavailableError();
   }
 }
