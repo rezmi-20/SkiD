@@ -4,7 +4,6 @@ import path from "node:path";
 const root = process.cwd();
 const allowedServerAuthImports = new Set([
   path.normalize("app/api/auth/[...path]/route.ts"),
-  path.normalize("app/api/auth/debug-session/route.ts"),
   path.normalize("lib/auth/index.ts"),
 ]);
 

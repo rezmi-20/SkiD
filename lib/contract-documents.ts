@@ -200,7 +200,10 @@ export async function activateContractAfterFullSignature(contractId: string) {
     })),
   });
   const documentHash = crypto.createHash("sha256").update(canonicalPayload).digest("hex");
-  const publicBaseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://direskill.local";
+  const publicBaseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.BASE_URL;
+  if (!publicBaseUrl) {
+    throw new Error("Public application URL is not configured.");
+  }
   const verificationUrl = `${publicBaseUrl.replace(/\/$/, "")}/contracts/${contractId}?hash=${documentHash}`;
   const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, {
     errorCorrectionLevel: "M",

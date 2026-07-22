@@ -66,7 +66,40 @@ export async function setUserRole(userId: string, role: "client" | "worker" | "a
   await requireSuperAdmin();
 
   try {
-    await sql`UPDATE users SET role = ${role} WHERE id = ${userId}`;
+    const targetRows = await sql`
+      SELECT
+        u.role,
+        EXISTS (
+          SELECT 1 FROM worker_profiles wp WHERE wp.user_id = u.id
+        ) AS "hasWorkerProfile",
+        EXISTS (
+          SELECT 1 FROM client_profiles cp WHERE cp.user_id = u.id
+        ) AS "hasClientProfile"
+      FROM users u
+      WHERE u.id = ${userId}
+      LIMIT 1
+    `;
+
+    if (targetRows.length === 0) {
+      return { success: false, error: "User not found." };
+    }
+
+    const currentRole = targetRows[0].role as "client" | "worker" | "admin";
+    const hasWorkerProfile = Boolean(targetRows[0].hasWorkerProfile);
+    const hasClientProfile = Boolean(targetRows[0].hasClientProfile);
+
+    const nextRole =
+      role === "admin"
+        ? "admin"
+        : currentRole === "admin"
+          ? hasWorkerProfile
+            ? "worker"
+            : hasClientProfile
+              ? "client"
+              : "client"
+          : role;
+
+    await sql`UPDATE users SET role = ${nextRole} WHERE id = ${userId}`;
     revalidatePath("/admin/users");
     return { success: true };
   } catch (err) {

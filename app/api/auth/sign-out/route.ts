@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
 
@@ -13,10 +13,8 @@ const NEON_COOKIE_NAMES = [
   "__Secure-neon-auth.session_challenge",
 ];
 
-export async function GET() {
-  const res = NextResponse.redirect(new URL("/login", process.env.VERCEL_PROJECT_PRODUCTION_URL 
-    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` 
-    : "http://localhost:3000"));
+export async function GET(req: NextRequest) {
+  const res = NextResponse.redirect(new URL("/login", req.url));
   
   // Expire all Neon Auth cookies
   for (const name of NEON_COOKIE_NAMES) {
@@ -27,7 +25,7 @@ export async function GET() {
   return res;
 }
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   const res = NextResponse.json({ success: true });
   
   // Expire all Neon Auth cookies

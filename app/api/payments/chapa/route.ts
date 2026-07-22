@@ -22,19 +22,20 @@ function normalizeUrl(url: string) {
 }
 
 function appUrl() {
-  return normalizeUrl(
+  const candidate =
     process.env.BASE_URL ||
     process.env.NEXT_PUBLIC_BASE_URL ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    "http://localhost:3000",
-  );
+    process.env.NEXT_PUBLIC_APP_URL;
+
+  return candidate ? normalizeUrl(candidate) : null;
 }
 
 function paymentWebhookUrl() {
+  const baseUrl = appUrl();
   const candidates = [
     process.env.WEBHOOK_URL,
     process.env.CHAPA_WEBHOOK_URL,
-    `${appUrl()}/api/payment/webhook`,
+    baseUrl ? `${baseUrl}/api/payment/webhook` : null,
   ];
 
   for (const candidate of candidates) {
@@ -57,7 +58,9 @@ function paymentWebhookUrl() {
 }
 
 function paymentReturnUrl(jobId: string, txRef: string) {
-  return `${appUrl()}/payment-success?job_id=${encodeURIComponent(jobId)}&tx_ref=${encodeURIComponent(txRef)}`;
+  const baseUrl = appUrl();
+  if (!baseUrl) return null;
+  return `${baseUrl}/payment-success?job_id=${encodeURIComponent(jobId)}&tx_ref=${encodeURIComponent(txRef)}`;
 }
 
 function splitName(fullName: string | null | undefined) {

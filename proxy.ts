@@ -30,7 +30,7 @@ function applyCorsHeaders(req: NextRequest, res: NextResponse) {
   return res;
 }
 
-export default async function middleware(req: NextRequest) {
+export default async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const isApiRoute = pathname.startsWith("/api/");
 
@@ -43,7 +43,6 @@ export default async function middleware(req: NextRequest) {
   }
 
   try {
-    // Read session directly from request cookies instead of calling next/headers cookies()
     const session = await getNeonSessionFromCookies(req.cookies);
     const isLoggedIn = !!session?.user;
     const user = session?.user as any;
@@ -58,7 +57,6 @@ export default async function middleware(req: NextRequest) {
     }
 
     if (isLoggedIn && isAuthPage) {
-      // Query the database for the user role only if they are logged in and trying to access the login/register pages
       const rows = await sql`SELECT role FROM users WHERE id = ${user.id}`;
       const dbRole = rows[0]?.role;
       if (dbRole === "client") return NextResponse.redirect(new URL("/client/search", req.url));
@@ -68,7 +66,7 @@ export default async function middleware(req: NextRequest) {
 
     return NextResponse.next();
   } catch (error) {
-    console.error("[MIDDLEWARE_ERROR]", error);
+    console.error("[PROXY_ERROR]", error);
     if (pathname.startsWith("/client") || pathname.startsWith("/worker") || pathname.startsWith("/admin")) {
       return NextResponse.redirect(new URL("/login", req.url));
     }
