@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { toggleWorkerVerification } from "@/lib/actions/admin";
+import { updateWorkerVerificationStatus } from "@/lib/actions/admin";
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,13 +10,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { workerId, isVerified, reason } = await req.json();
+    const { workerId, isVerified, reason, status } = await req.json();
 
     if (!workerId) {
       return NextResponse.json({ error: "Worker ID is required" }, { status: 400 });
     }
 
-    await toggleWorkerVerification(workerId, isVerified ?? true, reason);
+    const nextStatus = typeof status === "string" ? status : isVerified === false ? "rejected" : "approved";
+    const result = await updateWorkerVerificationStatus(workerId, nextStatus, reason);
+    if (!result.success) {
+      return NextResponse.json({ error: result.error || "Failed to update worker verification status" }, { status: 400 });
+    }
 
     return NextResponse.json({ message: "Worker verification status updated" });
   } catch (error) {

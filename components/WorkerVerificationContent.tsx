@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useState } from "react";
+import { toWorkerDisplayStatus } from "@/lib/worker-verification";
 
 interface WorkerVerificationContentProps {
   worker: {
@@ -10,22 +11,37 @@ interface WorkerVerificationContentProps {
     full_name: string;
     email: string;
     phone: string;
-    fayda_fan_number?: string | null;
+    masked_fin?: string | null;
     district: string;
     skills: string[];
     fayda_doc_url: string;
     is_verified: boolean;
+    verification_status?: string | null;
+    is_suspended?: boolean | null;
   };
   onApprove: () => void;
   onReject: (reason: string) => void;
+  onRevoke: (reason: string) => void;
+  onPending: () => void;
 }
 
 export default function WorkerVerificationContent({
   worker,
   onApprove,
-  onReject
+  onReject,
+  onRevoke,
+  onPending
 }: WorkerVerificationContentProps) {
   const [rejectReason, setRejectReason] = useState("");
+  const displayStatus = toWorkerDisplayStatus(worker.verification_status, worker.is_verified, worker.is_suspended);
+  const requireReason = (action: (reason: string) => void) => {
+    const reason = rejectReason.trim();
+    if (!reason) {
+      alert("Please enter a reason before rejecting or revoking verification.");
+      return;
+    }
+    action(reason);
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-12 pb-32">
@@ -34,7 +50,7 @@ export default function WorkerVerificationContent({
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-1">
         <div className="space-y-4">
           <Link 
-            href="/admin/dashboard" 
+            href="/admin/verify" 
             className="text-[10px] font-black uppercase tracking-[0.3em] text-primary hover:opacity-70 transition-all flex items-center gap-2"
           >
             <span className="material-symbols-outlined text-[14px]">arrow_back</span>
@@ -52,11 +68,11 @@ export default function WorkerVerificationContent({
         <div className="flex flex-col items-start md:items-end gap-2">
           <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-40">System Status</p>
           <div className={`px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.15em] shadow-sm border ${
-            worker.is_verified 
+            displayStatus === "approved"
               ? 'bg-primary/10 text-primary border-primary/20' 
               : 'bg-secondary/10 text-secondary border-secondary/20'
           }`}>
-            {worker.is_verified ? 'Verified Asset' : 'Pending Audit'}
+            {displayStatus}
           </div>
         </div>
       </header>
@@ -75,7 +91,7 @@ export default function WorkerVerificationContent({
                 { label: "Legal Name", value: worker.full_name },
                 { label: "Email Index", value: worker.email },
                 { label: "Phone Node", value: `+251 ${worker.phone}` },
-                { label: "Fayda FAN", value: worker.fayda_fan_number || "Not recorded" },
+                { label: "Fayda FIN", value: worker.masked_fin || "Not recorded" },
                 { label: "District", value: worker.district || "Unspecified" },
               ].map((item) => (
                 <div key={item.label}>
@@ -134,25 +150,42 @@ export default function WorkerVerificationContent({
             value={rejectReason}
             onChange={(event) => setRejectReason(event.target.value)}
             rows={3}
-            placeholder="Rejection reason, shown to the worker if rejected"
+            placeholder="Reason required for rejection or revocation"
             className="w-full rounded-2xl border border-surface-container-highest bg-surface-container-low px-4 py-3 text-sm font-medium text-on-surface outline-none focus:border-secondary"
           />
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
              <button 
                 onClick={onApprove}
-                disabled={worker.is_verified}
+                disabled={displayStatus === "approved"}
                 className="flex-1 h-16 bg-primary text-on-primary rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-30 disabled:scale-100 disabled:grayscale shadow-xl shadow-primary/20 flex items-center justify-center gap-3"
              >
                 <span className="material-symbols-outlined">verified</span>
-                {worker.is_verified ? 'Access Granted' : 'Authorize Asset'}
+                {displayStatus === "approved" ? 'Approved' : 'Approve'}
              </button>
 
              <button 
-                onClick={() => onReject(rejectReason)}
+                onClick={() => requireReason(onReject)}
                 className="px-10 h-16 bg-surface-container-high border border-surface-container-highest text-secondary rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-surface-container-highest active:scale-[0.98] transition-all flex items-center justify-center gap-3"
              >
                 <span className="material-symbols-outlined">block</span>
                 Reject
+             </button>
+
+             <button
+                onClick={() => requireReason(onRevoke)}
+                className="px-10 h-16 bg-error/10 border border-error/20 text-error rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-error/20 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+             >
+                <span className="material-symbols-outlined">gpp_bad</span>
+                Revoke Verification
+             </button>
+
+             <button
+                onClick={onPending}
+                disabled={displayStatus === "pending"}
+                className="px-10 h-16 bg-surface-container-high border border-surface-container-highest text-on-surface rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-surface-container-highest active:scale-[0.98] transition-all disabled:opacity-30 flex items-center justify-center gap-3"
+             >
+                <span className="material-symbols-outlined">pending_actions</span>
+                Mark Pending
              </button>
           </div>
         </main>
