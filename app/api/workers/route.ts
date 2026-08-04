@@ -56,6 +56,7 @@ export async function GET(req: NextRequest) {
       WHERE u.role = 'worker'
         AND u.is_suspended = false
         AND wp.is_verified = true
+        AND wp.verification_status = 'approved'
     `;
 
     // Query filtering (Name OR Skill)

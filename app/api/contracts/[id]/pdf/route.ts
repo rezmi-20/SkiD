@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
+import { getAdminPrincipal, hasAdminPermission } from "@/lib/admin-authorization";
 
 export const dynamic = "force-dynamic";
 
@@ -33,8 +34,9 @@ export async function GET(
     }
 
     const contract = rows[0];
+    const admin = session.user.role === "admin" ? await getAdminPrincipal() : null;
     const canRead =
-      session.user.role === "admin" ||
+      hasAdminPermission(admin, "reports.read") ||
       session.user.id === contract.client_id ||
       session.user.id === contract.worker_id;
 

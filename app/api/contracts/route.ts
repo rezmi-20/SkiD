@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Only the client can create a contract draft." }, { status: 403 });
     }
 
-    const setup = await ensureContractSetupComplete();
+    const setup = await ensureContractSetupComplete("/client/contracts");
     if (!setup.completed) {
       return NextResponse.json(
         { error: setup.error || "Complete Contract Setup before creating contracts.", setupHref: setup.setupHref },

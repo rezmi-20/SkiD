@@ -18,18 +18,35 @@ export async function GET(req: NextRequest) {
     }
 
     const userId = session.user.id;
-    const rows = await sql`SELECT role FROM users WHERE id = ${userId}`;
+    const rows = await sql`
+      SELECT
+        u.role,
+        u.is_suspended,
+        wp.is_verified AS worker_is_verified,
+        wp.verification_status AS worker_verification_status
+      FROM users u
+      LEFT JOIN worker_profiles wp ON wp.user_id = u.id
+      WHERE u.id = ${userId}
+      LIMIT 1
+    `;
 
     if (rows.length === 0) {
       return NextResponse.json({ error: "User profile not found" }, { status: 404 });
     }
 
+    const userRow = rows[0];
+
     return NextResponse.json({
       id: userId,
       email: session.user.email,
       name: session.user.name,
-      role: rows[0].role,
-      emailVerified: session.user.emailVerified
+      role: userRow.role,
+      emailVerified: session.user.emailVerified,
+      authenticated: true,
+      isSuspended: userRow.is_suspended ?? false,
+      workerIsVerified: userRow.worker_is_verified ?? null,
+      workerVerificationStatus: userRow.worker_verification_status ?? null,
+      workerIsSuspended: userRow.is_suspended ?? false,
     });
 
   } catch (error) {

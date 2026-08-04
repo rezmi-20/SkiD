@@ -306,11 +306,11 @@ export const translations = {
     "register.fields.password": "Account Password",
     "register.fields.password.placeholder": "Security Key (Min 6 chars)",
 
-    "register.fayda.title": "Scan Fayda National ID",
-    "register.fayda.subtitle": "High precision scan required",
+    "register.fayda.title": "Upload Fayda National ID",
+    "register.fayda.subtitle": "Clear image upload required",
     "register.fayda.secure": "Secure Indexing",
     "register.fayda.desc": "Your document is encrypted. Human audit typically completes within {time}.",
-    "register.fayda.no_scan": "No ID Scan Attached",
+    "register.fayda.no_scan": "No ID Upload Attached",
 
     "register.expertise.title": "Expertise Categories",
     "register.expertise.portfolio": "Professional Portfolio Summary",
@@ -1571,11 +1571,11 @@ export const translations = {
     "register.fields.password": "Jecha Darbiinii Account",
     "register.fields.password.placeholder": "Furtuu Nageenyaa (Xiqqoo 6)",
 
-    "register.fayda.title": "Scan Fayda ID Mirkaneessi",
+    "register.fayda.title": "Upload Fayda ID Mirkaneessi",
     "register.fayda.subtitle": "Footoo qulqulluu ta'e qofa fudhatama",
     "register.fayda.secure": "Galmeessa Amansiisaa",
     "register.fayda.desc": "Sanadni keessan icciitiin isaa eegamaadha. Sakatta'iinsi eenyummaa yeroo baay'ee sa'aatii {time} keessatti xumurama.",
-    "register.fayda.no_scan": "Footoon ID hin attachments",
+    "register.fayda.no_scan": "ID upload hin attached",
 
     "register.expertise.title": "Kalaqa Ogummaa",
     "register.expertise.portfolio": "Gabaasa Hojii Kee",

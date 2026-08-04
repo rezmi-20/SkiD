@@ -27,7 +27,7 @@ const checks = [
   { label: "receipt route has auth", pattern: /const session = await auth\(\)/ },
   { label: "receipt route checks ownership", pattern: /canRead/ },
   { label: "payment UI uses secured PDF receipt route", pattern: /\/api\/payments\/\$\{[^}]+\.paymentId|\/api\/payments\/\$\{confirmedData\.paymentId|\/api\/payments\/\$\{tx\.id/ },
-  { label: "query params alone cannot mark payment paid", pattern: /verifyAndReleasePayment\(/ },
+  { label: "query params alone cannot mark payment paid", pattern: /Only the paying client can verify this payment|Login required before verifying a returned payment/ },
   { label: "checkout page does not submit payment amount to API", pattern: /router\.push\(`\/client\/pay\/\$\{encodeURIComponent\(jobId\.trim\(\)\)\}`\)/ },
 ];
 

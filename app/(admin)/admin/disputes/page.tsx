@@ -1,14 +1,10 @@
 export const dynamic = 'force-dynamic';
-import { auth } from "@/lib/auth";
 import { getDisputes } from "@/lib/actions/disputes";
-import { redirect } from "next/navigation";
 import AdminDisputesContent from "@/components/AdminDisputesContent";
+import { requireAdminPermission } from "@/lib/admin-authorization";
 
 export default async function DisputesPage() {
-  const session = await auth();
-  if (session?.user?.role !== "admin") {
-    redirect("/login");
-  }
+  await requireAdminPermission("disputes.read");
 
   const disputes = await getDisputes();
 

@@ -28,6 +28,7 @@ export async function GET(
         AND u.role = 'worker'
         AND u.is_suspended = false
         AND wp.is_verified = true
+        AND wp.verification_status = 'approved'
       GROUP BY u.id, wp.full_name, wp.bio, wp.skills, wp.latitude, wp.longitude, wp.hourly_rate, wp.avatar_url, wp.is_verified`;
 
     if (rows.length === 0) {

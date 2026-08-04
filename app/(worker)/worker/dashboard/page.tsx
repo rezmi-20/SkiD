@@ -5,6 +5,7 @@ import { sql } from "@/lib/db";
 import { getPendingJobs, getWorkerJobs } from "@/lib/actions/jobs";
 import { redirect } from "next/navigation";
 import WorkerDashboardContent from "@/components/WorkerDashboardContent";
+import { getWorkerAccessRoute, WORKER_DASHBOARD_ROUTE } from "@/lib/worker-routing";
 
 export default async function WorkerDashboardPage() {
   const session = await auth();
@@ -13,13 +14,37 @@ export default async function WorkerDashboardPage() {
     redirect("/login");
   }
 
-  const [profileRows, pendingJobs, recentJobs] = await Promise.all([
-    sql`SELECT full_name, is_verified, district, skills FROM worker_profiles WHERE user_id = ${session.user.id} LIMIT 1`,
+  const profileRows = await sql`
+    SELECT
+      u.is_suspended,
+      wp.full_name,
+      wp.is_verified,
+      wp.verification_status,
+      wp.district,
+      wp.skills
+    FROM users u
+    LEFT JOIN worker_profiles wp ON wp.user_id = u.id
+    WHERE u.id = ${session.user.id}
+    LIMIT 1
+  `;
+
+  const worker = profileRows[0];
+  const workerRoute = getWorkerAccessRoute({
+    role: session.user.role,
+    isSuspended: worker?.is_suspended ?? false,
+    isVerified: worker?.is_verified ?? null,
+    verificationStatus: worker?.verification_status ?? null,
+  });
+
+  if (workerRoute !== WORKER_DASHBOARD_ROUTE) {
+    redirect(workerRoute);
+  }
+
+  const [pendingJobs, recentJobs] = await Promise.all([
     getPendingJobs(),
     getWorkerJobs(),
   ]);
 
-  const worker = profileRows[0];
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 

@@ -1,15 +1,17 @@
-import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
-import { redirect } from "next/navigation";
 import { AdminDashboardClient } from "@/components/admin/AdminDashboardClient";
+import { hasAdminPermission, requireAdmin } from "@/lib/admin-authorization";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
-  const session = await auth();
-  if (!session || session.user.role !== "admin") {
-    redirect("/login");
-  }
+  const admin = await requireAdmin();
+  const verificationCapabilities = {
+    canRead: hasAdminPermission(admin, "verification.read"),
+    canReview: hasAdminPermission(admin, "verification.review"),
+    canApprove: hasAdminPermission(admin, "verification.approve"),
+    canReject: hasAdminPermission(admin, "verification.reject"),
+  };
 
   // ── Live Metrics ────────────────────────────────────────────────────
   const [
@@ -21,7 +23,14 @@ export default async function AdminDashboardPage() {
     revenueResult,
   ] = await Promise.all([
     sql`SELECT COUNT(*)::int AS count FROM worker_profiles`,
-    sql`SELECT COUNT(*)::int AS count FROM worker_profiles WHERE is_verified = false`,
+    verificationCapabilities.canRead ? sql`
+      SELECT COUNT(*)::int AS count
+      FROM worker_profiles wp
+      JOIN users u ON u.id = wp.user_id
+      WHERE wp.is_verified = false
+         OR wp.verification_status IS DISTINCT FROM 'approved'
+         OR u.is_suspended = true
+    ` : Promise.resolve([{ count: 0 }]),
     sql`SELECT COUNT(*)::int AS count FROM jobs WHERE status = 'active'`,
     sql`SELECT COUNT(*)::int AS count FROM jobs WHERE status = 'completed' AND updated_at >= date_trunc('month', CURRENT_DATE)`,
     sql`SELECT COUNT(*)::int AS count FROM jobs WHERE status = 'disputed'`,
@@ -35,22 +44,27 @@ export default async function AdminDashboardPage() {
       : `ETB ${totalRevenue.toFixed(0)}`;
 
   // ── Pending Workers ─────────────────────────────────────────────────
-  const unverifiedWorkers = await sql`
+  const unverifiedWorkers = verificationCapabilities.canRead ? await sql`
     SELECT
       wp.user_id,
       wp.full_name,
       wp.skills,
       wp.fayda_doc_url,
       wp.avatar_url,
+      wp.verification_status,
+      wp.is_verified,
       wp.created_at,
       u.phone,
-      u.email
+      u.email,
+      u.is_suspended
     FROM worker_profiles wp
     JOIN users u ON wp.user_id = u.id
     WHERE wp.is_verified = false
+       OR wp.verification_status IS DISTINCT FROM 'approved'
+       OR u.is_suspended = true
     ORDER BY wp.created_at DESC
     LIMIT 10
-  `;
+  ` : [];
 
   // ── Activity Feed ───────────────────────────────────────────────────
   const recentUsers = await sql`
@@ -86,6 +100,7 @@ export default async function AdminDashboardPage() {
       disputeCount={disputeCount[0]?.count ?? 0}
       activityFeed={activityFeed}
       unverifiedWorkers={unverifiedWorkers as any[]}
+      verificationCapabilities={verificationCapabilities}
     />
   );
 }

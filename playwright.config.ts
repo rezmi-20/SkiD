@@ -36,7 +36,7 @@ export default defineConfig({
   webServer: {
     command: `npx next dev --hostname ${webServerHost} --port ${webServerPort}`,
     url: baseURL,
-    reuseExistingServer: false,
+    reuseExistingServer: process.env.PLAYWRIGHT_REUSE_SERVER === "true",
     timeout: 120000,
   },
 });

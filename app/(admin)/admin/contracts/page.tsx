@@ -1,15 +1,11 @@
-import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
-import { redirect } from "next/navigation";
 import { ContractsOversightClient } from "@/components/admin/ContractsOversightClient";
+import { requireAdminPermission } from "@/lib/admin-authorization";
 
 export const dynamic = "force-dynamic";
 
 export default async function ContractsPage() {
-  const session = await auth();
-  if (!session || session.user.role !== "admin") {
-    redirect("/login");
-  }
+  await requireAdminPermission("reports.read");
 
   // Fetch all contracts along with client & worker names and job titles
   const contractsData = await sql`

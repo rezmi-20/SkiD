@@ -1,7 +1,7 @@
 "use server";
 
-import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
+import { requireAdminPermission, type AdminPermission } from "@/lib/admin-authorization";
 
 export interface AdminPaymentReportRow {
   paymentId: string;
@@ -42,11 +42,8 @@ function toNumber(value: unknown) {
   return Number(value ?? 0);
 }
 
-export async function getAdminPaymentReport(): Promise<AdminPaymentReport> {
-  const session = await auth();
-  if (!session?.user?.id || session.user.role !== "admin") {
-    throw new Error("Unauthorized");
-  }
+export async function getAdminPaymentReport(permission: AdminPermission = "payment_cases.read"): Promise<AdminPaymentReport> {
+  await requireAdminPermission(permission);
 
   const [totalsRows, monthlyRows, paymentRows] = await Promise.all([
     sql`

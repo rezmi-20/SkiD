@@ -93,7 +93,7 @@ export default function Navbar({ userRole, language, setLanguage, t, isMenuOpen,
             <a
               href={
                 userRole === "admin"
-                  ? "/admin/dashboard"
+                  ? "/admin/login"
                   : userRole === "worker"
                   ? "/worker/dashboard"
                   : "/client/search"
@@ -184,7 +184,7 @@ export default function Navbar({ userRole, language, setLanguage, t, isMenuOpen,
               <a
                 href={
                   userRole === "admin"
-                    ? "/admin/dashboard"
+                    ? "/admin/login"
                     : userRole === "worker"
                     ? "/worker/dashboard"
                     : "/client/search"

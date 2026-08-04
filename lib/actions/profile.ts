@@ -4,14 +4,11 @@ import { sql } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { isTrustedUploadReference } from "@/lib/security";
+import { maskFinLast4, protectFin, validateFin } from "@/lib/fin-protection";
+import { getClientIdentityColumns, getClientIdentityStatus, toClientDisplayStatus, validateClientIdentityDocument } from "@/lib/client-verification";
+import { recordVerificationSubmission } from "@/lib/verification-operations";
 
-function normalizeFaydaFan(value: unknown) {
-  const fan = typeof value === "string" ? value.trim().toUpperCase() : "";
-  if (!fan) return null;
-  return fan.replace(/[^A-Z0-9-]/g, "").slice(0, 64);
-}
-
-function maskFaydaFan(value: unknown) {
+function maskDeprecatedIdentity(value: unknown) {
   const fan = String(value || "").trim();
   if (!fan) return null;
   if (fan.length <= 6) return `${fan.slice(0, 2)}••${fan.slice(-2)}`;
@@ -26,7 +23,7 @@ export async function getProfileData() {
   const role = (session.user as any).role;
 
   try {
-    const userRows = await sql`SELECT email, phone FROM users WHERE id = ${userId}`;
+    const userRows = await sql`SELECT email, phone, is_suspended FROM users WHERE id = ${userId}`;
     const user = userRows[0];
 
     let profile;
@@ -38,13 +35,19 @@ export async function getProfileData() {
       profile = rows[0];
     }
 
-    const fullFanNumber = profile?.fayda_fan_number;
+    const clientIdentity = role === "client" ? await getClientIdentityStatus(userId) : null;
     const safeProfile = profile
       ? {
           ...profile,
+          verification_status: clientIdentity?.status ?? profile.verification_status,
           fayda_fan_number: undefined,
-          masked_fayda_fan_number: maskFaydaFan(fullFanNumber),
-          has_fayda_fan_number: Boolean(fullFanNumber),
+          fin_encrypted: undefined,
+          fin_fingerprint: undefined,
+          fin_encryption_key_id: undefined,
+          fayda_doc_url: undefined,
+          masked_fin: maskFinLast4(profile.fin_last4),
+          has_fin: Boolean(profile.fin_last4),
+          has_fayda_doc: Boolean(profile.fayda_doc_url),
         }
       : profile;
 
@@ -67,12 +70,13 @@ export async function updateProfile(data: any) {
   const targetUserId = (isAdmin && data.userId) ? data.userId : session.user.id;
 
   let targetRole = (session.user as any).role;
-  if (isAdmin && data.userId) {
-    const roleRows = await sql`SELECT role FROM users WHERE id = ${targetUserId}`;
-    if (roleRows && roleRows[0]) {
-      targetRole = roleRows[0].role;
+    if (isAdmin && data.userId) {
+      const roleRows = await sql`SELECT role FROM users WHERE id = ${targetUserId}`;
+      if (roleRows && roleRows[0]) {
+        targetRole = roleRows[0].role;
+      }
     }
-  }
+    const clientColumns = targetRole === "client" ? await getClientIdentityColumns() : null;
 
   try {
     // 1. Fetch current verification status
@@ -81,12 +85,51 @@ export async function updateProfile(data: any) {
       const rows = await sql`SELECT is_verified, full_name, avatar_url FROM worker_profiles WHERE user_id = ${targetUserId}`;
       currentProfile = rows[0];
     } else {
-      const rows = await sql`SELECT is_verified, full_name, avatar_url FROM client_profiles WHERE user_id = ${targetUserId}`;
+      const rows = await sql`
+        SELECT is_verified, full_name, avatar_url, verification_status
+        FROM client_profiles
+        WHERE user_id = ${targetUserId}
+      `;
       currentProfile = rows[0];
     }
 
     const isVerified = currentProfile?.is_verified || false;
-    const faydaFanNumber = normalizeFaydaFan(data.faydaFanNumber);
+    const currentVerificationStatus = toClientDisplayStatus(currentProfile?.verification_status, currentProfile?.is_verified);
+    const submittedFin = data.faydaFinNumber ?? data.fin;
+    const submittedClientDoc = data.faydaDocDataUrl ?? data.faydaDocUrl;
+    const hasSubmittedFin = typeof submittedFin === "string" && submittedFin.trim().length > 0;
+    const hasSubmittedClientDoc = typeof submittedClientDoc === "string" && submittedClientDoc.trim().length > 0;
+
+    if (targetRole === "client" && (hasSubmittedFin || hasSubmittedClientDoc) && !(hasSubmittedFin && hasSubmittedClientDoc)) {
+      return { success: false, error: "Submit both your 12-digit FIN and Fayda ID image together." };
+    }
+
+    if (targetRole === "client" && hasSubmittedFin && hasSubmittedClientDoc) {
+      if (currentVerificationStatus === "pending") {
+        return { success: false, error: "A verification request is already pending." };
+      }
+      if (currentVerificationStatus === "approved") {
+        return { success: false, error: "Your Fayda identity is already verified." };
+      }
+      if (currentVerificationStatus === "suspended" || currentVerificationStatus === "revoked") {
+        return { success: false, error: "This account cannot submit Fayda verification while identity access is restricted." };
+      }
+    }
+
+    if (targetRole === "client" && hasSubmittedClientDoc) {
+      const docValidation = validateClientIdentityDocument(submittedClientDoc);
+      if (!docValidation.ok) {
+        return { success: false, error: docValidation.error };
+      }
+    }
+
+    const normalizedFin = hasSubmittedFin ? validateFin(submittedFin) : null;
+
+    if (hasSubmittedFin && !normalizedFin) {
+      return { success: false, error: "FIN must be exactly 12 digits." };
+    }
+
+    const protectedFin = normalizedFin ? protectFin(normalizedFin, targetUserId, "profile") : null;
 
     // 2. Update Users table (email/phone always editable for now, or follow system rules)
     if (data.email || data.phone) {
@@ -112,30 +155,86 @@ export async function updateProfile(data: any) {
           date_of_birth = ${data.dateOfBirth},
           district = ${data.district},
           hourly_rate = ${data.hourlyRate},
-          fayda_fan_number = COALESCE(${faydaFanNumber}, fayda_fan_number)
+          fin_encrypted = COALESCE(${protectedFin?.finEncrypted ?? null}, fin_encrypted),
+          fin_encryption_key_id = COALESCE(${protectedFin?.finEncryptionKeyId ?? null}, fin_encryption_key_id),
+          fin_fingerprint = COALESCE(${protectedFin?.finFingerprint ?? null}, fin_fingerprint),
+          fin_last4 = COALESCE(${protectedFin?.finLast4 ?? null}, fin_last4),
+          verification_status = CASE WHEN ${Boolean(protectedFin)} THEN 'pending' ELSE verification_status END,
+          is_verified = CASE WHEN ${Boolean(protectedFin)} THEN false ELSE is_verified END
         WHERE user_id = ${targetUserId}
       `;
     } else {
-      await sql`
-        UPDATE client_profiles 
-        SET 
-          full_name = ${isVerified ? currentProfile.full_name : data.fullName},
-          avatar_url = ${isVerified ? currentProfile.avatar_url : data.avatarUrl},
-          fayda_fan_number = COALESCE(${faydaFanNumber}, fayda_fan_number)
-        WHERE user_id = ${targetUserId}
-      `;
+      if (clientColumns?.has("verification_status")) {
+        await sql`
+          UPDATE client_profiles
+          SET
+            full_name = ${isVerified ? currentProfile.full_name : data.fullName},
+            avatar_url = ${isVerified ? currentProfile.avatar_url : data.avatarUrl},
+            fin_encrypted = COALESCE(${protectedFin?.finEncrypted ?? null}, fin_encrypted),
+            fin_encryption_key_id = COALESCE(${protectedFin?.finEncryptionKeyId ?? null}, fin_encryption_key_id),
+            fin_fingerprint = COALESCE(${protectedFin?.finFingerprint ?? null}, fin_fingerprint),
+            fin_last4 = COALESCE(${protectedFin?.finLast4 ?? null}, fin_last4),
+            fayda_doc_url = COALESCE(${hasSubmittedClientDoc ? submittedClientDoc : null}, fayda_doc_url),
+            verification_status = CASE WHEN ${Boolean(protectedFin)} THEN 'pending' ELSE verification_status END,
+            is_verified = CASE WHEN ${Boolean(protectedFin)} THEN false ELSE is_verified END
+          WHERE user_id = ${targetUserId}
+        `;
+      } else {
+        await sql`
+          UPDATE client_profiles
+          SET
+            full_name = ${isVerified ? currentProfile.full_name : data.fullName},
+            avatar_url = ${isVerified ? currentProfile.avatar_url : data.avatarUrl},
+            fin_encrypted = COALESCE(${protectedFin?.finEncrypted ?? null}, fin_encrypted),
+            fin_encryption_key_id = COALESCE(${protectedFin?.finEncryptionKeyId ?? null}, fin_encryption_key_id),
+            fin_fingerprint = COALESCE(${protectedFin?.finFingerprint ?? null}, fin_fingerprint),
+            fin_last4 = COALESCE(${protectedFin?.finLast4 ?? null}, fin_last4),
+            fayda_doc_url = COALESCE(${hasSubmittedClientDoc ? submittedClientDoc : null}, fayda_doc_url),
+            is_verified = CASE WHEN ${Boolean(protectedFin)} THEN false ELSE is_verified END
+          WHERE user_id = ${targetUserId}
+        `;
+      }
+
+      if (protectedFin) {
+        await recordVerificationSubmission("client", targetUserId, hasSubmittedClientDoc ? submittedClientDoc : null, protectedFin.finLast4);
+        await sql`
+          INSERT INTO audit_logs (user_id, action, details)
+          VALUES (
+            ${session.user.id},
+            'client_verification_submitted',
+            ${JSON.stringify({
+              userId: targetUserId,
+              oldStatus: currentVerificationStatus,
+              newStatus: "pending",
+              source: "profile_settings",
+              timestamp: new Date().toISOString(),
+            })}
+          )
+        `;
+      }
     }
 
     revalidatePath(`/${targetRole}/profile`);
     revalidatePath(`/${targetRole}/profile/settings`);
     return { success: true };
   } catch (error) {
-    console.error("[UPDATE_PROFILE_ERROR]", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("[UPDATE_PROFILE_ERROR]", message);
+    if (
+      message.includes("FIN encryption key is not configured") ||
+      message.includes("FIN_HMAC_KEY is not configured") ||
+      message.includes("FIN_ENCRYPTION_KEY")
+    ) {
+      return {
+        success: false,
+        error: "Fayda verification security keys are not configured for this local environment.",
+      };
+    }
     return { success: false, error: "Failed to update profile" };
   }
 }
 
-export async function resubmitVerification(faydaDocUrl: string) {
+export async function resubmitVerification(faydaDocUrl: string, faydaFinNumber?: string) {
   const session = await auth();
   if (!session?.user?.id || session.user.role !== "worker") {
     return { success: false, error: "Unauthorized" };
@@ -145,20 +244,31 @@ export async function resubmitVerification(faydaDocUrl: string) {
     return { success: false, error: "Invalid Fayda document reference" };
   }
 
+  const normalizedFin = validateFin(faydaFinNumber);
+  if (!normalizedFin) {
+    return { success: false, error: "FIN must be exactly 12 digits." };
+  }
+
   try {
+    const protectedFin = protectFin(normalizedFin, session.user.id, "profile");
     await sql`
       UPDATE worker_profiles 
       SET 
         fayda_doc_url = ${faydaDocUrl}, 
+        fin_encrypted = ${protectedFin.finEncrypted},
+        fin_encryption_key_id = ${protectedFin.finEncryptionKeyId},
+        fin_fingerprint = ${protectedFin.finFingerprint},
+        fin_last4 = ${protectedFin.finLast4},
         verification_status = 'pending',
         is_verified = false
       WHERE user_id = ${session.user.id}
     `;
+    await recordVerificationSubmission("worker", session.user.id, faydaDocUrl, protectedFin.finLast4);
 
     revalidatePath("/worker/pending-verification");
     return { success: true };
   } catch (error) {
-    console.error("[RESUBMIT_VERIFICATION_ERROR]", error);
+    console.error("[RESUBMIT_VERIFICATION_ERROR]", error instanceof Error ? error.message : "Unknown error");
     return { success: false, error: "Failed to resubmit verification document" };
   }
 }

@@ -15,6 +15,10 @@ const authIndex = read("lib/auth/index.ts");
 const sessionCookie = read("lib/auth/session-cookie.ts");
 const authMe = read("app/api/auth/me/route.ts");
 const loginPage = read("app/(auth)/login/page.tsx");
+const callbackPage = read("app/auth/callback/page.tsx");
+const workerDashboardPage = read("app/(worker)/worker/dashboard/page.tsx");
+const pendingVerificationPage = read("app/(worker)/worker/pending-verification/page.tsx");
+const workerRouting = read("lib/worker-routing.ts");
 const notificationBell = read("components/shell/NotificationBell.tsx");
 const appShell = read("components/shell/AppShell.tsx");
 const mobileNav = read("components/shell/MobileNav.tsx");
@@ -36,7 +40,9 @@ check(
 check(
   "Temporary auth fetch failure is represented distinctly",
   sessionCookie.includes("class AuthSessionUnavailableError") &&
-    authIndex.includes("throw new AuthSessionUnavailableError()")
+    authIndex.includes("throw new AuthSessionUnavailableError()") &&
+    sessionCookie.includes("NEON_AUTH_SESSION_FETCH_TIMEOUT_MS") &&
+    sessionCookie.includes("NEON_AUTH_SESSION_FETCH_RETRIES")
 );
 
 check(
@@ -44,6 +50,57 @@ check(
   authMe.includes('optional = req.nextUrl.searchParams.get("optional") === "1"') &&
     authMe.includes("authenticated: false") &&
     loginPage.includes('/api/auth/me?optional=1')
+);
+
+check(
+  "Login waits for a usable session before redirecting",
+  loginPage.includes("Login succeeded, but the session could not be initialized. Please try again.") &&
+    loginPage.includes("waitForUsableSession") &&
+    !loginPage.includes('window.location.href = "/auth/callback"')
+);
+
+check(
+  "Callback shows temporary service error when auth cookies exist but session is not ready",
+  callbackPage.includes("Login succeeded, but the session could not be initialized. Please try again.") &&
+    callbackPage.includes("hasAuthCookies")
+);
+
+check(
+  "Worker login redirects inactive lifecycle states to pending verification",
+  loginPage.includes("getWorkerAccessRoute") &&
+    loginPage.includes("workerVerificationStatus") &&
+    loginPage.includes("workerIsSuspended") &&
+    workerRouting.includes("WORKER_PENDING_VERIFICATION_ROUTE")
+);
+
+check(
+  "Auth callback sends workers through lifecycle-aware routing",
+  callbackPage.includes("getWorkerAccessRoute") &&
+    callbackPage.includes("verification_status") &&
+    callbackPage.includes("is_suspended") &&
+    workerRouting.includes("WORKER_PENDING_VERIFICATION_ROUTE")
+);
+
+check(
+  "Worker dashboard guards lifecycle before loading active-worker actions",
+  workerDashboardPage.includes("getWorkerAccessRoute") &&
+    workerDashboardPage.includes("redirect(workerRoute)") &&
+    workerDashboardPage.indexOf("redirect(workerRoute)") < workerDashboardPage.indexOf("getPendingJobs()") &&
+    workerDashboardPage.indexOf("redirect(workerRoute)") < workerDashboardPage.indexOf("getWorkerJobs()")
+);
+
+check(
+  "Pending verification page reflects restricted worker states",
+  pendingVerificationPage.includes("is_suspended") &&
+    pendingVerificationPage.includes("revoked") &&
+    pendingVerificationPage.includes("Account Suspended")
+);
+
+check(
+  "Worker routing helper keeps dashboard and pending-verification decisions centralized",
+  workerRouting.includes("WORKER_DASHBOARD_ROUTE") &&
+    workerRouting.includes("WORKER_PENDING_VERIFICATION_ROUTE") &&
+    workerRouting.includes("getWorkerAccessRoute")
 );
 
 check(

@@ -5,12 +5,27 @@ import { checkLoginAttempts, logLoginAttempt } from "@/lib/actions/auth";
 export const dynamic = 'force-dynamic';
 
 const handlers = auth.handler();
-export const GET = handlers.GET;
 export const PUT = handlers.PUT;
 export const DELETE = handlers.DELETE;
 export const PATCH = handlers.PATCH;
 
+function isRemovedDebugAuthPath(req: NextRequest) {
+  return new URL(req.url).pathname === "/api/auth/debug-session";
+}
+
+export async function GET(req: NextRequest, context: any) {
+  if (isRemovedDebugAuthPath(req)) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  return handlers.GET(req, context);
+}
+
 export async function POST(req: NextRequest, context: any) {
+  if (isRemovedDebugAuthPath(req)) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
   try {
     const url = new URL(req.url);
     if (url.pathname.endsWith("/sign-in/email")) {

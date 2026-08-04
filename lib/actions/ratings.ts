@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "@/lib/actions/notifications";
 import { sanitizeText } from "@/lib/sanitize";
+import { assertActiveVerifiedWorker } from "@/lib/identity-lifecycle";
 
 type RatingActionResult =
   | { success: true }
@@ -44,6 +45,11 @@ export async function getRatingPageData(jobId: string) {
 
   if (role !== "client" && role !== "worker") return null;
 
+  if (role === "worker") {
+    const workerAccess = await assertActiveVerifiedWorker(userId);
+    if (!workerAccess.allowed) return null;
+  }
+
   try {
     const jobs = await sql`
       SELECT
@@ -58,11 +64,14 @@ export async function getRatingPageData(jobId: string) {
         wp.full_name as worker_name,
         wp.avatar_url as worker_avatar,
         wp.is_verified as worker_verified,
+        wp.verification_status as worker_verification_status,
+        wu.is_suspended as worker_suspended,
         wp.skills,
         p.status as payment_status
       FROM jobs j
       LEFT JOIN client_profiles cp ON j.client_id = cp.user_id
       LEFT JOIN worker_profiles wp ON j.worker_id = wp.user_id
+      LEFT JOIN users wu ON j.worker_id = wu.id
       LEFT JOIN payments p ON p.job_id = j.id AND p.status = 'released'
       WHERE j.id = ${jobId}
         AND (j.client_id = ${userId} OR j.worker_id = ${userId})
@@ -76,6 +85,7 @@ export async function getRatingPageData(jobId: string) {
     const isClient = role === "client" && job.client_id === userId;
     const isWorker = role === "worker" && job.worker_id === userId;
     if (!isClient && !isWorker) return null;
+    if (job.worker_suspended || !job.worker_verified || job.worker_verification_status !== "approved") return null;
 
     const ratedId = ratingTargetForRole(job, isClient ? "client" : "worker");
     if (!ratedId || ratedId === userId) return null;
@@ -146,6 +156,13 @@ async function rateForRole(
     return { success: false, error: "You don't have permission", code: "FORBIDDEN" };
   }
 
+  if (role === "worker") {
+    const workerAccess = await assertActiveVerifiedWorker(session.user.id);
+    if (!workerAccess.allowed) {
+      return { success: false, error: workerAccess.error || "Forbidden", code: "FORBIDDEN" };
+    }
+  }
+
   const score = Number(rating);
   if (!Number.isInteger(score) || score < 1 || score > 5) {
     return { success: false, error: "Rating must be between 1 and 5", code: "INVALID_STATE" };
@@ -159,9 +176,14 @@ async function rateForRole(
         j.status,
         j.client_id,
         j.worker_id,
-        p.status as payment_status
+        p.status as payment_status,
+        wp.is_verified as worker_verified,
+        wp.verification_status as worker_verification_status,
+        wu.is_suspended as worker_suspended
       FROM jobs j
       LEFT JOIN payments p ON p.job_id = j.id AND p.status = 'released'
+      LEFT JOIN worker_profiles wp ON j.worker_id = wp.user_id
+      LEFT JOIN users wu ON j.worker_id = wu.id
       WHERE j.id = ${jobId}
       ORDER BY p.created_at DESC NULLS LAST
       LIMIT 1
@@ -173,6 +195,9 @@ async function rateForRole(
 
     const job = jobs[0];
     const isClientRatingWorker = role === "client";
+    if (job.worker_suspended || !job.worker_verified || job.worker_verification_status !== "approved") {
+      return { success: false, error: "Worker must be verified and active for rating participation.", code: "FORBIDDEN" };
+    }
 
     if (isClientRatingWorker && job.client_id !== session.user.id) {
       return { success: false, error: "You don't have permission", code: "FORBIDDEN" };

@@ -6,6 +6,7 @@ import { createNotification } from "@/lib/actions/notifications";
 import { ensureContractSetupComplete, verifyContractPin } from "@/lib/actions/contract-setup";
 import { revalidatePath } from "next/cache";
 import { activateContractAfterFullSignature } from "@/lib/contract-documents";
+import { maskFinLast4 } from "@/lib/fin-protection";
 
 type ContractActionResult =
   | { success: true; contract?: any }
@@ -68,7 +69,7 @@ export async function saveContractDraft(contractId: string, draft: ContractDraft
     return { success: false, error: "Only the client can edit the contract draft.", code: "FORBIDDEN" };
   }
 
-  const setup = await ensureContractSetupComplete();
+  const setup = await ensureContractSetupComplete(`/contracts/${contractId}`);
   if (!setup.completed) {
     return {
       success: false,
@@ -176,7 +177,7 @@ export async function acceptContractTerms(contractId: string): Promise<ContractA
     return { success: false, error: "Only the assigned worker can accept contract terms.", code: "FORBIDDEN" };
   }
 
-  const setup = await ensureContractSetupComplete();
+  const setup = await ensureContractSetupComplete(`/contracts/${contractId}`);
   if (!setup.completed) {
     return {
       success: false,
@@ -261,6 +262,15 @@ export async function rejectContractTerms(contractId: string, reason?: string): 
     return { success: false, error: "Only the assigned worker can reject contract terms.", code: "FORBIDDEN" };
   }
 
+  const setup = await ensureContractSetupComplete(`/contracts/${contractId}`);
+  if (!setup.completed) {
+    return {
+      success: false,
+      error: setup.error || "Complete Contract Setup before rejecting contract terms.",
+      code: "CONTRACT_SETUP_REQUIRED",
+    };
+  }
+
   const rejectionReason = typeof reason === "string" ? reason.trim().slice(0, 1000) : "";
   if (!rejectionReason) {
     return { success: false, error: "A rejection reason is required.", code: "INVALID_STATE" };
@@ -341,7 +351,7 @@ export async function finalizeContractDraft(contractId: string): Promise<Contrac
     return { success: false, error: "Only the client can finalize the contract draft.", code: "FORBIDDEN" };
   }
 
-  const setup = await ensureContractSetupComplete();
+  const setup = await ensureContractSetupComplete(`/contracts/${contractId}`);
   if (!setup.completed) {
     return {
       success: false,
@@ -486,6 +496,11 @@ export async function getUserContracts() {
     }
 
     if (role === "worker") {
+      const setup = await ensureContractSetupComplete("/worker/contracts");
+      if (!setup.completed) {
+        return [];
+      }
+
       return await sql`
         SELECT
           c.id as contract_id,
@@ -549,9 +564,11 @@ export async function getContractForSigning(contractId: string) {
         wp.avatar_url as worker_avatar,
         u_worker.phone as worker_phone,
         wp.is_verified as worker_verified,
+        wp.fin_last4 as worker_fin_last4,
         cp.full_name as client_name,
         cp.avatar_url as client_avatar,
         cp.is_verified as client_verified,
+        cp.fin_last4 as client_fin_last4,
         u_client.phone as client_phone
       FROM contracts c
       JOIN jobs j ON c.job_id = j.id
@@ -573,12 +590,23 @@ export async function getContractForSigning(contractId: string) {
       throw new Error("Forbidden");
     }
 
+    if (!isAdmin) {
+      const setup = await ensureContractSetupComplete(`/contracts/${contractId}`);
+      if (!setup.completed) {
+        throw new Error(setup.error || "Contract access requires completed setup.");
+      }
+    }
+
     const clientSigned = !!contract.client_signed_at;
     const workerSigned = !!contract.worker_signed_at;
     const contractStatus = contract.status || "DRAFT";
 
     return {
       ...contract,
+      client_fin_last4: undefined,
+      worker_fin_last4: undefined,
+      client_masked_fin: maskFinLast4(contract.client_fin_last4),
+      worker_masked_fin: maskFinLast4(contract.worker_fin_last4),
       user_role: isClient ? "client" : isWorker ? "worker" : "admin",
       user_has_signed: isClient ? clientSigned : isWorker ? workerSigned : false,
       signature_status: contractStatus,
@@ -626,7 +654,7 @@ async function signContractForRole(
     return { success: false, error: "You don't have permission", code: "FORBIDDEN" };
   }
 
-  const setup = await ensureContractSetupComplete();
+  const setup = await ensureContractSetupComplete(`/contracts/${contractId}`);
   if (!setup.completed) {
     return {
       success: false,
@@ -662,7 +690,9 @@ async function signContractForRole(
         j.title as job_title,
         j.status as job_status,
         COALESCE(cp.is_verified, false) as client_verified,
-        COALESCE(wp.is_verified, false) as worker_verified
+        cp.fin_last4 as client_fin_last4,
+        COALESCE(wp.is_verified, false) as worker_verified,
+        wp.fin_last4 as worker_fin_last4
       FROM contracts c
       JOIN jobs j ON c.job_id = j.id
       LEFT JOIN client_profiles cp ON j.client_id = cp.user_id
@@ -707,7 +737,7 @@ async function signContractForRole(
       };
     }
 
-    if (!contract.client_verified || !contract.worker_verified) {
+    if (!contract.client_verified || !contract.worker_verified || !contract.client_fin_last4 || !contract.worker_fin_last4) {
       return {
         success: false,
         error: BOTH_PARTIES_VERIFIED_MESSAGE,

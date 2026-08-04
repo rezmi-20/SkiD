@@ -4,6 +4,7 @@ import { sql } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { areTrustedUploadReferences } from "@/lib/security";
+import { requireAdminPermission } from "@/lib/admin-authorization";
 
 export async function createDispute(data: {
   jobId: string;
@@ -57,10 +58,7 @@ export async function createDispute(data: {
 }
 
 export async function getDisputes() {
-  const session = await auth();
-  if (session?.user?.role !== "admin") {
-    throw new Error("Unauthorized");
-  }
+  await requireAdminPermission("disputes.read");
 
   try {
     return await sql`
@@ -86,12 +84,8 @@ export async function resolveDispute(
   resolutionNotes: string,
   status: 'resolved' | 'rejected'
 ) {
-  const session = await auth();
-  if (session?.user?.role !== "admin") {
-    throw new Error("Unauthorized");
-  }
-
-  const adminId = session.user.id;
+  const admin = await requireAdminPermission("disputes.resolve");
+  const adminId = admin.id;
 
   try {
     const disputes = await sql`SELECT job_id FROM disputes WHERE id = ${disputeId}`;

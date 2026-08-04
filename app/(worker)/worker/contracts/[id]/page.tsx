@@ -15,7 +15,7 @@ export default async function RoleContractDetailsPage({
   }
 
   const { id } = await params;
-  const setup = await getContractSetupStatus(session.user.id);
+  const setup = await getContractSetupStatus(session.user.id, `/worker/contracts/${id}`);
   if (!setup.completed) {
     redirect(setup.setupHref);
   }

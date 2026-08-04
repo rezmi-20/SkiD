@@ -3,6 +3,7 @@ import { sql } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { z } from "zod";
 import { ensureContractSetupComplete } from "@/lib/actions/contract-setup";
+import { assertActiveVerifiedWorker } from "@/lib/identity-lifecycle";
 
 const jobSchema = z.object({
   workerId: z.string().uuid().optional(),
@@ -13,6 +14,17 @@ const jobSchema = z.object({
   requestedDate: z.string().optional(),
 });
 
+const OPEN_INVITATION_STATUSES = [
+  "pending",
+  "accepted",
+  "active",
+  "in_progress",
+  "completion_requested",
+  "completed",
+  "payment_pending",
+  "paid",
+];
+
 import { sanitizeText } from "@/lib/sanitize";
 
 export async function POST(req: NextRequest) {
@@ -22,7 +34,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const setup = await ensureContractSetupComplete();
+    const setup = await ensureContractSetupComplete("/client/contract/new");
     if (!setup.completed) {
       return NextResponse.json(
         { error: setup.error || "Complete Contract Setup before creating hiring requests.", setupHref: setup.setupHref },
@@ -56,11 +68,29 @@ export async function POST(req: NextRequest) {
           AND u.role = 'worker'
           AND u.is_suspended = false
           AND wp.is_verified = true
+          AND wp.verification_status = 'approved'
         LIMIT 1
       `;
 
       if (workerRows.length === 0) {
         return NextResponse.json({ error: "Worker not found or unavailable" }, { status: 404 });
+      }
+
+      const duplicateRows = await sql`
+        SELECT id, status
+        FROM jobs
+        WHERE client_id = ${session.user.id}
+          AND worker_id = ${workerId}
+          AND status = ANY(${OPEN_INVITATION_STATUSES}::job_status[])
+        ORDER BY created_at DESC
+        LIMIT 1
+      `;
+
+      if (duplicateRows.length > 0) {
+        return NextResponse.json(
+          { error: `You already have an active hiring workflow with this worker (${duplicateRows[0].status}).` },
+          { status: 409 },
+        );
       }
     }
 
@@ -95,6 +125,10 @@ export async function GET(req: NextRequest) {
     if (session.user.role === "client") {
       rows = await sql`SELECT * FROM jobs WHERE client_id = ${session.user.id} ORDER BY created_at DESC`;
     } else if (session.user.role === "worker") {
+      const workerAccess = await assertActiveVerifiedWorker(session.user.id);
+      if (!workerAccess.allowed) {
+        return NextResponse.json({ error: workerAccess.error || "Forbidden" }, { status: 403 });
+      }
       rows = await sql`SELECT * FROM jobs WHERE worker_id = ${session.user.id} ORDER BY created_at DESC`;
     } else {
       rows = await sql`SELECT * FROM jobs ORDER BY created_at DESC`;

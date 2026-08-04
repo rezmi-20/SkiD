@@ -1,7 +1,6 @@
-import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
-import { redirect } from "next/navigation";
 import { CommunityModerationClient } from "@/components/admin/CommunityModerationClient";
+import { hasAdminPermission, requireAdminPermission } from "@/lib/admin-authorization";
 
 export const dynamic = "force-dynamic";
 
@@ -11,10 +10,7 @@ export const metadata = {
 };
 
 export default async function CommunityPage() {
-  const session = await auth();
-  if (!session || session.user.role !== "admin") {
-    redirect("/login");
-  }
+  const admin = await requireAdminPermission("content.read");
 
   const postsData = await sql`
     SELECT
@@ -44,5 +40,5 @@ export default async function CommunityPage() {
     isRemoved: p.isRemoved as boolean,
   }));
 
-  return <CommunityModerationClient initialPosts={posts} />;
+  return <CommunityModerationClient initialPosts={posts} canModerate={hasAdminPermission(admin, "content.moderate")} />;
 }

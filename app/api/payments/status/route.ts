@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { auth } from "@/lib/auth";
+import { getAdminPrincipal, hasAdminPermission } from "@/lib/admin-authorization";
 
 /**
  * GET /api/payments/status?txRef=DIRESKILL-xxx
@@ -44,10 +45,11 @@ export async function GET(req: NextRequest) {
     }
 
     const payment = rows[0];
+    const admin = session.user.role === "admin" ? await getAdminPrincipal() : null;
 
     // Security: only client or worker for this job can poll
     const canRead =
-      session.user.role === "admin" ||
+      (hasAdminPermission(admin, "payment_cases.read") || hasAdminPermission(admin, "reports.read")) ||
       session.user.id === payment.client_id ||
       session.user.id === payment.worker_id;
 

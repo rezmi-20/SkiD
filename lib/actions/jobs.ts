@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { createNotification } from "./notifications";
 import { ensureContractSetupComplete } from "./contract-setup";
 import { assertAllowedJobTransition, isJobStatus, type JobActorRole } from "@/lib/job-workflow";
+import { assertActiveVerifiedWorker } from "@/lib/identity-lifecycle";
 
 export interface CreateJobInput {
   title: string;
@@ -19,6 +20,17 @@ export interface CreateJobInput {
 type JobActionResult =
   | { success: true; job?: any; jobId?: string; contract?: any; contractId?: string }
   | { success: false; error: string; code?: "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "INVALID_STATE" | "CONTRACT_SETUP_REQUIRED" | "UNKNOWN" };
+
+const OPEN_INVITATION_STATUSES = [
+  "pending",
+  "accepted",
+  "active",
+  "in_progress",
+  "completion_requested",
+  "completed",
+  "payment_pending",
+  "paid",
+];
 
 async function logAuditAction(userId: string, action: string, details: Record<string, unknown>) {
   try {
@@ -41,7 +53,7 @@ export async function createJob(data: CreateJobInput) {
     return { success: false, error: "Only clients can create hiring requests", code: "FORBIDDEN" };
   }
 
-  const setup = await ensureContractSetupComplete();
+  const setup = await ensureContractSetupComplete("/client/contract/new");
   if (!setup.completed) {
     return {
       success: false,
@@ -60,11 +72,30 @@ export async function createJob(data: CreateJobInput) {
           AND u.role = 'worker'
           AND u.is_suspended = false
           AND wp.is_verified = true
+          AND wp.verification_status = 'approved'
         LIMIT 1
       `;
 
       if (workerRows.length === 0) {
         return { success: false, error: "Worker not found or unavailable", code: "NOT_FOUND" };
+      }
+
+      const duplicateRows = await sql`
+        SELECT id, status
+        FROM jobs
+        WHERE client_id = ${session.user.id}
+          AND worker_id = ${data.workerId}
+          AND status = ANY(${OPEN_INVITATION_STATUSES}::job_status[])
+        ORDER BY created_at DESC
+        LIMIT 1
+      `;
+
+      if (duplicateRows.length > 0) {
+        return {
+          success: false,
+          error: `You already have an active hiring workflow with this worker (${duplicateRows[0].status}).`,
+          code: "INVALID_STATE",
+        };
       }
     }
 
@@ -130,6 +161,11 @@ export async function getPendingJobs() {
     throw new Error("Forbidden");
   }
 
+  const workerAccess = await assertActiveVerifiedWorker(session.user.id);
+  if (!workerAccess.allowed) {
+    throw new Error(workerAccess.error || "Forbidden");
+  }
+
   try {
     return await sql`
       SELECT
@@ -163,6 +199,15 @@ export async function getWorkerJobs() {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
 
+  if (session.user.role !== "worker") {
+    throw new Error("Forbidden");
+  }
+
+  const workerAccess = await assertActiveVerifiedWorker(session.user.id);
+  if (!workerAccess.allowed) {
+    return [];
+  }
+
   try {
     // Fetch worker jobs, join client profiles and contracts
     return await sql`
@@ -193,7 +238,12 @@ export async function acceptJob(jobId: string): Promise<JobActionResult> {
     return { success: false, error: "You don't have permission", code: "FORBIDDEN" };
   }
 
-  const setup = await ensureContractSetupComplete();
+  const workerAccess = await assertActiveVerifiedWorker(session.user.id);
+  if (!workerAccess.allowed) {
+    return { success: false, error: workerAccess.error || "Forbidden", code: "FORBIDDEN" };
+  }
+
+  const setup = await ensureContractSetupComplete("/worker/jobs");
   if (!setup.completed) {
     return {
       success: false,
@@ -203,20 +253,6 @@ export async function acceptJob(jobId: string): Promise<JobActionResult> {
   }
 
   try {
-    const workerAccessRows = await sql`
-      SELECT u.id
-      FROM users u
-      JOIN worker_profiles wp ON u.id = wp.user_id
-      WHERE u.id = ${session.user.id}
-        AND u.is_suspended = false
-        AND wp.is_verified = true
-      LIMIT 1
-    `;
-
-    if (workerAccessRows.length === 0) {
-      return { success: false, error: "Your worker profile must be verified and active before accepting jobs.", code: "FORBIDDEN" };
-    }
-
     const jobRows = await sql`
       SELECT id, client_id, worker_id, title, description, budget, status
       FROM jobs
@@ -318,6 +354,11 @@ export async function rejectJob(jobId: string, reason?: string) {
     return { success: false, error: "Forbidden" };
   }
 
+  const workerAccess = await assertActiveVerifiedWorker(session.user.id);
+  if (!workerAccess.allowed) {
+    return { success: false, error: workerAccess.error || "Forbidden" };
+  }
+
   try {
     const rejectionReason = typeof reason === "string" ? reason.trim().slice(0, 1000) : null;
     const updatedRows = await sql`
@@ -362,6 +403,11 @@ export async function startJob(jobId: string): Promise<JobActionResult> {
 
   if (session.user.role !== "worker") {
     return { success: false, error: "You don't have permission", code: "FORBIDDEN" };
+  }
+
+  const workerAccess = await assertActiveVerifiedWorker(session.user.id);
+  if (!workerAccess.allowed) {
+    return { success: false, error: workerAccess.error || "Forbidden", code: "FORBIDDEN" };
   }
 
   try {
@@ -431,6 +477,11 @@ export async function completeJob(jobId: string): Promise<JobActionResult> {
 
   if (session.user.role !== "worker") {
     return { success: false, error: "You don't have permission", code: "FORBIDDEN" };
+  }
+
+  const workerAccess = await assertActiveVerifiedWorker(session.user.id);
+  if (!workerAccess.allowed) {
+    return { success: false, error: workerAccess.error || "Forbidden", code: "FORBIDDEN" };
   }
 
   try {
@@ -659,12 +710,23 @@ export async function updateJobStatus(jobId: string, status: string) {
       return { success: false, error: "Forbidden" };
     }
 
+    if (role === "admin") {
+      return { success: false, error: "Forbidden" };
+    }
+
     if (role === "client" && job.client_id !== session.user.id) {
       return { success: false, error: "Forbidden" };
     }
 
     if (role === "worker" && job.worker_id !== session.user.id) {
       return { success: false, error: "Forbidden" };
+    }
+
+    if (role === "worker") {
+      const workerAccess = await assertActiveVerifiedWorker(session.user.id);
+      if (!workerAccess.allowed) {
+        return { success: false, error: workerAccess.error || "Forbidden" };
+      }
     }
 
     const transition = assertAllowedJobTransition(job.status, status, role);

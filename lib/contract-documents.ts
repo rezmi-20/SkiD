@@ -3,6 +3,7 @@ import PDFDocument from "pdfkit";
 import QRCode from "qrcode";
 import { sql } from "@/lib/db";
 import { createNotification } from "@/lib/actions/notifications";
+import { maskFinLast4 } from "@/lib/fin-protection";
 
 function formatDate(value: unknown) {
   if (!value) return "Not recorded";
@@ -23,7 +24,7 @@ function formatMoney(value: unknown) {
   return `${Math.round(Number(value)).toLocaleString()} ETB`;
 }
 
-function maskFan(value: unknown) {
+function maskDeprecatedIdentity(value: unknown) {
   const fan = String(value || "").trim();
   if (!fan) return "Not recorded";
   if (fan.length <= 6) return `${fan.slice(0, 2)}••${fan.slice(-2)}`;
@@ -72,10 +73,10 @@ async function buildContractPdfBuffer(contract: any, signatures: any[], qrDataUr
 
   writeLabelValue(doc, "Client", contract.client_name || "Client", 48, 190);
   writeLabelValue(doc, "Client Identity", contract.client_verified ? "Verified Identity" : "Not verified", 48, 242);
-  writeLabelValue(doc, "Client Fayda FAN", maskFan(contract.client_fan), 48, 294);
+  writeLabelValue(doc, "Client Fayda FIN", maskFinLast4(contract.client_fin_last4) || "Not recorded", 48, 294);
   writeLabelValue(doc, "Worker", contract.worker_name || "Worker", 315, 190);
   writeLabelValue(doc, "Worker Identity", contract.worker_verified ? "Verified Identity" : "Not verified", 315, 242);
-  writeLabelValue(doc, "Worker Fayda FAN", maskFan(contract.worker_fan), 315, 294);
+  writeLabelValue(doc, "Worker Fayda FIN", maskFinLast4(contract.worker_fin_last4) || "Not recorded", 315, 294);
 
   doc.roundedRect(48, 354, 499, 144, 8).fillAndStroke("#f9fafb", "#e5e7eb");
   doc.fillColor("#111827").fontSize(13).font("Helvetica-Bold").text("Job Details", 68, 374);
@@ -152,10 +153,18 @@ export async function activateContractAfterFullSignature(contractId: string) {
       j.budget,
       cp.full_name as client_name,
       cp.is_verified as client_verified,
-      NULL::text as client_fan,
+      cp.fin_last4 as client_fin_last4,
+      cp.verification_provider as client_verification_provider,
+      cp.verification_reference as client_verification_reference,
+      cp.verification_status as client_verification_status,
+      cp.verified_at as client_verified_at,
       wp.full_name as worker_name,
       wp.is_verified as worker_verified,
-      NULL::text as worker_fan
+      wp.fin_last4 as worker_fin_last4,
+      wp.verification_provider as worker_verification_provider,
+      wp.verification_reference as worker_verification_reference,
+      wp.verification_status as worker_verification_status,
+      wp.verified_at as worker_verified_at
     FROM contracts c
     JOIN jobs j ON c.job_id = j.id
     LEFT JOIN client_profiles cp ON j.client_id = cp.user_id
@@ -189,9 +198,39 @@ export async function activateContractAfterFullSignature(contractId: string) {
     return contract;
   }
 
+  const signatureByRole = new Map<string, any>(signatures.map((signature: any) => [signature.role, signature]));
+  const identityVerificationSnapshot = [
+    {
+      partyUserId: contract.client_id,
+      role: "client",
+      verifiedLegalName: contract.client_name,
+      maskedFin: maskFinLast4(contract.client_fin_last4),
+      verificationProvider: contract.client_verification_provider || "Fayda",
+      verificationReference: contract.client_verification_reference || null,
+      verificationStatus: contract.client_verification_status || (contract.client_verified ? "approved" : "incomplete"),
+      verificationTimestamp: contract.client_verified_at || null,
+      signingTimestamp: signatureByRole.get("client")?.signed_at || null,
+    },
+    {
+      partyUserId: contract.worker_id,
+      role: "worker",
+      verifiedLegalName: contract.worker_name,
+      maskedFin: maskFinLast4(contract.worker_fin_last4),
+      verificationProvider: contract.worker_verification_provider || "Fayda",
+      verificationReference: contract.worker_verification_reference || null,
+      verificationStatus: contract.worker_verification_status || (contract.worker_verified ? "approved" : "pending"),
+      verificationTimestamp: contract.worker_verified_at || null,
+      signingTimestamp: signatureByRole.get("worker")?.signed_at || null,
+    },
+  ];
+  const finalizedSnapshot = {
+    ...(contract.finalized_snapshot && typeof contract.finalized_snapshot === "object" ? contract.finalized_snapshot : {}),
+    identityVerificationSnapshot,
+  };
+
   const canonicalPayload = JSON.stringify({
     contractId,
-    finalizedSnapshot: contract.finalized_snapshot,
+    finalizedSnapshot,
     signatures: signatures.map((signature: any) => ({
       userId: signature.user_id,
       role: signature.role,
@@ -219,6 +258,7 @@ export async function activateContractAfterFullSignature(contractId: string) {
     UPDATE contracts
     SET
       status = 'ACTIVE',
+      finalized_snapshot = ${JSON.stringify(finalizedSnapshot)},
       pdf_url = ${pdfUrl},
       final_pdf_base64 = ${pdfBase64},
       document_hash = ${documentHash},

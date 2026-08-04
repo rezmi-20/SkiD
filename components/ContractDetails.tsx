@@ -64,15 +64,20 @@ function SignatureRow({ label, name, signedAt }: { label: string; name: string |
   );
 }
 
-function VerificationStatusRow({ label, verified }: { label: string; verified: boolean }) {
+function VerificationStatusRow({ label, verified, maskedFin }: { label: string; verified: boolean; maskedFin?: string | null }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg border border-outline-variant bg-surface-container p-3">
-      <span className="text-sm font-bold text-on-surface">{label}</span>
-      <span className={`inline-flex items-center gap-1.5 text-xs font-black ${verified ? "text-primary" : "text-error"}`}>
+      <div>
+        <span className="text-sm font-bold text-on-surface">{label}</span>
+        <p className="mt-0.5 font-mono text-[11px] font-semibold text-on-surface-variant">
+          FIN: {maskedFin || "Not recorded"}
+        </p>
+      </div>
+      <span className={`inline-flex items-center gap-1.5 text-xs font-black ${verified && maskedFin ? "text-primary" : "text-error"}`}>
         <span className="material-symbols-outlined text-[16px]">
-          {verified ? "check_circle" : "cancel"}
+          {verified && maskedFin ? "check_circle" : "cancel"}
         </span>
-        {verified ? "Verified" : "Not verified"}
+        {verified && maskedFin ? "Verified" : "Not verified"}
       </span>
     </div>
   );
@@ -337,7 +342,7 @@ export default function ContractDetails({ contract, userId }: Props) {
   const hasAllSignatureConsent = Object.values(signatureConsent).every(Boolean);
   const clientVerified = !!contract.client_verified;
   const workerVerified = !!contract.worker_verified;
-  const bothPartiesVerified = clientVerified && workerVerified;
+  const bothPartiesVerified = clientVerified && workerVerified && !!contract.client_masked_fin && !!contract.worker_masked_fin;
   const canEditDraft = isClient && contractStatus === "DRAFT";
   const canWorkerReviewTerms = !isClient && contractStatus === "DRAFT" && termsStatus === "submitted";
   const canFinalizeDraft = canEditDraft && termsStatus === "accepted";
@@ -713,8 +718,8 @@ export default function ContractDetails({ contract, userId }: Props) {
           <div className="rounded-lg border border-outline-variant bg-surface-container-lowest p-5">
             <div className="mb-4 space-y-3 rounded-lg border border-outline-variant bg-surface-container-lowest p-4">
               <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Identity Verification</p>
-              <VerificationStatusRow label="Client" verified={clientVerified} />
-              <VerificationStatusRow label="Worker" verified={workerVerified} />
+              <VerificationStatusRow label="Client" verified={clientVerified} maskedFin={contract.client_masked_fin} />
+              <VerificationStatusRow label="Worker" verified={workerVerified} maskedFin={contract.worker_masked_fin} />
               {!bothPartiesVerified && (
                 <p className="text-xs font-bold leading-5 text-error">
                   Both client and worker must complete identity verification before signing this contract.

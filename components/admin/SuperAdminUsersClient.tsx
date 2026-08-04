@@ -1,17 +1,19 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import {
   Search, ShieldCheck, UserX, UserCheck, UserCog,
-  Trash2, Plus, X, Crown, AlertTriangle, Users, User
+  Trash2, Plus, X, Crown, AlertTriangle, Users, User, Copy, CheckCircle2
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import {
   setSuspendedStatus,
   setUserRole,
-  createAdminAccount,
   deleteUser,
 } from "@/lib/actions/super-admin";
+import { createAdminAccount, resetAdminEmployeePassword } from "@/lib/actions/admin-account";
+import type { AdminRole } from "@/lib/admin-authorization";
 
 type UserRole = "client" | "worker" | "admin";
 
@@ -21,14 +23,44 @@ interface UserRow {
   phone: string | null;
   role: UserRole;
   isSuspended: boolean;
+  workerIsVerified: boolean | null;
+  workerVerificationStatus: string | null;
+  clientIsVerified: boolean | null;
+  clientVerificationStatus: string | null;
   createdAt: string;
   fullName: string | null;
   avatarUrl: string | null;
+  adminRole?: string | null;
+  adminStatus?: string | null;
+  adminActivationRequired?: boolean | null;
+  adminEmployeeId?: string | null;
+  adminIdentityReference?: string | null;
+  adminFullName?: string | null;
+  adminCreatedByEmail?: string | null;
+  adminCreatedAt?: string | null;
 }
 
 interface Props {
   initialUsers: UserRow[];
 }
+
+const ROLE_LABELS: Record<AdminRole, string> = {
+  super_admin: "Super Admin",
+  content_verification_admin: "Content and Verification Admin",
+  dispute_payment_admin: "Dispute and Payment Admin",
+  user_support_admin: "User Support Admin",
+};
+
+const DEPARTMENT_OPTIONS = [
+  "Verification and Content",
+  "Dispute and Payments",
+  "User Support",
+  "Operations",
+  "Administration",
+] as const;
+
+type CreateAdminField = "fullName" | "email" | "phone" | "adminRole" | "department" | "note" | "identityConfirmed";
+type CreateAdminFieldErrors = Partial<Record<CreateAdminField, string>>;
 
 // ─── Create Admin Modal ───────────────────────────────────────────────────────
 function CreateAdminModal({
@@ -36,30 +68,123 @@ function CreateAdminModal({
   onCreated,
 }: {
   onClose: () => void;
-  onCreated: () => void;
+  onCreated: (user: UserRow) => void;
 }) {
   const { t } = useLanguage();
-  const [form, setForm] = useState({ email: "", password: "", fullName: "" });
+  const [form, setForm] = useState({
+    email: "",
+    phone: "",
+    fullName: "",
+    department: "Operations",
+    adminRole: "content_verification_admin" as AdminRole,
+    note: "",
+    identityConfirmed: false,
+  });
+  const [temporaryCredentials, setTemporaryCredentials] = useState<null | {
+    employeeId: string;
+    password: string;
+    identityReference: string;
+    expiresAt: string;
+    expiresIn: string;
+    adminRole: AdminRole;
+  }>(null);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<CreateAdminFieldErrors>({});
+  const [copiedField, setCopiedField] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const setField = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => {
+    setForm((f) => ({ ...f, [key]: value }));
+    setFieldErrors((current) => {
+      if (!current[key as CreateAdminField]) return current;
+      const next = { ...current };
+      delete next[key as CreateAdminField];
+      return next;
+    });
+  };
+
+  const validateForm = () => {
+    const nextErrors: CreateAdminFieldErrors = {};
+    const fullName = form.fullName.trim();
+    const email = form.email.trim().toLowerCase();
+    const phone = form.phone.trim().replace(/[\s-]/g, "");
+    const note = form.note.trim();
+
+    if (!fullName) nextErrors.fullName = "Full Name is required.";
+    else if (fullName.length < 2 || fullName.length > 120) nextErrors.fullName = "Full Name must be between 2 and 120 characters.";
+
+    if (!email) nextErrors.email = "Work Email is required.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) nextErrors.email = "Enter a valid work email.";
+
+    if (phone && !/^\+251\d{9}$/.test(phone)) nextErrors.phone = "Use Ethiopian international format, for example +251912345678.";
+    if (!form.adminRole || form.adminRole === "super_admin") nextErrors.adminRole = "Choose an allowed operational role.";
+    if (!form.department.trim()) nextErrors.department = "Department is required.";
+    if (note.length > 500) nextErrors.note = "Administrative Note must be 500 characters or fewer.";
+    if (/\b(password|passcode|secret|token|fin|passport|national\s*id|staff\s*id|document\s*number)\b/i.test(note)) {
+      nextErrors.note = "Do not enter passwords, FIN, passport, national ID, staff ID, document numbers, or private identity details.";
+    }
+    if (!form.identityConfirmed) nextErrors.identityConfirmed = "Offline identity and work-email confirmation is required.";
+
+    return nextErrors;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    const nextErrors = validateForm();
+    setFieldErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      setError("Fix the highlighted fields before creating the administrator.");
+      return;
+    }
     startTransition(async () => {
       const res = await createAdminAccount(form);
-      if (res.success) {
-        onCreated();
-        onClose();
+      if (res.success && res.user) {
+        onCreated(res.user);
+        setTemporaryCredentials(res.temporaryCredentials ?? null);
       } else {
+        if ("fieldErrors" in res && res.fieldErrors) {
+          setFieldErrors(res.fieldErrors as CreateAdminFieldErrors);
+        }
         setError(res.error || "Failed to create admin.");
       }
     });
   };
 
+  const copyValue = async (label: string, value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedField(label);
+      window.setTimeout(() => setCopiedField(null), 1500);
+    } catch {
+      setCopiedField(null);
+    }
+  };
+
+  const closeAndForgetCredentials = () => {
+    setTemporaryCredentials(null);
+    onClose();
+  };
+
+  const FieldError = ({ name }: { name: CreateAdminField }) => (
+    fieldErrors[name] ? <p className="text-[11px] font-semibold text-red-600">{fieldErrors[name]}</p> : null
+  );
+
+  const CopyButton = ({ label, value }: { label: string; value: string }) => (
+    <button
+      type="button"
+      onClick={() => copyValue(label, value)}
+      className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface-variant transition-colors hover:text-primary"
+      aria-label={`Copy ${label}`}
+      title={`Copy ${label}`}
+    >
+      {copiedField === label ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+    </button>
+  );
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
+      <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-3xl shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant">
           <div className="flex items-center gap-2.5">
@@ -71,15 +196,64 @@ function CreateAdminModal({
             </h2>
           </div>
           <button
-            onClick={onClose}
+            type="button"
+            onClick={closeAndForgetCredentials}
             className="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors"
+            aria-label="Close create administrator dialog"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        {temporaryCredentials ? (
+          <div className="p-6 space-y-4">
+            <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-900">
+              <p className="text-sm font-black uppercase tracking-wider">Save these temporary credentials now.</p>
+              <p className="mt-1 text-xs font-semibold">
+                The password will not be shown again. Give these details to the administrator through an approved offline channel.
+              </p>
+            </div>
+            <div className="grid gap-3 text-sm sm:grid-cols-2">
+              <div className="rounded-lg border border-outline-variant bg-surface-container p-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Employee ID</p>
+                <div className="mt-1 flex items-center justify-between gap-2">
+                  <p className="font-mono font-bold text-on-surface">{temporaryCredentials.employeeId}</p>
+                  <CopyButton label="Employee ID" value={temporaryCredentials.employeeId} />
+                </div>
+              </div>
+              <div className="rounded-lg border border-outline-variant bg-surface-container p-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Temporary password</p>
+                <div className="mt-1 flex items-center justify-between gap-2">
+                  <p className="font-mono font-bold text-on-surface break-all">{temporaryCredentials.password}</p>
+                  <CopyButton label="Temporary password" value={temporaryCredentials.password} />
+                </div>
+              </div>
+              <div className="rounded-lg border border-outline-variant bg-surface-container p-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Identity Verification Reference</p>
+                <p className="mt-1 font-mono font-bold text-on-surface">{temporaryCredentials.identityReference}</p>
+              </div>
+              <div className="rounded-lg border border-outline-variant bg-surface-container p-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Temporary credential expiry</p>
+                <p className="mt-1 font-semibold text-on-surface">
+                  {new Date(temporaryCredentials.expiresAt).toLocaleString()} ({temporaryCredentials.expiresIn})
+                </p>
+              </div>
+              <div className="rounded-lg border border-outline-variant bg-surface-container p-3 sm:col-span-2">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Assigned role</p>
+                <p className="mt-1 font-semibold text-on-surface">{ROLE_LABELS[temporaryCredentials.adminRole]}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={closeAndForgetCredentials}
+              className="w-full py-2.5 bg-primary text-on-primary text-xs font-bold uppercase tracking-wider rounded-lg transition-all active:scale-[0.98]"
+            >
+              Done
+            </button>
+          </div>
+        ) : (
+        /* Form */
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {error && (
             <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg">
               <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
@@ -87,48 +261,118 @@ function CreateAdminModal({
             </div>
           )}
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-on-surface">
-              {t("admin.users.modal.fullName" as any)}
-            </label>
-            <input
-              type="text"
-              value={form.fullName}
-              onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
-              required
-              className="w-full bg-surface-container px-3.5 py-2.5 rounded-lg border border-outline-variant text-sm text-on-surface focus:outline-none focus:border-primary transition-all"
-              placeholder="e.g. Abebe Kebede"
-            />
-          </div>
+          <section className="space-y-3">
+            <h3 className="text-xs font-black uppercase tracking-widest text-on-surface-variant">Employee Information</h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label htmlFor="admin-full-name" className="text-xs font-bold text-on-surface">Full Name <span className="text-red-600">*</span></label>
+                <input
+                  id="admin-full-name"
+                  type="text"
+                  value={form.fullName}
+                  onChange={(e) => setField("fullName", e.target.value)}
+                  required
+                  className="w-full bg-surface-container px-3.5 py-2.5 rounded-lg border border-outline-variant text-sm text-on-surface focus:outline-none focus:border-primary transition-all"
+                  placeholder="e.g. Abebe Kebede"
+                />
+                <p className="text-[11px] text-on-surface-variant">Enter the employee's official full name.</p>
+                <FieldError name="fullName" />
+              </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-on-surface">
-              {t("admin.users.modal.email" as any)}
-            </label>
-            <input
-              type="email"
-              value={form.email}
-              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-              required
-              className="w-full bg-surface-container px-3.5 py-2.5 rounded-lg border border-outline-variant text-sm text-on-surface focus:outline-none focus:border-primary transition-all"
-              placeholder="admin@example.com"
-            />
-          </div>
+              <div className="space-y-1.5">
+                <label htmlFor="admin-work-email" className="text-xs font-bold text-on-surface">Work Email <span className="text-red-600">*</span></label>
+                <input
+                  id="admin-work-email"
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setField("email", e.target.value)}
+                  required
+                  className="w-full bg-surface-container px-3.5 py-2.5 rounded-lg border border-outline-variant text-sm text-on-surface focus:outline-none focus:border-primary transition-all"
+                  placeholder="admin@example.com"
+                />
+                <p className="text-[11px] text-on-surface-variant">Enter the employee's company or approved work email.</p>
+                <FieldError name="email" />
+              </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-on-surface">
-              {t("admin.users.modal.password" as any)}
+              <div className="space-y-1.5 sm:col-span-2">
+                <label htmlFor="admin-phone" className="text-xs font-bold text-on-surface">Phone Number (Optional)</label>
+                <input
+                  id="admin-phone"
+                  type="tel"
+                  value={form.phone}
+                  onChange={(e) => setField("phone", e.target.value)}
+                  className="w-full bg-surface-container px-3.5 py-2.5 rounded-lg border border-outline-variant text-sm text-on-surface focus:outline-none focus:border-primary transition-all"
+                  placeholder="+251912345678"
+                />
+                <p className="text-[11px] text-on-surface-variant">Used only for internal contact and support.</p>
+                <FieldError name="phone" />
+              </div>
+            </div>
+          </section>
+
+          <section className="space-y-3">
+            <h3 className="text-xs font-black uppercase tracking-widest text-on-surface-variant">Role Assignment</h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label htmlFor="admin-operational-role" className="text-xs font-bold text-on-surface">Operational Role <span className="text-red-600">*</span></label>
+                <select
+                  id="admin-operational-role"
+                  value={form.adminRole}
+                  onChange={(e) => setField("adminRole", e.target.value as AdminRole)}
+                  className="w-full bg-surface-container px-3.5 py-2.5 rounded-lg border border-outline-variant text-sm text-on-surface focus:outline-none focus:border-primary transition-all"
+                >
+                  <option value="content_verification_admin">Content and Verification Admin</option>
+                  <option value="dispute_payment_admin">Dispute and Payment Admin</option>
+                  <option value="user_support_admin">User Support Admin</option>
+                </select>
+                <FieldError name="adminRole" />
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="admin-department" className="text-xs font-bold text-on-surface">Department <span className="text-red-600">*</span></label>
+                <select
+                  id="admin-department"
+                  value={form.department}
+                  onChange={(e) => setField("department", e.target.value)}
+                  required
+                  className="w-full bg-surface-container px-3.5 py-2.5 rounded-lg border border-outline-variant text-sm text-on-surface focus:outline-none focus:border-primary transition-all"
+                >
+                  {DEPARTMENT_OPTIONS.map((department) => (
+                    <option key={department} value={department}>{department}</option>
+                  ))}
+                </select>
+                <FieldError name="department" />
+              </div>
+
+              <div className="space-y-1.5 sm:col-span-2">
+                <label htmlFor="admin-note" className="text-xs font-bold text-on-surface">Administrative Note (Optional)</label>
+                <textarea
+                  id="admin-note"
+                  value={form.note}
+                  maxLength={500}
+                  onChange={(e) => setField("note", e.target.value)}
+                  className="min-h-20 w-full bg-surface-container px-3.5 py-2.5 rounded-lg border border-outline-variant text-sm text-on-surface focus:outline-none focus:border-primary transition-all"
+                  placeholder="Assignment context or support handoff note"
+                />
+                <p className="text-[11px] text-on-surface-variant">Add a short non-sensitive note about the employee or assignment.</p>
+                <FieldError name="note" />
+              </div>
+            </div>
+          </section>
+
+          <section className="space-y-3">
+            <h3 className="text-xs font-black uppercase tracking-widest text-on-surface-variant">Verification Confirmation</h3>
+            <label className="flex items-start gap-2 rounded-lg border border-outline-variant bg-surface-container p-3 text-xs font-semibold text-on-surface">
+              <input
+                type="checkbox"
+                checked={form.identityConfirmed}
+                onChange={(e) => setField("identityConfirmed", e.target.checked)}
+                className="mt-0.5"
+              />
+              <span>I confirm that this employee's identity and work email were verified offline through an approved company process.</span>
             </label>
-            <input
-              type="password"
-              value={form.password}
-              onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-              required
-              minLength={8}
-              className="w-full bg-surface-container px-3.5 py-2.5 rounded-lg border border-outline-variant text-sm text-on-surface focus:outline-none focus:border-primary transition-all"
-              placeholder="••••••••"
-            />
-          </div>
+            <FieldError name="identityConfirmed" />
+          </section>
 
           <button
             type="submit"
@@ -139,6 +383,7 @@ function CreateAdminModal({
             {isPending ? "Creating..." : t("admin.users.modal.submit" as any)}
           </button>
         </form>
+        )}
       </div>
     </div>
   );
@@ -165,12 +410,44 @@ function RoleBadge({ role }: { role: UserRole }) {
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
+function getIdentityStatus(user: UserRow) {
+  if (user.isSuspended) return "suspended";
+  if (user.role === "worker") {
+    if (user.workerVerificationStatus) return user.workerVerificationStatus;
+    return user.workerIsVerified ? "approved" : "pending";
+  }
+  if (user.role === "client") {
+    if (user.clientVerificationStatus === "incomplete") return "not_started";
+    if (user.clientVerificationStatus) return user.clientVerificationStatus;
+    return user.clientIsVerified ? "approved" : "not_started";
+  }
+  return "admin";
+}
+
+function IdentityBadge({ user }: { user: UserRow }) {
+  const status = getIdentityStatus(user);
+  const approved = status === "approved" || status === "admin";
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded border ${
+      approved
+        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+        : status === "suspended" || status === "revoked" || status === "rejected"
+          ? "bg-red-50 text-red-700 border-red-200"
+          : "bg-amber-50 text-amber-700 border-amber-200"
+    }`}>
+      <ShieldCheck className="w-3 h-3" />
+      {status === "admin" ? "Admin" : status.replace("_", " ")}
+    </span>
+  );
+}
+
 export function SuperAdminUsersClient({ initialUsers }: Props) {
   const { t } = useLanguage();
   const [users, setUsers] = useState<UserRow[]>(initialUsers);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"all" | "client" | "worker" | "admin">("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [resetCredentials, setResetCredentials] = useState<null | { employeeId: string; password: string; expiresIn: string }>(null);
   const [isPending, startTransition] = useTransition();
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
@@ -191,7 +468,7 @@ export function SuperAdminUsersClient({ initialUsers }: Props) {
         setUsers((prev) =>
           prev.map((u) => (u.id === userId ? { ...u, isSuspended: !current } : u))
         );
-      } else alert(res.error);
+      } else alert(res.error || "Failed to update suspension status.");
     });
   };
 
@@ -199,10 +476,14 @@ export function SuperAdminUsersClient({ initialUsers }: Props) {
     startTransition(async () => {
       const res = await setUserRole(userId, newRole);
       if (res.success) {
+        const appliedRole: UserRole =
+          res.role === "client" || res.role === "worker" || res.role === "admin"
+            ? res.role
+            : newRole;
         setUsers((prev) =>
-          prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
+          prev.map((u) => (u.id === userId ? { ...u, role: appliedRole } : u))
         );
-      } else alert(res.error);
+      } else alert(res.error || "Failed to update user role.");
     });
   };
 
@@ -212,7 +493,19 @@ export function SuperAdminUsersClient({ initialUsers }: Props) {
       if (res.success) {
         setUsers((prev) => prev.filter((u) => u.id !== userId));
         setConfirmDelete(null);
-      } else alert(res.error);
+      } else alert(res.error || "Failed to delete user.");
+    });
+  };
+
+  const handleResetPassword = (userId: string) => {
+    startTransition(async () => {
+      const res = await resetAdminEmployeePassword(userId);
+      if (res.success && res.temporaryCredentials) {
+        setResetCredentials(res.temporaryCredentials);
+        setUsers((prev) =>
+          prev.map((u) => u.id === userId ? { ...u, adminStatus: "activation_required", adminActivationRequired: true } : u)
+        );
+      } else alert(res.error || "Failed to reset administrator password.");
     });
   };
 
@@ -235,8 +528,8 @@ export function SuperAdminUsersClient({ initialUsers }: Props) {
       {showCreateModal && (
         <CreateAdminModal
           onClose={() => setShowCreateModal(false)}
-          onCreated={() => {
-            // Optimistically show a placeholder; server will have the real row on next load
+          onCreated={(user) => {
+            setUsers((prev) => [user, ...prev]);
           }}
         />
       )}
@@ -268,6 +561,27 @@ export function SuperAdminUsersClient({ initialUsers }: Props) {
                 {isPending ? "Deleting..." : "Delete Forever"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {resetCredentials && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4">
+            <h3 className="font-bold text-on-surface text-sm">Temporary password shown once</h3>
+            <p className="text-xs font-semibold text-on-surface-variant">
+              Employee {resetCredentials.employeeId} must sign in and activate again within {resetCredentials.expiresIn}.
+            </p>
+            <div className="rounded-lg border border-outline-variant bg-surface-container p-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Temporary password</p>
+              <p className="font-mono font-bold text-on-surface break-all">{resetCredentials.password}</p>
+            </div>
+            <button
+              onClick={() => setResetCredentials(null)}
+              className="w-full py-2.5 bg-primary text-on-primary text-xs font-bold uppercase tracking-wider rounded-lg"
+            >
+              Done
+            </button>
           </div>
         </div>
       )}
@@ -382,6 +696,16 @@ export function SuperAdminUsersClient({ initialUsers }: Props) {
                             {u.phone && (
                               <p className="text-[10px] text-on-surface-variant/70 mt-0.5">{u.phone}</p>
                             )}
+                            {u.role === "admin" && (
+                              <p className="text-[10px] text-on-surface-variant/70 mt-0.5">
+                                {u.adminEmployeeId || "Employee ID pending"} · {u.adminRole?.replaceAll("_", " ") || "admin"}
+                              </p>
+                            )}
+                            {u.role === "admin" && u.adminIdentityReference && (
+                              <p className="text-[10px] text-on-surface-variant/70 mt-0.5">
+                                IVR {u.adminIdentityReference}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -403,6 +727,15 @@ export function SuperAdminUsersClient({ initialUsers }: Props) {
                             : <><UserCheck className="w-3 h-3" />{t("admin.users.status.active" as any)}</>
                           }
                         </span>
+                        <div className="mt-1">
+                          <IdentityBadge user={u} />
+                        </div>
+                        {u.role === "admin" && (
+                          <p className="mt-1 text-[10px] font-semibold text-on-surface-variant">
+                            {u.adminStatus || "unknown"}
+                            {u.adminActivationRequired ? " · activation required" : ""}
+                          </p>
+                        )}
                       </td>
 
                       {/* Joined */}
@@ -412,6 +745,11 @@ export function SuperAdminUsersClient({ initialUsers }: Props) {
                             year: "numeric", month: "short", day: "numeric",
                           })}
                         </span>
+                        {u.role === "admin" && (
+                          <p className="mt-1 text-[10px] text-on-surface-variant/70">
+                            Created by {u.adminCreatedByEmail || "system"}
+                          </p>
+                        )}
                       </td>
 
                       {/* Actions */}
@@ -435,24 +773,29 @@ export function SuperAdminUsersClient({ initialUsers }: Props) {
                           </button>
 
                           {/* Promote / Demote */}
-                          {u.role !== "admin" ? (
-                            <button
-                              disabled={isPending}
-                              onClick={() => handleRole(u.id, "admin")}
-                              className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded font-bold border bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 transition-all disabled:opacity-50"
+                          {u.role === "client" && (
+                            <Link
+                              href={`/admin/clients/${u.id}/verify`}
+                              className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded font-bold border bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100 transition-all"
                             >
                               <ShieldCheck className="w-3 h-3" />
-                              {t("admin.users.action.makeAdmin" as any)}
-                            </button>
-                          ) : (
-                            <button
-                              disabled={isPending}
-                              onClick={() => handleRole(u.id, "client")}
-                              className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded font-bold border bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 transition-all disabled:opacity-50"
-                            >
-                              <UserCog className="w-3 h-3" />
-                              {t("admin.users.action.demote" as any)}
-                            </button>
+                              Review Fayda
+                            </Link>
+                          )}
+
+                          {u.role === "admin" && (
+                            <>
+                              {u.adminRole !== "super_admin" && (
+                                <button
+                                  disabled={isPending}
+                                  onClick={() => handleResetPassword(u.id)}
+                                  className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded font-bold border bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 transition-all disabled:opacity-50"
+                                >
+                                  <UserCog className="w-3 h-3" />
+                                  Reset Password
+                                </button>
+                              )}
+                            </>
                           )}
 
                           {/* Delete */}

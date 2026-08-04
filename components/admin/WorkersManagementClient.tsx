@@ -6,6 +6,7 @@ import { Search, ShieldCheck, ShieldAlert, CheckCircle, XCircle, ExternalLink, A
 import { useLanguage } from "@/context/LanguageContext";
 import { toggleWorkerVerification } from "@/lib/actions/admin";
 import FadeContent from "@/components/ui/fade-content";
+import { toWorkerDisplayStatus } from "@/lib/worker-verification";
 
 interface WorkerData {
   userId: string;
@@ -16,16 +17,23 @@ interface WorkerData {
   skills: string[] | null;
   district: string | null;
   experienceYears: number | null;
+  verificationStatus?: string | null;
   isVerified: boolean;
+  isSuspended?: boolean | null;
   faydaDocUrl: string | null;
   createdAt: string;
 }
 
 interface Props {
   initialWorkers: WorkerData[];
+  verificationCapabilities: {
+    canReview: boolean;
+    canApprove: boolean;
+    canReject: boolean;
+  };
 }
 
-export function WorkersManagementClient({ initialWorkers }: Props) {
+export function WorkersManagementClient({ initialWorkers, verificationCapabilities }: Props) {
   const { t } = useLanguage();
   const [workers, setWorkers] = useState<WorkerData[]>(initialWorkers);
   const [search, setSearch] = useState("");
@@ -38,7 +46,16 @@ export function WorkersManagementClient({ initialWorkers }: Props) {
       const res = await toggleWorkerVerification(userId, nextStatus);
       if (res.success) {
         setWorkers((prev) =>
-          prev.map((w) => (w.userId === userId ? { ...w, isVerified: nextStatus } : w))
+          prev.map((w) =>
+            w.userId === userId
+              ? {
+                  ...w,
+                  isVerified: nextStatus,
+                  isSuspended: false,
+                  verificationStatus: nextStatus ? "approved" : "rejected",
+                }
+              : w,
+          )
         );
       } else {
         alert(res.error || "Failed to update verification status.");
@@ -56,11 +73,14 @@ export function WorkersManagementClient({ initialWorkers }: Props) {
 
     const matchesStatus =
       statusFilter === "all" ||
-      (statusFilter === "verified" && w.isVerified) ||
-      (statusFilter === "pending" && !w.isVerified);
+      (statusFilter === "verified" && toWorkerDisplayStatus(w.verificationStatus, w.isVerified, w.isSuspended) === "approved") ||
+      (statusFilter === "pending" && toWorkerDisplayStatus(w.verificationStatus, w.isVerified, w.isSuspended) !== "approved");
 
     return matchesSearch && matchesStatus;
   });
+
+  const displayStatus = (worker: WorkerData) =>
+    toWorkerDisplayStatus(worker.verificationStatus, worker.isVerified, worker.isSuspended);
 
   return (
     <FadeContent blur duration={0.4} className="space-y-5 pb-10 max-w-full">
@@ -203,12 +223,14 @@ export function WorkersManagementClient({ initialWorkers }: Props) {
                     <td className="px-5 py-4">
                       <span
                         className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider rounded-full px-2.5 py-0.5 border ${
-                          w.isVerified
+                          displayStatus(w) === "approved"
                             ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-                            : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                            : displayStatus(w) === "suspended" || displayStatus(w) === "revoked"
+                              ? "bg-rose-500/10 text-rose-500 border-rose-500/20"
+                              : "bg-amber-500/10 text-amber-500 border-amber-500/20"
                         }`}
                       >
-                        {w.isVerified ? (
+                        {displayStatus(w) === "approved" ? (
                           <>
                             <ShieldCheck className="w-3.5 h-3.5" />
                             {t("verification.status.approved" as any)}
@@ -216,7 +238,7 @@ export function WorkersManagementClient({ initialWorkers }: Props) {
                         ) : (
                           <>
                             <ShieldAlert className="w-3.5 h-3.5" />
-                            {t("verification.status.pending" as any)}
+                            {displayStatus(w)}
                           </>
                         )}
                       </span>
@@ -229,30 +251,33 @@ export function WorkersManagementClient({ initialWorkers }: Props) {
                             className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-xl bg-surface-container text-on-surface hover:bg-surface-container-high font-semibold transition-all border border-outline-variant active:scale-95"
                           >
                             <ExternalLink className="w-3.5 h-3.5 opacity-60" />
-                            {t("admin.action.review" as any)}
+                            {verificationCapabilities.canReview ? t("admin.action.review" as any) : "View details"}
                           </Link>
                         )}
-                        <button
-                          disabled={isPending}
-                          onClick={() => handleToggleVerify(w.userId, w.isVerified)}
-                          className={`inline-flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-xl font-bold transition-all disabled:opacity-50 border active:scale-95 duration-200 ${
-                            w.isVerified
-                              ? "bg-rose-500/10 text-rose-500 border-rose-500/20 hover:bg-rose-500/20"
-                              : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20"
-                          }`}
-                        >
-                          {w.isVerified ? (
-                            <>
-                              <XCircle className="w-3.5 h-3.5" />
-                              {t("admin.action.reject" as any)}
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle className="w-3.5 h-3.5" />
-                              {t("admin.action.verify" as any)}
-                            </>
-                          )}
-                        </button>
+                        {((displayStatus(w) === "approved" && verificationCapabilities.canReject) ||
+                          (displayStatus(w) !== "approved" && verificationCapabilities.canApprove)) && (
+                          <button
+                            disabled={isPending}
+                            onClick={() => handleToggleVerify(w.userId, displayStatus(w) === "approved")}
+                            className={`inline-flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-xl font-bold transition-all disabled:opacity-50 border active:scale-95 duration-200 ${
+                              displayStatus(w) === "approved"
+                                ? "bg-rose-500/10 text-rose-500 border-rose-500/20 hover:bg-rose-500/20"
+                                : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20"
+                            }`}
+                          >
+                            {displayStatus(w) === "approved" ? (
+                              <>
+                                <XCircle className="w-3.5 h-3.5" />
+                                {t("admin.action.reject" as any)}
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle className="w-3.5 h-3.5" />
+                                {t("admin.action.verify" as any)}
+                              </>
+                            )}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

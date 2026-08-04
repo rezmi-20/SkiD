@@ -10,6 +10,7 @@ export default function VerificationResubmitForm() {
   const [submitting, setSubmitting] = useState(false);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [finNumber, setFinNumber] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -59,7 +60,7 @@ export default function VerificationResubmitForm() {
     setSubmitting(true);
     setError(null);
     try {
-      const result = await resubmitVerification(uploadedUrl);
+      const result = await resubmitVerification(uploadedUrl, finNumber);
       if (result.success) {
         setSuccess(true);
       } else {
@@ -95,6 +96,26 @@ export default function VerificationResubmitForm() {
         <p className="text-xs font-black text-zinc-300 uppercase tracking-widest">
           {t("verification.resubmit.title")}
         </p>
+      </div>
+
+      {/* Drop / Click Zone */}
+      <div className="space-y-2">
+        <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+          Fayda FIN
+        </label>
+        <input
+          type="password"
+          inputMode="numeric"
+          autoComplete="off"
+          maxLength={12}
+          value={finNumber}
+          onChange={(event) => {
+            setError(null);
+            setFinNumber(event.target.value.replace(/\D/g, "").slice(0, 12));
+          }}
+          placeholder="Enter your 12-digit FIN"
+          className="h-12 w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 text-sm font-bold text-zinc-100 outline-none focus:border-red-400"
+        />
       </div>
 
       {/* Drop / Click Zone */}
@@ -153,7 +174,7 @@ export default function VerificationResubmitForm() {
       <button
         type="button"
         onClick={handleSubmit}
-        disabled={!uploadedUrl || submitting}
+        disabled={!uploadedUrl || finNumber.length !== 12 || submitting}
         className="w-full h-12 bg-red-500 hover:bg-red-400 text-white rounded-2xl font-black text-sm transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         {submitting ? (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
@@ -8,19 +9,21 @@ import DireSkillLogo from "@/components/shell/DireSkillLogo";
 import {
   LayoutDashboard, Users, ShieldCheck, Briefcase,
   FileText, DollarSign, Scale, Megaphone,
-  BarChart2, Settings, ChevronLeft, ChevronRight, LogOut, Crown,
+  BarChart2, Settings, ChevronLeft, ChevronRight, LogOut, Crown, LifeBuoy, ClipboardList, UserCircle,
 } from "lucide-react";
-import { authClient } from "@/lib/auth/client";
+import type { AdminPermission, AdminRole } from "@/lib/admin-authorization";
 
 interface SidebarProps {
   userEmail: string | null;
-  isSuperAdmin?: boolean;
+  adminRole: AdminRole;
+  permissions: AdminPermission[];
 }
 
-export function Sidebar({ userEmail, isSuperAdmin = false }: SidebarProps) {
+export function Sidebar({ userEmail, adminRole, permissions }: SidebarProps) {
   const pathname = usePathname();
   const { t } = useLanguage();
   const [collapsed, setCollapsed] = useState(false);
+  const isSuperAdmin = adminRole === "super_admin";
 
   useEffect(() => {
     const saved = localStorage.getItem("admin-sidebar-collapsed");
@@ -35,27 +38,35 @@ export function Sidebar({ userEmail, isSuperAdmin = false }: SidebarProps) {
   };
 
   const handleLogout = async () => {
-    try { await authClient.signOut(); } catch (_) {}
-    await fetch("/api/auth/sign-out", { method: "POST", credentials: "include" });
-    window.location.href = "/login?logout=1";
+    await fetch("/api/admin/sign-out", { method: "POST", credentials: "include" });
+    window.location.href = "/admin/login";
   };
 
-  const navItems = [
-    { href: "/admin/dashboard",  icon: <LayoutDashboard className="w-5 h-5" />, labelKey: "admin.dashboard", superOnly: false },
-    { href: "/admin/workers",    icon: <Users className="w-5 h-5" />,            labelKey: "admin.workers",   superOnly: false },
-    { href: "/admin/verify",     icon: <ShieldCheck className="w-5 h-5" />,      labelKey: "admin.verify",    superOnly: false },
-    { href: "/admin/jobs",       icon: <Briefcase className="w-5 h-5" />,        labelKey: "admin.jobs",      superOnly: false },
-    { href: "/admin/contracts",  icon: <FileText className="w-5 h-5" />,         labelKey: "admin.contracts", superOnly: false },
-    { href: "/admin/payments",   icon: <DollarSign className="w-5 h-5" />,       labelKey: "admin.payments",  superOnly: false },
-    { href: "/admin/disputes",   icon: <Scale className="w-5 h-5" />,            labelKey: "admin.disputes",  superOnly: false },
-    { href: "/admin/community",  icon: <Megaphone className="w-5 h-5" />,        labelKey: "admin.community", superOnly: false },
-    { href: "/admin/reports",    icon: <BarChart2 className="w-5 h-5" />,        labelKey: "admin.reports",   superOnly: false },
-    { href: "/admin/settings",   icon: <Settings className="w-5 h-5" />,         labelKey: "admin.settings",  superOnly: false },
-    // ─ Super Admin only ─
-    { href: "/admin/users",      icon: <Crown className="w-5 h-5" />,            labelKey: "admin.users",     superOnly: true  },
+  const can = (permission: AdminPermission) => permissions.includes(permission);
+  const navItems: Array<{
+    href: string;
+    icon: ReactNode;
+    label: string;
+    visible: boolean;
+    superOnly?: boolean;
+  }> = [
+    { href: "/admin/dashboard", icon: <LayoutDashboard className="w-5 h-5" />, label: t("admin.dashboard" as any), visible: true },
+    { href: "/admin/profile", icon: <UserCircle className="w-5 h-5" />, label: "Profile", visible: true },
+    { href: "/admin/verify", icon: <ShieldCheck className="w-5 h-5" />, label: "Verification", visible: can("verification.read") },
+    { href: "/admin/workers", icon: <Users className="w-5 h-5" />, label: t("admin.workers" as any), visible: can("verification.read") },
+    { href: "/admin/community", icon: <Megaphone className="w-5 h-5" />, label: "Content", visible: can("content.read") },
+    { href: "/admin/disputes", icon: <Scale className="w-5 h-5" />, label: "Disputes", visible: can("disputes.read") },
+    { href: "/admin/payments", icon: <DollarSign className="w-5 h-5" />, label: "Payment Cases", visible: can("payment_cases.read") },
+    { href: "/admin/settings#support-tickets", icon: <LifeBuoy className="w-5 h-5" />, label: "Support Tickets", visible: can("support.read") },
+    { href: "/admin/reports", icon: <BarChart2 className="w-5 h-5" />, label: t("admin.reports" as any), visible: can("reports.read") },
+    { href: "/admin/jobs", icon: <Briefcase className="w-5 h-5" />, label: t("admin.jobs" as any), visible: can("reports.read") },
+    { href: "/admin/contracts", icon: <FileText className="w-5 h-5" />, label: t("admin.contracts" as any), visible: can("reports.read") },
+    { href: "/admin/settings#audit-logs", icon: <ClipboardList className="w-5 h-5" />, label: "Audit Logs", visible: can("audit.read"), superOnly: true },
+    { href: "/admin/settings#appeals", icon: <Settings className="w-5 h-5" />, label: "Appeals", visible: can("appeals.read"), superOnly: true },
+    { href: "/admin/users", icon: <Crown className="w-5 h-5" />, label: t("admin.users" as any), visible: can("admin_accounts.read"), superOnly: true },
   ] as const;
 
-  const visibleItems = navItems.filter((item) => !item.superOnly || isSuperAdmin);
+  const visibleItems = navItems.filter((item) => item.visible);
 
   return (
     <aside
@@ -90,7 +101,7 @@ export function Sidebar({ userEmail, isSuperAdmin = false }: SidebarProps) {
       {/* Nav Links */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 space-y-0.5 px-2">
         {/* Separator before super admin section */}
-        {visibleItems.map(({ href, icon, labelKey, superOnly }) => {
+        {visibleItems.map(({ href, icon, label, superOnly }) => {
           const isActive = pathname?.startsWith(href);
           return (
             <div key={href}>
@@ -110,7 +121,7 @@ export function Sidebar({ userEmail, isSuperAdmin = false }: SidebarProps) {
               )}
               <Link
                 href={href}
-                title={t(labelKey as any)}
+                title={label}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 group
                   ${isActive
                     ? superOnly
@@ -124,7 +135,7 @@ export function Sidebar({ userEmail, isSuperAdmin = false }: SidebarProps) {
               >
                 <span className="shrink-0">{icon}</span>
                 {!collapsed && (
-                  <span className="truncate">{t(labelKey as any)}</span>
+                  <span className="truncate">{label}</span>
                 )}
               </Link>
             </div>

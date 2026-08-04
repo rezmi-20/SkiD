@@ -56,10 +56,25 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   role: roleEnum("role").notNull().default("client"),
   isSuspended: boolean("is_suspended").notNull().default(false),
+  adminRole: varchar("admin_role", { length: 50 }),
+  adminStatus: varchar("admin_status", { length: 50 }),
+  adminActivationRequired: boolean("admin_activation_required").notNull().default(false),
+  adminUsername: varchar("admin_username", { length: 32 }),
+  adminFullName: varchar("admin_full_name", { length: 255 }),
+  adminTempCredentialExpiresAt: timestamp("admin_temp_credential_expires_at"),
+  adminActivationCompletedAt: timestamp("admin_activation_completed_at"),
+  adminIdentityReference: varchar("admin_identity_reference", { length: 120 }),
+  adminIdentityNote: text("admin_identity_note"),
+  adminCreatedBy: uuid("admin_created_by"),
+  adminCreatedAt: timestamp("admin_created_at"),
+  adminUpdatedAt: timestamp("admin_updated_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => [
   index("user_email_idx").on(table.email),
   index("user_phone_idx").on(table.phone),
+  index("user_admin_role_idx").on(table.adminRole),
+  index("user_admin_status_idx").on(table.adminStatus),
+  uniqueIndex("user_admin_username_unique_idx").on(table.adminUsername),
 ]);
 
 // ─── Worker Profiles ──────────────────────────────────────────────────────────
@@ -74,7 +89,12 @@ export const workerProfiles = pgTable("worker_profiles", {
   latitude: doublePrecision("latitude"),
   longitude: doublePrecision("longitude"),
   faydaDocUrl: text("fayda_doc_url"),
-  faydaFanNumber: varchar("fayda_fan_number", { length: 64 }),
+  finEncrypted: text("fin_encrypted"),
+  finEncryptionKeyId: varchar("fin_encryption_key_id", { length: 64 }),
+  finFingerprint: text("fin_fingerprint"),
+  finLast4: varchar("fin_last4", { length: 4 }),
+  verificationProvider: varchar("verification_provider", { length: 100 }),
+  verificationReference: varchar("verification_reference", { length: 255 }),
   dateOfBirth: timestamp("date_of_birth"),
   gender: varchar("gender", { length: 20 }),
   district: varchar("district", { length: 100 }),
@@ -96,6 +116,35 @@ export const workerProfiles = pgTable("worker_profiles", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const adminEmployees = pgTable("admin_employees", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  adminEmployeeId: varchar("admin_employee_id", { length: 32 }).notNull(),
+  workEmail: varchar("work_email", { length: 255 }).notNull(),
+  fullName: varchar("full_name", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 20 }),
+  department: varchar("department", { length: 120 }).notNull().default("Operations"),
+  adminRole: varchar("admin_role", { length: 50 }).notNull(),
+  adminStatus: varchar("admin_status", { length: 50 }).notNull().default("activation_required"),
+  adminActivationRequired: boolean("admin_activation_required").notNull().default(true),
+  passwordHash: text("password_hash").notNull(),
+  tempCredentialExpiresAt: timestamp("temp_credential_expires_at"),
+  activationCompletedAt: timestamp("activation_completed_at"),
+  adminIdentityReference: varchar("admin_identity_reference", { length: 120 }),
+  identityReference: varchar("identity_reference", { length: 120 }),
+  identityNote: text("identity_note"),
+  sessionVersion: integer("session_version").notNull().default(0),
+  createdBy: uuid("created_by"),
+  legacyUserId: uuid("legacy_user_id").references(() => users.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("admin_employees_employee_id_unique_idx").on(table.adminEmployeeId),
+  uniqueIndex("admin_employees_work_email_unique_idx").on(table.workEmail),
+  uniqueIndex("admin_employees_admin_identity_reference_unique_idx").on(table.adminIdentityReference),
+  index("admin_employees_role_idx").on(table.adminRole),
+  index("admin_employees_status_idx").on(table.adminStatus),
+]);
+
 // ─── Client Profiles ──────────────────────────────────────────────────────────
 export const clientProfiles = pgTable("client_profiles", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -104,7 +153,17 @@ export const clientProfiles = pgTable("client_profiles", {
     .references(() => users.id, { onDelete: "cascade" }),
   fullName: varchar("full_name", { length: 255 }).notNull(),
   avatarUrl: text("avatar_url"),
-  faydaFanNumber: varchar("fayda_fan_number", { length: 64 }),
+  faydaDocUrl: text("fayda_doc_url"),
+  finEncrypted: text("fin_encrypted"),
+  finEncryptionKeyId: varchar("fin_encryption_key_id", { length: 64 }),
+  finFingerprint: text("fin_fingerprint"),
+  finLast4: varchar("fin_last4", { length: 4 }),
+  verificationStatus: varchar("verification_status", { length: 50 }).notNull().default("not_started"),
+  verificationReason: text("verification_reason"),
+  verificationProvider: varchar("verification_provider", { length: 100 }),
+  verificationReference: varchar("verification_reference", { length: 255 }),
+  verifiedBy: uuid("verified_by").references(() => users.id),
+  verifiedAt: timestamp("verified_at"),
   latitude: doublePrecision("latitude"),
   longitude: doublePrecision("longitude"),
   isVerified: boolean("is_verified").notNull().default(false),
@@ -312,6 +371,19 @@ export const communityFlags = pgTable("community_flags", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const contentModerationEvents = pgTable("content_moderation_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  contentType: varchar("content_type", { length: 50 }).notNull(),
+  contentId: uuid("content_id").notNull(),
+  action: varchar("action", { length: 50 }).notNull(),
+  reason: text().notNull(),
+  adminEmployeeId: uuid("admin_employee_id").references(() => adminEmployees.id),
+  adminRole: varchar("admin_role", { length: 50 }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("content_moderation_events_content_idx").on(table.contentType, table.contentId),
+]);
+
 export const communityComments = pgTable("community_comments", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("user_id").notNull().references(() => users.id),
@@ -352,12 +424,51 @@ export const disputes = pgTable("disputes", {
 export const auditLogs = pgTable("audit_logs", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").references(() => users.id),
+  adminEmployeeId: uuid("admin_employee_id").references(() => adminEmployees.id),
   action: text("action").notNull(),
   details: json("details"),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const verificationAttempts = pgTable("verification_attempts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  accountUserId: uuid("account_user_id").notNull().references(() => users.id),
+  accountType: varchar("account_type", { length: 20 }).notNull(),
+  attemptNumber: integer("attempt_number").notNull(),
+  status: varchar("status", { length: 50 }).notNull().default("pending"),
+  documentReference: text("document_reference"),
+  documentFingerprint: varchar("document_fingerprint", { length: 128 }),
+  finLast4: varchar("fin_last4", { length: 4 }),
+  isCurrent: boolean("is_current").notNull().default(true),
+  submittedAt: timestamp("submitted_at").notNull().defaultNow(),
+  decidedAt: timestamp("decided_at"),
+  decidedBy: uuid("decided_by").references(() => adminEmployees.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("verification_attempts_account_idx").on(table.accountUserId, table.accountType),
+  uniqueIndex("verification_attempts_account_number_unique_idx").on(table.accountUserId, table.accountType, table.attemptNumber),
+]);
+
+export const verificationEvents = pgTable("verification_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  attemptId: uuid("attempt_id").references(() => verificationAttempts.id),
+  accountUserId: uuid("account_user_id").notNull().references(() => users.id),
+  accountType: varchar("account_type", { length: 20 }).notNull(),
+  oldStatus: varchar("old_status", { length: 50 }),
+  newStatus: varchar("new_status", { length: 50 }).notNull(),
+  action: varchar("action", { length: 50 }).notNull(),
+  adminEmployeeId: uuid("admin_employee_id").references(() => adminEmployees.id),
+  adminRole: varchar("admin_role", { length: 50 }),
+  reason: text(),
+  attemptNumber: integer("attempt_number"),
+  documentFingerprint: varchar("document_fingerprint", { length: 128 }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("verification_events_account_idx").on(table.accountUserId, table.accountType),
+  index("verification_events_attempt_idx").on(table.attemptId),
+]);
 
 // ─── Saved Workers (Favorites) ─────────────────────────────────────────────────
 export const savedWorkers = pgTable("saved_workers", {

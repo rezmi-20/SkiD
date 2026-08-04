@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { decodeClientIdentityDocument } from "@/lib/client-verification";
+import { getAdminPrincipal, hasAdminPermission } from "@/lib/admin-authorization";
+import { recordVerificationDocumentView } from "@/lib/verification-operations";
 
 export const dynamic = "force-dynamic";
 
@@ -9,14 +11,14 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ clientId: string }> },
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const [session, admin] = await Promise.all([auth(), getAdminPrincipal()]);
+  if (!session?.user?.id && !admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { clientId } = await params;
-  const isOwner = session.user.id === clientId;
-  const isAdmin = session.user.role === "admin";
+  const isOwner = session?.user?.id === clientId;
+  const isAdmin = Boolean(admin && hasAdminPermission(admin, "verification.read"));
 
   if (!isOwner && !isAdmin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -35,19 +37,8 @@ export async function GET(
     return NextResponse.json({ error: "Verification document not available" }, { status: 404 });
   }
 
-  if (isAdmin) {
-    await sql`
-      INSERT INTO audit_logs (user_id, action, details)
-      VALUES (
-        ${session.user.id},
-        'client_verification_document_viewed',
-        ${JSON.stringify({
-          adminId: session.user.id,
-          clientId,
-          timestamp: new Date().toISOString(),
-        })}
-      )
-    `;
+  if (isAdmin && admin) {
+    await recordVerificationDocumentView("client", clientId, admin).catch(() => undefined);
   }
 
   return new NextResponse(decoded.bytes, {
@@ -57,7 +48,7 @@ export async function GET(
       "Cache-Control": "no-store, private",
       "Content-Disposition": `inline; filename="client-verification-document.${decoded.mimeType === "application/pdf" ? "pdf" : "img"}"`,
       "X-Content-Type-Options": "nosniff",
+      "Referrer-Policy": "no-referrer",
     },
   });
 }
-

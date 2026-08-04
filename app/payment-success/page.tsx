@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
+import { sql } from "@/lib/db";
 import { verifyAndReleasePayment, type PaymentProcessingResult } from "@/lib/payment-processing";
 
 
@@ -20,6 +21,61 @@ function statusTone(success: boolean) {
     : "border-error/30 bg-error/10 text-error";
 }
 
+function failureResult(txRef: string, message: string): PaymentProcessingResult {
+  return {
+    success: false,
+    idempotent: false,
+    status: "failed",
+    txRef,
+    message,
+  };
+}
+
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+async function verifyReturnPayment({
+  txRef,
+  jobId,
+  userId,
+  userRole,
+}: {
+  txRef: string;
+  jobId: string | null;
+  userId?: string;
+  userRole?: string | null;
+}): Promise<PaymentProcessingResult> {
+  if (!txRef) return failureResult(txRef, "Missing transaction reference.");
+  if (!userId) return failureResult(txRef, "Login required before verifying a returned payment.");
+  if (userRole !== "client") return failureResult(txRef, "Only the paying client can verify this payment.");
+  if (jobId && !isUuid(jobId)) return failureResult(txRef, "Invalid job ID.");
+
+  const paymentRows = await sql`
+    SELECT j.client_id
+    FROM payments p
+    JOIN jobs j ON p.job_id = j.id
+    WHERE p.chapa_ref = ${txRef}
+      AND (${jobId ?? null}::uuid IS NULL OR p.job_id = ${jobId ?? null})
+    LIMIT 1
+  `;
+
+  if (paymentRows.length === 0) {
+    return failureResult(txRef, "Payment record not found.");
+  }
+
+  if (paymentRows[0].client_id !== userId) {
+    return failureResult(txRef, "Only the paying client can verify this payment.");
+  }
+
+  return verifyAndReleasePayment({
+    txRef,
+    jobId,
+    source: "return_url",
+    actorUserId: userId,
+  });
+}
+
 export default async function PaymentSuccessPage({
   searchParams,
 }: {
@@ -30,26 +86,18 @@ export default async function PaymentSuccessPage({
   const jobId = params.job_id || null;
   const session = await auth();
 
-  const result: PaymentProcessingResult = txRef
-    ? await verifyAndReleasePayment({
+  const result: PaymentProcessingResult = await verifyReturnPayment({
         txRef,
         jobId,
-        source: "return_url",
-        actorUserId: session?.user?.id ?? null,
+        userId: session?.user?.id,
+        userRole: session?.user?.role,
       }).catch((error): PaymentProcessingResult => ({
         success: false,
         idempotent: false,
         status: "failed" as const,
         txRef,
         message: error instanceof Error ? error.message : "Payment verification failed.",
-      }))
-    : {
-        success: false,
-        idempotent: false,
-        status: "failed" as const,
-        txRef,
-        message: "Missing transaction reference.",
-      };
+      }));
 
   const breakdown = result.breakdown;
   const dashboardHref = session?.user?.role === "worker" ? "/worker/dashboard" : "/client/dashboard";

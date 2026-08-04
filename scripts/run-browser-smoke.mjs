@@ -1,4 +1,8 @@
 import { spawnSync } from "node:child_process";
+import { resolve } from "node:path";
+import { config } from "dotenv";
+
+config({ path: resolve(process.cwd(), ".env.local"), quiet: true });
 
 function run(command, args) {
   const result = spawnSync(command, args, {

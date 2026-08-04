@@ -1,10 +1,12 @@
 "use client";
 
-import { useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CheckCircle, XCircle, ExternalLink, Clock } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { toggleWorkerVerification } from "@/lib/actions/admin";
+import { toWorkerDisplayStatus } from "@/lib/worker-verification";
 
 interface Worker {
   user_id: string;
@@ -14,11 +16,18 @@ interface Worker {
   skills: string[];
   fayda_doc_url?: string;
   created_at?: string;
+  verification_status?: string | null;
+  is_verified?: boolean;
+  is_suspended?: boolean | null;
 }
 
 interface PendingVerificationProps {
   workers: Worker[];
   onAction?: (userId: string, approved: boolean) => void;
+  canOpenDetails?: boolean;
+  canReview?: boolean;
+  canApprove?: boolean;
+  canReject?: boolean;
 }
 
 function timeAgo(dateStr?: string) {
@@ -31,18 +40,33 @@ function timeAgo(dateStr?: string) {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-export function PendingVerification({ workers, onAction }: PendingVerificationProps) {
+export function PendingVerification({
+  workers,
+  onAction,
+  canOpenDetails = true,
+  canReview = true,
+  canApprove = true,
+  canReject = true,
+}: PendingVerificationProps) {
   const { t } = useLanguage();
+  const router = useRouter();
+  const [visibleWorkers, setVisibleWorkers] = useState(workers);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    setVisibleWorkers(workers);
+  }, [workers]);
 
   const handleAction = (userId: string, approve: boolean) => {
     const reason = approve ? undefined : window.prompt("Reason for rejection?") || undefined;
     startTransition(async () => {
       const result = await toggleWorkerVerification(userId, approve, reason);
       if (result.success) {
+        setVisibleWorkers((prev) => prev.filter((worker) => worker.user_id !== userId));
         onAction?.(userId, approve);
+        router.refresh();
       } else {
-        alert("Failed to update verification status.");
+        alert(result.error || "Failed to update verification status.");
       }
     });
   };
@@ -55,8 +79,8 @@ export function PendingVerification({ workers, onAction }: PendingVerificationPr
           <h3 className="text-sm font-bold text-on-surface tracking-tight">
             {t("admin.pendingVerif.title" as any)}
           </h3>
-          {workers.length > 0 && (
-            <span className="badge-warning">{workers.length} {t("verification.status.pending" as any)}</span>
+          {visibleWorkers.length > 0 && (
+            <span className="badge-warning">{visibleWorkers.length} {t("verification.status.pending" as any)}</span>
           )}
         </div>
         <Link
@@ -68,7 +92,7 @@ export function PendingVerification({ workers, onAction }: PendingVerificationPr
       </div>
 
       {/* Empty State */}
-      {workers.length === 0 ? (
+      {visibleWorkers.length === 0 ? (
         <div className="py-12 flex flex-col items-center gap-3 text-on-surface-variant">
           <CheckCircle className="w-10 h-10 text-primary" />
           <p className="text-sm font-semibold text-on-surface">{t("admin.pendingVerif.empty" as any)}</p>
@@ -97,7 +121,7 @@ export function PendingVerification({ workers, onAction }: PendingVerificationPr
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant">
-              {workers.map((worker) => (
+              {visibleWorkers.map((worker) => (
                 <tr
                   key={worker.user_id}
                   className="hover:bg-surface-container transition-colors duration-150"
@@ -127,35 +151,39 @@ export function PendingVerification({ workers, onAction }: PendingVerificationPr
                     </span>
                   </td>
                   <td className="px-4 py-2.5">
-                    <span className="badge-warning">⚠ {t("verification.status.pending" as any)}</span>
+                    <span className="badge-warning">⚠ {toWorkerDisplayStatus(worker.verification_status, worker.is_verified, worker.is_suspended)}</span>
                   </td>
                   <td className="px-4 py-2.5">
                     <div className="flex items-center justify-end gap-2">
-                      {worker.fayda_doc_url && (
+                      {worker.fayda_doc_url && canOpenDetails && (
                         <Link
                           href={`/admin/verify/${worker.user_id}`}
                           className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-semibold transition-colors border border-outline-variant"
                         >
                           <ExternalLink className="w-3 h-3" />
-                          {t("admin.action.review" as any)}
+                          {canReview ? t("admin.action.review" as any) : "View details"}
                         </Link>
                       )}
-                      <button
-                        disabled={isPending}
-                        onClick={() => handleAction(worker.user_id, true)}
-                        className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded bg-green-50 text-green-700 hover:bg-green-100 font-bold transition-colors disabled:opacity-50 border border-green-200"
-                      >
-                        <CheckCircle className="w-3.5 h-3.5" />
-                        {t("admin.action.verify" as any)}
-                      </button>
-                      <button
-                        disabled={isPending}
-                        onClick={() => handleAction(worker.user_id, false)}
-                        className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded bg-red-50 text-red-700 hover:bg-red-100 font-bold transition-colors disabled:opacity-50 border border-red-200"
-                      >
-                        <XCircle className="w-3.5 h-3.5" />
-                        {t("admin.action.reject" as any)}
-                      </button>
+                      {canApprove && (
+                        <button
+                          disabled={isPending}
+                          onClick={() => handleAction(worker.user_id, true)}
+                          className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded bg-green-50 text-green-700 hover:bg-green-100 font-bold transition-colors disabled:opacity-50 border border-green-200"
+                        >
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          {t("admin.action.verify" as any)}
+                        </button>
+                      )}
+                      {canReject && (
+                        <button
+                          disabled={isPending}
+                          onClick={() => handleAction(worker.user_id, false)}
+                          className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded bg-red-50 text-red-700 hover:bg-red-100 font-bold transition-colors disabled:opacity-50 border border-red-200"
+                        >
+                          <XCircle className="w-3.5 h-3.5" />
+                          {t("admin.action.reject" as any)}
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

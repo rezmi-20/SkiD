@@ -41,6 +41,8 @@ interface ProfileContentProps {
     gender?: string;
     dateOfBirth?: string;
     district?: string;
+    verificationStatus?: string;
+    maskedFin?: string | null;
   };
   stats: {
     label: string;
@@ -71,6 +73,8 @@ export default function ProfileContent({ user, stats, menuGroups, skills }: Prof
   }, []);
 
   if (!mounted) return null;
+  const identityVerified = Boolean(user.is_verified && user.maskedFin);
+  const verificationHref = user.role === "worker" ? "/worker/pending-verification" : "/client/profile/settings?verify=1&returnTo=/client/profile";
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-5xl mx-auto pb-24">
@@ -116,6 +120,11 @@ export default function ProfileContent({ user, stats, menuGroups, skills }: Prof
             {user.role === "worker" && (
               <Badge variant="outline" className="px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
                 Fayda Active
+              </Badge>
+            )}
+            {user.role === "client" && !identityVerified && (
+              <Badge variant="outline" className="px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-600 border-amber-500/20">
+                Fayda Pending
               </Badge>
             )}
           </div>
@@ -191,14 +200,15 @@ export default function ProfileContent({ user, stats, menuGroups, skills }: Prof
               { label: "Account Created", value: "March 20, 2026" },
               { label: "Last Login", value: new Date().toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) },
               { label: "Membership Status", value: "Premium Member" },
-              { label: "Account Verification", value: "Verified", isBadge: true },
+              { label: "Account Verification", value: identityVerified ? "Verified" : (user.verificationStatus || "Incomplete"), isBadge: true },
+              { label: "Fayda FIN", value: user.maskedFin || "Not recorded" },
               { label: "Language Preference", value: language === "en" ? "English" : "Amharic" },
               { label: "Time Zone", value: "GMT+3 (East Africa Time)" },
             ].map((row, i) => (
               <div key={i} className="flex justify-between items-center py-2.5 border-b border-border/40 last:border-0">
                 <span className="text-muted-foreground font-medium">{row.label}</span>
                 {row.isBadge ? (
-                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                  <Badge variant="outline" className={`${identityVerified ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-amber-500/10 text-amber-600 border-amber-500/20"} rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider`}>
                     {row.value}
                   </Badge>
                 ) : (
@@ -207,6 +217,11 @@ export default function ProfileContent({ user, stats, menuGroups, skills }: Prof
               </div>
             ))}
           </div>
+          {!identityVerified && (
+            <Button asChild size="sm" className="rounded-xl text-xs font-semibold">
+              <Link href={verificationHref}>Complete Fayda Verification</Link>
+            </Button>
+          )}
         </div>
 
         {/* Card 3: Security Settings */}

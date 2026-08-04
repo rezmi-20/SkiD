@@ -11,7 +11,11 @@ export default function ClientRegisterPage() {
     password: "",
     fullName: "",
     phone: "",
+    faydaFinNumber: "",
+    faydaDocDataUrl: "",
+    faydaDocName: "",
   });
+  const [wantsVerification, setWantsVerification] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -20,6 +24,30 @@ export default function ClientRegisterPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleFaydaFile = (file: File | null) => {
+    if (!file) return;
+    const allowedTypes = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
+    if (!allowedTypes.includes(file.type)) {
+      setError("Fayda document must be PNG, JPG, WebP, or PDF.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Fayda document must be 5 MB or smaller.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setFormData((prev) => ({
+        ...prev,
+        faydaDocDataUrl: String(reader.result || ""),
+        faydaDocName: file.name,
+      }));
+    };
+    reader.onerror = () => setError("Could not read Fayda document.");
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +64,24 @@ export default function ClientRegisterPage() {
       setError("Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.");
       setIsLoading(false);
       return;
+    }
+
+    if (wantsVerification) {
+      if (!formData.faydaFinNumber || !formData.faydaDocDataUrl) {
+        setError("Submit both your FIN and Fayda document, or choose Skip for now.");
+        setIsLoading(false);
+        return;
+      }
+      if (!/^\d{12}$/.test(formData.faydaFinNumber)) {
+        setError("FIN must be exactly 12 digits.");
+        setIsLoading(false);
+        return;
+      }
+      if (!formData.faydaDocDataUrl) {
+        setError("Upload your Fayda ID image or document, or choose Skip for now.");
+        setIsLoading(false);
+        return;
+      }
     }
 
     try {
@@ -57,7 +103,14 @@ export default function ClientRegisterPage() {
       const res = await fetch("/api/auth/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, email: formData.email, role: "client", neonUserId: data?.user?.id }),
+        body: JSON.stringify({
+          ...formData,
+          faydaFinNumber: wantsVerification ? formData.faydaFinNumber : "",
+          faydaDocDataUrl: wantsVerification ? formData.faydaDocDataUrl : "",
+          email: formData.email,
+          role: "client",
+          neonUserId: data?.user?.id,
+        }),
       });
 
       const profileData = await res.json();
@@ -254,6 +307,62 @@ export default function ClientRegisterPage() {
               </div>
             </div>
 
+            <div className="space-y-3 rounded-2xl border border-zinc-700 bg-zinc-900/70 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[13px] font-bold text-zinc-100">Optional Fayda Verification</p>
+                  <p className="mt-1 text-[12px] leading-5 text-zinc-500">
+                    Optional during registration, mandatory before creating or signing contracts.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setWantsVerification((value) => !value);
+                    setError("");
+                  }}
+                  className={`rounded-full px-3 py-1 text-[11px] font-bold ${
+                    wantsVerification ? "bg-green-400 text-black" : "bg-zinc-800 text-zinc-300"
+                  }`}
+                >
+                  {wantsVerification ? "Enabled" : "Verify"}
+                </button>
+              </div>
+
+              {wantsVerification && (
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={12}
+                    value={formData.faydaFinNumber}
+                    onChange={(e) => setFormData({ ...formData, faydaFinNumber: e.target.value.replace(/\D/g, "").slice(0, 12) })}
+                    className="w-full h-[48px] px-4 bg-zinc-950 border border-zinc-700 rounded-2xl focus:border-green-400/80 focus:ring-1 focus:ring-green-400/80 outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white"
+                    placeholder="12-digit Fayda FIN"
+                  />
+                  <label className="flex h-[48px] cursor-pointer items-center justify-center rounded-2xl border border-dashed border-zinc-700 bg-zinc-950 px-4 text-[12px] font-bold text-zinc-300 hover:border-green-400/60">
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/png,image/jpeg,image/webp,application/pdf"
+                      onChange={(e) => handleFaydaFile(e.target.files?.[0] || null)}
+                    />
+                    {formData.faydaDocName || "Upload Fayda ID image/document"}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWantsVerification(false);
+                      setFormData({ ...formData, faydaFinNumber: "", faydaDocDataUrl: "", faydaDocName: "" });
+                    }}
+                    className="text-[12px] font-bold text-zinc-500 hover:text-zinc-300"
+                  >
+                    Skip for now
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* Submit Button */}
             <div className="pt-4">
               <button
@@ -264,7 +373,7 @@ export default function ClientRegisterPage() {
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                 ) : (
-                  "Create Client Account"
+                  wantsVerification ? "Create Account & Submit Verification" : "Create Client Account"
                 )}
               </button>
             </div>

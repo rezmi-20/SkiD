@@ -1,15 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
-import { LogOut, Calendar, Sun, Moon } from "lucide-react";
-import { authClient } from "@/lib/auth/client";
+import { LogOut, Calendar, Sun, Moon, UserCircle } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import type { Language } from "@/lib/translations";
+import type { AdminRole } from "@/lib/admin-authorization";
 
 interface TopBarProps {
   adminName: string;
+  adminRole: AdminRole;
 }
 
 const LANGS: { code: Language; label: string }[] = [
@@ -18,7 +20,7 @@ const LANGS: { code: Language; label: string }[] = [
   { code: "om", label: "OM" },
 ];
 
-export function TopBar({ adminName }: TopBarProps) {
+export function TopBar({ adminName, adminRole }: TopBarProps) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
@@ -53,9 +55,8 @@ export function TopBar({ adminName }: TopBarProps) {
   };
 
   const handleLogout = async () => {
-    try { await authClient.signOut(); } catch (_) {}
-    await fetch("/api/auth/sign-out", { method: "POST", credentials: "include" });
-    window.location.href = "/login?logout=1";
+    await fetch("/api/admin/sign-out", { method: "POST", credentials: "include" });
+    window.location.href = "/admin/login";
   };
 
   const isDark = mounted ? (theme === "dark" || theme === "grayscale") : false;
@@ -113,8 +114,18 @@ export function TopBar({ adminName }: TopBarProps) {
         {/* Admin name */}
         <div className="text-right hidden md:block">
           <p className="text-xs font-semibold text-on-surface">{adminName}</p>
-          <p className="text-[10px] text-on-surface-variant font-medium">System Administrator</p>
+          <p className="text-[10px] text-on-surface-variant font-medium">
+            {adminRole.replaceAll("_", " ")}
+          </p>
         </div>
+
+        <Link
+          href="/admin/profile"
+          className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-outline-variant bg-surface-container px-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-95"
+        >
+          <UserCircle className="w-3.5 h-3.5" />
+          <span className="hidden md:inline">Profile</span>
+        </Link>
 
         {/* Logout */}
         <button

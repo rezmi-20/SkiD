@@ -1,6 +1,7 @@
 import { sql } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { PLATFORM_CONFIG } from "@/lib/config";
+import { assertActiveVerifiedWorker } from "@/lib/identity-lifecycle";
 
 export interface WorkerEarningsTransaction {
   id: string;
@@ -165,6 +166,11 @@ export async function getWorkerEarnings() {
   const session = await auth();
   if (!session?.user?.id || session.user.role !== "worker") {
     throw new Error("Unauthorized");
+  }
+
+  const workerAccess = await assertActiveVerifiedWorker(session.user.id);
+  if (!workerAccess.allowed) {
+    throw new Error(workerAccess.error || "Forbidden");
   }
 
   try {

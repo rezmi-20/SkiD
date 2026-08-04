@@ -5,17 +5,73 @@ try {
   await resetDemoData(sql);
 
   await sql`
-    INSERT INTO users (id, email, password_hash, role, is_suspended)
+    INSERT INTO users (
+      id,
+      email,
+      password_hash,
+      role,
+      is_suspended,
+      admin_role,
+      admin_status,
+      admin_activation_required,
+      admin_created_at,
+      admin_updated_at
+    )
     VALUES
-      (${DEMO_IDS.admin}, 'demo.admin@direskill.local', 'demo-auth-managed-externally', 'admin', false),
-      (${DEMO_IDS.client}, 'demo.client@direskill.local', 'demo-auth-managed-externally', 'client', false),
-      (${DEMO_IDS.worker}, 'demo.worker@direskill.local', 'demo-auth-managed-externally', 'worker', false),
-      (${DEMO_IDS.unverifiedWorker}, 'demo.unverified@direskill.local', 'demo-auth-managed-externally', 'worker', false)
+      (${DEMO_IDS.client}, 'demo.client@direskill.local', 'demo-auth-managed-externally', 'client', false, null, null, false, null, null),
+      (${DEMO_IDS.worker}, 'demo.worker@direskill.local', 'demo-auth-managed-externally', 'worker', false, null, null, false, null, null),
+      (${DEMO_IDS.unverifiedWorker}, 'demo.unverified@direskill.local', 'demo-auth-managed-externally', 'worker', false, null, null, false, null, null),
+      (${DEMO_IDS.secondClient}, 'demo.second-client@direskill.local', 'demo-auth-managed-externally', 'client', false, null, null, false, null, null),
+      (${DEMO_IDS.secondWorker}, 'demo.second-worker@direskill.local', 'demo-auth-managed-externally', 'worker', false, null, null, false, null, null),
+      (${DEMO_IDS.rejectedWorker}, 'demo.rejected-worker@direskill.local', 'demo-auth-managed-externally', 'worker', false, null, null, false, null, null),
+      (${DEMO_IDS.suspendedWorker}, 'demo.suspended-worker@direskill.local', 'demo-auth-managed-externally', 'worker', true, null, null, false, null, null),
+      (${DEMO_IDS.revokedWorker}, 'demo.revoked-worker@direskill.local', 'demo-auth-managed-externally', 'worker', false, null, null, false, null, null),
+      (${DEMO_IDS.unverifiedClient}, 'demo.unverified-client@direskill.local', 'demo-auth-managed-externally', 'client', false, null, null, false, null, null)
   `;
 
   await sql`
-    INSERT INTO client_profiles (user_id, full_name, is_verified, latitude, longitude)
-    VALUES (${DEMO_IDS.client}, 'DEMO - Amina Client', true, 9.6009, 41.8501)
+    INSERT INTO admin_employees (
+      id,
+      admin_employee_id,
+      work_email,
+      full_name,
+      department,
+      admin_role,
+      admin_status,
+      admin_activation_required,
+      password_hash,
+      activation_completed_at,
+      identity_reference,
+      identity_note,
+      session_version,
+      created_at,
+      updated_at
+    )
+    VALUES (
+      ${DEMO_IDS.admin},
+      'OWN-9001',
+      'demo.admin@direskill.local',
+      'DEMO - Super Admin',
+      'Development Testing',
+      'super_admin',
+      'active',
+      false,
+      'demo-auth-managed-externally',
+      NOW(),
+      'browser_smoke_demo',
+      'development_test_admin_seed',
+      0,
+      NOW(),
+      NOW()
+    )
+  `;
+
+  await sql`
+    INSERT INTO client_profiles (user_id, full_name, is_verified, verification_status, fin_last4, latitude, longitude)
+    VALUES
+      (${DEMO_IDS.client}, 'DEMO - Amina Client', true, 'approved', '1202', 9.6009, 41.8501),
+      (${DEMO_IDS.secondClient}, 'DEMO - Second Client', true, 'approved', '1205', 9.6014, 41.8510),
+      (${DEMO_IDS.unverifiedClient}, 'DEMO - Unverified Client', false, 'incomplete', null, 9.6020, 41.8515)
   `;
 
   await sql`
@@ -32,6 +88,7 @@ try {
       verification_reason,
       verified_by,
       verified_at,
+      fin_last4,
       hourly_rate,
       experience_years,
       availability,
@@ -49,12 +106,32 @@ try {
         true,
         'approved',
         'Demo worker approved for presentation data only.',
-        ${DEMO_IDS.admin},
+        null,
         NOW(),
+        '1203',
         300,
         5,
         'available',
         'demo-chapa-subaccount'
+      ),
+      (
+        ${DEMO_IDS.secondWorker},
+        'DEMO - Hana Plumber',
+        'Second approved worker used for authorization and duplicate-invitation checks.',
+        ARRAY['Plumber', 'Pipe Repair'],
+        9.5998,
+        41.8507,
+        'Kezira',
+        true,
+        'approved',
+        'Demo worker approved for browser workflow tests.',
+        null,
+        NOW(),
+        '1206',
+        260,
+        4,
+        'available',
+        'demo-chapa-subaccount-2'
       ),
       (
         ${DEMO_IDS.unverifiedWorker},
@@ -69,8 +146,66 @@ try {
         null,
         null,
         null,
+        null,
         220,
         2,
+        'available',
+        null
+      ),
+      (
+        ${DEMO_IDS.rejectedWorker},
+        'DEMO - Rejected Worker',
+        'Demo worker rejected for discovery filtering.',
+        ARRAY['Painter'],
+        9.6015,
+        41.8491,
+        'Kezira',
+        false,
+        'rejected',
+        null,
+        null,
+        null,
+        null,
+        180,
+        1,
+        'available',
+        null
+      ),
+      (
+        ${DEMO_IDS.suspendedWorker},
+        'DEMO - Suspended Worker',
+        'Demo worker suspended for discovery filtering.',
+        ARRAY['Mason'],
+        9.6017,
+        41.8485,
+        'Kezira',
+        false,
+        'suspended',
+        null,
+        null,
+        null,
+        null,
+        200,
+        3,
+        'available',
+        null
+      ),
+      (
+        ${DEMO_IDS.revokedWorker},
+        'DEMO - Revoked Worker',
+        'Demo worker revoked for discovery filtering.',
+        ARRAY['Carpenter'],
+        9.6001,
+        41.8479,
+        'Kezira',
+        false,
+        'revoked',
+        null,
+        null,
+        null,
+        null,
+        240,
+        6,
         'available',
         null
       )
@@ -80,7 +215,9 @@ try {
     INSERT INTO contract_setups (user_id, pin_hash, accepted_policy, accepted_signature_use, completed_at, updated_at)
     VALUES
       (${DEMO_IDS.client}, 'demo-auth-managed-externally', true, true, NOW(), NOW()),
-      (${DEMO_IDS.worker}, 'demo-auth-managed-externally', true, true, NOW(), NOW())
+      (${DEMO_IDS.worker}, 'demo-auth-managed-externally', true, true, NOW(), NOW()),
+      (${DEMO_IDS.secondClient}, 'demo-auth-managed-externally', true, true, NOW(), NOW()),
+      (${DEMO_IDS.secondWorker}, 'demo-auth-managed-externally', true, true, NOW(), NOW())
   `;
 
   await sql`
@@ -191,7 +328,6 @@ try {
   await sql`
     INSERT INTO notifications (user_id, type, title, body, link_href)
     VALUES
-      (${DEMO_IDS.admin}, 'demo', 'DEMO - Verification queue ready', 'Use the pending demo worker to show admin verification.', '/admin/verify'),
       (${DEMO_IDS.client}, 'demo', 'DEMO - Payment ready', 'Use the payment pending demo job for the payment walkthrough.', '/client/payments'),
       (${DEMO_IDS.worker}, 'demo', 'DEMO - Completion requested', 'Use the in-progress demo job for worker completion flow.', '/worker/gigs'),
       (${DEMO_IDS.unverifiedWorker}, 'demo', 'DEMO - Verification pending', 'This worker remains unverified for the demo.', '/worker/pending-verification')

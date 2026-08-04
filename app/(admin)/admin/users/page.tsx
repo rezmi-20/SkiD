@@ -1,8 +1,6 @@
-import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
-import { isSuperAdmin } from "@/lib/config";
 import { getAllUsers } from "@/lib/actions/super-admin";
 import { SuperAdminUsersClient } from "@/components/admin/SuperAdminUsersClient";
+import { requireAdminPermission } from "@/lib/admin-authorization";
 
 export const dynamic = "force-dynamic";
 
@@ -12,13 +10,7 @@ export const metadata = {
 };
 
 export default async function UsersPage() {
-  const session = await auth();
-
-  // Only the super admin email can access this page
-  if (!session?.user || !isSuperAdmin((session.user as any).email)) {
-    redirect("/admin/dashboard");
-  }
-
+  await requireAdminPermission("admin_accounts.read");
   const users = await getAllUsers();
 
   return <SuperAdminUsersClient initialUsers={users} />;

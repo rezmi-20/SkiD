@@ -36,7 +36,7 @@ export default function NewContractPage() {
 
   // Load worker info when workerId present
   useEffect(() => {
-    getContractSetupStatus()
+    getContractSetupStatus(undefined, `/client/contract/new${window.location.search}`)
       .then((status) => {
         if (!status.completed) {
           router.replace(status.setupHref);
@@ -92,7 +92,7 @@ export default function NewContractPage() {
         }, 1500);
       } else {
         if (result.code === "CONTRACT_SETUP_REQUIRED") {
-          router.push("/client/contract-setup");
+          router.push("/client/profile/settings?verify=1&returnTo=/client/contract/new");
           return;
         }
         setError(result.error || t("contract.new.err_unexpected"));

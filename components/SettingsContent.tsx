@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { updateProfile } from "@/lib/actions/profile";
 import { useLanguage } from "@/context/LanguageContext";
@@ -19,10 +19,13 @@ interface ChapaBank {
 
 export default function SettingsContent({ initialData, role }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { language, setLanguage } = useLanguage();
   const [isPending, setIsPending] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [verificationError, setVerificationError] = useState("");
+  const [showFin, setShowFin] = useState(false);
   const [payoutStatus, setPayoutStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [payoutMessage, setPayoutMessage] = useState("");
   const [banks, setBanks] = useState<ChapaBank[]>([]);
@@ -31,7 +34,9 @@ export default function SettingsContent({ initialData, role }: Props) {
     fullName: initialData.full_name || "",
     email: initialData.email || "",
     phone: initialData.phone || "",
-    faydaFanNumber: "",
+    faydaFinNumber: "",
+    faydaDocDataUrl: "",
+    faydaDocName: "",
     bio: initialData.bio || "",
     skills: initialData.skills || [],
     gender: initialData.gender || "",
@@ -51,6 +56,9 @@ export default function SettingsContent({ initialData, role }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const hasChapaSubaccount = Boolean(initialData.chapa_subaccount_id);
+  const verificationReason = searchParams.get("reason");
+  const verificationStatus = initialData.verification_status || (initialData.is_verified ? "approved" : "not_started");
+  const clientCanSubmitVerification = role === "client" && verificationStatus !== "approved" && verificationStatus !== "pending";
 
   useEffect(() => {
     if (role !== "worker") return;
@@ -80,9 +88,23 @@ export default function SettingsContent({ initialData, role }: Props) {
   }, [role]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
     const file = e.target.files?.[0];
     if (!file) return;
+    const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      setError("Avatar must be PNG, JPG, or WebP.");
+      input.value = "";
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setError("Avatar image must be 2 MB or smaller.");
+      input.value = "";
+      return;
+    }
+
     setUploading(true);
+    setError("");
     try {
       const body = new FormData();
       body.append("file", file);
@@ -97,22 +119,87 @@ export default function SettingsContent({ initialData, role }: Props) {
       setError("Avatar upload failed");
     } finally {
       setUploading(false);
+      input.value = "";
     }
+  };
+
+  const handleFaydaDocumentUpload = (file: File | null) => {
+    if (!file) return;
+    setVerificationError("");
+    const allowedTypes = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
+    if (!allowedTypes.includes(file.type)) {
+      setError("Fayda document must be PNG, JPG, WebP, or PDF.");
+      setVerificationError("Fayda document must be PNG, JPG, WebP, or PDF.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Fayda document must be 5 MB or smaller.");
+      setVerificationError("Fayda document must be 5 MB or smaller.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setFormData((prev: typeof formData) => ({
+        ...prev,
+        faydaDocDataUrl: String(reader.result || ""),
+        faydaDocName: file.name,
+      }));
+    };
+    reader.onerror = () => setError("Could not read Fayda document.");
+    reader.readAsDataURL(file);
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsPending(true);
     setError("");
+    setVerificationError("");
     setSuccess(false);
 
     try {
+      const submitter = (e.nativeEvent as SubmitEvent).submitter;
+      const isVerificationSubmit =
+        submitter instanceof HTMLButtonElement &&
+        submitter.name === "intent" &&
+        submitter.value === "client-verification";
+      const wantsClientVerification =
+        role === "client" && (isVerificationSubmit || formData.faydaFinNumber || formData.faydaDocDataUrl);
+
+      if (wantsClientVerification) {
+        const showVerificationError = (message: string) => {
+          setError(message);
+          setVerificationError(message);
+        };
+
+        if (!clientCanSubmitVerification) {
+          showVerificationError("A verification request is already pending or approved.");
+          return;
+        }
+        if (!formData.faydaFinNumber || !formData.faydaDocDataUrl) {
+          showVerificationError("Submit both your 12-digit FIN and Fayda ID image/document together.");
+          return;
+        }
+        if (!/^\d{12}$/.test(formData.faydaFinNumber)) {
+          showVerificationError("FIN must be exactly 12 digits.");
+          return;
+        }
+      }
+
       const res = await updateProfile(formData);
       if (res.success) {
         setSuccess(true);
+        const returnTo = searchParams.get("returnTo");
+        if (returnTo?.startsWith("/") && !returnTo.startsWith("//")) {
+          router.push(returnTo);
+          return;
+        }
         setTimeout(() => setSuccess(false), 3000);
       } else {
         setError(res.error || "Update failed");
+        if (wantsClientVerification) {
+          setVerificationError(res.error || "Verification submission failed.");
+        }
       }
     } catch (err) {
       setError("An unexpected error occurred");
@@ -191,6 +278,11 @@ export default function SettingsContent({ initialData, role }: Props) {
            </button>
         </div>
         <h1 className="text-3xl font-black text-on-surface tracking-tight uppercase">Profile <span className="text-primary italic">Settings</span></h1>
+        {verificationReason && (
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-5 py-4 text-sm font-semibold text-on-surface">
+            {verificationReason}
+          </div>
+        )}
       </header>
 
       {/* ── Main Layout ── */}
@@ -233,7 +325,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                   }`}>
                     <div 
                       className={`relative group ${initialData.is_verified ? "cursor-default" : "cursor-pointer"}`} 
-                      onClick={() => !initialData.is_verified && fileInputRef.current?.click()}
+                      onClick={() => !initialData.is_verified && !uploading && fileInputRef.current?.click()}
                     >
                        <div className={`w-24 h-24 rounded-[2.5rem] border-4 shadow-xl flex items-center justify-center overflow-hidden transition-all ${
                          initialData.is_verified ? "bg-primary/10 border-primary" : "bg-surface-container-high border-surface"
@@ -259,7 +351,14 @@ export default function SettingsContent({ initialData, role }: Props) {
                             <span className="material-symbols-outlined text-[16px] filled">verified</span>
                          </div>
                        )}
-                       <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleAvatarUpload} />
+                       <input
+                         type="file"
+                         ref={fileInputRef}
+                         className="hidden"
+                         accept="image/png,image/jpeg,image/webp"
+                         onClick={(event) => event.stopPropagation()}
+                         onChange={handleAvatarUpload}
+                       />
                     </div>
                     <div className="text-center">
                        <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-40">
@@ -299,20 +398,95 @@ export default function SettingsContent({ initialData, role }: Props) {
                        />
                     </div>
                     <div className="space-y-2 md:col-span-2">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">Fayda FAN Number</label>
-                       <input
-                         type="text"
-                         value={initialData.is_verified ? initialData.masked_fayda_fan_number || "" : formData.faydaFanNumber}
-                         onChange={e => setFormData({...formData, faydaFanNumber: e.target.value})}
-                         disabled={initialData.is_verified}
-                         placeholder={initialData.is_verified ? initialData.masked_fayda_fan_number || "Not recorded" : "Enter your full FAN number"}
-                         className={`w-full h-14 border rounded-2xl px-6 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-bold text-sm ${
-                           initialData.is_verified
-                            ? "bg-surface-container-low border-primary/20 text-on-surface opacity-80 cursor-not-allowed"
-                            : "bg-surface-container-lowest border-surface-container-highest"
-                         }`}
-                       />
+                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">Fayda Identification Number (FIN)</label>
+                       <div className="relative">
+                         <input
+                           type={initialData.is_verified || showFin ? "text" : "password"}
+                           inputMode="numeric"
+                           autoComplete="off"
+                           maxLength={12}
+                           value={initialData.is_verified ? initialData.masked_fin || "" : formData.faydaFinNumber}
+                           onChange={e => {
+                             setVerificationError("");
+                             setFormData({...formData, faydaFinNumber: e.target.value.replace(/\D/g, "").slice(0, 12)});
+                           }}
+                           disabled={initialData.is_verified || (role === "client" && !clientCanSubmitVerification)}
+                           placeholder={initialData.is_verified ? initialData.masked_fin || "Not recorded" : "Enter your 12-digit FIN"}
+                           className={`w-full h-14 border rounded-2xl pl-6 pr-14 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-bold text-sm ${
+                             initialData.is_verified
+                              ? "bg-surface-container-low border-primary/20 text-on-surface opacity-80 cursor-not-allowed"
+                              : "bg-surface-container-lowest border-surface-container-highest"
+                           }`}
+                         />
+                         {!initialData.is_verified && clientCanSubmitVerification && (
+                           <button
+                             type="button"
+                             onClick={() => setShowFin((value) => !value)}
+                             aria-label={showFin ? "Hide FIN" : "Show FIN"}
+                             title={showFin ? "Hide FIN" : "Show FIN"}
+                             className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
+                           >
+                             <span className="material-symbols-outlined text-[20px]">
+                               {showFin ? "visibility_off" : "visibility"}
+                             </span>
+                           </button>
+                         )}
+                       </div>
                     </div>
+                    {role === "client" && (
+                      <div className="space-y-3 md:col-span-2 rounded-2xl border border-surface-container-highest bg-surface-container-low/60 p-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <p className="text-xs font-black uppercase tracking-widest text-on-surface">Fayda Verification</p>
+                            <p className="mt-1 text-xs leading-5 text-on-surface-variant">
+                              Submit your FIN and Fayda document together. This is required before setting up a contract PIN.
+                            </p>
+                            {verificationStatus === "pending" && (
+                              <p className="mt-2 text-xs font-bold text-amber-500">Pending Verification</p>
+                            )}
+                            {verificationStatus === "rejected" && (
+                              <p className="mt-2 text-xs font-bold text-error">
+                                Rejected{initialData.verification_reason ? `: ${initialData.verification_reason}` : ""}
+                              </p>
+                            )}
+                            {verificationStatus === "approved" && (
+                              <p className="mt-2 text-xs font-bold text-primary">Approved. Masked FIN: {initialData.masked_fin || "recorded"}</p>
+                            )}
+                          </div>
+                          <span className="rounded-full border border-surface-container-highest px-3 py-1 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+                            {verificationStatus === "incomplete" ? "not started" : verificationStatus.replace("_", " ")}
+                          </span>
+                        </div>
+
+                        {clientCanSubmitVerification && (
+                          <div className="space-y-3">
+                            <label className="flex h-12 cursor-pointer items-center justify-center rounded-2xl border border-dashed border-surface-container-highest bg-surface-container-lowest px-4 text-xs font-bold text-on-surface-variant hover:border-primary/50">
+                              <input
+                                type="file"
+                                className="hidden"
+                                accept="image/png,image/jpeg,image/webp,application/pdf"
+                                onChange={(event) => handleFaydaDocumentUpload(event.target.files?.[0] || null)}
+                              />
+                              {formData.faydaDocName || "Upload Fayda ID image/document"}
+                            </label>
+                            <button
+                              type="submit"
+                              name="intent"
+                              value="client-verification"
+                              disabled={isPending}
+                              className="flex h-12 w-full items-center justify-center rounded-2xl bg-primary px-4 text-xs font-black uppercase tracking-widest text-on-primary transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {isPending ? "Submitting..." : "Submit Verification"}
+                            </button>
+                            {verificationError && (
+                              <p className="rounded-2xl border border-error/20 bg-error-container px-4 py-3 text-xs font-bold text-on-error-container">
+                                {verificationError}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                     <div className="space-y-2">
                        <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">Email Address</label>
                        <input 

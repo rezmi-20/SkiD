@@ -14,6 +14,7 @@ export default function Footer({ language, setLanguage, t }) {
     { label: "Privacy Policy", href: "#" },
     { label: "Terms of Service", href: "#" },
     { label: "Proclamation 1156/2019", href: "#" },
+    { label: "Staff Login", href: "/admin/login" },
   ];
 
   return (

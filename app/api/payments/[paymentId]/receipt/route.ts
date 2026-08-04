@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import PDFDocument from "pdfkit";
 import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
+import { isActiveVerifiedWorker } from "@/lib/identity-lifecycle";
+import { getAdminPrincipal, hasAdminPermission } from "@/lib/admin-authorization";
 
 export const dynamic = "force-dynamic";
 
@@ -107,10 +109,12 @@ export async function GET(
     }
 
     const payment = rows[0];
+    const isWorkerParticipant = session.user.id === payment.worker_id;
+    const admin = session.user.role === "admin" ? await getAdminPrincipal() : null;
     const canRead =
-      session.user.role === "admin" ||
+      (hasAdminPermission(admin, "payment_cases.read") || hasAdminPermission(admin, "reports.read")) ||
       session.user.id === payment.client_id ||
-      session.user.id === payment.worker_id;
+      (isWorkerParticipant && await isActiveVerifiedWorker(session.user.id));
 
     if (!canRead) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });

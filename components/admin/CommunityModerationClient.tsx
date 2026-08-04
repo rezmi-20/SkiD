@@ -19,9 +19,10 @@ interface PostData {
 
 interface Props {
   initialPosts: PostData[];
+  canModerate: boolean;
 }
 
-export function CommunityModerationClient({ initialPosts }: Props) {
+export function CommunityModerationClient({ initialPosts, canModerate }: Props) {
   const { t } = useLanguage();
   const [posts, setPosts] = useState<PostData[]>(initialPosts);
   const [search, setSearch] = useState("");
@@ -30,8 +31,13 @@ export function CommunityModerationClient({ initialPosts }: Props) {
 
   const handleToggleRemove = (postId: string, currentRemoved: boolean) => {
     const nextStatus = !currentRemoved;
+    const reason = window.prompt(nextStatus ? "Reason for hiding this post" : "Reason for restoring this post")?.trim();
+    if (!reason) {
+      alert("A moderation reason is required.");
+      return;
+    }
     startTransition(async () => {
-      const res = await removeCommunityPost(postId, nextStatus);
+      const res = await removeCommunityPost(postId, nextStatus, reason);
       if (res.success) {
         setPosts((prev) =>
           prev.map((p) => (p.id === postId ? { ...p, isRemoved: nextStatus } : p))
@@ -193,6 +199,7 @@ export function CommunityModerationClient({ initialPosts }: Props) {
                       <button
                         disabled={isPending}
                         onClick={() => handleToggleRemove(p.id, p.isRemoved)}
+                        hidden={!canModerate}
                         className={`inline-flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-xl font-bold transition-all disabled:opacity-50 border active:scale-95 duration-200 ${
                           p.isRemoved
                             ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20"
@@ -211,6 +218,11 @@ export function CommunityModerationClient({ initialPosts }: Props) {
                           </>
                         )}
                       </button>
+                      {!canModerate && (
+                        <span className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant">
+                          Read only
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}

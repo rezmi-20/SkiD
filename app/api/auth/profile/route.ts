@@ -3,6 +3,10 @@ import { z } from "zod";
 import { sql } from "@/lib/db";
 import { sanitizeText } from "@/lib/sanitize";
 import { isTrustedUploadReference } from "@/lib/security";
+import { createNotification } from "@/lib/actions/notifications";
+import { protectFin, validateFin } from "@/lib/fin-protection";
+import { getClientIdentityColumns, validateClientIdentityDocument } from "@/lib/client-verification";
+import { recordVerificationSubmission } from "@/lib/verification-operations";
 
 const passwordSchema = z
   .string()
@@ -23,6 +27,8 @@ const registerSchema = z.object({
   district: z.string().optional(),
   skills: z.array(z.string()).optional(),
   faydaDocUrl: z.string().optional(),
+  faydaDocDataUrl: z.string().optional(),
+  faydaFinNumber: z.string().optional(),
   bio: z.string().optional(),
   neonUserId: z.string().optional(),
 });
@@ -47,6 +53,37 @@ export async function POST(req: NextRequest) {
     }
 
     const sanitizedFullName = sanitizeText(fullName);
+    let protectedClientFin: ReturnType<typeof protectFin> | null = null;
+    let submittedClientDocument: string | null = null;
+    const clientColumns = role === "client" ? await getClientIdentityColumns() : null;
+
+    if (role === "client") {
+      const { faydaFinNumber, faydaDocDataUrl } = parsed.data;
+      const hasFin = typeof faydaFinNumber === "string" && faydaFinNumber.trim().length > 0;
+      const hasDoc = typeof faydaDocDataUrl === "string" && faydaDocDataUrl.trim().length > 0;
+
+      if (hasFin !== hasDoc) {
+        return NextResponse.json(
+          { error: "Submit both your 12-digit FIN and Fayda ID image together, or skip verification for now." },
+          { status: 400 }
+        );
+      }
+
+      if (hasFin && hasDoc) {
+        const normalizedFin = validateFin(faydaFinNumber);
+        if (!normalizedFin) {
+          return NextResponse.json({ error: "FIN must be exactly 12 digits." }, { status: 400 });
+        }
+
+        const docValidation = validateClientIdentityDocument(faydaDocDataUrl);
+        if (!docValidation.ok) {
+          return NextResponse.json({ error: docValidation.error }, { status: 400 });
+        }
+
+        protectedClientFin = protectFin(normalizedFin, neonUserId, "profile");
+        submittedClientDocument = faydaDocDataUrl;
+      }
+    }
 
     // Insert user into our public schema users table with the same ID as neon_auth
     const newUser = await sql`
@@ -79,8 +116,90 @@ export async function POST(req: NextRequest) {
           ${sanitizedBio},
           'pending'
         )`;
+      if (faydaDocUrl) {
+        await recordVerificationSubmission("worker", userId, faydaDocUrl, null);
+      }
     } else {
-      await sql`INSERT INTO client_profiles (user_id, full_name) VALUES (${userId}, ${sanitizedFullName})`;
+      if (protectedClientFin) {
+        if (clientColumns?.has("verification_status")) {
+          await sql`
+            INSERT INTO client_profiles (
+              user_id,
+              full_name,
+              fayda_doc_url,
+              fin_encrypted,
+              fin_encryption_key_id,
+              fin_fingerprint,
+              fin_last4,
+              verification_status,
+              is_verified
+            )
+            VALUES (
+              ${userId},
+              ${sanitizedFullName},
+              ${submittedClientDocument},
+              ${protectedClientFin.finEncrypted},
+              ${protectedClientFin.finEncryptionKeyId},
+              ${protectedClientFin.finFingerprint},
+              ${protectedClientFin.finLast4},
+              'pending',
+              false
+            )
+          `;
+        } else {
+          await sql`
+            INSERT INTO client_profiles (
+              user_id,
+              full_name,
+              fayda_doc_url,
+              fin_encrypted,
+              fin_encryption_key_id,
+              fin_fingerprint,
+              fin_last4,
+              is_verified
+            )
+            VALUES (
+              ${userId},
+              ${sanitizedFullName},
+              ${submittedClientDocument},
+              ${protectedClientFin.finEncrypted},
+              ${protectedClientFin.finEncryptionKeyId},
+              ${protectedClientFin.finFingerprint},
+              ${protectedClientFin.finLast4},
+              false
+            )
+          `;
+        }
+      } else {
+        await sql`
+          INSERT INTO client_profiles (user_id, full_name, verification_status, is_verified)
+          VALUES (${userId}, ${sanitizedFullName}, 'not_started', false)
+        `;
+      }
+
+      if (protectedClientFin) {
+        await recordVerificationSubmission("client", userId, submittedClientDocument, protectedClientFin.finLast4);
+        await sql`
+          INSERT INTO audit_logs (user_id, action, details)
+          VALUES (
+            ${userId},
+            'client_verification_submitted',
+            ${JSON.stringify({
+              userId,
+              status: "pending",
+              source: "registration",
+              timestamp: new Date().toISOString(),
+            })}
+          )
+        `;
+      }
+      await createNotification({
+        userId,
+        type: "identity_verification_required",
+        title: "Complete Fayda Verification",
+        body: "Complete Fayda identity verification before creating or signing legally binding contracts.",
+        linkHref: "/client/profile/settings?verify=1",
+      });
     }
 
     return NextResponse.json(

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
+import { getWorkerAccessRoute } from "@/lib/worker-routing";
 
 function getLoginErrorMessage(error: unknown) {
   const message = error instanceof Error ? error.message : String(error || "");
@@ -37,12 +38,51 @@ export default function LoginPage() {
   const isEmail = identifier.includes("@");
   const isPhone = !isEmail && /^[0-9+]/.test(identifier);
 
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const waitForUsableSession = async () => {
+    const maxAttempts = 3;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        const res = await fetch("/api/auth/me?optional=1", {
+          credentials: "include",
+          cache: "no-store",
+        });
+
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}));
+          if (data?.authenticated !== false && data?.role) {
+            return data as {
+              role?: string;
+              isSuspended?: boolean;
+              workerVerificationStatus?: string | null;
+              workerIsSuspended?: boolean | null;
+              workerIsVerified?: boolean | null;
+            };
+          }
+        }
+      } catch {
+        // Keep retrying through transient auth/session mint failures.
+      }
+
+      if (attempt < maxAttempts) {
+        await sleep(250 * attempt);
+      }
+    }
+
+    return null;
+  };
+
   useEffect(() => {
     setMounted(true);
 
     // If ?logout=1 is in URL, we came here to force sign out — skip the session redirect
     const forceLogout = searchParams.get("logout") === "1";
     if (forceLogout) return;
+    if (searchParams.get("error") === "suspended") {
+      setError("Your account is suspended. Please contact an administrator for review.");
+    }
 
     const checkSession = async () => {
       try {
@@ -52,11 +92,23 @@ export default function LoginPage() {
         });
 
         if (res.ok) {
-          const { authenticated, role } = await res.json();
+          const { authenticated, role, isSuspended, workerVerificationStatus, workerIsSuspended, workerIsVerified } = await res.json();
           if (authenticated === false) return;
+          if (isSuspended) {
+            setError("Your account is suspended. Please contact an administrator for review.");
+            return;
+          }
           if (role === "client") router.replace("/client/search");
-          else if (role === "worker") router.replace("/worker/dashboard");
-          else if (role === "admin") router.replace("/admin/dashboard");
+          else if (role === "worker") {
+            router.replace(
+              getWorkerAccessRoute({
+                role,
+                verificationStatus: workerVerificationStatus,
+                isSuspended: workerIsSuspended,
+                isVerified: workerIsVerified,
+              })
+            );
+          }
         } else if (res.status >= 500) {
           setError("The authentication service is temporarily unavailable. Please try again in a moment.");
         }
@@ -119,10 +171,36 @@ export default function LoginPage() {
         }
         setError("Invalid credentials. Please check your email/phone and password.");
       } else {
-        // Small delay to ensure cookie is committed, then full navigation
-        setTimeout(() => {
-          window.location.href = "/auth/callback";
-        }, 300);
+        const session = await waitForUsableSession();
+
+        if (!session?.role) {
+          setError("Login succeeded, but the session could not be initialized. Please try again.");
+          return;
+        }
+
+        if (session.isSuspended) {
+          setError("Your account is suspended. Please contact an administrator for review.");
+          return;
+        }
+
+        if (session.role === "client") {
+          router.replace("/client/search");
+          return;
+        }
+
+        if (session.role === "worker") {
+          router.replace(
+            getWorkerAccessRoute({
+              role: session.role,
+              verificationStatus: session.workerVerificationStatus,
+              isSuspended: session.workerIsSuspended,
+              isVerified: session.workerIsVerified,
+            })
+          );
+          return;
+        }
+
+        setError("Login succeeded, but the session could not be initialized. Please try again.");
       }
     } catch (err) {
       setError(getLoginErrorMessage(err));

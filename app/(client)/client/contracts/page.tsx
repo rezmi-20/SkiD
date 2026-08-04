@@ -4,7 +4,7 @@ import { getContractSetupStatus } from "@/lib/actions/contract-setup";
 import { redirect } from "next/navigation";
 
 export default async function ClientContractsPage() {
-  const setup = await getContractSetupStatus();
+  const setup = await getContractSetupStatus(undefined, "/client/contracts");
   if (!setup.completed) {
     redirect(setup.setupHref);
   }

@@ -3,6 +3,8 @@ import { sql } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { updateJobStatus } from "@/lib/actions/jobs";
 import { z } from "zod";
+import { assertActiveVerifiedWorker } from "@/lib/identity-lifecycle";
+import { getAdminPrincipal, hasAdminPermission } from "@/lib/admin-authorization";
 
 const patchSchema = z.object({
   status: z.enum([
@@ -34,9 +36,17 @@ export async function GET(
     if (rows.length === 0) return NextResponse.json({ error: "Job not found" }, { status: 404 });
 
     const job = rows[0];
+    const admin = session.user.role === "admin" ? await getAdminPrincipal() : null;
     // Security check: Only involved parties or admin can see details
-    if (session.user.role !== "admin" && job.client_id !== session.user.id && job.worker_id !== session.user.id) {
+    if (!hasAdminPermission(admin, "reports.read") && job.client_id !== session.user.id && job.worker_id !== session.user.id) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    if (session.user.role === "worker" && job.worker_id === session.user.id) {
+      const workerAccess = await assertActiveVerifiedWorker(session.user.id);
+      if (!workerAccess.allowed) {
+        return NextResponse.json({ error: workerAccess.error || "Forbidden" }, { status: 403 });
+      }
     }
 
     return NextResponse.json({ job });

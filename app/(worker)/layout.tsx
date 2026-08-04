@@ -23,6 +23,10 @@ export default async function WorkerLayout({
     throw error;
   }
 
+  if ((session?.user as any)?.isSuspended) {
+    redirect("/login?error=suspended");
+  }
+
   if (!session || session.user.role !== "worker") {
     redirect("/login");
   }

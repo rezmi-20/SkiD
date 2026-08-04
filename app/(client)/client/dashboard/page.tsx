@@ -2,12 +2,20 @@ export const dynamic = 'force-dynamic';
 import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import ClientDashboardContent from "@/components/ClientDashboardContent";
+import { getClientIdentityStatus } from "@/lib/client-verification";
 
 export default async function ClientDashboardPage() {
   const session = await auth();
   if (!session?.user?.id) return null;
   
-  const profileRows = await sql`SELECT full_name, avatar_url FROM client_profiles WHERE user_id = ${session.user.id}`;
+  const [profileRows, identityStatus] = await Promise.all([
+    sql`
+    SELECT full_name, avatar_url
+    FROM client_profiles
+    WHERE user_id = ${session.user.id}
+  `,
+    getClientIdentityStatus(session.user.id),
+  ]);
   const jobRows = await sql`SELECT * FROM jobs WHERE client_id = ${session.user.id} ORDER BY created_at DESC LIMIT 5`;
   
   const activeContractRows = await sql`
@@ -36,7 +44,9 @@ export default async function ClientDashboardPage() {
     fullName,
     firstName,
     avatarUrl,
-    greeting
+    greeting,
+    identityVerified: identityStatus.status === "approved" && identityStatus.isVerified && identityStatus.hasFin,
+    verificationStatus: identityStatus.status
   };
 
   return (

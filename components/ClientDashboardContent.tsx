@@ -49,6 +49,8 @@ interface ClientDashboardContentProps {
     firstName: string;
     avatarUrl: string | null;
     greeting: string;
+    identityVerified?: boolean;
+    verificationStatus?: string;
   };
   activeContracts: any[];
   recentJobs: any[];
@@ -144,6 +146,19 @@ export default function ClientDashboardContent({
 
   return (
     <FadeContent blur duration={0.4} className="space-y-5 max-w-full">
+      {!userData.identityVerified && (
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-bold text-foreground">Fayda verification required</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Complete Fayda identity verification to access contracts and legally bind agreements.
+            </p>
+          </div>
+          <Button asChild size="sm" className="rounded-xl font-semibold shrink-0">
+            <Link href="/client/profile/settings?verify=1&returnTo=/client/dashboard">Verify Now</Link>
+          </Button>
+        </div>
+      )}
 
       {/* ══ ROW 1 — Hero + Stats Panel ════════════════════════════════ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

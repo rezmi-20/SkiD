@@ -14,9 +14,12 @@ export default async function ContractDetailsPage({
   if (!session?.user?.id) {
     redirect("/login");
   }
+  if ((session.user as any).isSuspended) {
+    redirect("/login?error=suspended");
+  }
 
   const { id } = await params;
-  const setup = await getContractSetupStatus(session.user.id);
+  const setup = await getContractSetupStatus(session.user.id, `/contracts/${id}`);
   if (!setup.completed) {
     redirect(setup.setupHref);
   }

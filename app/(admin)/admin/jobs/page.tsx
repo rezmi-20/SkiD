@@ -1,15 +1,11 @@
-import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
-import { redirect } from "next/navigation";
 import { JobsQueueClient } from "@/components/admin/JobsQueueClient";
+import { requireAdminPermission } from "@/lib/admin-authorization";
 
 export const dynamic = "force-dynamic";
 
 export default async function JobsPage() {
-  const session = await auth();
-  if (!session || session.user.role !== "admin") {
-    redirect("/login");
-  }
+  await requireAdminPermission("reports.read");
 
   // Fetch all jobs with client & worker names
   const jobsData = await sql`

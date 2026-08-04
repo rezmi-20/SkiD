@@ -17,6 +17,8 @@ import StepReview from "./components/StepReview";
 export default function WorkerRegisterPage() {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [isProcessingId, setIsProcessingId] = useState(false);
+  const [faydaFileName, setFaydaFileName] = useState("");
   const [error, setError] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -67,12 +69,75 @@ export default function WorkerRegisterPage() {
   const nextStep = () => validateStep() && (setStep(s => s + 1), window.scrollTo({ top: 0, behavior: "smooth" }));
   const prevStep = () => (setStep(s => s - 1), window.scrollTo({ top: 0, behavior: "smooth" }));
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const readImage = (file: File) => new Promise<HTMLImageElement>((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Could not read the selected image."));
+    };
+    image.src = url;
+  });
+
+  const blobToDataUrl = (blob: Blob) => new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onloadend = () => setFormData({ ...formData, faydaDocUrl: reader.result as string });
-    reader.readAsDataURL(file);
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Could not prepare the selected image."));
+    reader.readAsDataURL(blob);
+  });
+
+  const prepareFaydaDocument = async (file: File) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("Please choose a Fayda document image.");
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Please choose an image under 10 MB.");
+      return;
+    }
+
+    setIsProcessingId(true);
+    setError("");
+
+    try {
+      const image = await readImage(file);
+      const maxSide = 1200;
+      const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+      const width = Math.max(1, Math.round(image.width * scale));
+      const height = Math.max(1, Math.round(image.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext("2d");
+      if (!context) {
+        throw new Error("Could not prepare image preview.");
+      }
+
+      context.drawImage(image, 0, 0, width, height);
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.78));
+      if (!blob) {
+        throw new Error("Could not compress the selected image.");
+      }
+
+      const dataUrl = await blobToDataUrl(blob);
+      setFormData((prev) => ({ ...prev, faydaDocUrl: dataUrl }));
+      setFaydaFileName(file.name);
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : "Could not attach Fayda document.");
+    } finally {
+      setIsProcessingId(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    await prepareFaydaDocument(e.target.files?.[0] as File);
+    e.target.value = "";
   };
 
   const toggleSkill = (skill: string) => {
@@ -194,7 +259,16 @@ export default function WorkerRegisterPage() {
             <AnimatePresence mode="wait">
               <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="space-y-6">
                 {step === 1 && <StepIdentity formData={formData} setFormData={setFormData} />}
-                {step === 2 && <StepIdCompliance formData={formData} fileInputRef={fileInputRef} handleFileUpload={handleFileUpload} />}
+                {step === 2 && (
+                  <StepIdCompliance
+                    formData={formData}
+                    fileInputRef={fileInputRef}
+                    handleFileUpload={handleFileUpload}
+                    handleFileDrop={prepareFaydaDocument}
+                    isProcessing={isProcessingId}
+                    fileName={faydaFileName}
+                  />
+                )}
                 {step === 3 && <StepServiceParameters formData={formData} setFormData={setFormData} toggleSkill={toggleSkill} categories={categories} locations={locations} />}
                 {step === 4 && <StepReview formData={formData} />}
 

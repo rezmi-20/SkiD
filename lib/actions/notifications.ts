@@ -24,6 +24,7 @@ export type NotificationType =
   | "completion_requested"
   | "completion_accepted"
   | "completion_rejected"
+  | "identity_verification_required"
   | "post_liked"
   | "post_commented";
 

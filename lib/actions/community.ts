@@ -3,6 +3,7 @@
 import { sql } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { requireAdminPermission } from "@/lib/admin-authorization";
 
 export async function getCommunityPosts(category?: string) {
   try {
@@ -98,13 +99,24 @@ export async function flagPost(postId: string, reason: string) {
   }
 }
 
-export async function removeCommunityPost(postId: string, isRemoved: boolean) {
-  const session = await auth();
-  if (session?.user?.role !== "admin") {
-    return { success: false, error: "Unauthorized" };
+export async function removeCommunityPost(postId: string, isRemoved: boolean, reason?: string) {
+  const admin = await requireAdminPermission("content.moderate");
+  const normalizedReason = typeof reason === "string" ? reason.trim().slice(0, 500) : "";
+  if (!normalizedReason) {
+    return { success: false, error: "A moderation reason is required." };
   }
   try {
-    await sql`UPDATE community_posts SET is_removed = ${isRemoved} WHERE id = ${postId}`;
+    const rows = await sql`
+      UPDATE community_posts
+      SET is_removed = ${isRemoved}
+      WHERE id = ${postId}
+      RETURNING id
+    `;
+    if (rows.length === 0) return { success: false, error: "Post not found." };
+    await sql`
+      INSERT INTO content_moderation_events (content_type, content_id, action, reason, admin_employee_id, admin_role)
+      VALUES (${ "community_post" }, ${postId}, ${isRemoved ? "hide" : "restore"}, ${normalizedReason}, ${admin.id}, ${admin.role})
+    `;
     revalidatePath("/admin/community");
     revalidatePath("/community/feed");
     return { success: true };

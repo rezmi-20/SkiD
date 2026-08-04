@@ -7,6 +7,6 @@ export const metadata = {
 };
 
 export default async function ReportsPage() {
-  const report = await getAdminPaymentReport();
+  const report = await getAdminPaymentReport("reports.read");
   return <AdminPaymentReportsContent report={report} />;
 }

@@ -28,6 +28,12 @@ interface Props {
   disputeCount: number;
   activityFeed: { type: string; title: string; created_at: string }[];
   unverifiedWorkers: any[];
+  verificationCapabilities: {
+    canRead: boolean;
+    canReview: boolean;
+    canApprove: boolean;
+    canReject: boolean;
+  };
 }
 
 const PLATFORM_DATA = [
@@ -106,6 +112,7 @@ export function AdminDashboardClient({
   disputeCount,
   activityFeed,
   unverifiedWorkers,
+  verificationCapabilities,
 }: Props) {
   const { t } = useLanguage();
 
@@ -148,9 +155,13 @@ export function AdminDashboardClient({
               Monitor platform health, verify workers, manage disputes and oversee all activity.
             </p>
             <div className="flex items-center gap-3 flex-wrap">
-              <Button asChild size="sm" className="rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 gap-1.5 shadow-lg shadow-blue-500/20">
-                <Link href="/admin/verify"><ShieldAlert size={14} /> Verify Workers</Link>
-              </Button>
+              {verificationCapabilities.canRead && (
+                <Button asChild size="sm" className="rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 gap-1.5 shadow-lg shadow-blue-500/20">
+                  <Link href="/admin/verify">
+                    <ShieldAlert size={14} /> {verificationCapabilities.canReview ? "Verify Workers" : "View Verification"}
+                  </Link>
+                </Button>
+              )}
               <Button asChild size="sm" variant="outline" className="rounded-xl border-white/15 text-white bg-white/5 hover:bg-white/10 font-semibold px-5 gap-1.5">
                 <Link href="/admin/users">Manage Users</Link>
               </Button>
@@ -180,9 +191,11 @@ export function AdminDashboardClient({
               <CountUp to={pendingVerifCount} duration={1.5} />
             </p>
             <p className="text-[11px] text-muted-foreground mt-1">Workers awaiting verification</p>
-            <Link href="/admin/verify" className="mt-3 flex items-center gap-1 text-[11px] font-semibold text-amber-400 hover:underline">
-              Review now <ChevronRight size={11} />
-            </Link>
+            {verificationCapabilities.canRead && (
+              <Link href="/admin/verify" className="mt-3 flex items-center gap-1 text-[11px] font-semibold text-amber-400 hover:underline">
+                {verificationCapabilities.canReview ? "Review now" : "View details"} <ChevronRight size={11} />
+              </Link>
+            )}
           </div>
 
           {/* Quick admin links */}
@@ -280,7 +293,15 @@ export function AdminDashboardClient({
             View All <ChevronRight size={12} />
           </Link>
         </div>
-        <PendingVerification workers={unverifiedWorkers} />
+        {verificationCapabilities.canRead && (
+          <PendingVerification
+            workers={unverifiedWorkers}
+            canOpenDetails={verificationCapabilities.canRead}
+            canReview={verificationCapabilities.canReview}
+            canApprove={verificationCapabilities.canApprove}
+            canReject={verificationCapabilities.canReject}
+          />
+        )}
       </div>
 
     </FadeContent>

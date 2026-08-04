@@ -50,7 +50,10 @@ export default function ClientProfilePage() {
         phone: profile?.phone,
         gender: profile?.gender,
         dateOfBirth: profile?.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString() : undefined,
-        district: profile?.district
+        district: profile?.district,
+        is_verified: Boolean(profile?.is_verified && profile?.has_fin),
+        verificationStatus: profile?.verification_status || "incomplete",
+        maskedFin: profile?.masked_fin || null
       }}
       stats={stats}
       menuGroups={menuGroups}

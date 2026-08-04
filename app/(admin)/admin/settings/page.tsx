@@ -1,15 +1,11 @@
-import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
-import { redirect } from "next/navigation";
 import { PlatformSettingsClient } from "@/components/admin/PlatformSettingsClient";
+import { requireAnyAdminPermission } from "@/lib/admin-authorization";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  const session = await auth();
-  if (!session || session.user.role !== "admin") {
-    redirect("/login");
-  }
+  await requireAnyAdminPermission(["audit.read", "appeals.read", "support.read"]);
 
   // Fetch db statistics for System Health board
   const [

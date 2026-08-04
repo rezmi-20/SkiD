@@ -33,13 +33,43 @@ export const auth = async () => {
   if (!session?.user) return null;
 
   try {
-    // Fetch role from our DB for compatibility
-    const rows = await sql`SELECT role FROM users WHERE id = ${session.user.id}`;
+    // Fetch account state from our DB for compatibility
+    const rows = await sql`
+      SELECT
+        role,
+        is_suspended AS "isSuspended",
+        admin_role AS "adminRole",
+        admin_status AS "adminStatus",
+        admin_activation_required AS "adminActivationRequired"
+      FROM users
+      WHERE id = ${session.user.id}
+    `;
     if (rows && rows[0]) {
-      (session.user as any).role = rows[0].role;
+      (session.user as any).isSuspended = rows[0].isSuspended ?? false;
+      (session.user as any).role = rows[0].isSuspended ? "suspended" : rows[0].role;
+      (session.user as any).adminRole = rows[0].adminRole ?? null;
+      (session.user as any).adminStatus = rows[0].adminStatus ?? null;
+      (session.user as any).adminActivationRequired = rows[0].adminActivationRequired ?? false;
     }
   } catch (err) {
-    console.error("Auth wrapper role fetch failed", err);
+    const message = err instanceof Error ? err.message : String(err);
+    if (/admin_role|admin_status|admin_activation_required/i.test(message)) {
+      try {
+        const rows = await sql`
+          SELECT role, is_suspended AS "isSuspended"
+          FROM users
+          WHERE id = ${session.user.id}
+        `;
+        if (rows && rows[0]) {
+          (session.user as any).isSuspended = rows[0].isSuspended ?? false;
+          (session.user as any).role = rows[0].isSuspended ? "suspended" : rows[0].role;
+        }
+      } catch (fallbackError) {
+        console.error("Auth wrapper role fallback failed", fallbackError);
+      }
+    } else {
+      console.error("Auth wrapper role fetch failed", err);
+    }
   }
 
   return session;

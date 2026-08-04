@@ -17,16 +17,46 @@ interface WorkerVerificationContentProps {
     fayda_doc_url: string;
     is_verified: boolean;
     verification_status?: string | null;
+    verification_reason?: string | null;
+    verified_at?: string | Date | null;
+    reviewer_email?: string | null;
     is_suspended?: boolean | null;
   };
-  onApprove: () => void;
-  onReject: (reason: string) => void;
-  onRevoke: (reason: string) => void;
-  onPending: () => void;
+  attempt: {
+    id: string;
+    attemptNumber: number;
+    status: string;
+    submittedAt: string;
+  } | null;
+  history: Array<{
+    id: string;
+    action: string;
+    oldStatus: string | null;
+    newStatus: string;
+    reason: string | null;
+    attemptNumber: number | null;
+    adminEmployeeId: string | null;
+    adminName: string | null;
+    adminRole: string | null;
+    createdAt: string;
+  }>;
+  capabilities: {
+    canReview: boolean;
+    canApprove: boolean;
+    canReject: boolean;
+    canRequestResubmission: boolean;
+  };
+  onApprove?: () => void;
+  onReject?: (reason: string) => void;
+  onRevoke?: (reason: string) => void;
+  onPending?: (reason: string) => void;
 }
 
 export default function WorkerVerificationContent({
   worker,
+  attempt,
+  history,
+  capabilities,
   onApprove,
   onReject,
   onRevoke,
@@ -42,6 +72,7 @@ export default function WorkerVerificationContent({
     }
     action(reason);
   };
+  const readOnly = !capabilities.canReview;
 
   return (
     <div className="max-w-4xl mx-auto space-y-12 pb-32">
@@ -61,7 +92,9 @@ export default function WorkerVerificationContent({
               Review <span className="text-primary">Identity</span>
             </h1>
             <p className="text-on-surface-variant font-medium opacity-60">
-              Auditing professional credentials for platform security.
+              {readOnly
+                ? "Read-only oversight mode. You can inspect this case but cannot make a verification decision."
+                : "Auditing professional credentials for platform security."}
             </p>
           </div>
         </div>
@@ -93,10 +126,52 @@ export default function WorkerVerificationContent({
                 { label: "Phone Node", value: `+251 ${worker.phone}` },
                 { label: "Fayda FIN", value: worker.masked_fin || "Not recorded" },
                 { label: "District", value: worker.district || "Unspecified" },
+                { label: "Reviewer", value: worker.reviewer_email || "Not recorded" },
+                { label: "Decision Time", value: worker.verified_at ? new Date(worker.verified_at).toLocaleString() : "Not recorded" },
+                { label: "Current Attempt", value: attempt ? `Attempt ${attempt.attemptNumber}` : "Attempt pending" },
               ].map((item) => (
                 <div key={item.label}>
                   <p className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest opacity-30 mb-1">{item.label}</p>
                   <p className="font-bold text-on-surface leading-tight break-all">{item.value}</p>
+                </div>
+              ))}
+             </div>
+          </section>
+
+          <section className="space-y-6">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-40 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[16px]">history</span>
+              Case Timeline
+            </h3>
+            <div className="space-y-3 bg-surface-container-low p-6 rounded-[2rem] border border-surface-container-highest/50">
+              <div>
+                <p className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest opacity-30 mb-1">Current Status</p>
+                <p className="font-bold text-on-surface leading-tight">{displayStatus}</p>
+              </div>
+              {attempt && (
+                <div>
+                  <p className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest opacity-30 mb-1">Submission</p>
+                  <p className="font-bold text-on-surface leading-tight">
+                    Attempt {attempt.attemptNumber} · {new Date(attempt.submittedAt).toLocaleString()}
+                  </p>
+                </div>
+              )}
+              <div>
+                <p className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest opacity-30 mb-1">Reason</p>
+                <p className="font-bold text-on-surface leading-tight">{worker.verification_reason || "No reason recorded"}</p>
+              </div>
+              {history.slice(0, 6).map((event) => (
+                <div key={event.id} className="border-t border-surface-container-highest/50 pt-3">
+                  <p className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest opacity-30 mb-1">
+                    {event.action.replaceAll("_", " ")} · Attempt {event.attemptNumber || "-"}
+                  </p>
+                  <p className="font-bold text-on-surface leading-tight">
+                    {event.oldStatus || "new"} → {event.newStatus}
+                  </p>
+                  <p className="mt-1 text-[10px] text-on-surface-variant">
+                    {event.adminName || event.adminEmployeeId || "System"} · {new Date(event.createdAt).toLocaleString()}
+                  </p>
+                  {event.reason && <p className="mt-1 text-xs text-on-surface-variant">{event.reason}</p>}
                 </div>
               ))}
             </div>
@@ -131,10 +206,10 @@ export default function WorkerVerificationContent({
              <div className="p-10 bg-black/50 flex items-center justify-center min-h-[500px] relative group">
                 <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none z-10" />
                 {worker.fayda_doc_url ? (
-                  <img 
-                    src={worker.fayda_doc_url} 
-                    alt="Fayda ID" 
-                    className="max-w-full rounded-2xl shadow-2xl border border-white/5 grayscale hover:grayscale-0 transition-all duration-1000 ease-out cursor-zoom-in relative z-0" 
+                  <iframe
+                    src={`/api/workers/${worker.user_id}/verification-document`}
+                    title="Protected Fayda ID document"
+                    className="relative z-0 h-[520px] w-full rounded-2xl border border-white/5 bg-white shadow-2xl"
                   />
                 ) : (
                   <div className="flex flex-col items-center gap-6 text-on-surface-variant opacity-20">
@@ -145,49 +220,64 @@ export default function WorkerVerificationContent({
              </div>
           </motion.section>
 
-          {/* Action Bar */}
-          <textarea
-            value={rejectReason}
-            onChange={(event) => setRejectReason(event.target.value)}
-            rows={3}
-            placeholder="Reason required for rejection or revocation"
-            className="w-full rounded-2xl border border-surface-container-highest bg-surface-container-low px-4 py-3 text-sm font-medium text-on-surface outline-none focus:border-secondary"
-          />
-          <div className="grid gap-4 sm:grid-cols-2">
-             <button 
-                onClick={onApprove}
-                disabled={displayStatus === "approved"}
-                className="flex-1 h-16 bg-primary text-on-primary rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-30 disabled:scale-100 disabled:grayscale shadow-xl shadow-primary/20 flex items-center justify-center gap-3"
-             >
-                <span className="material-symbols-outlined">verified</span>
-                {displayStatus === "approved" ? 'Approved' : 'Approve'}
-             </button>
+          {readOnly ? (
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-5 py-4 text-sm font-bold text-on-surface">
+              Read-only oversight mode. You can inspect this case but cannot make a verification decision.
+            </div>
+          ) : (
+            <>
+              <textarea
+                value={rejectReason}
+                onChange={(event) => setRejectReason(event.target.value)}
+                rows={3}
+                placeholder="Reason required for rejection or revocation"
+                className="w-full rounded-2xl border border-surface-container-highest bg-surface-container-low px-4 py-3 text-sm font-medium text-on-surface outline-none focus:border-secondary"
+              />
+              <div className="grid gap-4 sm:grid-cols-2">
+                {capabilities.canApprove && onApprove && (
+                  <button
+                    onClick={onApprove}
+                    disabled={displayStatus === "approved"}
+                    className="flex-1 h-16 bg-primary text-on-primary rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-30 disabled:scale-100 disabled:grayscale shadow-xl shadow-primary/20 flex items-center justify-center gap-3"
+                  >
+                    <span className="material-symbols-outlined">verified</span>
+                    {displayStatus === "approved" ? 'Approved' : 'Approve'}
+                  </button>
+                )}
 
-             <button 
-                onClick={() => requireReason(onReject)}
-                className="px-10 h-16 bg-surface-container-high border border-surface-container-highest text-secondary rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-surface-container-highest active:scale-[0.98] transition-all flex items-center justify-center gap-3"
-             >
-                <span className="material-symbols-outlined">block</span>
-                Reject
-             </button>
+                {capabilities.canReject && onReject && (
+                  <button
+                    onClick={() => requireReason(onReject)}
+                    className="px-10 h-16 bg-surface-container-high border border-surface-container-highest text-secondary rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-surface-container-highest active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+                  >
+                    <span className="material-symbols-outlined">block</span>
+                    Reject
+                  </button>
+                )}
 
-             <button
-                onClick={() => requireReason(onRevoke)}
-                className="px-10 h-16 bg-error/10 border border-error/20 text-error rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-error/20 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
-             >
-                <span className="material-symbols-outlined">gpp_bad</span>
-                Revoke Verification
-             </button>
+                {capabilities.canReview && onRevoke && (
+                  <button
+                    onClick={() => requireReason(onRevoke)}
+                    className="px-10 h-16 bg-error/10 border border-error/20 text-error rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-error/20 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+                  >
+                    <span className="material-symbols-outlined">gpp_bad</span>
+                    Revoke Verification
+                  </button>
+                )}
 
-             <button
-                onClick={onPending}
-                disabled={displayStatus === "pending"}
-                className="px-10 h-16 bg-surface-container-high border border-surface-container-highest text-on-surface rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-surface-container-highest active:scale-[0.98] transition-all disabled:opacity-30 flex items-center justify-center gap-3"
-             >
-                <span className="material-symbols-outlined">pending_actions</span>
-                Mark Pending
-             </button>
-          </div>
+                {capabilities.canRequestResubmission && onPending && (
+                  <button
+                    onClick={() => requireReason(onPending)}
+                    disabled={displayStatus === "pending"}
+                    className="px-10 h-16 bg-surface-container-high border border-surface-container-highest text-on-surface rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-surface-container-highest active:scale-[0.98] transition-all disabled:opacity-30 flex items-center justify-center gap-3"
+                  >
+                    <span className="material-symbols-outlined">pending_actions</span>
+                    Request Resubmission
+                  </button>
+                )}
+              </div>
+            </>
+          )}
         </main>
       </div>
     </div>
