@@ -18,14 +18,14 @@ function decodeDataDocument(value: string) {
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: Promise<{ workerId: string }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const [session, admin] = await Promise.all([auth(), getAdminPrincipal()]);
   if (!session?.user?.id && !admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { workerId } = await params;
+  const { id: workerId } = await params;
   const isOwner = session?.user?.id === workerId;
   const isAdmin = Boolean(admin && hasAdminPermission(admin, "verification.read"));
   if (!isOwner && !isAdmin) {
