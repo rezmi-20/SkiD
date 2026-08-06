@@ -20,7 +20,7 @@ interface WorkerData {
   verificationStatus?: string | null;
   isVerified: boolean;
   isSuspended?: boolean | null;
-  faydaDocUrl: string | null;
+  hasDocument: boolean;
   createdAt: string;
 }
 
@@ -245,7 +245,7 @@ export function WorkersManagementClient({ initialWorkers, verificationCapabiliti
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center justify-end gap-2">
-                        {w.faydaDocUrl && (
+                        {w.hasDocument && (
                           <Link
                             href={`/admin/verify/${w.userId}`}
                             className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-xl bg-surface-container text-on-surface hover:bg-surface-container-high font-semibold transition-all border border-outline-variant active:scale-95"

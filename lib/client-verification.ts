@@ -84,15 +84,22 @@ export async function getClientIdentityColumns() {
 export async function getClientIdentityStatus(userId: string) {
   const columns = await getClientIdentityColumns();
   const selected = [
-    "user_id",
-    "is_verified",
-    ...(columns.has("verification_status") ? ["verification_status"] : []),
-    ...(columns.has("verification_reason") ? ["verification_reason"] : []),
-    ...(columns.has("fin_last4") ? ["fin_last4"] : []),
-    ...(columns.has("fayda_doc_url") ? ["fayda_doc_url"] : []),
+    `"user_id"`,
+    `"is_verified"`,
+    ...(columns.has("verification_status") ? [`"verification_status"`] : []),
+    ...(columns.has("verification_reason") ? [`"verification_reason"`] : []),
+    ...(columns.has("fin_last4") ? [`"fin_last4"`] : []),
+    ...(columns.has("fayda_doc_url")
+      ? [`CASE
+          WHEN fayda_doc_url IS NOT NULL
+           AND length(fayda_doc_url) > 0
+          THEN true
+          ELSE false
+        END AS "has_document"`]
+      : [`false AS "has_document"`]),
   ];
   const rows = await sql.query(
-    `SELECT ${selected.map((column) => `"${column}"`).join(", ")} FROM client_profiles WHERE user_id = $1 LIMIT 1`,
+    `SELECT ${selected.join(", ")} FROM client_profiles WHERE user_id = $1 LIMIT 1`,
     [userId],
   );
   const profile = rows[0];
@@ -103,8 +110,7 @@ export async function getClientIdentityStatus(userId: string) {
     status: toClientDisplayStatus(profile?.verification_status, profile?.is_verified),
     hasFin: Boolean(profile?.fin_last4),
     maskedFin: maskFinLast4(profile?.fin_last4),
-    hasDocument: Boolean(profile?.fayda_doc_url),
+    hasDocument: Boolean(profile?.has_document),
     reason: profile?.verification_reason || null,
   };
 }
-

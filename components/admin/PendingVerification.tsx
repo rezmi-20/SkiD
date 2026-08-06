@@ -14,7 +14,7 @@ interface Worker {
   phone: string;
   email: string;
   skills: string[];
-  fayda_doc_url?: string;
+  has_document?: boolean;
   created_at?: string;
   verification_status?: string | null;
   is_verified?: boolean;
@@ -58,7 +58,7 @@ export function PendingVerification({
   }, [workers]);
 
   const handleAction = (userId: string, approve: boolean) => {
-    const reason = approve ? undefined : window.prompt("Reason for rejection?") || undefined;
+    const reason = approve ? undefined : window.prompt(t("admin.verification.rejectReasonPrompt" as any)) || undefined;
     startTransition(async () => {
       const result = await toggleWorkerVerification(userId, approve, reason);
       if (result.success) {
@@ -66,7 +66,7 @@ export function PendingVerification({
         onAction?.(userId, approve);
         router.refresh();
       } else {
-        alert(result.error || "Failed to update verification status.");
+        alert(result.error || t("admin.verification.updateFailed" as any));
       }
     });
   };
@@ -87,7 +87,7 @@ export function PendingVerification({
           href="/admin/verify"
           className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
         >
-          {t("common.search" as any) === "Search" ? "View All" : "ሁሉ ይመልከቱ"} <ExternalLink className="w-3 h-3" />
+          {t("admin.dashboard.viewAll" as any)} <ExternalLink className="w-3 h-3" />
         </Link>
       </div>
 
@@ -96,7 +96,7 @@ export function PendingVerification({
         <div className="py-12 flex flex-col items-center gap-3 text-on-surface-variant">
           <CheckCircle className="w-10 h-10 text-primary" />
           <p className="text-sm font-semibold text-on-surface">{t("admin.pendingVerif.empty" as any)}</p>
-          <p className="text-xs text-on-surface-variant">No pending submissions in the queue.</p>
+          <p className="text-xs text-on-surface-variant">{t("admin.verification.noPending" as any)}</p>
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -110,13 +110,13 @@ export function PendingVerification({
                   {t("worker.skills" as any) ?? "Skills"}
                 </th>
                 <th className="text-left px-4 py-2 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
-                  {t("common.next" as any) === "Next" ? "Submitted" : "የቀረበበት"}
+                  {t("admin.verification.submitted" as any)}
                 </th>
                 <th className="text-left px-4 py-2 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
                   {t("verification.status.pending" as any)}
                 </th>
                 <th className="text-right px-4 py-2 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
-                  {t("common.submit" as any) === "Submit" ? "Actions" : "ተግባሮች"}
+                  {t("admin.verification.actions" as any)}
                 </th>
               </tr>
             </thead>
@@ -155,13 +155,13 @@ export function PendingVerification({
                   </td>
                   <td className="px-4 py-2.5">
                     <div className="flex items-center justify-end gap-2">
-                      {worker.fayda_doc_url && canOpenDetails && (
+                      {worker.has_document && canOpenDetails && (
                         <Link
                           href={`/admin/verify/${worker.user_id}`}
                           className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-semibold transition-colors border border-outline-variant"
                         >
                           <ExternalLink className="w-3 h-3" />
-                          {canReview ? t("admin.action.review" as any) : "View details"}
+                          {canReview ? t("admin.action.review" as any) : t("admin.dashboard.viewDetails" as any)}
                         </Link>
                       )}
                       {canApprove && (

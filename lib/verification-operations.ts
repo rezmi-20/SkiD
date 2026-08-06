@@ -5,11 +5,13 @@ import { revalidatePath } from "next/cache";
 import { sql } from "@/lib/db";
 import { createNotification } from "@/lib/actions/notifications";
 import {
+  getAdminPrincipal,
   hasAdminPermission,
   requireAdminPermission,
   type AdminPermission,
   type AdminPrincipal,
 } from "@/lib/admin-authorization";
+import { decryptFin } from "@/lib/fin-protection";
 
 export type VerificationAccountType = "worker" | "client";
 export type VerificationDecisionStatus = "approved" | "rejected" | "resubmission_requested" | "suspended" | "revoked";
@@ -23,6 +25,7 @@ type ProfileSnapshot = {
   isSuspended: boolean;
   finLast4: string | null;
   finEncrypted?: string | null;
+  finEncryptionKeyId?: string | null;
   documentRef: string | null;
 };
 
@@ -62,6 +65,7 @@ async function getProfileSnapshot(accountType: VerificationAccountType, accountU
         wp.verification_status,
         wp.fin_last4,
         wp.fin_encrypted,
+        wp.fin_encryption_key_id,
         wp.fayda_doc_url,
         u.is_suspended
       FROM worker_profiles wp
@@ -80,6 +84,7 @@ async function getProfileSnapshot(accountType: VerificationAccountType, accountU
       isSuspended: Boolean(row.is_suspended),
       finLast4: row.fin_last4 ?? null,
       finEncrypted: row.fin_encrypted ?? null,
+      finEncryptionKeyId: row.fin_encryption_key_id ?? null,
       documentRef: row.fayda_doc_url ?? null,
     };
   }
@@ -92,6 +97,7 @@ async function getProfileSnapshot(accountType: VerificationAccountType, accountU
       cp.verification_status,
       cp.fin_last4,
       cp.fin_encrypted,
+      cp.fin_encryption_key_id,
       cp.fayda_doc_url,
       u.is_suspended
     FROM client_profiles cp
@@ -110,6 +116,7 @@ async function getProfileSnapshot(accountType: VerificationAccountType, accountU
     isSuspended: Boolean(row.is_suspended),
     finLast4: row.fin_last4 ?? null,
     finEncrypted: row.fin_encrypted ?? null,
+    finEncryptionKeyId: row.fin_encryption_key_id ?? null,
     documentRef: row.fayda_doc_url ?? null,
   };
 }
@@ -128,10 +135,78 @@ export async function getCurrentVerificationAttempt(accountType: VerificationAcc
 
 export async function ensureCurrentVerificationAttempt(accountType: VerificationAccountType, accountUserId: string) {
   const existing = await getCurrentVerificationAttempt(accountType, accountUserId);
-  if (existing) return existing;
-
   const snapshot = await getProfileSnapshot(accountType, accountUserId);
-  if (!snapshot) return null;
+  if (!snapshot) return existing ?? null;
+
+  if (existing) {
+    if (existing.status === "pending" || snapshot.oldStatus !== "pending") return existing;
+
+    const fingerprint = documentFingerprint(snapshot.documentRef);
+    await sql`
+      WITH previous AS (
+        UPDATE verification_attempts
+        SET is_current = false
+        WHERE id = ${existing.id}
+          AND is_current = true
+          AND status <> 'pending'
+        RETURNING attempt_number
+      ),
+      next_number AS (
+        SELECT COALESCE(MAX(attempt_number), 0) + 1 AS n
+        FROM verification_attempts
+        WHERE account_user_id = ${accountUserId}
+          AND account_type = ${accountType}
+      ),
+      inserted AS (
+        INSERT INTO verification_attempts (
+          account_user_id,
+          account_type,
+          attempt_number,
+          status,
+          document_reference,
+          document_fingerprint,
+          fin_last4,
+          is_current,
+          submitted_at
+        )
+        SELECT
+          ${accountUserId},
+          ${accountType},
+          n,
+          'pending',
+          ${snapshot.documentRef ? `${accountType}:${accountUserId}:attempt-document` : null},
+          ${fingerprint},
+          ${snapshot.finLast4},
+          true,
+          NOW()
+        FROM next_number
+        WHERE EXISTS (SELECT 1 FROM previous)
+        RETURNING *
+      )
+      INSERT INTO verification_events (
+        attempt_id,
+        account_user_id,
+        account_type,
+        old_status,
+        new_status,
+        action,
+        attempt_number,
+        document_fingerprint
+      )
+      SELECT
+        id,
+        account_user_id,
+        account_type,
+        ${String(existing.status || "decided")},
+        status,
+        'submitted',
+        attempt_number,
+        document_fingerprint
+      FROM inserted
+    `;
+
+    return (await getCurrentVerificationAttempt(accountType, accountUserId)) ?? existing;
+  }
 
   const rows = await sql`
     INSERT INTO verification_attempts (
@@ -252,6 +327,133 @@ export async function getVerificationHistory(accountType: VerificationAccountTyp
   `;
 }
 
+async function auditVerificationFinReveal(input: {
+  admin: AdminPrincipal;
+  accountType: VerificationAccountType;
+  accountUserId: string;
+  attemptId: string | null;
+  attemptNumber: number | null;
+  context: string;
+  success: boolean;
+  failureReason?: string;
+}) {
+  await sql`
+    INSERT INTO audit_logs (admin_employee_id, action, details)
+    VALUES (
+      ${input.admin.id},
+      ${"verification_fin_revealed"},
+      ${JSON.stringify({
+        adminId: input.admin.id,
+        adminEmployeeId: input.admin.employeeId ?? null,
+        adminRole: input.admin.role,
+        targetUserId: input.accountUserId,
+        accountType: input.accountType,
+        attemptId: input.attemptId,
+        attemptNumber: input.attemptNumber,
+        action: "verification_fin_revealed",
+        context: input.context,
+        success: input.success,
+        failureReason: input.failureReason ?? null,
+        timestamp: new Date().toISOString(),
+      })}
+    )
+  `;
+}
+
+export async function revealVerificationFin(
+  accountType: VerificationAccountType,
+  accountUserId: string,
+  expectedAttemptId?: string | null,
+  context?: string,
+) {
+  const admin = await getAdminPrincipal();
+  if (!admin) {
+    return { success: false, status: 401, error: "Active administrator access is required." };
+  }
+
+  const authorizedAdmin = admin;
+  const normalizedContext = cleanReason(context) || "Active verification review FIN comparison";
+  let attemptId: string | null = null;
+  let attemptNumber: number | null = null;
+
+  async function deny(status: number, error: string) {
+    await auditVerificationFinReveal({
+      admin: authorizedAdmin,
+      accountType,
+      accountUserId,
+      attemptId,
+      attemptNumber,
+      context: normalizedContext,
+      success: false,
+      failureReason: error,
+    }).catch(() => undefined);
+    return { success: false, status, error };
+  }
+
+  if (accountType !== "worker" && accountType !== "client") {
+    return deny(400, "Invalid verification account type.");
+  }
+  if (!hasAdminPermission(authorizedAdmin, "verification.review") || authorizedAdmin.role !== "content_verification_admin") {
+    return deny(403, "Only content verification administrators may reveal FIN during active review.");
+  }
+  if (authorizedAdmin.id === accountUserId) {
+    return deny(403, "Administrators cannot review their own verification case.");
+  }
+
+  const snapshot = await getProfileSnapshot(accountType, accountUserId);
+  if (!snapshot) {
+    return deny(404, `${accountType === "worker" ? "Worker" : "Client"} not found.`);
+  }
+  if (snapshot.isSuspended || snapshot.oldStatus === "suspended" || snapshot.oldStatus === "revoked") {
+    return deny(409, "Suspended or revoked verification cases cannot reveal FIN here.");
+  }
+
+  const attempt = await getCurrentVerificationAttempt(accountType, accountUserId);
+  if (!attempt) {
+    return deny(404, "Current verification attempt not found.");
+  }
+  attemptId = String(attempt.id);
+  attemptNumber = Number(attempt.attempt_number || attempt.attemptNumber || 1);
+
+  if (expectedAttemptId && attemptId !== expectedAttemptId) {
+    return deny(409, "This verification attempt is stale. Reload the case and try again.");
+  }
+  if (!["pending", "rejected", "resubmission_requested"].includes(snapshot.oldStatus)) {
+    return deny(409, "This verification case is not in an active reviewable state.");
+  }
+  const activeReviewStatus = attempt.status === "pending" || snapshot.oldStatus === "pending";
+  if (!activeReviewStatus) {
+    return deny(409, "FIN can only be revealed for an active pending review.");
+  }
+  if (!snapshot.finLast4 || !snapshot.finEncrypted || !snapshot.finEncryptionKeyId || !snapshot.documentRef) {
+    return deny(400, "Current FIN metadata and verification document are required before reveal.");
+  }
+
+  let fin: string;
+  try {
+    fin = decryptFin({
+      finEncrypted: snapshot.finEncrypted,
+      finEncryptionKeyId: snapshot.finEncryptionKeyId,
+      userId: accountUserId,
+      scope: "profile",
+    });
+  } catch {
+    return deny(500, "FIN could not be decrypted for this review.");
+  }
+
+  await auditVerificationFinReveal({
+    admin: authorizedAdmin,
+    accountType,
+    accountUserId,
+    attemptId,
+    attemptNumber,
+    context: normalizedContext,
+    success: true,
+  });
+
+  return { success: true, status: 200, fin };
+}
+
 export async function decideVerificationCase(
   accountType: VerificationAccountType,
   accountUserId: string,
@@ -280,8 +482,26 @@ export async function decideVerificationCase(
 
   const attempt = await ensureCurrentVerificationAttempt(accountType, accountUserId);
   if (!attempt) return { success: false, status: 404, error: "Verification attempt not found." };
-  if (expectedAttemptId && attempt.id !== expectedAttemptId) {
-    return { success: false, status: 409, error: "This verification attempt is stale. Reload the case and try again." };
+  if (expectedAttemptId && String(attempt.id) !== expectedAttemptId) {
+    const expectedRows = await sql`
+      SELECT id, status, is_current
+      FROM verification_attempts
+      WHERE id = ${expectedAttemptId}
+        AND account_user_id = ${accountUserId}
+        AND account_type = ${accountType}
+      LIMIT 1
+    `;
+    const expectedAttempt = expectedRows[0] ?? null;
+    const repairedPendingAttempt = Boolean(
+      expectedAttempt &&
+        expectedAttempt.is_current === false &&
+        expectedAttempt.status !== "pending" &&
+        attempt.status === "pending" &&
+        snapshot.oldStatus === "pending",
+    );
+    if (!repairedPendingAttempt) {
+      return { success: false, status: 409, error: "This verification attempt is stale. Reload the case and try again." };
+    }
   }
   if (attempt.status !== "pending") {
     return { success: false, status: 409, error: "This verification attempt has already been decided." };
@@ -289,8 +509,8 @@ export async function decideVerificationCase(
   if (!["pending", "rejected", "resubmission_requested"].includes(snapshot.oldStatus)) {
     return { success: false, status: 409, error: "This verification case is not pending review." };
   }
-  if (!snapshot.finLast4 || !snapshot.finEncrypted || !snapshot.documentRef) {
-    return { success: false, status: 400, error: "Current FIN metadata and verification document are required before approval or rejection." };
+  if (nextStatus === "approved" && (!snapshot.finLast4 || !snapshot.finEncrypted || !snapshot.documentRef)) {
+    return { success: false, status: 400, error: "Current FIN metadata and verification document are required before approval." };
   }
 
   const isApproved = nextStatus === "approved";

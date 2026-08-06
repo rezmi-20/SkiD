@@ -30,6 +30,7 @@
     "db:migrate:admin-identity-reference": "node scripts/migrate-admin-identity-reference.mjs",
     "db:migrate:verification-operations": "node scripts/migrate-verification-operations.mjs",
     "check:verification-operations": "node scripts/check-verification-operations.mjs",
+    "check:verification-query-performance": "node scripts/check-verification-query-performance.mjs",
     "check:env:production": "node scripts/check-production-env.mjs",
     "test:browser": "node scripts/run-browser-smoke.mjs",
     "test:browser:headed": "node scripts/run-browser-smoke.mjs --headed",

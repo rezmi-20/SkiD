@@ -18,7 +18,12 @@ export default async function VerifyQueuePage() {
       wp.user_id,
       wp.full_name,
       wp.skills,
-      wp.fayda_doc_url,
+      CASE
+        WHEN wp.fayda_doc_url IS NOT NULL
+         AND length(wp.fayda_doc_url) > 0
+        THEN true
+        ELSE false
+      END AS has_document,
       wp.fin_last4,
       wp.avatar_url,
       wp.verification_status,
@@ -46,7 +51,12 @@ export default async function VerifyQueuePage() {
        cp.is_verified,
        ${clientColumns.has("verification_status") ? "cp.verification_status" : "NULL AS verification_status"},
        ${clientColumns.has("fin_last4") ? "cp.fin_last4" : "NULL AS fin_last4"},
-       ${clientColumns.has("fayda_doc_url") ? "cp.fayda_doc_url" : "NULL AS fayda_doc_url"},
+       ${clientColumns.has("fayda_doc_url") ? `CASE
+         WHEN cp.fayda_doc_url IS NOT NULL
+          AND length(cp.fayda_doc_url) > 0
+         THEN true
+         ELSE false
+       END AS has_document` : "false AS has_document"},
        ${clientColumns.has("verified_at") ? "cp.verified_at" : "NULL AS verified_at"},
        cp.created_at,
        u.phone,
@@ -71,7 +81,7 @@ export default async function VerifyQueuePage() {
     isVerified: Boolean(w.is_verified),
     isSuspended: Boolean(w.is_suspended),
     maskedFin: maskFinLast4(w.fin_last4),
-    hasDocument: Boolean(w.fayda_doc_url),
+    hasDocument: Boolean(w.has_document),
     createdAt: String(w.created_at),
     decidedAt: w.verified_at ? String(w.verified_at) : null,
     reviewerName: w.reviewer_name ?? null,
@@ -86,7 +96,7 @@ export default async function VerifyQueuePage() {
     isVerified: Boolean(client.is_verified),
     isSuspended: Boolean(client.is_suspended),
     maskedFin: maskFinLast4(client.fin_last4),
-    hasDocument: Boolean(client.fayda_doc_url),
+    hasDocument: Boolean(client.has_document),
     createdAt: String(client.created_at),
     decidedAt: client.verified_at ? String(client.verified_at) : null,
     reviewerName: client.reviewer_name ?? null,

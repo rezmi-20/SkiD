@@ -49,7 +49,12 @@ export default async function AdminDashboardPage() {
       wp.user_id,
       wp.full_name,
       wp.skills,
-      wp.fayda_doc_url,
+      CASE
+        WHEN wp.fayda_doc_url IS NOT NULL
+         AND length(wp.fayda_doc_url) > 0
+        THEN true
+        ELSE false
+      END AS has_document,
       wp.avatar_url,
       wp.verification_status,
       wp.is_verified,

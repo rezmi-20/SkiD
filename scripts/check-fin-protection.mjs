@@ -25,6 +25,8 @@ const contractDocuments = read("lib/contract-documents.ts");
 const contractDetails = read("components/ContractDetails.tsx");
 const courtCopy = read("app/api/admin/contracts/[id]/court-copy/route.ts");
 const workerVerification = read("components/WorkerVerificationContent.tsx");
+const finReveal = read("components/admin/VerificationFinReveal.tsx");
+const verificationOps = read("lib/verification-operations.ts");
 const packageJson = JSON.parse(read("package.json"));
 
 pass("FIN requires exactly 12 digits", finProtection.includes("const FIN_DIGITS = /^\\d{12}$/;"));
@@ -43,6 +45,8 @@ pass("Contract page displays masked FIN only", contractDetails.includes("client_
 pass("Ordinary contract PDF masks FIN", contractDocuments.includes("maskFinLast4(contract.client_fin_last4)") && contractDocuments.includes("maskFinLast4(contract.worker_fin_last4)"));
 pass("Contract activation stores immutable identity snapshot", contractDocuments.includes("identityVerificationSnapshot") && contractDocuments.includes("finalized_snapshot"));
 pass("Admin verification UI uses masked FIN", workerVerification.includes("masked_fin") && !workerVerification.includes("fayda_fan_number"));
+pass("Controlled verification FIN reveal is temporary and audited", finReveal.includes("Reveal FIN for verification") && finReveal.includes("setTimeout") && verificationOps.includes("verification_fin_revealed") && verificationOps.includes('"content_verification_admin"'));
+pass("Controlled reveal does not persist or log FIN", !finReveal.includes("localStorage") && !finReveal.includes("sessionStorage") && !finReveal.includes("console."));
 pass("Court copy route requires legal export allowlist", courtCopy.includes("LEGAL_DOCUMENT_EXPORT_ADMIN_IDS"));
 pass("Court copy route is disabled by default", courtCopy.includes("COURT_COPY_EXPORT_ENABLED") && courtCopy.includes("Court copy export is temporarily disabled."));
 pass("Court copy route does not trust forged re-auth headers", !courtCopy.includes("x-legal-reauth-confirmed") && !courtCopy.includes("x-legal-2fa-confirmed"));

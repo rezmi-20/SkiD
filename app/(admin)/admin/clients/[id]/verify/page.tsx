@@ -6,6 +6,8 @@ import { maskFinLast4 } from "@/lib/fin-protection";
 import { getClientIdentityColumns, toClientDisplayStatus } from "@/lib/client-verification";
 import { hasAdminPermission, requireAdminPermission } from "@/lib/admin-authorization";
 import { ensureCurrentVerificationAttempt, getVerificationHistory } from "@/lib/verification-operations";
+import ProtectedVerificationDocumentViewer from "@/components/admin/ProtectedVerificationDocumentViewer";
+import VerificationFinReveal from "@/components/admin/VerificationFinReveal";
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +64,14 @@ export default async function ClientVerificationReviewPage({
       : "not_started";
   const attempt = await ensureCurrentVerificationAttempt("client", client.user_id);
   const history = await getVerificationHistory("client", client.user_id);
+  const profileReviewStatus = String(client.verification_status || displayStatus || "pending");
+  const activeReviewStatus = String(attempt?.status || "pending") === "pending" || profileReviewStatus === "pending";
+  const canRevealFin = Boolean(
+    capabilities.canReview &&
+      attempt?.id &&
+      activeReviewStatus &&
+      ["pending", "rejected", "resubmission_requested"].includes(String(client.verification_status || "pending")),
+  );
 
   async function approveClient() {
     "use server";
@@ -103,7 +113,15 @@ export default async function ClientVerificationReviewPage({
         </div>
         <div className="flex justify-between gap-4">
           <span className="font-bold text-on-surface-variant">Masked FIN</span>
-          <span className="font-mono font-bold text-on-surface">{maskFinLast4(client.fin_last4) || "Not recorded"}</span>
+          <div className="max-w-sm text-right">
+            <VerificationFinReveal
+              accountType="client"
+              accountUserId={client.user_id}
+              attemptId={attempt?.id ? String(attempt.id) : null}
+              maskedFin={maskFinLast4(client.fin_last4)}
+              canReveal={canRevealFin}
+            />
+          </div>
         </div>
         <div className="flex justify-between gap-4">
           <span className="font-bold text-on-surface-variant">Phone</span>
@@ -143,10 +161,10 @@ export default async function ClientVerificationReviewPage({
           <div className="border-b border-outline-variant px-4 py-3 text-xs font-black uppercase tracking-widest text-on-surface-variant">
             Secure identity-document viewer
           </div>
-          <iframe
-            src={`/api/clients/${client.user_id}/verification-document`}
+          <ProtectedVerificationDocumentViewer
+            documentUrl={`/api/clients/${client.user_id}/verification-document`}
             title="Protected client Fayda document"
-            className="h-[560px] w-full bg-white"
+            className="bg-black/50 p-4"
           />
         </section>
       ) : (

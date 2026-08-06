@@ -18,7 +18,12 @@ export default async function WorkersPage() {
       wp.user_id AS "userId",
       wp.full_name AS "fullName",
       wp.skills,
-      wp.fayda_doc_url AS "faydaDocUrl",
+      CASE
+        WHEN wp.fayda_doc_url IS NOT NULL
+         AND length(wp.fayda_doc_url) > 0
+        THEN true
+        ELSE false
+      END AS "hasDocument",
       wp.experience_years AS "experienceYears",
       wp.district,
       wp.bio,
@@ -46,7 +51,7 @@ export default async function WorkersPage() {
     verificationStatus: w.verificationStatus,
     isVerified: w.isVerified,
     isSuspended: w.isSuspended,
-    faydaDocUrl: w.faydaDocUrl,
+    hasDocument: w.hasDocument,
     createdAt: String(w.createdAt),
   }));
 

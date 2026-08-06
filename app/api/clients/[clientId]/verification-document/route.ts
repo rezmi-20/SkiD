@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { decodeClientIdentityDocument } from "@/lib/client-verification";
 import { getAdminPrincipal, hasAdminPermission } from "@/lib/admin-authorization";
@@ -7,21 +6,33 @@ import { recordVerificationDocumentView } from "@/lib/verification-operations";
 
 export const dynamic = "force-dynamic";
 
+const DOCUMENT_HEADERS = {
+  "Cache-Control": "private, no-store",
+  Pragma: "no-cache",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "no-referrer",
+  "Content-Security-Policy": "default-src 'none'; frame-ancestors 'self'",
+  "X-Frame-Options": "SAMEORIGIN",
+};
+
+function documentError(message: string, status: number) {
+  return NextResponse.json({ error: message }, { status, headers: DOCUMENT_HEADERS });
+}
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ clientId: string }> },
 ) {
-  const [session, admin] = await Promise.all([auth(), getAdminPrincipal()]);
-  if (!session?.user?.id && !admin) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = await getAdminPrincipal();
+  if (!admin) {
+    return documentError("Unauthorized", 401);
   }
 
   const { clientId } = await params;
-  const isOwner = session?.user?.id === clientId;
   const isAdmin = Boolean(admin && hasAdminPermission(admin, "verification.read"));
 
-  if (!isOwner && !isAdmin) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!isAdmin) {
+    return documentError("Forbidden", 403);
   }
 
   const rows = await sql`
@@ -34,7 +45,7 @@ export async function GET(
   const decoded = decodeClientIdentityDocument(documentRef);
 
   if (!decoded.ok) {
-    return NextResponse.json({ error: "Verification document not available" }, { status: 404 });
+    return documentError("Verification document not available", 404);
   }
 
   if (isAdmin && admin) {
@@ -45,10 +56,8 @@ export async function GET(
     status: 200,
     headers: {
       "Content-Type": decoded.mimeType,
-      "Cache-Control": "no-store, private",
+      ...DOCUMENT_HEADERS,
       "Content-Disposition": `inline; filename="client-verification-document.${decoded.mimeType === "application/pdf" ? "pdf" : "img"}"`,
-      "X-Content-Type-Options": "nosniff",
-      "Referrer-Policy": "no-referrer",
     },
   });
 }

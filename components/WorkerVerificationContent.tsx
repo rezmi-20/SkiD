@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useState } from "react";
+import ProtectedVerificationDocumentViewer from "@/components/admin/ProtectedVerificationDocumentViewer";
+import VerificationFinReveal from "@/components/admin/VerificationFinReveal";
 import { toWorkerDisplayStatus } from "@/lib/worker-verification";
 
 interface WorkerVerificationContentProps {
@@ -64,6 +66,14 @@ export default function WorkerVerificationContent({
 }: WorkerVerificationContentProps) {
   const [rejectReason, setRejectReason] = useState("");
   const displayStatus = toWorkerDisplayStatus(worker.verification_status, worker.is_verified, worker.is_suspended);
+  const profileReviewStatus = String(worker.verification_status || displayStatus || "pending");
+  const activeReviewStatus = attempt?.status === "pending" || profileReviewStatus === "pending";
+  const canRevealFin = Boolean(
+    capabilities.canReview &&
+      attempt?.id &&
+      activeReviewStatus &&
+      ["pending", "rejected", "resubmission_requested"].includes(String(worker.verification_status || "pending")),
+  );
   const requireReason = (action: (reason: string) => void) => {
     const reason = rejectReason.trim();
     if (!reason) {
@@ -124,7 +134,6 @@ export default function WorkerVerificationContent({
                 { label: "Legal Name", value: worker.full_name },
                 { label: "Email Index", value: worker.email },
                 { label: "Phone Node", value: `+251 ${worker.phone}` },
-                { label: "Fayda FIN", value: worker.masked_fin || "Not recorded" },
                 { label: "District", value: worker.district || "Unspecified" },
                 { label: "Reviewer", value: worker.reviewer_email || "Not recorded" },
                 { label: "Decision Time", value: worker.verified_at ? new Date(worker.verified_at).toLocaleString() : "Not recorded" },
@@ -135,6 +144,13 @@ export default function WorkerVerificationContent({
                   <p className="font-bold text-on-surface leading-tight break-all">{item.value}</p>
                 </div>
               ))}
+              <VerificationFinReveal
+                accountType="worker"
+                accountUserId={worker.user_id}
+                attemptId={attempt?.id ?? null}
+                maskedFin={worker.masked_fin}
+                canReveal={canRevealFin}
+              />
              </div>
           </section>
 
@@ -206,10 +222,10 @@ export default function WorkerVerificationContent({
              <div className="p-10 bg-black/50 flex items-center justify-center min-h-[500px] relative group">
                 <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none z-10" />
                 {worker.fayda_doc_url ? (
-                  <iframe
-                    src={`/api/workers/${worker.user_id}/verification-document`}
+                  <ProtectedVerificationDocumentViewer
+                    documentUrl={`/api/workers/${worker.user_id}/verification-document`}
                     title="Protected Fayda ID document"
-                    className="relative z-0 h-[520px] w-full rounded-2xl border border-white/5 bg-white shadow-2xl"
+                    className="relative z-0 w-full"
                   />
                 ) : (
                   <div className="flex flex-col items-center gap-6 text-on-surface-variant opacity-20">
