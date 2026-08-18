@@ -31,7 +31,7 @@ check("active admin redirected away from activation page", proxy.includes('pathn
 check("layout renders activation page without admin shell", layout.includes("getActivationRequiredAdminPrincipal") && layout.includes("{children}"));
 check("activation action requires activation-required admin", actions.includes("requireActivationRequiredAdmin()"));
 check("activation form has no username field", !activationForm.includes('name="username"') && !activationForm.includes("adminUsername"));
-check("activation form shows read-only employee identity", activationForm.includes("Employee ID") && activationForm.includes("Work email") && activationForm.includes("Department"));
+check("activation form shows read-only employee identity", activationForm.includes("admin.common.employeeId") && activationForm.includes("admin.common.workEmail") && activationForm.includes("admin.common.department"));
 check("weak and mismatched password denied", actions.includes("validateStrongAdminPassword") && actions.includes("Password confirmation does not match"));
 check("expired temporary credential denied", actions.includes("temp_credential_expires_at") && actions.includes("Temporary credential has expired"));
 check("same temporary password denied", actions.includes("different from the temporary password") && actions.includes("verifyBetterAuthPassword"));

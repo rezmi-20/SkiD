@@ -15,6 +15,8 @@ import {
   Briefcase,
   Wallet,
   Users,
+  Scale,
+  LifeBuoy,
 } from "lucide-react";
 
 interface NavItem {
@@ -29,6 +31,8 @@ const CLIENT_NAV: NavItem[] = [
   { key: "nav.discover", label: "Discover", href: "/client/search", icon: <Search size={20} /> },
   { key: "nav.contracts", label: "Contracts", href: "/client/contracts", icon: <FileText size={20} /> },
   { key: "nav.payments", label: "Payments", href: "/client/payments", icon: <CreditCard size={20} /> },
+  { key: "nav.disputes", label: "Disputes", href: "/client/disputes", icon: <Scale size={20} /> },
+  { key: "nav.support", label: "Support", href: "/client/support", icon: <LifeBuoy size={20} /> },
   { key: "nav.chat", label: "Chat", href: "/client/messages", icon: <MessageSquare size={20} /> },
   { key: "nav.feed", label: "Community", href: "/client/community", icon: <Users size={20} /> },
   { key: "nav.profile", label: "Profile", href: "/client/profile", icon: <User size={20} /> },
@@ -39,6 +43,8 @@ const WORKER_NAV: NavItem[] = [
   { key: "nav.mygigs", label: "Gigs", href: "/worker/gigs", icon: <Briefcase size={20} /> },
   { key: "nav.contracts", label: "Contracts", href: "/worker/contracts", icon: <FileText size={20} /> },
   { key: "nav.earnings", label: "Earnings", href: "/worker/earnings", icon: <Wallet size={20} /> },
+  { key: "nav.disputes", label: "Disputes", href: "/worker/disputes", icon: <Scale size={20} /> },
+  { key: "nav.support", label: "Support", href: "/worker/support", icon: <LifeBuoy size={20} /> },
   { key: "nav.chat", label: "Chat", href: "/worker/messages", icon: <MessageSquare size={20} /> },
   { key: "nav.feed", label: "Community", href: "/worker/community", icon: <Users size={20} /> },
   { key: "nav.profile", label: "Profile", href: "/worker/profile", icon: <User size={20} /> },

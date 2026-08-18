@@ -147,7 +147,7 @@ export function ContractsOversightClient({ initialContracts }: Props) {
                       </div>
                     </td>
                     <td className="px-5 py-4 text-on-surface-variant font-semibold">
-                      {c.signedAt ? formatDate(c.signedAt) : <span className="italic text-xs opacity-40">Unfinished</span>}
+                      {c.signedAt ? formatDate(c.signedAt) : <span className="italic text-xs opacity-40">{t("common.unfinished")}</span>}
                     </td>
                     <td className="px-5 py-4 text-right">
                       {c.pdfUrl ? (
@@ -157,7 +157,7 @@ export function ContractsOversightClient({ initialContracts }: Props) {
                           className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-outline-variant bg-surface-container text-on-surface hover:bg-blue-500 hover:text-white hover:border-blue-500 px-3.5 text-xs font-bold transition-all active:scale-95 shadow-sm duration-200"
                         >
                           <Download className="w-3.5 h-3.5" />
-                          <span>PDF</span>
+                      <span>{t("common.pdf")}</span>
                         </Link>
                       ) : (
                         <span className="text-xs text-on-surface-variant/40">—</span>

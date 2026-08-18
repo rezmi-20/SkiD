@@ -203,6 +203,8 @@ export async function setSuspendedStatus(userId: string, isSuspended: boolean) {
     });
 
     revalidatePath("/admin/users");
+    revalidatePath("/admin/clients");
+    revalidatePath(`/admin/clients/${userId}/verify`);
     revalidatePath("/admin/workers");
     revalidatePath("/admin/verify");
     revalidatePath("/admin/dashboard");
@@ -364,7 +366,8 @@ export async function deleteUser(userId: string) {
         (SELECT COUNT(*)::int FROM ratings WHERE rater_id = ${userId} OR rated_id = ${userId}) AS ratings,
         (SELECT COUNT(*)::int FROM conversations WHERE client_id = ${userId} OR worker_id = ${userId}) AS conversations,
         (SELECT COUNT(*)::int FROM messages WHERE sender_id = ${userId}) AS messages,
-        (SELECT COUNT(*)::int FROM disputes WHERE client_id = ${userId} OR worker_id = ${userId}) AS disputes
+        (SELECT COUNT(*)::int FROM disputes WHERE client_id = ${userId} OR worker_id = ${userId}) AS disputes,
+        (SELECT COUNT(*)::int FROM audit_logs WHERE user_id = ${userId}) AS audit_history
     `;
     const blockers = blockerRows[0] || {};
     const blockingLabels = Object.entries(blockers)
@@ -388,7 +391,6 @@ export async function deleteUser(userId: string) {
       sql`DELETE FROM community_posts WHERE user_id = ${userId}`,
       sql`DELETE FROM saved_workers WHERE client_id = ${userId} OR worker_id = ${userId}`,
       sql`UPDATE disputes SET admin_id = NULL WHERE admin_id = ${userId}`,
-      sql`UPDATE audit_logs SET user_id = NULL WHERE user_id = ${userId}`,
       sql`DELETE FROM users WHERE id = ${userId}`,
     ]);
 

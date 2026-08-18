@@ -45,10 +45,10 @@ export default function SearchFilters({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <SlidersHorizontal size={14} className="text-primary" />
-            <h3 className="font-bold text-xs uppercase tracking-widest text-muted-foreground">Refine Search</h3>
+            <h3 className="font-bold text-xs uppercase tracking-widest text-muted-foreground">{t("search.refine")}</h3>
           </div>
           <Badge variant="outline" className="rounded-full text-[9px] font-bold border-border bg-muted/50 px-2 py-0.5">
-            {resultsCount} Found
+            {resultsCount} {t("search.found")}
           </Badge>
         </div>
 
@@ -63,7 +63,7 @@ export default function SearchFilters({
             className="flex-1 flex items-center justify-center gap-1.5 rounded-lg text-xs font-bold"
           >
             <List size={13} />
-            List
+            {t("search.view.list")}
           </Button>
           <Button 
             onClick={() => setViewMode("map")}
@@ -72,14 +72,14 @@ export default function SearchFilters({
             className="flex-1 flex items-center justify-center gap-1.5 rounded-lg text-xs font-bold"
           >
             <Map size={13} />
-            Map
+            {t("search.view.map")}
           </Button>
         </div>
 
         {/* Category Details Block style */}
         <div className="space-y-3">
           <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">
-            <span className="flex items-center gap-1.5"><Layers size={12} /> Service Category</span>
+            <span className="flex items-center gap-1.5"><Layers size={12} /> {t("search.serviceCategory")}</span>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {CATEGORIES.map((cat) => {
@@ -92,7 +92,7 @@ export default function SearchFilters({
                   size="xs"
                   className="rounded-lg text-[9px] uppercase font-bold tracking-wider px-2.5 h-7"
                 >
-                  {cat}
+                  {cat === "All" ? t("categories.all") : cat === "Electrician" ? t("categories.electrician") : cat === "Plumber" ? t("categories.plumber") : cat === "Painter" ? t("categories.painter") : cat === "Satellite Dish" ? t("categories.satellite_dish") : t("categories.house_finishing")}
                 </Button>
               );
             })}
@@ -104,7 +104,7 @@ export default function SearchFilters({
         {/* Details Slider: Rating */}
         <div className="space-y-3">
           <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">
-            <span className="flex items-center gap-1.5"><Star size={12} /> Min Rating</span>
+            <span className="flex items-center gap-1.5"><Star size={12} /> {t("search.minRating")}</span>
             <Badge variant="outline" className="flex items-center gap-0.5 border-primary/20 bg-primary/10 text-primary py-0 px-2 rounded font-bold text-[9px]">
               <span>{(filters.minRating || 3.0).toFixed(1)}</span>
             </Badge>
@@ -128,7 +128,7 @@ export default function SearchFilters({
         {/* Details Slider: Distance */}
         <div className="space-y-3">
           <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">
-            <span className="flex items-center gap-1.5"><Compass size={12} /> Max Distance</span>
+            <span className="flex items-center gap-1.5"><Compass size={12} /> {t("search.maxDistance")}</span>
             <Badge variant="outline" className="flex items-center gap-0.5 border-border bg-muted py-0 px-2 rounded font-bold text-[9px]">
               <span>{filters.maxDistance}km</span>
             </Badge>
@@ -157,7 +157,7 @@ export default function SearchFilters({
           className="w-full rounded-xl text-[10px] font-bold uppercase tracking-wider h-10 border-border"
         >
           <RotateCcw size={12} className="mr-1.5" />
-          Reset Filters
+          {t("search.resetFilters")}
         </Button>
       </CardContent>
     </Card>

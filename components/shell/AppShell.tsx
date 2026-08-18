@@ -38,7 +38,7 @@ export default function AppShell({
   contractSetupHref,
 }: AppShellProps) {
   const { theme, setTheme } = useTheme();
-  const { language, setLanguage } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const [mounted, setMounted] = useState(false);
   // Sidebar collapse state lives HERE so content area can react with matching margin
   const [collapsed, setCollapsed] = useState(true);
@@ -130,6 +130,17 @@ export default function AppShell({
                 >
                   አማ
                 </button>
+                <button
+                  onClick={() => setLanguage("om")}
+                  className={cn(
+                    "px-3 py-1 rounded-full text-[11px] font-semibold transition-all",
+                    language === "om"
+                      ? "bg-foreground text-background shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  OM
+                </button>
               </div>
 
               {/* Notification bell */}
@@ -141,7 +152,7 @@ export default function AppShell({
                 size="icon"
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                 className="rounded-full text-muted-foreground hover:text-foreground"
-                title="Toggle Theme"
+                title={t("common.toggleTheme")}
               >
                 {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
               </Button>

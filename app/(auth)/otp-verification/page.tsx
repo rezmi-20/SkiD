@@ -4,8 +4,10 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import DireSkillLogo from "@/components/shell/DireSkillLogo";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function OTPVerificationPage() {
+  const { t } = useLanguage();
   const [digits, setDigits] = useState(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -77,13 +79,13 @@ export default function OTPVerificationPage() {
       });
 
       if (verifyError) {
-        setError(verifyError.message || "Invalid code. Please try again.");
+        setError(verifyError.message || t("auth.otp.invalid"));
       } else {
         router.push("/login?verified=true");
       }
     } catch (err: any) {
       console.error("Verification Error:", err);
-      setError(err.message || "An unexpected error occurred. Please try again.");
+      setError(err.message || t("auth.otp.unexpected"));
     } finally {
       setIsLoading(false);
     }
@@ -137,10 +139,10 @@ export default function OTPVerificationPage() {
             </svg>
           </div>
           <h2 className="text-4xl font-bold tracking-tight text-white mb-4 leading-tight">
-            Check Your <br /><span className="text-green-400">Inbox</span>
+            {t("auth.otp.marketingTitle")}
           </h2>
           <p className="text-zinc-400 text-lg max-w-sm mx-auto leading-relaxed">
-            We've sent a 6-digit verification code to your email address.
+            {t("auth.otp.marketingDesc")}
           </p>
         </div>
       </div>
@@ -166,9 +168,9 @@ export default function OTPVerificationPage() {
 
           {/* Heading */}
           <div className="text-center mb-8 space-y-2">
-            <h1 className="text-[28px] font-bold tracking-tight text-white">Verify Your Email</h1>
+            <h1 className="text-[28px] font-bold tracking-tight text-white">{t("auth.otp.title")}</h1>
             <p className="text-zinc-500 text-[15px] font-medium">
-              Enter the 6-digit code sent to your email address.
+              {t("auth.otp.subtitle")}
             </p>
           </div>
 
@@ -187,7 +189,7 @@ export default function OTPVerificationPage() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
-              A new code has been sent to your email.
+              {t("auth.otp.resent")}
             </div>
           )}
 
@@ -223,7 +225,7 @@ export default function OTPVerificationPage() {
                 <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
               ) : (
                 <>
-                  Verify & Continue
+                  {t("auth.otp.submit")}
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                   </svg>
@@ -238,11 +240,11 @@ export default function OTPVerificationPage() {
               onClick={handleResend}
               className="text-[13px] font-bold text-zinc-500 hover:text-green-400 transition-colors"
             >
-              Didn't receive a code?{" "}
-              <span className="text-green-400 font-bold">Resend</span>
+              {t("auth.otp.resendPrompt")}{" "}
+              <span className="text-green-400 font-bold">{t("auth.otp.resend")}</span>
             </button>
             <Link href="/login" className="text-[13px] font-medium text-zinc-600 hover:text-zinc-400 transition-colors">
-              ← Back to Sign In
+              ← {t("auth.otp.back")}
             </Link>
           </div>
         </div>

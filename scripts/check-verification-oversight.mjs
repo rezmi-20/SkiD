@@ -39,6 +39,7 @@ const userSupportBlock = roleBlock("user_support_admin");
 check("super admin has verification.read", adminAuth.includes("super_admin") && adminAuth.includes('"verification.read"'));
 check("super admin lacks verification.review", !superAdminBlock.includes('"verification.review"'));
 check("super admin lacks verification.approve", !superAdminBlock.includes('"verification.approve"'));
+check("super admin lacks verification.revoke", !superAdminBlock.includes('"verification.revoke"'));
 check("worker case opens with verification.read", workerPage.includes('requireAdminPermission("verification.read")'));
 check("client case opens with verification.read", clientPage.includes('requireAdminPermission("verification.read")'));
 check("worker case derives review capability separately", workerPage.includes('hasAdminPermission(admin, "verification.review")'));
@@ -50,12 +51,13 @@ check("worker controls hidden without capabilities", workerContent.includes("cap
 check("client controls hidden without capabilities", clientPage.includes("capabilities.canApprove") && clientPage.includes("capabilities.canReject"));
 check("verification list labels view details for read-only", tabs.includes('canReview ? t("admin.verification.review") : t("admin.verification.viewDetails")'));
 check("dashboard pending list labels view details for read-only", pending.includes('canReview ? t("admin.action.review" as any) : t("admin.dashboard.viewDetails" as any)'));
-check("workers table labels view details for read-only", workersManagement.includes('verificationCapabilities.canReview ? t("admin.action.review" as any) : "View details"'));
+check("workers table uses status-aware detail labels", workersManagement.includes("actionLabel") && workersManagement.includes("admin.verification.viewDetails"));
 check("approve server action requires exact permission", adminActions.includes('status === "approved"') && adminActions.includes('"verification.approve"'));
 check("reject server action requires exact permission", adminActions.includes('status === "rejected"') && adminActions.includes('"verification.reject"'));
 check("request resubmission server action requires exact permission", adminActions.includes('status === "pending"') && adminActions.includes('"verification.request_resubmission"'));
-check("worker verification API requires exact permission", workerApi.includes("requireAdminPermission") && workerApi.includes("verification.approve") && workerApi.includes("verification.reject"));
-check("client verification API requires exact permission", clientApi.includes("requireAdminPermission") && clientApi.includes("verification.approve") && clientApi.includes("verification.reject"));
+check("revoke server action requires exact permission", adminActions.includes('status === "revoked"') && adminActions.includes('"verification.revoke"'));
+check("worker verification API requires exact permission", workerApi.includes("requireAdminPermission") && workerApi.includes("verification.approve") && workerApi.includes("verification.reject") && workerApi.includes("verification.revoke"));
+check("client verification API requires exact permission", clientApi.includes("requireAdminPermission") && clientApi.includes("verification.approve") && clientApi.includes("verification.reject") && clientApi.includes("verification.revoke"));
 check("unrelated admin roles have no verification.read", !disputePaymentBlock.includes('"verification.read"') && !userSupportBlock.includes('"verification.read"'));
 
 process.exit(failed ? 1 : 0);

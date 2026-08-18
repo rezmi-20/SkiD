@@ -93,15 +93,15 @@ export default function SearchPage() {
             <Badge variant="secondary" className="flex items-center gap-1.5 bg-primary/10 text-primary border-none hover:bg-primary/15 py-0.5 px-2.5 rounded-full font-bold">
               <span className={`w-1.5 h-1.5 rounded-full ${location ? 'bg-primary animate-pulse' : 'bg-destructive animate-pulse'}`} />
               <span className="text-[10px] uppercase tracking-wider">
-                {locLoading ? "Locating..." : location ? `Nearby Kezira, DD` : "Location Required"}
+                {locLoading ? t("search.locating") : location ? t("search.nearbyKezira") : t("search.locationRequired")}
               </span>
             </Badge>
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight">
-            Discover Professionals
+            {t("search.discoverTitle")}
           </h1>
           <p className="text-sm text-muted-foreground max-w-xl">
-            Find and hire verified service experts in your local district.
+            {t("search.discoverDesc")}
           </p>
         </div>
 
@@ -114,7 +114,7 @@ export default function SearchPage() {
             className="flex items-center gap-1.5 rounded-lg text-xs font-bold"
           >
             <List size={14} />
-            List
+            {t("search.view.list")}
           </Button>
           <Button 
             onClick={() => setViewMode("map")}
@@ -123,7 +123,7 @@ export default function SearchPage() {
             className="flex items-center gap-1.5 rounded-lg text-xs font-bold"
           >
             <Map size={14} />
-            Map
+            {t("search.view.map")}
           </Button>
         </div>
       </section>
@@ -149,7 +149,7 @@ export default function SearchPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
             <Input 
               type="text"
-              placeholder="Search by name, skill, or service..."
+              placeholder={t("search.placeholderDetailed")}
               value={filters.query}
               onChange={(e) => setFilters({ ...filters, query: e.target.value })}
               className="w-full pl-10 h-11 bg-card border-border rounded-xl"
@@ -186,9 +186,9 @@ export default function SearchPage() {
                           <SearchX size={22} />
                         </div>
                         <div className="max-w-xs mx-auto space-y-1">
-                          <p className="font-semibold text-sm">No results found</p>
+                          <p className="font-semibold text-sm">{t("search.noResultsTitle")}</p>
                           <p className="text-xs text-muted-foreground">
-                            Try adjusting your filters or searching for something else.
+                            {t("search.noResultsDesc")}
                           </p>
                         </div>
                       </CardContent>

@@ -7,9 +7,9 @@ import { usePathname } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import DireSkillLogo from "@/components/shell/DireSkillLogo";
 import {
-  LayoutDashboard, Users, ShieldCheck, Briefcase,
+  LayoutDashboard, Users, ShieldCheck, Briefcase, UserRound,
   FileText, DollarSign, Scale, Megaphone,
-  BarChart2, Settings, ChevronLeft, ChevronRight, LogOut, Crown, LifeBuoy, ClipboardList, UserCircle,
+  BarChart2, Gavel, ChevronLeft, ChevronRight, LogOut, Crown, LifeBuoy, ClipboardList, UserCircle, AlertTriangle,
 } from "lucide-react";
 import type { AdminPermission, AdminRole } from "@/lib/admin-authorization";
 
@@ -54,15 +54,17 @@ export function Sidebar({ userEmail, adminRole, permissions }: SidebarProps) {
     { href: "/admin/profile", icon: <UserCircle className="w-5 h-5" />, label: "Profile", visible: true },
     { href: "/admin/verify", icon: <ShieldCheck className="w-5 h-5" />, label: "Verification", visible: can("verification.read") },
     { href: "/admin/workers", icon: <Users className="w-5 h-5" />, label: t("admin.workers" as any), visible: can("verification.read") },
+    { href: "/admin/clients", icon: <UserRound className="w-5 h-5" />, label: t("admin.clients" as any), visible: can("verification.read") },
     { href: "/admin/community", icon: <Megaphone className="w-5 h-5" />, label: "Content", visible: can("content.read") },
     { href: "/admin/disputes", icon: <Scale className="w-5 h-5" />, label: "Disputes", visible: can("disputes.read") },
     { href: "/admin/payments", icon: <DollarSign className="w-5 h-5" />, label: "Payment Cases", visible: can("payment_cases.read") },
-    { href: "/admin/settings#support-tickets", icon: <LifeBuoy className="w-5 h-5" />, label: "Support Tickets", visible: can("support.read") },
+    { href: "/admin/support", icon: <LifeBuoy className="w-5 h-5" />, label: "Support Tickets", visible: can("support.read") },
     { href: "/admin/reports", icon: <BarChart2 className="w-5 h-5" />, label: t("admin.reports" as any), visible: can("reports.read") },
     { href: "/admin/jobs", icon: <Briefcase className="w-5 h-5" />, label: t("admin.jobs" as any), visible: can("reports.read") },
     { href: "/admin/contracts", icon: <FileText className="w-5 h-5" />, label: t("admin.contracts" as any), visible: can("reports.read") },
-    { href: "/admin/settings#audit-logs", icon: <ClipboardList className="w-5 h-5" />, label: "Audit Logs", visible: can("audit.read"), superOnly: true },
-    { href: "/admin/settings#appeals", icon: <Settings className="w-5 h-5" />, label: "Appeals", visible: can("appeals.read"), superOnly: true },
+    { href: "/admin/audit", icon: <ClipboardList className="w-5 h-5" />, label: "Audit Logs", visible: can("audit.read"), superOnly: true },
+    { href: "/admin/appeals", icon: <Gavel className="w-5 h-5" />, label: "Appeals", visible: can("appeals.read"), superOnly: true },
+    { href: "/admin/misconduct", icon: <AlertTriangle className="w-5 h-5" />, label: "Admin Conduct", visible: can("admin_misconduct.review"), superOnly: true },
     { href: "/admin/users", icon: <Crown className="w-5 h-5" />, label: t("admin.users" as any), visible: can("admin_accounts.read"), superOnly: true },
   ] as const;
 

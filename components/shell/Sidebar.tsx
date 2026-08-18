@@ -13,10 +13,12 @@ import {
   FileText,
   CreditCard,
   MessageSquare,
+  Scale,
   User,
   Users,
   Briefcase,
   Wallet,
+  LifeBuoy,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -56,6 +58,8 @@ const CLIENT_GROUPS: NavGroup[] = [
     items: [
       { key: "nav.contracts", label: "Contracts", href: "/client/contracts", icon: <FileText size={18} /> },
       { key: "nav.payments", label: "Payments", href: "/client/payments", icon: <CreditCard size={18} /> },
+      { key: "nav.disputes", label: "Disputes", href: "/client/disputes", icon: <Scale size={18} /> },
+      { key: "nav.support", label: "Support", href: "/client/support", icon: <LifeBuoy size={18} /> },
       { key: "nav.chat", label: "Messages", href: "/client/messages", icon: <MessageSquare size={18} /> },
       { key: "nav.feed", label: "Community", href: "/client/community", icon: <Users size={18} /> },
     ],
@@ -81,6 +85,8 @@ const WORKER_GROUPS: NavGroup[] = [
     items: [
       { key: "nav.contracts", label: "Contracts", href: "/worker/contracts", icon: <FileText size={18} /> },
       { key: "nav.earnings", label: "Earnings", href: "/worker/earnings", icon: <Wallet size={18} /> },
+      { key: "nav.disputes", label: "Disputes", href: "/worker/disputes", icon: <Scale size={18} /> },
+      { key: "nav.support", label: "Support", href: "/worker/support", icon: <LifeBuoy size={18} /> },
       { key: "nav.chat", label: "Messages", href: "/worker/messages", icon: <MessageSquare size={18} /> },
       { key: "nav.feed", label: "Community", href: "/worker/community", icon: <Users size={18} /> },
     ],
@@ -225,7 +231,7 @@ export default function Sidebar({ role, userEmail, collapsed, onToggle }: Sideba
                   <LogOut size={16} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="right">Sign Out</TooltipContent>
+            <TooltipContent side="right">{t("common.signout")}</TooltipContent>
             </Tooltip>
           ) : (
             <Button
@@ -258,7 +264,7 @@ export default function Sidebar({ role, userEmail, collapsed, onToggle }: Sideba
             ) : (
               <>
                 <ChevronLeft size={16} />
-                <span className="text-xs">Collapse</span>
+                <span className="text-xs">{t("common.collapse")}</span>
               </>
             )}
           </Button>

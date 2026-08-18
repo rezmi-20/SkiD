@@ -39,19 +39,32 @@ function cleanReason(value: unknown) {
   return typeof value === "string" ? value.trim().slice(0, 1000) : "";
 }
 
+function toAttemptStatus(status: string | null | undefined, fallback: "pending" | "not_started" = "pending") {
+  const normalized = status || fallback;
+  if (normalized === "not_started" || normalized === "incomplete") return "pending";
+  if (["pending", "approved", "rejected", "resubmission_requested", "suspended", "revoked"].includes(normalized)) {
+    return normalized;
+  }
+  return "pending";
+}
+
 function requiredPermissionForDecision(status: string): AdminPermission {
   if (status === "approved") return "verification.approve";
   if (status === "rejected") return "verification.reject";
   if (status === "resubmission_requested" || status === "pending") return "verification.request_resubmission";
+  if (status === "revoked") return "verification.revoke";
   return "verification.review";
 }
 
-function canActOnVerification(admin: Pick<AdminPrincipal, "role" | "status"> | null | undefined) {
+function canActOnVerification(admin: Pick<AdminPrincipal, "role" | "status"> | null | undefined, status?: string) {
   return (
     hasAdminPermission(admin, "verification.review") &&
-    hasAdminPermission(admin, "verification.approve") &&
-    hasAdminPermission(admin, "verification.reject") &&
-    hasAdminPermission(admin, "verification.request_resubmission")
+    (status === "approved" ? hasAdminPermission(admin, "verification.approve") : true) &&
+    (status === "rejected" ? hasAdminPermission(admin, "verification.reject") : true) &&
+    (status === "resubmission_requested" || status === "pending"
+      ? hasAdminPermission(admin, "verification.request_resubmission")
+      : true) &&
+    (status === "revoked" ? hasAdminPermission(admin, "verification.revoke") : true)
   );
 }
 
@@ -224,7 +237,7 @@ export async function ensureCurrentVerificationAttempt(accountType: Verification
       ${accountUserId},
       ${accountType},
       1,
-      ${snapshot.oldStatus === "not_started" ? "pending" : snapshot.oldStatus},
+      ${toAttemptStatus(snapshot.oldStatus)},
       ${snapshot.documentRef ? `${accountType}:${accountUserId}:profile-document` : null},
       ${documentFingerprint(snapshot.documentRef)},
       ${snapshot.finLast4},
@@ -240,22 +253,30 @@ export async function ensureCurrentVerificationAttempt(accountType: Verification
 
 export async function recordVerificationSubmission(accountType: VerificationAccountType, accountUserId: string, documentRef: string | null, finLast4: string | null) {
   const fingerprint = documentFingerprint(documentRef);
-  const rows = await sql`
-    WITH previous AS (
+  const documentReference = documentRef ? `${accountType}:${accountUserId}:attempt-document` : null;
+  const currentPending = await sql`
+    SELECT id
+    FROM verification_attempts
+    WHERE account_user_id = ${accountUserId}
+      AND account_type = ${accountType}
+      AND is_current = true
+      AND status = 'pending'
+    LIMIT 1
+  `;
+  if (currentPending.length > 0) return null;
+
+  const [, insertedRows] = await sql.transaction([
+    sql`SELECT pg_advisory_xact_lock(hashtext(${`${accountType}:${accountUserId}`}))`,
+    sql`
       UPDATE verification_attempts
       SET is_current = false
       WHERE account_user_id = ${accountUserId}
         AND account_type = ${accountType}
         AND is_current = true
-      RETURNING attempt_number
-    ),
-    next_number AS (
-      SELECT COALESCE(MAX(attempt_number), 0) + 1 AS n
-      FROM verification_attempts
-      WHERE account_user_id = ${accountUserId}
-        AND account_type = ${accountType}
-    ),
-    inserted AS (
+        AND status <> 'pending'
+      RETURNING attempt_number, status
+    `,
+    sql`
       INSERT INTO verification_attempts (
         account_user_id,
         account_type,
@@ -270,17 +291,28 @@ export async function recordVerificationSubmission(accountType: VerificationAcco
       SELECT
         ${accountUserId},
         ${accountType},
-        n,
+        COALESCE(MAX(attempt_number), 0) + 1,
         'pending',
-        ${documentRef ? `${accountType}:${accountUserId}:attempt-document` : null},
+        ${documentReference},
         ${fingerprint},
         ${finLast4},
         true,
         NOW()
-      FROM next_number
+      FROM verification_attempts
+      WHERE account_user_id = ${accountUserId}
+        AND account_type = ${accountType}
+      HAVING NOT EXISTS (
+        SELECT 1
+        FROM verification_attempts current_attempt
+        WHERE current_attempt.account_user_id = ${accountUserId}
+          AND current_attempt.account_type = ${accountType}
+          AND current_attempt.is_current = true
+          AND current_attempt.status = 'pending'
+      )
       RETURNING *
-    )
-    INSERT INTO verification_events (
+    `,
+    sql`
+      INSERT INTO verification_events (
       attempt_id,
       account_user_id,
       account_type,
@@ -291,18 +323,40 @@ export async function recordVerificationSubmission(accountType: VerificationAcco
       document_fingerprint
     )
     SELECT
-      id,
-      account_user_id,
-      account_type,
-      NULL,
-      status,
+      current_attempt.id,
+      current_attempt.account_user_id,
+      current_attempt.account_type,
+      (
+        SELECT previous_attempt.status
+        FROM verification_attempts previous_attempt
+        WHERE previous_attempt.account_user_id = ${accountUserId}
+          AND previous_attempt.account_type = ${accountType}
+          AND previous_attempt.is_current = false
+        ORDER BY previous_attempt.attempt_number DESC
+        LIMIT 1
+      ),
+      current_attempt.status,
       'submitted',
-      attempt_number,
-      document_fingerprint
-    FROM inserted
+      current_attempt.attempt_number,
+      current_attempt.document_fingerprint
+    FROM verification_attempts current_attempt
+    WHERE current_attempt.account_user_id = ${accountUserId}
+      AND current_attempt.account_type = ${accountType}
+      AND current_attempt.is_current = true
+      AND current_attempt.status = 'pending'
+      AND current_attempt.document_reference IS NOT DISTINCT FROM ${documentReference}
+      AND current_attempt.document_fingerprint IS NOT DISTINCT FROM ${fingerprint}
+      AND current_attempt.fin_last4 IS NOT DISTINCT FROM ${finLast4}
+      AND NOT EXISTS (
+        SELECT 1
+        FROM verification_events existing_event
+        WHERE existing_event.attempt_id = current_attempt.id
+          AND existing_event.action = 'submitted'
+      )
     RETURNING attempt_id
-  `;
-  return rows[0] ?? null;
+    `,
+  ]);
+  return insertedRows?.[0] ?? null;
 }
 
 export async function getVerificationHistory(accountType: VerificationAccountType, accountUserId: string) {
@@ -462,7 +516,7 @@ export async function decideVerificationCase(
   expectedAttemptId?: string | null,
 ) {
   const admin = await requireAdminPermission(requiredPermissionForDecision(nextStatus));
-  if (!canActOnVerification(admin)) {
+  if (!canActOnVerification(admin, nextStatus)) {
     return { success: false, status: 403, error: "Only content and verification administrators may make verification decisions." };
   }
   if (admin.id === accountUserId) {
@@ -476,8 +530,11 @@ export async function decideVerificationCase(
 
   const snapshot = await getProfileSnapshot(accountType, accountUserId);
   if (!snapshot) return { success: false, status: 404, error: `${accountType === "worker" ? "Worker" : "Client"} not found.` };
-  if (snapshot.isSuspended || snapshot.oldStatus === "suspended" || snapshot.oldStatus === "revoked") {
+  if (snapshot.isSuspended || snapshot.oldStatus === "suspended" || (snapshot.oldStatus === "revoked" && nextStatus !== "revoked")) {
     return { success: false, status: 409, error: "Suspended or revoked verification cases cannot be overwritten here." };
+  }
+  if (nextStatus === "revoked" && snapshot.oldStatus !== "approved") {
+    return { success: false, status: 409, error: "Only currently approved verification cases can be revoked." };
   }
 
   const attempt = await ensureCurrentVerificationAttempt(accountType, accountUserId);
@@ -503,10 +560,13 @@ export async function decideVerificationCase(
       return { success: false, status: 409, error: "This verification attempt is stale. Reload the case and try again." };
     }
   }
-  if (attempt.status !== "pending") {
+  if (nextStatus !== "revoked" && attempt.status !== "pending") {
     return { success: false, status: 409, error: "This verification attempt has already been decided." };
   }
-  if (!["pending", "rejected", "resubmission_requested"].includes(snapshot.oldStatus)) {
+  if (nextStatus === "revoked" && attempt.status !== "approved") {
+    return { success: false, status: 409, error: "Only an approved current attempt can be revoked." };
+  }
+  if (nextStatus !== "revoked" && !["pending", "rejected", "resubmission_requested"].includes(snapshot.oldStatus)) {
     return { success: false, status: 409, error: "This verification case is not pending review." };
   }
   if (nextStatus === "approved" && (!snapshot.finLast4 || !snapshot.finEncrypted || !snapshot.documentRef)) {
@@ -518,13 +578,13 @@ export async function decideVerificationCase(
   const updateRows = await sql.query(
     `UPDATE ${profileTable}
      SET
-       is_verified = $1,
-       verification_status = $2,
-       verification_reason = $3,
-       verified_by = $4,
-       verified_at = CASE WHEN $1 THEN NOW() ELSE NULL END
-     WHERE user_id = $5
-       AND COALESCE(verification_status, CASE WHEN is_verified THEN 'approved' ELSE 'pending' END) = $6
+       is_verified = $1::boolean,
+       verification_status = $2::varchar,
+       verification_reason = $3::text,
+       verified_by = CASE WHEN $1::boolean THEN $4::uuid ELSE verified_by END,
+       verified_at = CASE WHEN $1::boolean THEN NOW() WHEN $2::varchar = 'revoked' THEN verified_at ELSE NULL END
+     WHERE user_id = $5::uuid
+       AND COALESCE(verification_status, CASE WHEN is_verified THEN 'approved' ELSE 'pending' END) = $6::varchar
      RETURNING user_id`,
     [isApproved, nextStatus, isApproved ? null : normalizedReason, null, accountUserId, snapshot.oldStatus],
   );
@@ -538,7 +598,7 @@ export async function decideVerificationCase(
         decided_at = NOW(),
         decided_by = ${admin.id}
     WHERE id = ${attempt.id}
-      AND status = 'pending'
+      AND status = ${nextStatus === "revoked" ? "approved" : "pending"}
       AND is_current = true
     RETURNING id
   `;
@@ -588,6 +648,8 @@ export async function decideVerificationCase(
         reason: isApproved ? null : normalizedReason,
         attemptId: attempt.id,
         attemptNumber: Number(attempt.attempt_number || attempt.attemptNumber || 1),
+        reviewerEmployeeId: admin.employeeId ?? null,
+        reviewerRole: admin.role,
         timestamp: new Date().toISOString(),
       })}
     )
@@ -601,7 +663,9 @@ export async function decideVerificationCase(
         ? "Verification Approved"
         : nextStatus === "rejected"
           ? "Verification Rejected"
-          : "Verification Needs More Information",
+          : nextStatus === "revoked"
+            ? "Verification Revoked"
+            : "Verification Needs More Information",
       body: isApproved
         ? accountType === "worker"
           ? "Your Fayda verification was approved. You can now receive hiring requests."

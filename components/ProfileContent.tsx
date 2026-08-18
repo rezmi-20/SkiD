@@ -75,6 +75,18 @@ export default function ProfileContent({ user, stats, menuGroups, skills }: Prof
   if (!mounted) return null;
   const identityVerified = Boolean(user.is_verified && user.maskedFin);
   const verificationHref = user.role === "worker" ? "/worker/pending-verification" : "/client/profile/settings?verify=1&returnTo=/client/profile";
+  const verificationLabel = (() => {
+    if (identityVerified) return t("profile.verified");
+    switch (user.verificationStatus) {
+      case "pending": return t("verification.status.pending");
+      case "approved": return t("verification.status.approved");
+      case "rejected": return t("verification.status.rejected");
+      case "resubmission_requested": return t("verification.status.resubmission_requested");
+      case "suspended": return t("verification.status.suspended");
+      case "revoked": return t("verification.status.revoked");
+      default: return t("profile.incomplete");
+    }
+  })();
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-5xl mx-auto pb-24">
@@ -115,16 +127,16 @@ export default function ProfileContent({ user, stats, menuGroups, skills }: Prof
 
           <div className="flex flex-wrap gap-2 justify-center">
             <Badge variant="outline" className="px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-card border-border">
-              {user.role === "worker" ? "Verified Provider" : "Client Account"}
+              {user.role === "worker" ? t("profile.verifiedProvider") : t("profile.clientAccount")}
             </Badge>
             {user.role === "worker" && (
               <Badge variant="outline" className="px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                Fayda Active
+                {t("profile.faydaActive")}
               </Badge>
             )}
             {user.role === "client" && !identityVerified && (
               <Badge variant="outline" className="px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-600 border-amber-500/20">
-                Fayda Pending
+                {t("profile.faydaPending")}
               </Badge>
             )}
           </div>
@@ -144,7 +156,7 @@ export default function ProfileContent({ user, stats, menuGroups, skills }: Prof
       {/* ── SKILLS ROW (Worker Only) ── */}
       {skills && skills.length > 0 && (
         <div className="space-y-3 max-w-3xl mx-auto">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-center">Professional Skills</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-center">{t("profile.professionalSkills")}</p>
           <div className="flex flex-wrap gap-2 justify-center">
             {skills.map((skill, i) => (
               <Badge key={i} variant="secondary" className="px-3.5 py-1.5 text-xs rounded-xl font-semibold bg-indigo-500/10 text-indigo-600 border-none">
@@ -161,23 +173,23 @@ export default function ProfileContent({ user, stats, menuGroups, skills }: Prof
         {/* Card 1: Personal Details */}
         <div className="space-y-4">
           <div className="flex items-center justify-between pb-2 border-b border-border/80">
-            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-foreground">Personal details</h2>
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-foreground">{t("profile.personalDetails")}</h2>
             <Link href={user.role === "worker" ? "/worker/profile/settings" : "/client/profile/settings"}>
               <Button variant="ghost" size="sm" className="h-7 text-xs text-primary rounded-lg gap-1 hover:bg-primary/5 px-2">
-                <Settings size={12} /> Edit
+                <Settings size={12} /> {t("profile.edit")}
               </Button>
             </Link>
           </div>
 
           <div className="space-y-1 text-sm">
             {[
-              { label: "Full name", value: user.name },
-              { label: "Date of Birth", value: user.dateOfBirth || "January 1, 1992" },
-              { label: "Gender", value: user.gender || "Male" },
-              { label: "Nationality", value: "Ethiopian" },
-              { label: "Address", value: user.district ? `${user.district}, Dire Dawa` : "Dire Dawa, Ethiopia" },
-              { label: "Phone Number", value: user.phone || "+251 912 345 678" },
-              { label: "Email", value: user.email },
+              { label: t("profile.fullName"), value: user.name },
+              { label: t("profile.dateOfBirth"), value: user.dateOfBirth || t("profile.defaultDob") },
+              { label: t("profile.gender"), value: user.gender || t("profile.genderMale") },
+              { label: t("profile.nationality"), value: t("profile.nationalityEthiopian") },
+              { label: t("profile.address"), value: user.district ? `${user.district}, Dire Dawa` : t("profile.defaultAddress") },
+              { label: t("profile.phoneNumber"), value: user.phone || t("profile.defaultPhone") },
+              { label: t("checkout.email"), value: user.email },
             ].map((row, i) => (
               <div key={i} className="flex justify-between items-center py-2.5 border-b border-border/40 last:border-0">
                 <span className="text-muted-foreground font-medium">{row.label}</span>
@@ -190,20 +202,20 @@ export default function ProfileContent({ user, stats, menuGroups, skills }: Prof
         {/* Card 2: Account Details */}
         <div className="space-y-4">
           <div className="flex items-center justify-between pb-2 border-b border-border/80">
-            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-foreground">Account Details</h2>
-            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[9px] uppercase tracking-wider rounded-full px-2 py-0">Active</Badge>
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-foreground">{t("profile.accountDetails")}</h2>
+            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[9px] uppercase tracking-wider rounded-full px-2 py-0">{t("profile.active")}</Badge>
           </div>
 
           <div className="space-y-1 text-sm">
             {[
-              { label: "Display Name", value: user.name.toLowerCase().replace(/\s+/g, "_") + "_ds" },
-              { label: "Account Created", value: "March 20, 2026" },
-              { label: "Last Login", value: new Date().toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) },
-              { label: "Membership Status", value: "Premium Member" },
-              { label: "Account Verification", value: identityVerified ? "Verified" : (user.verificationStatus || "Incomplete"), isBadge: true },
-              { label: "Fayda FIN", value: user.maskedFin || "Not recorded" },
-              { label: "Language Preference", value: language === "en" ? "English" : "Amharic" },
-              { label: "Time Zone", value: "GMT+3 (East Africa Time)" },
+              { label: t("profile.displayName"), value: user.name.toLowerCase().replace(/\s+/g, "_") + "_ds" },
+              { label: t("profile.accountCreated"), value: t("profile.accountCreatedDate") },
+              { label: t("profile.lastLogin"), value: new Date().toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) },
+              { label: t("profile.membershipStatus"), value: t("profile.premiumMember") },
+              { label: t("profile.accountVerification"), value: verificationLabel, isBadge: true },
+              { label: t("profile.faydaFin"), value: user.maskedFin || t("profile.notRecorded") },
+              { label: t("footer.language"), value: language === "en" ? "English" : language === "am" ? "Amharic" : "Afaan Oromo" },
+              { label: t("profile.timeZone"), value: t("profile.eastAfricaTime") },
             ].map((row, i) => (
               <div key={i} className="flex justify-between items-center py-2.5 border-b border-border/40 last:border-0">
                 <span className="text-muted-foreground font-medium">{row.label}</span>
@@ -219,7 +231,7 @@ export default function ProfileContent({ user, stats, menuGroups, skills }: Prof
           </div>
           {!identityVerified && (
             <Button asChild size="sm" className="rounded-xl text-xs font-semibold">
-              <Link href={verificationHref}>Complete Fayda Verification</Link>
+              <Link href={verificationHref}>{t("profile.completeFayda")}</Link>
             </Button>
           )}
         </div>
@@ -227,18 +239,18 @@ export default function ProfileContent({ user, stats, menuGroups, skills }: Prof
         {/* Card 3: Security Settings */}
         <div className="space-y-4">
           <div className="flex items-center justify-between pb-2 border-b border-border/80">
-            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-foreground">Security Settings</h2>
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-foreground">{t("profile.securitySettings")}</h2>
             <Lock size={12} className="text-muted-foreground" />
           </div>
 
           <div className="space-y-1 text-sm">
             {[
-              { label: "Password Last Changed", value: "July 15, 2026" },
-              { label: "Two-Factor Authentication", value: "Enabled", isBadge: true },
-              { label: "Security Questions Set", value: "Yes" },
-              { label: "Login Notifications", value: "Enabled", isBadge: true },
-              { label: "Connected Devices", value: "2 Devices" },
-              { label: "Recent Account Activity", value: "No Suspicious Activity Detected" },
+              { label: t("profile.passwordLastChanged"), value: t("profile.passwordLastChangedDate") },
+              { label: t("profile.twoFactor"), value: t("profile.enabled"), isBadge: true },
+              { label: t("profile.securityQuestionsSet"), value: t("profile.yes") },
+              { label: t("profile.loginNotifications"), value: t("profile.enabled"), isBadge: true },
+              { label: t("profile.connectedDevices"), value: t("profile.twoDevices") },
+              { label: t("profile.recentAccountActivity"), value: t("profile.noSuspiciousActivity") },
             ].map((row, i) => (
               <div key={i} className="flex justify-between items-center py-2.5 border-b border-border/40 last:border-0">
                 <span className="text-muted-foreground font-medium">{row.label}</span>
@@ -257,14 +269,14 @@ export default function ProfileContent({ user, stats, menuGroups, skills }: Prof
         {/* Card 4: Preferences & App Settings */}
         <div className="space-y-4">
           <div className="flex items-center justify-between pb-2 border-b border-border/80">
-            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-foreground">Preferences</h2>
+            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-foreground">{t("profile.preferences")}</h2>
             <Globe size={12} className="text-muted-foreground" />
           </div>
 
           <div className="space-y-4 text-sm pt-2">
             {/* Language Toggle */}
             <div className="flex justify-between items-center py-1">
-              <span className="text-muted-foreground font-medium">Language Preference</span>
+              <span className="text-muted-foreground font-medium">{t("footer.language")}</span>
               <div className="flex items-center gap-1 bg-muted rounded-xl p-0.5 border border-border">
                 <button 
                   onClick={() => setLanguage("en")} 
@@ -282,12 +294,20 @@ export default function ProfileContent({ user, stats, menuGroups, skills }: Prof
                 >
                   አማ
                 </button>
+                <button
+                  onClick={() => setLanguage("om")}
+                  className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                    language === "om" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  OM
+                </button>
               </div>
             </div>
 
             {/* Dark Mode Switch */}
             <div className="flex justify-between items-center py-1">
-              <span className="text-muted-foreground font-medium">Dark Mode Appearance</span>
+              <span className="text-muted-foreground font-medium">{t("profile.darkModeAppearance")}</span>
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -295,7 +315,7 @@ export default function ProfileContent({ user, stats, menuGroups, skills }: Prof
                 className="h-8 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground gap-1 px-3 border border-border"
               >
                 {theme === "dark" ? <Sun size={11} /> : <Moon size={11} />}
-                <span className="text-[9px] font-bold uppercase tracking-wider">{theme === "dark" ? "Activated" : "Deactivated"}</span>
+                <span className="text-[9px] font-bold uppercase tracking-wider">{theme === "dark" ? t("profile.activated") : t("profile.deactivated")}</span>
               </Button>
             </div>
 
@@ -308,7 +328,7 @@ export default function ProfileContent({ user, stats, menuGroups, skills }: Prof
                 asChild
               >
                 <Link href={user.role === "worker" ? "/worker/profile/settings" : "/client/profile/settings"}>
-                  <Settings size={13} className="mr-2 text-muted-foreground" /> Account & Profile Settings
+                  <Settings size={13} className="mr-2 text-muted-foreground" /> {t("profile.accountProfileSettings")}
                 </Link>
               </Button>
               <Button 
@@ -316,7 +336,7 @@ export default function ProfileContent({ user, stats, menuGroups, skills }: Prof
                 onClick={() => authClient.signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/login"; } } })}
                 className="w-full justify-start rounded-xl text-xs font-semibold h-10 text-destructive hover:bg-destructive/10 hover:text-destructive"
               >
-                <LogOut size={13} className="mr-2" /> Sign Out
+                <LogOut size={13} className="mr-2" /> {t("profile.signOut")}
               </Button>
             </div>
           </div>
@@ -326,7 +346,7 @@ export default function ProfileContent({ user, stats, menuGroups, skills }: Prof
       {/* ── Footer ── */}
       <footer className="text-center py-8">
         <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">
-          DireSkill v1.0 · Integrated Management Platform
+          {t("profile.footer")}
         </p>
       </footer>
     </div>

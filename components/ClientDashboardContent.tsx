@@ -70,41 +70,46 @@ const ACTIVITY_DATA = [
 /* ── Service category cards ─────────────────────────────────────────── */
 const SERVICES = [
   {
-    label: "Electrical",
+    labelKey: "clientDashboard.service.electrical",
+    category: "electrical",
     icon: <Plug size={20} />,
     color: "from-amber-500/20 to-amber-500/5",
     iconBg: "bg-amber-500/15 text-amber-500",
-    count: "142 pros",
+    countKey: "clientDashboard.service.electricalCount",
   },
   {
-    label: "Plumbing",
+    labelKey: "clientDashboard.service.plumbing",
+    category: "plumbing",
     icon: <Droplets size={20} />,
     color: "from-blue-500/20 to-blue-500/5",
     iconBg: "bg-blue-500/15 text-blue-500",
-    count: "98 pros",
+    countKey: "clientDashboard.service.plumbingCount",
   },
   {
-    label: "Painting",
+    labelKey: "clientDashboard.service.painting",
+    category: "painting",
     icon: <Paintbrush size={20} />,
     color: "from-pink-500/20 to-pink-500/5",
     iconBg: "bg-pink-500/15 text-pink-500",
-    count: "76 pros",
+    countKey: "clientDashboard.service.paintingCount",
   },
   {
-    label: "Carpentry",
+    labelKey: "clientDashboard.service.carpentry",
+    category: "carpentry",
     icon: <Wrench size={20} />,
     color: "from-emerald-500/20 to-emerald-500/5",
     iconBg: "bg-emerald-500/15 text-emerald-500",
-    count: "54 pros",
+    countKey: "clientDashboard.service.carpentryCount",
   },
   {
-    label: "All Services",
+    labelKey: "clientDashboard.service.all",
+    category: "",
     icon: <MoreHorizontal size={20} />,
     color: "from-primary/20 to-primary/5",
     iconBg: "bg-primary/15 text-primary",
-    count: "View all",
+    countKey: "clientDashboard.service.viewAll",
   },
-];
+] as const;
 
 /* ── Status styling ─────────────────────────────────────────────────── */
 function statusStyle(status: string) {
@@ -134,6 +139,7 @@ export default function ClientDashboardContent({
   activeContracts = [],
   recentJobs = [],
 }: ClientDashboardContentProps) {
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
 
   const activeCount      = activeContracts.length;
@@ -143,19 +149,29 @@ export default function ClientDashboardContent({
   }, 0);
   const uniqueWorkers    = new Set(activeContracts.map((c) => c.worker_name || c.partner_name).filter(Boolean)).size;
   const initials         = userData.fullName ? userData.fullName.slice(0, 2).toUpperCase() : "DS";
+  const statusLabel = (status?: string) => {
+    switch (status?.toLowerCase()) {
+      case "in_progress": return t("clientDashboard.status.inProgress");
+      case "accepted": return t("clientDashboard.status.accepted");
+      case "completed": return t("clientDashboard.status.completed");
+      case "pending": return t("clientDashboard.status.pending");
+      case "posted": return t("clientDashboard.status.posted");
+      default: return t("clientDashboard.status.active");
+    }
+  };
 
   return (
     <FadeContent blur duration={0.4} className="space-y-5 max-w-full">
       {!userData.identityVerified && (
         <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-bold text-foreground">Fayda verification required</p>
+            <p className="text-sm font-bold text-foreground">{t("clientDashboard.verifyRequired")}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Complete Fayda identity verification to access contracts and legally bind agreements.
+              {t("clientDashboard.verifyRequiredDesc")}
             </p>
           </div>
           <Button asChild size="sm" className="rounded-xl font-semibold shrink-0">
-            <Link href="/client/profile/settings?verify=1&returnTo=/client/dashboard">Verify Now</Link>
+            <Link href="/client/profile/settings?verify=1&returnTo=/client/dashboard">{t("clientDashboard.verifyNow")}</Link>
           </Button>
         </div>
       )}
@@ -184,20 +200,20 @@ export default function ClientDashboardContent({
           <div className="relative z-10">
             <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-primary/80 mb-3">
               <Zap size={11} className="text-primary" />
-              DireSkill Platform
+              {t("clientDashboard.platform")}
             </span>
             <h1 className="text-2xl md:text-3xl font-extrabold text-white leading-tight mb-1">
-              Hire Verified<br />Professionals
+              {t("clientDashboard.hireVerified")}<br />{t("clientDashboard.professionals")}
             </h1>
             <p className="text-sm text-white/50 mb-6 max-w-xs">
-              Post a job, get matched with Fayda-verified workers in Dire Dawa. Fast, safe, contract-backed.
+              {t("clientDashboard.heroDesc")}
             </p>
             <div className="flex items-center gap-3">
               <Button asChild size="sm" className="rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-5 gap-1.5 shadow-lg shadow-primary/20">
-                <Link href="/client/search"><Plus size={14} /> Post a Job</Link>
+                <Link href="/client/search"><Plus size={14} /> {t("clientDashboard.postJob")}</Link>
               </Button>
               <Button asChild size="sm" variant="outline" className="rounded-xl border-white/20 text-white bg-white/5 hover:bg-white/10 font-semibold px-5 gap-1.5">
-                <Link href="/client/contracts">View Contracts</Link>
+                <Link href="/client/contracts">{t("clientDashboard.viewContracts")}</Link>
               </Button>
             </div>
           </div>
@@ -223,7 +239,7 @@ export default function ClientDashboardContent({
           {/* Total spending */}
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex-1">
             <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Budget</p>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("clientDashboard.totalBudget")}</p>
               <BarChart2 size={14} className="text-muted-foreground" />
             </div>
             <p className="text-3xl font-black tracking-tight mt-1">
@@ -232,7 +248,7 @@ export default function ClientDashboardContent({
             </p>
             <div className="mt-3 flex items-center gap-1.5 text-xs text-emerald-500 font-semibold">
               <TrendingUp size={12} />
-              <span>Across {activeCount} active contracts</span>
+              <span>{t("clientDashboard.acrossContracts").replace("{count}", String(activeCount))}</span>
             </div>
           </div>
 
@@ -243,14 +259,14 @@ export default function ClientDashboardContent({
                 <Briefcase size={15} />
               </div>
               <p className="text-2xl font-black"><CountUp to={activeCount} duration={1.2} /></p>
-              <p className="text-[11px] text-muted-foreground font-medium mt-0.5">Contracts</p>
+              <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{t("clientDashboard.contracts")}</p>
             </div>
             <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
               <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-500 w-fit mb-2">
                 <Users size={15} />
               </div>
               <p className="text-2xl font-black"><CountUp to={uniqueWorkers} duration={1.2} /></p>
-              <p className="text-[11px] text-muted-foreground font-medium mt-0.5">Workers</p>
+              <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{t("clientDashboard.workers")}</p>
             </div>
           </div>
         </div>
@@ -259,24 +275,24 @@ export default function ClientDashboardContent({
       {/* ══ ROW 2 — Service Categories (horizontal scroll) ════════════ */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Browse Services</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("clientDashboard.browseServices")}</p>
           <Link href="/client/search" className="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
-            See All <ChevronRight size={12} />
+            {t("clientDashboard.seeAll")} <ChevronRight size={12} />
           </Link>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {SERVICES.map((svc) => (
             <Link
-              key={svc.label}
-              href={svc.label === "All Services" ? "/client/search" : `/client/search?category=${svc.label.toLowerCase()}`}
+              key={svc.labelKey}
+              href={svc.category ? `/client/search?category=${svc.category}` : "/client/search"}
               className={`group flex flex-col items-center gap-2.5 rounded-2xl border border-border bg-gradient-to-b ${svc.color} p-4 text-center hover:border-primary/30 hover:shadow-md transition-all`}
             >
               <div className={`p-3 rounded-xl ${svc.iconBg} group-hover:scale-110 transition-transform`}>
                 {svc.icon}
               </div>
               <div>
-                <p className="text-sm font-semibold text-foreground">{svc.label}</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{svc.count}</p>
+                <p className="text-sm font-semibold text-foreground">{t(svc.labelKey)}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{t(svc.countKey)}</p>
               </div>
             </Link>
           ))}
@@ -290,11 +306,11 @@ export default function ClientDashboardContent({
         <div className="lg:col-span-2 rounded-2xl border border-border bg-card shadow-sm p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-sm font-bold">Spending Overview</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Total for the last 7 months</p>
+              <p className="text-sm font-bold">{t("clientDashboard.spendingOverview")}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("clientDashboard.lastSevenMonths")}</p>
             </div>
             <span className="flex items-center gap-1.5 text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full">
-              <Activity size={11} /> Live
+              <Activity size={11} /> {t("clientDashboard.live")}
             </span>
           </div>
           <ResponsiveContainer width="100%" height={180}>
@@ -317,8 +333,8 @@ export default function ClientDashboardContent({
         {/* Search + Find Pro */}
         <div className="rounded-2xl border border-border bg-card shadow-sm p-5 flex flex-col gap-4">
           <div>
-            <p className="text-sm font-bold">Find a Professional</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Search 370+ verified workers</p>
+            <p className="text-sm font-bold">{t("clientDashboard.findProfessional")}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{t("clientDashboard.searchVerifiedWorkers")}</p>
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={15} />
@@ -326,22 +342,22 @@ export default function ClientDashboardContent({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="e.g. Electrician…"
+              placeholder={t("clientDashboard.searchExample")}
               className="pl-9 h-10 rounded-xl bg-background border-border text-sm"
             />
           </div>
           <Button size="sm" className="rounded-xl h-10 font-semibold gap-2" asChild>
             <Link href={`/client/search?q=${encodeURIComponent(searchQuery)}`}>
-              <Search size={14} /> Search Workers
+              <Search size={14} /> {t("clientDashboard.searchWorkers")}
             </Link>
           </Button>
 
           <div className="border-t border-border pt-4 space-y-2.5">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Quick links</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{t("clientDashboard.quickLinks")}</p>
             {[
-              { label: "My Contracts", href: "/client/contracts", icon: <Briefcase size={13} /> },
-              { label: "Payments", href: "/client/payments", icon: <CreditCard size={13} /> },
-              { label: "Messages", href: "/client/messages", icon: <MessageSquare size={13} /> },
+              { label: t("clientDashboard.myContracts"), href: "/client/contracts", icon: <Briefcase size={13} /> },
+              { label: t("clientDashboard.payments"), href: "/client/payments", icon: <CreditCard size={13} /> },
+              { label: t("clientDashboard.messages"), href: "/client/messages", icon: <MessageSquare size={13} /> },
             ].map((l) => (
               <Link key={l.href} href={l.href} className="flex items-center justify-between py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors group">
                 <span className="flex items-center gap-2">{l.icon}{l.label}</span>
@@ -358,9 +374,9 @@ export default function ClientDashboardContent({
         {/* Contracts — table style, 3 cols */}
         <div className="lg:col-span-3">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Active Contracts</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("clientDashboard.activeContracts")}</p>
             <Link href="/client/contracts" className="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
-              View All <ChevronRight size={12} />
+              {t("clientDashboard.viewAll")} <ChevronRight size={12} />
             </Link>
           </div>
 
@@ -369,10 +385,10 @@ export default function ClientDashboardContent({
               <>
                 {/* Table header */}
                 <div className="grid grid-cols-12 gap-2 px-4 py-2.5 bg-muted/40 border-b border-border text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  <span className="col-span-5">Worker / Job</span>
-                  <span className="col-span-3">Status</span>
-                  <span className="col-span-2">Budget</span>
-                  <span className="col-span-2 text-right">Action</span>
+                  <span className="col-span-5">{t("clientDashboard.workerJob")}</span>
+                  <span className="col-span-3">{t("clientDashboard.status")}</span>
+                  <span className="col-span-2">{t("clientDashboard.budget")}</span>
+                  <span className="col-span-2 text-right">{t("clientDashboard.action")}</span>
                 </div>
                 <div className="divide-y divide-border">
                   {activeContracts.slice(0, 5).map((contract) => {
@@ -391,7 +407,7 @@ export default function ClientDashboardContent({
                         </div>
                         <div className="col-span-3">
                           <Badge variant="outline" className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border ${statusStyle(contract.job_status)}`}>
-                            {contract.job_status?.replace("_", " ") || "Active"}
+                            {statusLabel(contract.job_status)}
                           </Badge>
                         </div>
                         <div className="col-span-2">
@@ -414,11 +430,11 @@ export default function ClientDashboardContent({
                   <Briefcase size={22} />
                 </div>
                 <div>
-                  <p className="font-semibold text-sm">No active contracts</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Post a job to get started.</p>
+                  <p className="font-semibold text-sm">{t("clientDashboard.noActiveContracts")}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("clientDashboard.postJobStart")}</p>
                 </div>
                 <Button size="sm" className="rounded-xl gap-1.5 mt-1" asChild>
-                  <Link href="/client/search"><Plus size={14} /> Find a Pro</Link>
+                  <Link href="/client/search"><Plus size={14} /> {t("clientDashboard.findPro")}</Link>
                 </Button>
               </div>
             )}
@@ -428,8 +444,8 @@ export default function ClientDashboardContent({
         {/* Activity feed — 2 cols */}
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">History</p>
-            <span className="text-[10px] text-muted-foreground">{recentJobs.length} requests</span>
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("clientDashboard.history")}</p>
+            <span className="text-[10px] text-muted-foreground">{recentJobs.length} {t("clientDashboard.requests")}</span>
           </div>
 
           <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
@@ -449,7 +465,7 @@ export default function ClientDashboardContent({
                         </p>
                       </div>
                       <Badge variant="outline" className={`rounded-full text-[9px] font-bold uppercase px-1.5 py-0 border shrink-0 ${statusStyle(job.status)}`}>
-                        {job.status || "Posted"}
+                        {statusLabel(job.status || "posted")}
                       </Badge>
                     </div>
                   );
@@ -458,7 +474,7 @@ export default function ClientDashboardContent({
             ) : (
               <div className="py-12 flex flex-col items-center gap-2 text-center">
                 <Activity size={24} className="text-muted-foreground/30" />
-                <p className="text-xs text-muted-foreground font-medium">No history yet</p>
+                <p className="text-xs text-muted-foreground font-medium">{t("clientDashboard.noHistoryYet")}</p>
               </div>
             )}
           </div>

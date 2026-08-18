@@ -51,7 +51,7 @@ export default function WorkerRegisterPage() {
       const hasSpecial = /[^A-Za-z0-9]/.test(password);
 
       if (password.length < 8 || !hasUppercase || !hasLowercase || !hasDigit || !hasSpecial) {
-        setError("Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.");
+        setError(t("register.errors.password_complexity"));
         return false;
       }
     }
@@ -78,7 +78,7 @@ export default function WorkerRegisterPage() {
     };
     image.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error("Could not read the selected image."));
+      reject(new Error(t("register.errors.image_read")));
     };
     image.src = url;
   });
@@ -86,19 +86,19 @@ export default function WorkerRegisterPage() {
   const blobToDataUrl = (blob: Blob) => new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error("Could not prepare the selected image."));
+    reader.onerror = () => reject(new Error(t("register.errors.image_prepare")));
     reader.readAsDataURL(blob);
   });
 
   const prepareFaydaDocument = async (file: File) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setError("Please choose a Fayda document image.");
+      setError(t("register.errors.fayda_image_required"));
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      setError("Please choose an image under 10 MB.");
+      setError(t("register.errors.fayda_image_size"));
       return;
     }
 
@@ -116,20 +116,20 @@ export default function WorkerRegisterPage() {
       canvas.height = height;
       const context = canvas.getContext("2d");
       if (!context) {
-        throw new Error("Could not prepare image preview.");
+        throw new Error(t("register.errors.image_preview"));
       }
 
       context.drawImage(image, 0, 0, width, height);
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.78));
       if (!blob) {
-        throw new Error("Could not compress the selected image.");
+        throw new Error(t("register.errors.image_compress"));
       }
 
       const dataUrl = await blobToDataUrl(blob);
       setFormData((prev) => ({ ...prev, faydaDocUrl: dataUrl }));
       setFaydaFileName(file.name);
     } catch (uploadError) {
-      setError(uploadError instanceof Error ? uploadError.message : "Could not attach Fayda document.");
+      setError(uploadError instanceof Error ? uploadError.message : t("register.errors.fayda_attach"));
     } finally {
       setIsProcessingId(false);
     }
@@ -160,7 +160,7 @@ export default function WorkerRegisterPage() {
       });
 
       if (signUpError) {
-        setError(signUpError.message || "Registration failed.");
+        setError(signUpError.message || t("register.errors.registration_failed"));
         setIsLoading(false);
         return;
       }

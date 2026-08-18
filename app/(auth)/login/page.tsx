@@ -7,22 +7,24 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
 import { getWorkerAccessRoute } from "@/lib/worker-routing";
+import { useLanguage } from "@/context/LanguageContext";
 
-function getLoginErrorMessage(error: unknown) {
+function getLoginErrorMessage(error: unknown, t: (key: any) => string) {
   const message = error instanceof Error ? error.message : String(error || "");
 
   if (message.includes("502") || message.toLowerCase().includes("bad gateway")) {
-    return "The authentication service is temporarily unavailable. Please try again in a moment.";
+    return t("auth.login.errServiceUnavailable");
   }
 
   if (message.toLowerCase().includes("fetch") || message.toLowerCase().includes("network")) {
-    return "Could not reach the authentication service. Please check your connection and try again.";
+    return t("auth.login.errNetwork");
   }
 
-  return "An unexpected error occurred. Please try again later.";
+  return t("auth.login.errUnexpectedLater");
 }
 
 export default function LoginPage() {
+  const { t } = useLanguage();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -81,7 +83,7 @@ export default function LoginPage() {
     const forceLogout = searchParams.get("logout") === "1";
     if (forceLogout) return;
     if (searchParams.get("error") === "suspended") {
-      setError("Your account is suspended. Please contact an administrator for review.");
+      setError(t("auth.login.errSuspended"));
     }
 
     const checkSession = async () => {
@@ -95,7 +97,7 @@ export default function LoginPage() {
           const { authenticated, role, isSuspended, workerVerificationStatus, workerIsSuspended, workerIsVerified } = await res.json();
           if (authenticated === false) return;
           if (isSuspended) {
-            setError("Your account is suspended. Please contact an administrator for review.");
+            setError(t("auth.login.errSuspended"));
             return;
           }
           if (role === "client") router.replace("/client/search");
@@ -110,14 +112,14 @@ export default function LoginPage() {
             );
           }
         } else if (res.status >= 500) {
-          setError("The authentication service is temporarily unavailable. Please try again in a moment.");
+          setError(t("auth.login.errServiceUnavailable"));
         }
       } catch (err) {
-        setError(getLoginErrorMessage(err));
+        setError(getLoginErrorMessage(err, t));
       }
     };
     checkSession();
-  }, [router, searchParams]);
+  }, [router, searchParams, t]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,13 +141,13 @@ export default function LoginPage() {
         const lookupData = await lookupRes.json().catch(() => ({}));
 
         if (lookupRes.status === 409 && lookupData.error === "legacy_account") {
-          setError("This phone number is linked to an older account. Please log in with your email address instead.");
+          setError(t("auth.login.errLegacyPhone"));
           setIsLoading(false);
           return;
         }
 
         if (!lookupRes.ok) {
-          setError("No account found with this phone number. Try using your email to log in.");
+          setError(t("auth.login.errNoPhone"));
           setIsLoading(false);
           return;
         }
@@ -166,20 +168,20 @@ export default function LoginPage() {
           return;
         }
         if (signInError.status === 502 || signInError.message?.toLowerCase().includes("bad gateway")) {
-          setError("The authentication service is temporarily unavailable. Please try again in a moment.");
+          setError(t("auth.login.errServiceUnavailable"));
           return;
         }
-        setError("Invalid credentials. Please check your email/phone and password.");
+        setError(t("auth.login.errInvalidCredentials"));
       } else {
         const session = await waitForUsableSession();
 
         if (!session?.role) {
-          setError("Login succeeded, but the session could not be initialized. Please try again.");
+          setError(t("auth.login.errSessionInit"));
           return;
         }
 
         if (session.isSuspended) {
-          setError("Your account is suspended. Please contact an administrator for review.");
+          setError(t("auth.login.errSuspended"));
           return;
         }
 
@@ -200,10 +202,10 @@ export default function LoginPage() {
           return;
         }
 
-        setError("Login succeeded, but the session could not be initialized. Please try again.");
+        setError(t("auth.login.errSessionInit"));
       }
     } catch (err) {
-      setError(getLoginErrorMessage(err));
+      setError(getLoginErrorMessage(err, t));
     } finally {
       setIsLoading(false);
     }
@@ -249,17 +251,17 @@ export default function LoginPage() {
             </svg>
           </div>
           <h2 className="text-5xl font-bold tracking-tight text-white mb-6 leading-tight">
-            Elevate your <br /><span className="text-green-400">Professional</span> Journey
+            {t("auth.marketing.loginTitle")}
           </h2>
           <p className="text-zinc-400 text-lg max-w-md mx-auto leading-relaxed">
-            Join the premier marketplace for top-tier professionals and extraordinary opportunities.
+            {t("auth.marketing.loginDesc")}
           </p>
         </div>
 
         <div className="absolute bottom-12 left-12 flex items-center gap-4 text-sm font-medium text-zinc-500">
-          <Link href="#" className="hover:text-green-400 transition-colors">Privacy Policy</Link>
+          <Link href="#" className="hover:text-green-400 transition-colors">{t("auth.privacy")}</Link>
           <span>&bull;</span>
-          <Link href="#" className="hover:text-green-400 transition-colors">Terms of Service</Link>
+          <Link href="#" className="hover:text-green-400 transition-colors">{t("auth.terms")}</Link>
         </div>
       </div>
 
@@ -285,10 +287,10 @@ export default function LoginPage() {
 
             <div className="text-center space-y-1.5">
               <h1 className="text-[28px] font-bold tracking-tight text-white flex items-center justify-center gap-2">
-                Hi, Welcome Back <span>👋</span>
+                {t("auth.login.title")} <span>👋</span>
               </h1>
               <p className="text-zinc-500 text-[15px] font-medium">
-                Sign in with your email or phone number
+                {t("auth.login.subtitle")}
               </p>
             </div>
           </div>
@@ -319,11 +321,11 @@ export default function LoginPage() {
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                     <polyline points="22 4 12 14.01 9 11.01"></polyline>
                   </svg>
-                  <span>Account Created Successfully!</span>
+                  <span>{t("auth.login.created")}</span>
                 </div>
                 {needsVerification && (
                   <p className="text-[12px] text-zinc-400 font-medium ml-8 leading-relaxed">
-                    A verification link has been sent to your email. Please verify your account before signing in.
+                    {t("auth.login.verifyEmailNotice")}
                   </p>
                 )}
               </motion.div>
@@ -335,7 +337,7 @@ export default function LoginPage() {
             {/* Unified Email / Phone Input */}
             <div className="space-y-1.5">
               <label className="text-[13px] font-medium text-zinc-300 ml-1">
-                Email or Phone Number
+                {t("auth.login.identifier")}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -369,7 +371,7 @@ export default function LoginPage() {
                     }
                   }}
                   className="w-full h-[52px] pl-[44px] pr-4 bg-zinc-900 border border-zinc-700 rounded-2xl focus:border-green-400/80 focus:ring-1 focus:ring-green-400/80 outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white shadow-sm"
-                  placeholder="you@example.com or 0911 997 755"
+                  placeholder={t("auth.login.identifierPlaceholder")}
                 />
               </div>
               {/* Subtle hint showing detected mode */}
@@ -382,7 +384,7 @@ export default function LoginPage() {
                     className="text-[11px] ml-1 font-bold uppercase tracking-widest"
                     style={{ color: isEmail || isPhone ? "#4ade80" : "#71717a" }}
                   >
-                    {isEmail ? "✓ Signing in with email" : isPhone ? "✓ Signing in with phone number" : "Enter email or phone"}
+                    {isEmail ? `✓ ${t("auth.login.withEmail")}` : isPhone ? `✓ ${t("auth.login.withPhone")}` : t("auth.login.enterIdentifier")}
                   </motion.p>
                 )}
               </AnimatePresence>
@@ -390,7 +392,7 @@ export default function LoginPage() {
 
             {/* Password Input */}
             <div className="space-y-1.5">
-              <label className="text-[13px] font-medium text-zinc-300 ml-1">Password</label>
+              <label className="text-[13px] font-medium text-zinc-300 ml-1">{t("admin.common.password")}</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500">
@@ -404,7 +406,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full h-[52px] pl-[44px] pr-12 bg-zinc-900 border border-zinc-700 rounded-2xl focus:border-green-400/80 focus:ring-1 focus:ring-green-400/80 outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white shadow-sm"
-                  placeholder="Enter your password"
+                  placeholder={t("auth.login.passwordPlaceholder")}
                 />
                 <button
                   type="button"
@@ -429,7 +431,7 @@ export default function LoginPage() {
             {/* Forgot Password */}
             <div className="flex justify-end pt-1 pb-1">
               <Link href="#" className="text-[13px] font-bold text-green-400 hover:text-green-300 transition-colors tracking-wide">
-                Forgot Password?
+                {t("auth.login.forgot")}
               </Link>
             </div>
 
@@ -443,7 +445,7 @@ export default function LoginPage() {
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                 ) : (
-                  "Sign In"
+                  t("auth.login.submit")
                 )}
               </button>
             </div>
@@ -452,7 +454,7 @@ export default function LoginPage() {
           {/* Divider */}
           <div className="relative flex items-center py-7 w-full">
             <div className="flex-grow border-t border-zinc-800/80"></div>
-            <span className="flex-shrink-0 mx-4 text-[11px] font-bold text-zinc-500 uppercase tracking-wider">Or Sign in with</span>
+            <span className="flex-shrink-0 mx-4 text-[11px] font-bold text-zinc-500 uppercase tracking-wider">{t("auth.login.divider")}</span>
             <div className="flex-grow border-t border-zinc-800/80"></div>
           </div>
 
@@ -465,21 +467,21 @@ export default function LoginPage() {
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
               </svg>
-              Sign in with Google
+              {t("auth.login.google")}
             </button>
             <button type="button" className="w-full h-[52px] flex items-center justify-center gap-3 bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 rounded-full font-medium text-[14px] text-white transition-colors active:scale-[0.98] shadow-sm">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
                 <path d="M17.05 13.92c-.02-2.31 1.89-3.42 1.98-3.48-1.08-1.58-2.76-1.79-3.36-1.82-1.42-.14-2.78.84-3.51.84-.73 0-1.85-.82-3.03-.8-1.53.02-2.95.89-3.74 2.26-1.6 2.78-.41 6.89 1.16 9.16.76 1.1 1.66 2.33 2.85 2.29 1.14-.04 1.58-.74 2.96-.74 1.38 0 1.78.74 2.98.71 1.23-.02 2.01-1.12 2.76-2.22.87-1.27 1.23-2.5 1.25-2.56-.03-.01-2.28-.88-2.3-3.64zM14.94 4.54c.63-.76 1.05-1.82.93-2.88-1.02.04-2.21.68-2.85 1.44-.57.67-1.07 1.75-.93 2.79 1.14.09 2.22-.59 2.85-1.35z" />
               </svg>
-              Sign in with Apple
+              {t("auth.login.apple")}
             </button>
           </div>
 
           {/* Footer */}
           <p className="text-center text-[13px] text-zinc-400 font-medium mt-auto pt-10 pb-6 w-full">
-            Don't have an account?{" "}
+            {t("auth.login.noAccount")}{" "}
             <Link href="/register/client" className="text-green-400 font-bold hover:text-green-300 transition-colors">
-              Register
+              {t("auth.login.register")}
             </Link>
           </p>
 

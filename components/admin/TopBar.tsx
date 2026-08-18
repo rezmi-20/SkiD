@@ -43,6 +43,7 @@ export function TopBar({ adminName, adminRole }: TopBarProps) {
     if (!pathname) return t("admin.dashboard" as any);
     if (pathname.includes("/admin/dashboard")) return t("admin.dashboard" as any);
     if (pathname.includes("/admin/workers"))   return t("admin.workers" as any);
+    if (pathname.includes("/admin/clients"))   return t("admin.clients" as any);
     if (pathname.includes("/admin/verify"))    return t("nav.admin.verify" as any);
     if (pathname.includes("/admin/jobs"))      return t("admin.jobs" as any);
     if (pathname.includes("/admin/contracts")) return t("admin.contracts" as any);
@@ -124,7 +125,7 @@ export function TopBar({ adminName, adminRole }: TopBarProps) {
           className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-outline-variant bg-surface-container px-3 text-xs font-bold uppercase tracking-wider text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-95"
         >
           <UserCircle className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">Profile</span>
+            <span className="hidden md:inline">{t("nav.profile" as any)}</span>
         </Link>
 
         {/* Logout */}

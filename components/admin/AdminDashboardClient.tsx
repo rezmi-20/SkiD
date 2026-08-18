@@ -81,7 +81,7 @@ function MetricTile({
   );
 }
 
-function ActivityItem({ item, idx }: { item: { type: string; title: string; created_at: string }; idx: number }) {
+function ActivityItem({ item, idx, t }: { item: { type: string; title: string; created_at: string }; idx: number; t: (key: any) => string }) {
   const isUser = item.type === "user_signup";
   const colors = ["text-rose-400 bg-rose-500/10", "text-blue-400 bg-blue-500/10", "text-violet-400 bg-violet-500/10", "text-amber-400 bg-amber-500/10"];
   return (
@@ -92,12 +92,12 @@ function ActivityItem({ item, idx }: { item: { type: string; title: string; crea
       <div className="flex-1 min-w-0">
         <p className="text-xs font-semibold truncate">{item.title}</p>
         <p className="text-[10px] text-muted-foreground">
-          {isUser ? "New user signup" : "Job posted"} ·{" "}
+          {isUser ? t("admin.dashboard.activity.userSignup") : t("admin.dashboard.activity.jobPosted")} ?{" "}
           {new Date(item.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
         </p>
       </div>
       <Badge variant="outline" className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border shrink-0 ${isUser ? "text-blue-400 border-blue-500/20 bg-blue-500/10" : "text-violet-400 border-violet-500/20 bg-violet-500/10"}`}>
-        {isUser ? "user" : "job"}
+        {isUser ? t("admin.dashboard.badge.user") : t("admin.dashboard.badge.job")}
       </Badge>
     </div>
   );
@@ -117,12 +117,12 @@ export function AdminDashboardClient({
   const { t } = useLanguage();
 
   const metrics = [
-    { label: "Total Workers", value: workerCount, icon: Users, accent: "bg-blue-500/10 text-blue-400" },
-    { label: "Pending Verif.", value: pendingVerifCount, icon: Clock, accent: "bg-amber-500/10 text-amber-400" },
-    { label: "Active Contracts", value: activeContractCount, icon: FileText, accent: "bg-emerald-500/10 text-emerald-400" },
-    { label: "Jobs This Month", value: completedJobsMonthly, icon: Briefcase, accent: "bg-violet-500/10 text-violet-400" },
-    { label: "Platform Revenue", value: revenueDisplay, icon: DollarSign, accent: "bg-green-500/10 text-green-400" },
-    { label: "Disputes", value: disputeCount, icon: Scale, accent: "bg-rose-500/10 text-rose-400" },
+    { label: t("admin.metric.totalWorkers"), value: workerCount, icon: Users, accent: "bg-blue-500/10 text-blue-400" },
+    { label: t("admin.metric.pendingVerif"), value: pendingVerifCount, icon: Clock, accent: "bg-amber-500/10 text-amber-400" },
+    { label: t("admin.metric.activeContracts"), value: activeContractCount, icon: FileText, accent: "bg-emerald-500/10 text-emerald-400" },
+    { label: t("admin.metric.jobsMonth"), value: completedJobsMonthly, icon: Briefcase, accent: "bg-violet-500/10 text-violet-400" },
+    { label: t("admin.metric.revenue"), value: revenueDisplay, icon: DollarSign, accent: "bg-green-500/10 text-green-400" },
+    { label: t("admin.metric.disputes"), value: disputeCount, icon: Scale, accent: "bg-rose-500/10 text-rose-400" },
   ];
 
   return (
@@ -146,24 +146,24 @@ export function AdminDashboardClient({
           <div className="relative z-10">
             <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-blue-400/80 mb-3">
               <Zap size={11} className="text-blue-400" />
-              Admin Command Center
+              {t("admin.dashboard.commandCenter")}
             </span>
             <h1 className="text-2xl md:text-3xl font-extrabold text-white leading-tight mb-1">
-              Platform<br />Overview
+              {t("admin.dashboard.platformOverview")}
             </h1>
             <p className="text-sm text-white/40 mb-6 max-w-xs">
-              Monitor platform health, verify workers, manage disputes and oversee all activity.
+              {t("admin.dashboard.desc")}
             </p>
             <div className="flex items-center gap-3 flex-wrap">
               {verificationCapabilities.canRead && (
                 <Button asChild size="sm" className="rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 gap-1.5 shadow-lg shadow-blue-500/20">
                   <Link href="/admin/verify">
-                    <ShieldAlert size={14} /> {verificationCapabilities.canReview ? "Verify Workers" : "View Verification"}
+                    <ShieldAlert size={14} /> {verificationCapabilities.canReview ? t("admin.dashboard.verifyWorkers") : t("admin.dashboard.viewVerification")}
                   </Link>
                 </Button>
               )}
               <Button asChild size="sm" variant="outline" className="rounded-xl border-white/15 text-white bg-white/5 hover:bg-white/10 font-semibold px-5 gap-1.5">
-                <Link href="/admin/users">Manage Users</Link>
+                <Link href="/admin/users">{t("admin.dashboard.manageUsers")}</Link>
               </Button>
             </div>
           </div>
@@ -172,7 +172,7 @@ export function AdminDashboardClient({
             <div className="absolute top-5 right-5 flex items-center gap-2 bg-rose-500/20 border border-rose-500/30 rounded-xl px-3 py-2">
               <AlertTriangle size={13} className="text-rose-300 animate-pulse" />
               <div>
-                <p className="text-[10px] text-rose-300/60 font-medium">Open Disputes</p>
+                <p className="text-[10px] text-rose-300/60 font-medium">{t("admin.dashboard.openDisputes")}</p>
                 <p className="text-sm font-bold text-rose-200">{disputeCount}</p>
               </div>
             </div>
@@ -184,16 +184,16 @@ export function AdminDashboardClient({
           {/* Pending verif alert */}
           <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5 shadow-sm flex-1">
             <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider">Needs Attention</p>
+              <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider">{t("admin.dashboard.needsAttention")}</p>
               <Clock size={14} className="text-amber-400" />
             </div>
             <p className="text-3xl font-black tracking-tight mt-1">
               <CountUp to={pendingVerifCount} duration={1.5} />
             </p>
-            <p className="text-[11px] text-muted-foreground mt-1">Workers awaiting verification</p>
+            <p className="text-[11px] text-muted-foreground mt-1">{t("admin.dashboard.workersAwaiting")}</p>
             {verificationCapabilities.canRead && (
               <Link href="/admin/verify" className="mt-3 flex items-center gap-1 text-[11px] font-semibold text-amber-400 hover:underline">
-                {verificationCapabilities.canReview ? "Review now" : "View details"} <ChevronRight size={11} />
+                {verificationCapabilities.canReview ? t("admin.dashboard.reviewNow") : t("admin.dashboard.viewDetails")} <ChevronRight size={11} />
               </Link>
             )}
           </div>
@@ -201,8 +201,8 @@ export function AdminDashboardClient({
           {/* Quick admin links */}
           <div className="grid grid-cols-2 gap-3">
             {[
-              { label: "Users", href: "/admin/users", icon: UserCog, bg: "bg-blue-500/10 text-blue-400" },
-              { label: "Reports", href: "/admin/reports", icon: BarChart3, bg: "bg-violet-500/10 text-violet-400" },
+              { label: t("admin.dashboard.users"), href: "/admin/users", icon: UserCog, bg: "bg-blue-500/10 text-blue-400" },
+              { label: t("admin.dashboard.reports"), href: "/admin/reports", icon: BarChart3, bg: "bg-violet-500/10 text-violet-400" },
             ].map((item) => (
               <Link key={item.href} href={item.href} className="rounded-2xl border border-border bg-card p-4 shadow-sm hover:border-border/60 transition-colors group">
                 <div className={`p-2 rounded-xl w-fit mb-2 ${item.bg}`}>
@@ -230,11 +230,11 @@ export function AdminDashboardClient({
         <div className="lg:col-span-2 rounded-2xl border border-border bg-card shadow-sm p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-sm font-bold">Platform Activity</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Jobs posted & user signups — this week</p>
+              <p className="text-sm font-bold">{t("admin.dashboard.platformActivity")}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("admin.dashboard.platformActivityDesc")}</p>
             </div>
             <span className="flex items-center gap-1.5 text-xs font-semibold text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full">
-              <Activity size={11} /> Live
+              <Activity size={11} /> {t("admin.dashboard.live")}
             </span>
           </div>
           <ResponsiveContainer width="100%" height={180}>
@@ -253,33 +253,33 @@ export function AdminDashboardClient({
               <XAxis dataKey="day" tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }} axisLine={false} tickLine={false} />
               <RechartsTooltip content={<ChartTooltip />} cursor={{ stroke: "var(--color-border)" }} />
-              <Area type="monotone" dataKey="jobs" name="Jobs" stroke="#3b82f6" strokeWidth={2.5} fill="url(#jobsGrad)" dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
-              <Area type="monotone" dataKey="users" name="Users" stroke="#818cf8" strokeWidth={2.5} fill="url(#usersGrad)" dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+              <Area type="monotone" dataKey="jobs" name={t("admin.dashboard.jobsPosted")} stroke="#3b82f6" strokeWidth={2.5} fill="url(#jobsGrad)" dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+              <Area type="monotone" dataKey="users" name={t("admin.dashboard.newUsers")} stroke="#818cf8" strokeWidth={2.5} fill="url(#usersGrad)" dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
             </AreaChart>
           </ResponsiveContainer>
           {/* Legend */}
           <div className="flex items-center gap-5 mt-3">
-            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><span className="h-2 w-4 rounded-full bg-blue-500 inline-block" /> Jobs Posted</span>
-            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><span className="h-2 w-4 rounded-full bg-indigo-400 inline-block" /> New Users</span>
+            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><span className="h-2 w-4 rounded-full bg-blue-500 inline-block" /> {t("admin.dashboard.jobsPosted")}</span>
+            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"><span className="h-2 w-4 rounded-full bg-indigo-400 inline-block" /> {t("admin.dashboard.newUsers")}</span>
           </div>
         </div>
 
         {/* Recent activity feed */}
         <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Recent Activity</p>
-            <span className="text-[10px] text-muted-foreground">{activityFeed.length} events</span>
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("admin.activity.title")}</p>
+            <span className="text-[10px] text-muted-foreground">{activityFeed.length} {t("admin.dashboard.events")}</span>
           </div>
           {activityFeed.length > 0 ? (
             <div className="divide-y divide-border max-h-[240px] overflow-y-auto">
               {activityFeed.map((item, idx) => (
-                <ActivityItem key={idx} item={item} idx={idx} />
+                <ActivityItem key={idx} item={item} idx={idx} t={t} />
               ))}
             </div>
           ) : (
             <div className="flex flex-col items-center py-12 gap-2 text-center">
               <Activity size={22} className="text-muted-foreground/30" />
-              <p className="text-xs text-muted-foreground">No recent activity</p>
+              <p className="text-xs text-muted-foreground">{t("admin.dashboard.noRecentActivity")}</p>
             </div>
           )}
         </div>
@@ -288,9 +288,9 @@ export function AdminDashboardClient({
       {/* ROW 4 — Pending verification table */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Pending Worker Verification</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("admin.dashboard.pendingWorkerVerification")}</p>
           <Link href="/admin/verify" className="text-xs text-blue-500 font-semibold hover:underline flex items-center gap-1">
-            View All <ChevronRight size={12} />
+            {t("admin.dashboard.viewAll")} <ChevronRight size={12} />
           </Link>
         </div>
         {verificationCapabilities.canRead && (

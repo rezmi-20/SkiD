@@ -40,7 +40,7 @@ check("migration creates attempts and events", migration.includes("CREATE TABLE 
 check("events are append-only", migration.includes("verification_events_no_update") && migration.includes("verification_events_no_delete"));
 check("attempts have one current index", migration.includes("verification_attempts_current_unique_idx") && migration.includes("WHERE is_current = true"));
 check("schema exports attempt and event tables", schema.includes("verificationAttempts") && schema.includes("verificationEvents"));
-check("decision path requires exact permissions", ops.includes("verification.approve") && ops.includes("verification.reject") && ops.includes("verification.request_resubmission"));
+check("decision path requires exact permissions", ops.includes("verification.approve") && ops.includes("verification.reject") && ops.includes("verification.request_resubmission") && ops.includes("verification.revoke"));
 check("only content verification admin can decide", ops.includes("Only content and verification administrators may make verification decisions") && ops.includes("canActOnVerification"));
 check("self review denied", ops.includes("Administrators cannot review their own verification case"));
 check("stale attempt denied", ops.includes("This verification attempt is stale") && ops.includes("expectedAttemptId"));
@@ -56,7 +56,9 @@ check("FIN reveal UI avoids persistent storage and console output", !finReveal.i
 check("history omits full FIN and raw document data", migration.includes("document_fingerprint") && !migration.includes("fin_encrypted") && !migration.includes("fayda_doc_url"));
 check("submission attempts recorded for profile and registration", profileActions.includes("recordVerificationSubmission") && registerRoute.includes("recordVerificationSubmission"));
 check("admin actions delegate to guarded operations", adminActions.includes("decideVerificationCase") && adminActions.includes("expectedAttemptId"));
-check("queue has worker and client filters", queueTabs.includes("admin.verification.queue.pending") && queueTabs.includes("admin.verification.queue.rejected") && queueTabs.includes("admin.verification.queue.decided"));
+check("queue has complete worker and client filters", queueTabs.includes("admin.verification.queue.pending") && queueTabs.includes("admin.verification.queue.approved") && queueTabs.includes("admin.verification.queue.revoked") && queueTabs.includes("admin.verification.queue.resubmitted"));
+check("revocation is approved-only and separately audited", ops.includes("Only currently approved verification cases can be revoked.") && ops.includes("reviewerEmployeeId"));
+check("submission attempt writer avoids duplicate current attempts", ops.includes("pg_advisory_xact_lock") && ops.includes("status <> 'pending'") && ops.includes("NOT EXISTS"));
 check("queue displays masked FIN and no raw document URL", queuePage.includes("maskFinLast4") && !queueTabs.includes("fayda_doc_url"));
 check("worker review uses protected document route", workerContent.includes("/api/workers/${worker.user_id}/verification-document") && !workerContent.includes("src={worker.fayda_doc_url}"));
 check("client review uses protected document route", clientPage.includes("/api/clients/${client.user_id}/verification-document"));

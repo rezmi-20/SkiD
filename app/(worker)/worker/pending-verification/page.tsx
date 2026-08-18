@@ -37,7 +37,7 @@ export default function PendingVerificationPage() {
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-white">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-zinc-400 text-sm font-semibold tracking-wide animate-pulse">Loading Profile...</p>
+          <p className="text-zinc-400 text-sm font-semibold tracking-wide animate-pulse">{t("verification.loadingProfile")}</p>
         </div>
       </div>
     );
@@ -47,18 +47,19 @@ export default function PendingVerificationPage() {
   const isRejected = accountState === "rejected";
   const isSuspended = accountState === "suspended";
   const isRevoked = accountState === "revoked";
-  const isPending = !isRejected && !isSuspended && !isRevoked;
+  const canReverify = isRejected || isRevoked;
+  const isPending = !canReverify && !isSuspended;
   const title = isSuspended
-    ? "Account Suspended"
+    ? t("verification.suspended.title")
     : isRevoked
-    ? "Verification Revoked"
+    ? t("verification.revoked.title")
     : isRejected
     ? t("verification.rejected.title")
     : t("verification.pending.title");
   const desc = isSuspended
-    ? "Your worker account is temporarily suspended. Please contact an administrator for review."
+    ? t("verification.suspended.desc")
     : isRevoked
-    ? "Your worker verification was revoked. Please upload a clear Fayda ID and resubmit."
+    ? t("verification.revoked.desc")
     : isRejected
     ? t("verification.rejected.desc")
     : t("verification.pending.desc");
@@ -96,6 +97,13 @@ export default function PendingVerificationPage() {
             </p>
           </div>
 
+          {worker?.verification_reason && canReverify && (
+            <div className="rounded-2xl border border-red-400/20 bg-red-400/10 p-4 text-left">
+              <p className="text-[10px] font-black uppercase tracking-widest text-red-300">{t("verification.reason")}</p>
+              <p className="mt-1 text-xs font-semibold leading-relaxed text-zinc-200">{worker.verification_reason}</p>
+            </div>
+          )}
+
           <div className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl space-y-3">
             <div className="flex justify-between items-center text-xs font-semibold">
               <span className="text-zinc-500 uppercase tracking-wider">{t("verification.role")}</span>
@@ -117,9 +125,9 @@ export default function PendingVerificationPage() {
                 {accountState === "rejected"
                   ? t("verification.status.rejected")
                   : accountState === "suspended"
-                  ? "Suspended"
+                  ? t("verification.status.suspended")
                   : accountState === "revoked"
-                  ? "Revoked"
+                  ? t("verification.status.revoked")
                   : worker?.verification_status === "approved"
                   ? t("verification.status.approved")
                   : t("verification.status.pending")}
@@ -127,9 +135,9 @@ export default function PendingVerificationPage() {
             </div>
           </div>
 
-          {/* Resubmission form for rejected workers */}
-          {isRejected && (
-            <VerificationResubmitForm />
+          {/* Reverification form for rejected or revoked workers */}
+          {canReverify && (
+            <VerificationResubmitForm mode={isRevoked ? "reverify" : "resubmit"} />
           )}
 
           {isPending && (

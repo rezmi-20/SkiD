@@ -120,6 +120,13 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    if (payment.status !== "released" || String(payment.chapa_status || "").toLowerCase() !== "success") {
+      return NextResponse.json(
+        { error: "Receipt is available only after verified payment release." },
+        { status: 409 },
+      );
+    }
+
     const pdf = await buildPdfBuffer(payment);
     const filename = `direskill-receipt-${payment.chapa_ref || payment.payment_id}.pdf`;
 

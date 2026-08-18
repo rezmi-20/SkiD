@@ -159,7 +159,7 @@ export function JobsQueueClient({ initialJobs }: Props) {
                     <td className="px-5 py-4 font-bold text-on-surface group-hover:text-blue-500 transition-colors">{j.title}</td>
                     <td className="px-5 py-4 text-on-surface-variant font-semibold">{j.clientName}</td>
                     <td className="px-5 py-4 text-on-surface-variant font-semibold">
-                      {j.workerName || <span className="text-xs text-on-surface-variant/40 italic">Unassigned</span>}
+                    {j.workerName || <span className="text-xs text-on-surface-variant/40 italic">{t("admin.verification.unassigned" as any)}</span>}
                     </td>
                     <td className="px-5 py-4 font-extrabold text-on-surface">
                       {j.budget ? `${j.budget.toLocaleString()} ETB` : "Negotiable"}

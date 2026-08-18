@@ -4,8 +4,10 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function ClientRegisterPage() {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -29,11 +31,11 @@ export default function ClientRegisterPage() {
     if (!file) return;
     const allowedTypes = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
     if (!allowedTypes.includes(file.type)) {
-      setError("Fayda document must be PNG, JPG, WebP, or PDF.");
+      setError(t("auth.register.client.errDocType"));
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setError("Fayda document must be 5 MB or smaller.");
+      setError(t("auth.register.client.errDocSize"));
       return;
     }
 
@@ -45,7 +47,7 @@ export default function ClientRegisterPage() {
         faydaDocName: file.name,
       }));
     };
-    reader.onerror = () => setError("Could not read Fayda document.");
+    reader.onerror = () => setError(t("auth.register.client.errDocRead"));
     reader.readAsDataURL(file);
   };
 
@@ -61,24 +63,24 @@ export default function ClientRegisterPage() {
     const hasSpecial = /[^A-Za-z0-9]/.test(password);
 
     if (password.length < 8 || !hasUppercase || !hasLowercase || !hasDigit || !hasSpecial) {
-      setError("Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.");
+      setError(t("auth.register.client.errPassword"));
       setIsLoading(false);
       return;
     }
 
     if (wantsVerification) {
       if (!formData.faydaFinNumber || !formData.faydaDocDataUrl) {
-        setError("Submit both your FIN and Fayda document, or choose Skip for now.");
+        setError(t("auth.register.client.errBothRequired"));
         setIsLoading(false);
         return;
       }
       if (!/^\d{12}$/.test(formData.faydaFinNumber)) {
-        setError("FIN must be exactly 12 digits.");
+        setError(t("auth.register.client.errFinDigits"));
         setIsLoading(false);
         return;
       }
       if (!formData.faydaDocDataUrl) {
-        setError("Upload your Fayda ID image or document, or choose Skip for now.");
+        setError(t("auth.register.client.errDocRequired"));
         setIsLoading(false);
         return;
       }
@@ -172,17 +174,17 @@ export default function ClientRegisterPage() {
             </svg>
           </div>
           <h2 className="text-5xl font-bold tracking-tight text-white mb-6 leading-tight">
-            Start <br/><span className="text-green-400">Hiring</span>
+            {t("auth.marketing.clientTitle")}
           </h2>
           <p className="text-zinc-400 text-lg max-w-md mx-auto leading-relaxed">
-            Create a high-trust client profile to engage with verified professionals in Dire Dawa.
+            {t("auth.marketing.clientDesc")}
           </p>
         </div>
         
         <div className="absolute bottom-12 left-12 flex items-center gap-4 text-sm font-medium text-zinc-500">
-          <Link href="#" className="hover:text-green-400 transition-colors">Privacy Policy</Link>
+          <Link href="#" className="hover:text-green-400 transition-colors">{t("auth.privacy")}</Link>
           <span>&bull;</span>
-          <Link href="#" className="hover:text-green-400 transition-colors">Terms of Service</Link>
+          <Link href="#" className="hover:text-green-400 transition-colors">{t("auth.terms")}</Link>
         </div>
       </div>
 
@@ -208,10 +210,10 @@ export default function ClientRegisterPage() {
             
             <div className="text-center space-y-1.5">
               <h1 className="text-[28px] font-bold tracking-tight text-white flex items-center justify-center gap-2">
-                Create Account <span>✨</span>
+                {t("auth.register.client.title")} <span>✨</span>
               </h1>
               <p className="text-zinc-500 text-[15px] font-medium">
-                Client Registration
+                {t("auth.register.client.subtitle")}
               </p>
             </div>
           </div>
@@ -235,7 +237,7 @@ export default function ClientRegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-4 w-full">
             {/* Display Name Input */}
             <div className="space-y-1.5">
-              <label className="text-[13px] font-medium text-zinc-300 ml-1">Display Name</label>
+              <label className="text-[13px] font-medium text-zinc-300 ml-1">{t("auth.register.client.displayName")}</label>
               <div className="relative">
                 <input
                   type="text"
@@ -243,14 +245,14 @@ export default function ClientRegisterPage() {
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                   className="w-full h-[52px] px-4 bg-zinc-900 border border-zinc-700 rounded-2xl focus:border-green-400/80 focus:ring-1 focus:ring-green-400/80 outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white shadow-sm"
-                  placeholder="Personal or Business Name"
+                  placeholder={t("auth.register.client.displayNamePlaceholder")}
                 />
               </div>
             </div>
 
             {/* Email Input */}
             <div className="space-y-1.5">
-              <label className="text-[13px] font-medium text-zinc-300 ml-1">Email</label>
+              <label className="text-[13px] font-medium text-zinc-300 ml-1">{t("auth.register.client.email")}</label>
               <div className="relative">
                 <input
                   type="email"
@@ -265,7 +267,7 @@ export default function ClientRegisterPage() {
 
             {/* Phone Input */}
             <div className="space-y-1.5">
-              <label className="text-[13px] font-medium text-zinc-300 ml-1">Phone Number</label>
+              <label className="text-[13px] font-medium text-zinc-300 ml-1">{t("auth.register.client.phone")}</label>
               <div className="relative flex">
                 <div className="h-[52px] px-4 bg-zinc-800 border border-zinc-700 border-r-0 rounded-l-2xl flex items-center justify-center text-zinc-400 font-medium text-[14px]">
                   +251
@@ -294,7 +296,7 @@ export default function ClientRegisterPage() {
 
             {/* Password Input */}
             <div className="space-y-1.5">
-              <label className="text-[13px] font-medium text-zinc-300 ml-1">Password</label>
+              <label className="text-[13px] font-medium text-zinc-300 ml-1">{t("admin.common.password")}</label>
               <div className="relative">
                 <input
                   type="password"
@@ -302,7 +304,7 @@ export default function ClientRegisterPage() {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="w-full h-[52px] px-4 bg-zinc-900 border border-zinc-700 rounded-2xl focus:border-green-400/80 focus:ring-1 focus:ring-green-400/80 outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white shadow-sm"
-                  placeholder="Min 6 characters"
+                  placeholder={t("auth.register.client.passwordPlaceholder")}
                 />
               </div>
             </div>
@@ -310,9 +312,9 @@ export default function ClientRegisterPage() {
             <div className="space-y-3 rounded-2xl border border-zinc-700 bg-zinc-900/70 p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[13px] font-bold text-zinc-100">Optional Fayda Verification</p>
+                  <p className="text-[13px] font-bold text-zinc-100">{t("auth.register.client.optionalFayda")}</p>
                   <p className="mt-1 text-[12px] leading-5 text-zinc-500">
-                    Optional during registration, mandatory before creating or signing contracts.
+                    {t("auth.register.client.optionalFaydaDesc")}
                   </p>
                 </div>
                 <button
@@ -325,7 +327,7 @@ export default function ClientRegisterPage() {
                     wantsVerification ? "bg-green-400 text-black" : "bg-zinc-800 text-zinc-300"
                   }`}
                 >
-                  {wantsVerification ? "Enabled" : "Verify"}
+                  {wantsVerification ? t("auth.register.client.enabled") : t("auth.register.client.verify")}
                 </button>
               </div>
 
@@ -338,7 +340,7 @@ export default function ClientRegisterPage() {
                     value={formData.faydaFinNumber}
                     onChange={(e) => setFormData({ ...formData, faydaFinNumber: e.target.value.replace(/\D/g, "").slice(0, 12) })}
                     className="w-full h-[48px] px-4 bg-zinc-950 border border-zinc-700 rounded-2xl focus:border-green-400/80 focus:ring-1 focus:ring-green-400/80 outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white"
-                    placeholder="12-digit Fayda FIN"
+                    placeholder={t("auth.register.client.finPlaceholder")}
                   />
                   <label className="flex h-[48px] cursor-pointer items-center justify-center rounded-2xl border border-dashed border-zinc-700 bg-zinc-950 px-4 text-[12px] font-bold text-zinc-300 hover:border-green-400/60">
                     <input
@@ -347,7 +349,7 @@ export default function ClientRegisterPage() {
                       accept="image/png,image/jpeg,image/webp,application/pdf"
                       onChange={(e) => handleFaydaFile(e.target.files?.[0] || null)}
                     />
-                    {formData.faydaDocName || "Upload Fayda ID image/document"}
+                    {formData.faydaDocName || t("auth.register.client.uploadFayda")}
                   </label>
                   <button
                     type="button"
@@ -357,7 +359,7 @@ export default function ClientRegisterPage() {
                     }}
                     className="text-[12px] font-bold text-zinc-500 hover:text-zinc-300"
                   >
-                    Skip for now
+                    {t("auth.register.client.skip")}
                   </button>
                 </div>
               )}
@@ -373,7 +375,7 @@ export default function ClientRegisterPage() {
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                 ) : (
-                  wantsVerification ? "Create Account & Submit Verification" : "Create Client Account"
+                  wantsVerification ? t("auth.register.client.submitWithVerification") : t("auth.register.client.submit")
                 )}
               </button>
             </div>
@@ -382,15 +384,15 @@ export default function ClientRegisterPage() {
           {/* Switch to Worker */}
           <div className="mt-8 pt-6 border-t border-zinc-800/80 w-full text-center">
             <Link href="/register/worker" className="text-[13px] font-bold text-green-400 hover:text-green-300 transition-colors tracking-wide">
-              Switch to Worker Onboarding instead &rarr;
+              {t("auth.register.client.switchWorker")} &rarr;
             </Link>
           </div>
 
           {/* Footer */}
           <p className="text-center text-[13px] text-zinc-400 font-medium mt-auto pt-10 pb-6 w-full">
-            Already have an account?{" "}
+            {t("auth.register.client.haveAccount")}{" "}
             <Link href="/login" className="text-green-400 font-bold hover:text-green-300 transition-colors">
-              Sign In
+              {t("auth.register.client.signIn")}
             </Link>
           </p>
 

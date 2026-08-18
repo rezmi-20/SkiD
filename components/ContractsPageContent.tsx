@@ -38,11 +38,11 @@ export default function ContractsPageContent({ contracts = [], role }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const tabs = [
-    { id: "all", label: "All" },
-    { id: "active", label: "Active" },
-    { id: "pending", label: "Pending" },
-    { id: "completed", label: "Completed" },
-    { id: "disputed", label: "Disputed" },
+    { id: "all", label: t("contracts.all") },
+    { id: "active", label: t("contracts.active") },
+    { id: "pending", label: t("contracts.pending") },
+    { id: "completed", label: t("contracts.completed") },
+    { id: "disputed", label: t("contracts.disputed") },
   ];
 
   const filteredContracts = contracts.filter((c) => {
@@ -67,20 +67,20 @@ export default function ContractsPageContent({ contracts = [], role }: Props) {
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-primary">
-            Service Repository
+            {t("contracts.repository")}
           </p>
           <h1 className="text-3xl font-extrabold tracking-tight mt-0.5">
-            My Contracts
+            {t("contracts.title")}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Monitor and manage your active and past service agreements.
+            {t("contracts.desc")}
           </p>
         </div>
         
         {role === "client" && (
           <Button asChild className="rounded-xl font-semibold shadow-sm shadow-primary/20 shrink-0">
             <Link href="/client/search">
-              <Plus className="mr-1.5 h-4 w-4" /> New Contract
+              <Plus className="mr-1.5 h-4 w-4" /> {t("contracts.new")}
             </Link>
           </Button>
         )}
@@ -106,7 +106,7 @@ export default function ContractsPageContent({ contracts = [], role }: Props) {
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant opacity-60" size={16} />
           <Input 
             type="text"
-            placeholder="Search by name, title, or service type..."
+            placeholder={t("contracts.search_detailed")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 h-11 rounded-xl bg-surface-container border-outline-variant/40 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
@@ -123,6 +123,7 @@ export default function ContractsPageContent({ contracts = [], role }: Props) {
               const isCompleted = ["paid", "closed"].includes(contract.job_status);
               const canRatePartner = isCompleted && !contract.user_has_rated;
               const isDisputed = contract.job_status === 'disputed';
+              const canOpenDispute = ["accepted", "active", "in_progress", "completion_requested", "completed", "payment_pending", "paid"].includes(contract.job_status);
               const isDraft = status === "DRAFT";
               const isPending = !contract.signed_at;
               const partnerInitials = (contract.partner_name || "P").slice(0, 2).toUpperCase();
@@ -154,14 +155,14 @@ export default function ContractsPageContent({ contracts = [], role }: Props) {
                             {contract.partner_name}
                           </h3>
                           <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-50 mt-0.5">
-                            {role === "client" ? "Verified Contractor" : "Client Account"}
+                            {role === "client" ? t("contracts.partner.verifiedContractor") : t("contracts.partner.clientAccount")}
                           </p>
                         </div>
                         <Badge 
                           variant="outline" 
                           className={`rounded-full text-[9px] uppercase font-bold tracking-wider px-2.5 py-0.5 border ${getStatusStyles(status)}`}
                         >
-                          {getStatusLabel(status, contract.signed_at)}
+                          {getStatusLabel(status, contract.signed_at, t)}
                         </Badge>
                       </div>
 
@@ -171,19 +172,19 @@ export default function ContractsPageContent({ contracts = [], role }: Props) {
                       <div className="space-y-2 text-xs">
                         {/* Service Title */}
                         <div className="flex justify-between items-start py-1 gap-4">
-                          <span className="text-on-surface-variant opacity-60 font-semibold shrink-0">Service Job:</span>
+                          <span className="text-on-surface-variant opacity-60 font-semibold shrink-0">{t("contracts.serviceJob")}</span>
                           <span className="font-bold text-on-surface text-right truncate max-w-[180px]">{contract.job_title}</span>
                         </div>
 
                         {/* Contract ID */}
                         <div className="flex justify-between items-center py-1">
-                          <span className="text-on-surface-variant opacity-60 font-semibold flex items-center gap-1"><Hash size={12} /> Contract ID:</span>
+                          <span className="text-on-surface-variant opacity-60 font-semibold flex items-center gap-1"><Hash size={12} /> {t("contracts.contractId")}</span>
                           <span className="font-mono font-bold text-[10px] text-on-surface">{displayId}</span>
                         </div>
 
                         {/* Date Created */}
                         <div className="flex justify-between items-center py-1">
-                          <span className="text-on-surface-variant opacity-60 font-semibold flex items-center gap-1"><Calendar size={12} /> Date Created:</span>
+                          <span className="text-on-surface-variant opacity-60 font-semibold flex items-center gap-1"><Calendar size={12} /> {t("contracts.dateCreated")}</span>
                           <span className="font-bold text-on-surface">
                             {new Date(contract.contract_created_at).toLocaleDateString(undefined, { 
                               month: 'short', 
@@ -195,7 +196,7 @@ export default function ContractsPageContent({ contracts = [], role }: Props) {
 
                         {/* Agreed Budget */}
                         <div className="flex justify-between items-center py-1">
-                          <span className="text-on-surface-variant opacity-60 font-semibold flex items-center gap-1"><CreditCard size={12} /> Budget:</span>
+                          <span className="text-on-surface-variant opacity-60 font-semibold flex items-center gap-1"><CreditCard size={12} /> {t("contracts.budgetLabel")}</span>
                           <span className="font-extrabold text-on-surface">
                             {contract.budget ? `${contract.budget.toLocaleString()} ETB` : "—"}
                           </span>
@@ -208,13 +209,13 @@ export default function ContractsPageContent({ contracts = [], role }: Props) {
                       <div className="flex gap-2 w-full pt-4">
                         <Button asChild className="flex-1 rounded-xl text-xs font-bold uppercase tracking-wider h-10 shadow-sm active:scale-95 duration-150" variant="default">
                           <Link href={`/contracts/${contract.contract_id}`}>
-                            <span>{isDraft ? (role === "client" ? "Open Draft" : "Review Draft") : isPending ? "Review & Sign" : "Manage"}</span>
+                            <span>{isDraft ? (role === "client" ? t("contracts.openDraft") : t("contracts.reviewDraft")) : isPending ? t("contracts.reviewSign") : t("contracts.manage")}</span>
                             <ArrowRight size={13} className="ml-1.5" />
                           </Link>
                         </Button>
                         
                         {(contract.signed_at || contract.pdf_url) && (
-                          <Button variant="outline" size="icon" className="rounded-xl h-10 w-10 shrink-0 border-outline-variant hover:text-primary hover:border-primary active:scale-95 duration-150" title="Download Agreement">
+                          <Button variant="outline" size="icon" className="rounded-xl h-10 w-10 shrink-0 border-outline-variant hover:text-primary hover:border-primary active:scale-95 duration-150" title={t("contracts.downloadAgreement")}>
                             <Download size={14} />
                           </Button>
                         )}
@@ -224,7 +225,7 @@ export default function ContractsPageContent({ contracts = [], role }: Props) {
                         <Button variant="outline" size="sm" className="w-full rounded-xl text-xs font-bold uppercase tracking-wider h-10 text-primary border-primary/20 hover:bg-primary/5 active:scale-95 duration-150" asChild>
                           <Link href={role === 'client' ? `/client/rate/${contract.job_id}` : `/worker/rate/${contract.job_id}`}>
                             <Star size={12} className="mr-1.5 fill-primary stroke-none" />
-                            Rate Partner
+                            {t("contracts.ratePartner")}
                           </Link>
                         </Button>
                       )}
@@ -233,15 +234,26 @@ export default function ContractsPageContent({ contracts = [], role }: Props) {
                         <Button variant="outline" size="sm" className="w-full rounded-xl text-xs font-bold uppercase tracking-wider h-10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/5 dark:text-emerald-400 dark:border-emerald-400/20 active:scale-95 duration-150" asChild>
                           <Link href={`/client/pay/${contract.job_id}`}>
                             <CreditCard size={12} className="mr-1.5" />
-                            Complete Payment
+                            {t("contracts.completePayment")}
+                          </Link>
+                        </Button>
+                      )}
+
+                      {canOpenDispute && !isDisputed && (
+                        <Button variant="outline" size="sm" className="w-full rounded-xl text-xs font-bold uppercase tracking-wider h-10 text-rose-500 border-rose-500/20 hover:bg-rose-500/5 active:scale-95 duration-150" asChild>
+                          <Link href={`/${role}/disputes/new`}>
+                            <AlertTriangle size={12} className="mr-1.5" />
+                            Open Dispute
                           </Link>
                         </Button>
                       )}
 
                       {isDisputed && (
-                        <Button variant="outline" size="sm" className="w-full rounded-xl text-xs font-bold uppercase tracking-wider h-10 text-rose-500 border-rose-500/20 hover:bg-rose-500/5 active:scale-95 duration-150">
+                        <Button variant="outline" size="sm" className="w-full rounded-xl text-xs font-bold uppercase tracking-wider h-10 text-rose-500 border-rose-500/20 hover:bg-rose-500/5 active:scale-95 duration-150" asChild>
+                          <Link href={`/${role}/disputes`}>
                           <AlertTriangle size={12} className="mr-1.5" />
-                          Open Resolution
+                          {t("contracts.openResolution")}
+                          </Link>
                         </Button>
                       )}
                     </div>
@@ -259,14 +271,14 @@ export default function ContractsPageContent({ contracts = [], role }: Props) {
               <FolderOpen size={24} />
             </div>
             <div className="max-w-xs mx-auto space-y-1">
-              <p className="font-black text-sm uppercase tracking-wide text-on-surface">Repository Empty</p>
+              <p className="font-black text-sm uppercase tracking-wide text-on-surface">{t("contracts.emptyRepository")}</p>
               <p className="text-xs text-on-surface-variant opacity-60 leading-relaxed">
-                No service agreements were found matching your selection.
+                {t("contracts.emptyFilteredDesc")}
               </p>
             </div>
             <Button size="sm" variant="outline" className="rounded-xl border-outline-variant font-bold uppercase tracking-wider text-xs px-4" asChild>
               <Link href={role === "client" ? "/client/search" : "/worker/dashboard"}>
-                {role === "client" ? "Explore Professionals" : "Visit Dashboard"}
+                {role === "client" ? t("contracts.exploreProfessionals") : t("contracts.visitDashboard")}
               </Link>
             </Button>
           </CardContent>
@@ -276,25 +288,25 @@ export default function ContractsPageContent({ contracts = [], role }: Props) {
   );
 }
 
-function getStatusLabel(status: string, signedAt: string | null) {
+function getStatusLabel(status: string, signedAt: string | null, t: (key: any) => string) {
   switch (status) {
-    case "DRAFT": return "Draft";
-    case "READY_FOR_SIGNATURE": return "Ready to Sign";
-    case "CLIENT_SIGNED": return "Client Signed";
-    case "WORKER_SIGNED": return "Worker Signed";
-    case "FULLY_SIGNED": return "Fully Signed";
-    case "ACTIVE": return "Active";
+    case "DRAFT": return t("contracts.status.draft");
+    case "READY_FOR_SIGNATURE": return t("contracts.status.readyToSign");
+    case "CLIENT_SIGNED": return t("contracts.status.clientSigned");
+    case "WORKER_SIGNED": return t("contracts.status.workerSigned");
+    case "FULLY_SIGNED": return t("contracts.status.fullySigned");
+    case "ACTIVE": return t("contracts.active");
   }
-  if (!signedAt) return "Pending Signature";
+  if (!signedAt) return t("contracts.status.pending_signature");
   switch (status) {
-    case "active": return "In Progress";
-    case "completion_requested": return "Completion Review";
-    case "completed": return "Finalized";
-    case "payment_pending": return "Payment Pending";
-    case "paid": return "Paid";
-    case "closed": return "Closed";
-    case "disputed": return "In Dispute";
-    case "cancelled": return "Terminated";
+    case "active": return t("contracts.status.inProgress");
+    case "completion_requested": return t("contracts.status.completionReview");
+    case "completed": return t("contracts.status.finalized");
+    case "payment_pending": return t("contracts.status.paymentPending");
+    case "paid": return t("contracts.status.paid");
+    case "closed": return t("contracts.status.closed");
+    case "disputed": return t("contracts.status.inDispute");
+    case "cancelled": return t("contracts.status.terminated");
     default: return status;
   }
 }

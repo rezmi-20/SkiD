@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { resubmitVerification } from "@/lib/actions/profile";
 import { useLanguage } from "@/context/LanguageContext";
 
-export default function VerificationResubmitForm() {
+export default function VerificationResubmitForm({ mode = "resubmit" }: { mode?: "resubmit" | "reverify" }) {
   const { t } = useLanguage();
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -94,14 +94,14 @@ export default function VerificationResubmitForm() {
       <div className="flex items-center gap-2 mb-1">
         <span className="material-symbols-outlined text-red-400 text-[18px]">upload_file</span>
         <p className="text-xs font-black text-zinc-300 uppercase tracking-widest">
-          {t("verification.resubmit.title")}
+          {mode === "reverify" ? t("verification.reverify.title") : t("verification.resubmit.title")}
         </p>
       </div>
 
       {/* Drop / Click Zone */}
       <div className="space-y-2">
         <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-          Fayda FIN
+          {t("verification.resubmit.fin_label")}
         </label>
         <input
           type="password"
@@ -113,7 +113,7 @@ export default function VerificationResubmitForm() {
             setError(null);
             setFinNumber(event.target.value.replace(/\D/g, "").slice(0, 12));
           }}
-          placeholder="Enter your 12-digit FIN"
+          placeholder={t("verification.resubmit.fin_placeholder")}
           className="h-12 w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 text-sm font-bold text-zinc-100 outline-none focus:border-red-400"
         />
       </div>
@@ -185,7 +185,7 @@ export default function VerificationResubmitForm() {
         ) : (
           <>
             <span className="material-symbols-outlined text-[18px]">send</span>
-            {t("verification.resubmit.btn")}
+            {mode === "reverify" ? t("verification.reverify.btn") : t("verification.resubmit.btn")}
           </>
         )}
       </button>

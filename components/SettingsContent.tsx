@@ -20,7 +20,7 @@ interface ChapaBank {
 export default function SettingsContent({ initialData, role }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { language, setLanguage } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const [isPending, setIsPending] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
@@ -69,14 +69,14 @@ export default function SettingsContent({ initialData, role }: Props) {
     fetch("/api/list-banks")
       .then(async (res) => {
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Unable to load banks.");
+        if (!res.ok) throw new Error(data.error || t("settings.errLoadBanks"));
         return data.banks || [];
       })
       .then((bankList: ChapaBank[]) => {
         if (isMounted) setBanks(bankList);
       })
       .catch((err) => {
-        if (isMounted) setPayoutMessage(err instanceof Error ? err.message : "Unable to load banks.");
+        if (isMounted) setPayoutMessage(err instanceof Error ? err.message : t("settings.errLoadBanks"));
       })
       .finally(() => {
         if (isMounted) setBanksLoading(false);
@@ -93,12 +93,12 @@ export default function SettingsContent({ initialData, role }: Props) {
     if (!file) return;
     const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
-      setError("Avatar must be PNG, JPG, or WebP.");
+      setError(t("settings.errAvatarType"));
       input.value = "";
       return;
     }
     if (file.size > 2 * 1024 * 1024) {
-      setError("Avatar image must be 2 MB or smaller.");
+      setError(t("settings.errAvatarSize"));
       input.value = "";
       return;
     }
@@ -113,10 +113,10 @@ export default function SettingsContent({ initialData, role }: Props) {
       if (res.ok && data.url) {
         setFormData((prev: typeof formData) => ({ ...prev, avatarUrl: data.url }));
       } else {
-        setError(data.error || "Upload failed");
+        setError(data.error || t("settings.errUploadFailed"));
       }
     } catch {
-      setError("Avatar upload failed");
+      setError(t("settings.errAvatarUploadFailed"));
     } finally {
       setUploading(false);
       input.value = "";
@@ -128,13 +128,13 @@ export default function SettingsContent({ initialData, role }: Props) {
     setVerificationError("");
     const allowedTypes = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
     if (!allowedTypes.includes(file.type)) {
-      setError("Fayda document must be PNG, JPG, WebP, or PDF.");
-      setVerificationError("Fayda document must be PNG, JPG, WebP, or PDF.");
+      setError(t("settings.errFaydaDocType"));
+      setVerificationError(t("settings.errFaydaDocType"));
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setError("Fayda document must be 5 MB or smaller.");
-      setVerificationError("Fayda document must be 5 MB or smaller.");
+      setError(t("settings.errFaydaDocSize"));
+      setVerificationError(t("settings.errFaydaDocSize"));
       return;
     }
 
@@ -146,7 +146,7 @@ export default function SettingsContent({ initialData, role }: Props) {
         faydaDocName: file.name,
       }));
     };
-    reader.onerror = () => setError("Could not read Fayda document.");
+    reader.onerror = () => setError(t("settings.errFaydaDocRead"));
     reader.readAsDataURL(file);
   };
 
@@ -173,15 +173,15 @@ export default function SettingsContent({ initialData, role }: Props) {
         };
 
         if (!clientCanSubmitVerification) {
-          showVerificationError("A verification request is already pending or approved.");
+          showVerificationError(t("settings.errVerificationBlocked"));
           return;
         }
         if (!formData.faydaFinNumber || !formData.faydaDocDataUrl) {
-          showVerificationError("Submit both your 12-digit FIN and Fayda ID image/document together.");
+          showVerificationError(t("settings.errVerificationBoth"));
           return;
         }
         if (!/^\d{12}$/.test(formData.faydaFinNumber)) {
-          showVerificationError("FIN must be exactly 12 digits.");
+          showVerificationError(t("settings.errFinDigits"));
           return;
         }
       }
@@ -196,13 +196,13 @@ export default function SettingsContent({ initialData, role }: Props) {
         }
         setTimeout(() => setSuccess(false), 3000);
       } else {
-        setError(res.error || "Update failed");
+        setError(res.error || t("settings.errUpdateFailed"));
         if (wantsClientVerification) {
-          setVerificationError(res.error || "Verification submission failed.");
+          setVerificationError(res.error || t("settings.errVerificationSubmit"));
         }
       }
     } catch (err) {
-      setError("An unexpected error occurred");
+      setError(t("settings.errUnexpected"));
     } finally {
       setIsPending(false);
     }
@@ -232,24 +232,24 @@ export default function SettingsContent({ initialData, role }: Props) {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Unable to create Chapa subaccount.");
+        throw new Error(data.error || t("settings.errCreateSubaccount"));
       }
 
       setPayoutStatus("success");
-      setPayoutMessage(data.message || "Chapa payout account connected.");
+      setPayoutMessage(data.message || t("settings.payoutConnected"));
       router.refresh();
     } catch (err) {
       setPayoutStatus("error");
-      setPayoutMessage(err instanceof Error ? err.message : "Unable to create Chapa subaccount.");
+      setPayoutMessage(err instanceof Error ? err.message : t("settings.errCreateSubaccount"));
     }
   };
 
   const sections = [
-    { id: "personal", label: "Personal Info", icon: "person" },
-    ...(role === "worker" ? [{ id: "professional", label: "Professional", icon: "construction" }] : []),
-    ...(role === "worker" ? [{ id: "payout", label: "Payout", icon: "account_balance" }] : []),
-    { id: "security", label: "Security", icon: "security" },
-    { id: "notifications", label: "Preferences", icon: "notifications" },
+    { id: "personal", label: t("settings.section.personalInfo"), icon: "person" },
+    ...(role === "worker" ? [{ id: "professional", label: t("settings.section.professional"), icon: "construction" }] : []),
+    ...(role === "worker" ? [{ id: "payout", label: t("settings.section.payout"), icon: "account_balance" }] : []),
+    { id: "security", label: t("settings.section.security"), icon: "security" },
+    { id: "notifications", label: t("settings.section.preferences"), icon: "notifications" },
   ];
 
   return (
@@ -273,11 +273,11 @@ export default function SettingsContent({ initialData, role }: Props) {
               ) : success ? (
                 <span className="material-symbols-outlined text-[18px]">check_circle</span>
               ) : (
-                "Save Changes"
+                t("settings.saveChanges")
               )}
            </button>
         </div>
-        <h1 className="text-3xl font-black text-on-surface tracking-tight uppercase">Profile <span className="text-primary italic">Settings</span></h1>
+        <h1 className="text-3xl font-black text-on-surface tracking-tight uppercase">{t("settings.titleProfile")} <span className="text-primary italic">{t("settings.titleSettings")}</span></h1>
         {verificationReason && (
           <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-5 py-4 text-sm font-semibold text-on-surface">
             {verificationReason}
@@ -362,17 +362,17 @@ export default function SettingsContent({ initialData, role }: Props) {
                     </div>
                     <div className="text-center">
                        <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-40">
-                         {initialData.is_verified ? "Official Fayda Identity Photo" : "Tap to update avatar"}
+                         {initialData.is_verified ? t("settings.avatarOfficial") : t("settings.avatarUpdate")}
                        </p>
                        {initialData.is_verified && (
-                         <p className="text-[9px] text-primary font-bold uppercase tracking-tighter mt-1">Locked after Verification</p>
+                         <p className="text-[9px] text-primary font-bold uppercase tracking-tighter mt-1">{t("settings.lockedAfterVerification")}</p>
                        )}
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2 relative">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">Full Name</label>
+                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">{t("settings.fullName")}</label>
                        <input 
                          type="text" 
                          value={formData.fullName}
@@ -389,7 +389,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                        )}
                     </div>
                     <div className="space-y-2">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">Phone Number</label>
+                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">{t("settings.phoneNumber")}</label>
                        <input 
                          type="text" 
                          value={formData.phone}
@@ -398,7 +398,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                        />
                     </div>
                     <div className="space-y-2 md:col-span-2">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">Fayda Identification Number (FIN)</label>
+                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">{t("settings.faydaFin")}</label>
                        <div className="relative">
                          <input
                            type={initialData.is_verified || showFin ? "text" : "password"}
@@ -411,7 +411,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                              setFormData({...formData, faydaFinNumber: e.target.value.replace(/\D/g, "").slice(0, 12)});
                            }}
                            disabled={initialData.is_verified || (role === "client" && !clientCanSubmitVerification)}
-                           placeholder={initialData.is_verified ? initialData.masked_fin || "Not recorded" : "Enter your 12-digit FIN"}
+                           placeholder={initialData.is_verified ? initialData.masked_fin || t("settings.notRecorded") : t("verification.resubmit.fin_placeholder")}
                            className={`w-full h-14 border rounded-2xl pl-6 pr-14 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-bold text-sm ${
                              initialData.is_verified
                               ? "bg-surface-container-low border-primary/20 text-on-surface opacity-80 cursor-not-allowed"
@@ -422,8 +422,8 @@ export default function SettingsContent({ initialData, role }: Props) {
                            <button
                              type="button"
                              onClick={() => setShowFin((value) => !value)}
-                             aria-label={showFin ? "Hide FIN" : "Show FIN"}
-                             title={showFin ? "Hide FIN" : "Show FIN"}
+                             aria-label={showFin ? t("settings.hideFin") : t("settings.showFin")}
+                             title={showFin ? t("settings.hideFin") : t("settings.showFin")}
                              className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
                            >
                              <span className="material-symbols-outlined text-[20px]">
@@ -437,24 +437,31 @@ export default function SettingsContent({ initialData, role }: Props) {
                       <div className="space-y-3 md:col-span-2 rounded-2xl border border-surface-container-highest bg-surface-container-low/60 p-4">
                         <div className="flex items-start justify-between gap-4">
                           <div>
-                            <p className="text-xs font-black uppercase tracking-widest text-on-surface">Fayda Verification</p>
+                            <p className="text-xs font-black uppercase tracking-widest text-on-surface">{t("settings.faydaVerification")}</p>
                             <p className="mt-1 text-xs leading-5 text-on-surface-variant">
-                              Submit your FIN and Fayda document together. This is required before setting up a contract PIN.
+                              {t("settings.faydaVerificationDesc")}
                             </p>
                             {verificationStatus === "pending" && (
-                              <p className="mt-2 text-xs font-bold text-amber-500">Pending Verification</p>
+                              <p className="mt-2 text-xs font-bold text-amber-500">{t("settings.pendingVerification")}</p>
                             )}
                             {verificationStatus === "rejected" && (
                               <p className="mt-2 text-xs font-bold text-error">
-                                Rejected{initialData.verification_reason ? `: ${initialData.verification_reason}` : ""}
+                                {t("settings.rejected")}{initialData.verification_reason ? `: ${initialData.verification_reason}` : ""}
+                              </p>
+                            )}
+                            {verificationStatus === "revoked" && (
+                              <p className="mt-2 text-xs font-bold text-error">
+                                {t("settings.revoked")}{initialData.verification_reason ? `: ${initialData.verification_reason}` : ""}
                               </p>
                             )}
                             {verificationStatus === "approved" && (
-                              <p className="mt-2 text-xs font-bold text-primary">Approved. Masked FIN: {initialData.masked_fin || "recorded"}</p>
+                              <p className="mt-2 text-xs font-bold text-primary">{t("settings.approvedMaskedFin")} {initialData.masked_fin || t("settings.recorded")}</p>
                             )}
                           </div>
                           <span className="rounded-full border border-surface-container-highest px-3 py-1 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                            {verificationStatus === "incomplete" ? "not started" : verificationStatus.replace("_", " ")}
+                            {verificationStatus === "incomplete" || verificationStatus === "not_started"
+                              ? t("settings.notStarted")
+                              : t(`verification.status.${verificationStatus}` as any)}
                           </span>
                         </div>
 
@@ -467,7 +474,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                                 accept="image/png,image/jpeg,image/webp,application/pdf"
                                 onChange={(event) => handleFaydaDocumentUpload(event.target.files?.[0] || null)}
                               />
-                              {formData.faydaDocName || "Upload Fayda ID image/document"}
+                              {formData.faydaDocName || t("settings.uploadFaydaDoc")}
                             </label>
                             <button
                               type="submit"
@@ -476,7 +483,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                               disabled={isPending}
                               className="flex h-12 w-full items-center justify-center rounded-2xl bg-primary px-4 text-xs font-black uppercase tracking-widest text-on-primary transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
                             >
-                              {isPending ? "Submitting..." : "Submit Verification"}
+                              {isPending ? t("verification.resubmit.submitting") : t("settings.submitVerification")}
                             </button>
                             {verificationError && (
                               <p className="rounded-2xl border border-error/20 bg-error-container px-4 py-3 text-xs font-bold text-on-error-container">
@@ -488,7 +495,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                       </div>
                     )}
                     <div className="space-y-2">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">Email Address</label>
+                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">{t("settings.emailAddress")}</label>
                        <input 
                          type="email" 
                          value={formData.email}
@@ -497,16 +504,16 @@ export default function SettingsContent({ initialData, role }: Props) {
                        />
                     </div>
                     <div className="space-y-2">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">Gender</label>
+                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">{t("settings.gender")}</label>
                        <select 
                          value={formData.gender}
                          onChange={e => setFormData({...formData, gender: e.target.value})}
                          className="w-full h-14 bg-surface-container-lowest border border-surface-container-highest rounded-2xl px-6 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-bold text-sm appearance-none"
                        >
-                          <option value="">Select Gender</option>
-                          <option value="male">Male</option>
-                          <option value="female">Female</option>
-                          <option value="other">Other</option>
+                          <option value="">{t("settings.selectGender")}</option>
+                          <option value="male">{t("settings.genderMale")}</option>
+                          <option value="female">{t("settings.genderFemale")}</option>
+                          <option value="other">{t("settings.genderOther")}</option>
                        </select>
                     </div>
                   </div>
@@ -522,18 +529,18 @@ export default function SettingsContent({ initialData, role }: Props) {
                   className="space-y-8"
                 >
                   <div className="space-y-2">
-                     <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">Professional Bio</label>
+                     <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">{t("settings.professionalBio")}</label>
                      <textarea 
                        rows={4}
                        value={formData.bio}
                        onChange={e => setFormData({...formData, bio: e.target.value})}
                        className="w-full bg-surface-container-lowest border border-surface-container-highest rounded-[2rem] p-6 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm leading-relaxed"
-                       placeholder="Describe your expertise and service quality..."
+                       placeholder={t("settings.professionalBioPlaceholder")}
                      />
                   </div>
 
                   <div className="space-y-4">
-                     <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">Service Skills</label>
+                     <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">{t("settings.serviceSkills")}</label>
                      <div className="flex flex-wrap gap-2">
                         {formData.skills.map((s: string, i: number) => (
                           <span key={i} className="px-5 py-2.5 bg-primary/10 text-primary border border-primary/20 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
@@ -545,14 +552,14 @@ export default function SettingsContent({ initialData, role }: Props) {
                         ))}
                         <button type="button" className="px-5 py-2.5 bg-surface-container-high border border-surface-container-highest rounded-2xl text-[10px] font-black uppercase tracking-widest text-on-surface-variant flex items-center gap-2 hover:bg-primary/5 hover:text-primary transition-all">
                            <span className="material-symbols-outlined text-[16px]">add</span>
-                           Add Skill
+                           {t("settings.addSkill")}
                         </button>
                      </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">Hourly Rate (ETB)</label>
+                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">{t("settings.hourlyRate")}</label>
                        <input 
                          type="number" 
                          value={formData.hourlyRate}
@@ -561,7 +568,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                        />
                     </div>
                     <div className="space-y-2">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">District / Area</label>
+                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">{t("settings.districtArea")}</label>
                        <input 
                          type="text" 
                          value={formData.district}
@@ -592,12 +599,12 @@ export default function SettingsContent({ initialData, role }: Props) {
                       </div>
                       <div className="min-w-0">
                         <h3 className="text-sm font-black uppercase tracking-widest text-on-surface">
-                          Chapa Payout Account
+                          {t("settings.chapaPayoutAccount")}
                         </h3>
                         <p className="mt-1 text-xs leading-5 text-on-surface-variant">
                           {hasChapaSubaccount
-                            ? "Your Chapa subaccount is connected. Client payments can now be split and released to you."
-                            : "Connect your bank account so clients can pay completed jobs through Chapa split payments."}
+                            ? t("settings.chapaConnectedDesc")
+                            : t("settings.chapaConnectDesc")}
                         </p>
                         {hasChapaSubaccount && (
                           <p className="mt-3 truncate font-mono text-[11px] text-primary">
@@ -613,7 +620,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <div className="space-y-2">
                           <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                            Account Name
+                            {t("settings.accountName")}
                           </label>
                           <input
                             type="text"
@@ -624,7 +631,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                         </div>
                         <div className="space-y-2">
                           <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                            Account Number
+                            {t("settings.accountNumber")}
                           </label>
                           <input
                             type="text"
@@ -637,7 +644,7 @@ export default function SettingsContent({ initialData, role }: Props) {
 
                       <div className="space-y-2">
                         <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                          Bank
+                          {t("settings.bank")}
                         </label>
                         <select
                           value={payoutForm.bankCode}
@@ -652,7 +659,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                           disabled={banksLoading}
                           className="h-14 w-full appearance-none rounded-2xl border border-surface-container-highest bg-surface-container-lowest px-6 text-sm font-bold outline-none transition-all focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
                         >
-                          <option value="">{banksLoading ? "Loading banks..." : "Select bank"}</option>
+                          <option value="">{banksLoading ? t("settings.loadingBanks") : t("settings.selectBank")}</option>
                           {banks.map((bank) => {
                             const code = String(bank.code ?? bank.id ?? "");
                             if (!code) return null;
@@ -675,7 +682,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                         <span className={`material-symbols-outlined text-[18px] ${payoutStatus === "loading" ? "animate-spin" : ""}`}>
                           {payoutStatus === "loading" ? "sync" : "add_card"}
                         </span>
-                        {payoutStatus === "loading" ? "Connecting..." : "Connect Chapa Payout"}
+                        {payoutStatus === "loading" ? t("settings.connecting") : t("settings.connectChapaPayout")}
                       </button>
                     </div>
                   )}
@@ -706,18 +713,18 @@ export default function SettingsContent({ initialData, role }: Props) {
                            <span className="material-symbols-outlined">lock</span>
                         </div>
                         <div>
-                           <h3 className="text-sm font-black text-on-surface uppercase tracking-widest">Account Security</h3>
-                           <p className="text-xs text-on-surface-variant opacity-60">Manage your access credentials</p>
+                           <h3 className="text-sm font-black text-on-surface uppercase tracking-widest">{t("settings.accountSecurity")}</h3>
+                           <p className="text-xs text-on-surface-variant opacity-60">{t("settings.manageCredentials")}</p>
                         </div>
                      </div>
                      
                      <div className="flex flex-col gap-3">
                         <button type="button" className="w-full h-14 bg-surface-container-lowest border border-surface-container-highest rounded-2xl flex items-center justify-between px-6 hover:border-primary/30 transition-all group">
-                           <span className="text-xs font-bold text-on-surface uppercase tracking-widest">Change PIN Code</span>
+                           <span className="text-xs font-bold text-on-surface uppercase tracking-widest">{t("settings.changePin")}</span>
                            <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">chevron_right</span>
                         </button>
                         <button type="button" className="w-full h-14 bg-surface-container-lowest border border-surface-container-highest rounded-2xl flex items-center justify-between px-6 hover:border-primary/30 transition-all group">
-                           <span className="text-xs font-bold text-on-surface uppercase tracking-widest">Update Password</span>
+                           <span className="text-xs font-bold text-on-surface uppercase tracking-widest">{t("settings.updatePassword")}</span>
                            <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">chevron_right</span>
                         </button>
                      </div>
@@ -725,11 +732,11 @@ export default function SettingsContent({ initialData, role }: Props) {
 
                   <div className="p-8 bg-error-container/10 border border-error/20 rounded-[3rem] flex items-center justify-between">
                      <div className="space-y-1">
-                        <h3 className="text-sm font-black text-error uppercase tracking-widest">Danger Zone</h3>
-                        <p className="text-xs text-error opacity-60">Permanently delete your account</p>
+                        <h3 className="text-sm font-black text-error uppercase tracking-widest">{t("settings.dangerZone")}</h3>
+                        <p className="text-xs text-error opacity-60">{t("settings.deleteAccountDesc")}</p>
                      </div>
                      <button type="button" className="px-6 py-3 bg-error text-on-error rounded-xl text-[10px] font-black uppercase tracking-widest hover:shadow-lg hover:shadow-error/20 active:scale-95 transition-all">
-                        Delete Account
+                        {t("settings.deleteAccount")}
                      </button>
                   </div>
                 </motion.section>
@@ -744,8 +751,8 @@ export default function SettingsContent({ initialData, role }: Props) {
                   className="space-y-10"
                 >
                   <div className="space-y-6">
-                     <h3 className="text-label-sm uppercase tracking-[0.2em] text-on-surface-variant ml-4 opacity-60">Platform Language</h3>
-                     <div className="grid grid-cols-2 gap-4">
+                     <h3 className="text-label-sm uppercase tracking-[0.2em] text-on-surface-variant ml-4 opacity-60">{t("footer.language")}</h3>
+                     <div className="grid grid-cols-3 gap-4">
                         <button 
                           type="button"
                           onClick={() => setLanguage('en')}
@@ -766,16 +773,26 @@ export default function SettingsContent({ initialData, role }: Props) {
                            <span className="text-xl font-black">አማ</span>
                            <span className="text-[9px] uppercase tracking-widest font-bold opacity-60">Amharic</span>
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => setLanguage('om')}
+                          className={`h-20 rounded-[2rem] border transition-all flex flex-col items-center justify-center gap-1 ${
+                            language === 'om' ? "bg-primary text-on-primary border-primary shadow-xl" : "bg-surface-container-low border-surface-container-highest text-on-surface-variant"
+                          }`}
+                        >
+                           <span className="text-xl font-black">OM</span>
+                           <span className="text-[9px] uppercase tracking-widest font-bold opacity-60">Afaan Oromo</span>
+                        </button>
                      </div>
                   </div>
 
                   <div className="space-y-6">
-                     <h3 className="text-label-sm uppercase tracking-[0.2em] text-on-surface-variant ml-4 opacity-60">Push Notifications</h3>
+                     <h3 className="text-label-sm uppercase tracking-[0.2em] text-on-surface-variant ml-4 opacity-60">{t("settings.pushNotifications")}</h3>
                      <div className="space-y-3">
                         {[
-                          { label: "Job Request Alerts", id: "notify_requests" },
-                          { label: "Contract Updates", id: "notify_contracts" },
-                          { label: "Messaging Notifications", id: "notify_messages" },
+                          { label: t("settings.notifyJobRequests"), id: "notify_requests" },
+                          { label: t("settings.notifyContractUpdates"), id: "notify_contracts" },
+                          { label: t("settings.notifyMessages"), id: "notify_messages" },
                         ].map(n => (
                           <div key={n.id} className="flex items-center justify-between p-6 bg-surface-container-lowest border border-surface-container-highest rounded-[2rem]">
                              <span className="text-xs font-bold text-on-surface uppercase tracking-widest">{n.label}</span>

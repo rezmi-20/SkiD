@@ -47,6 +47,7 @@ interface WorkerVerificationContentProps {
     canApprove: boolean;
     canReject: boolean;
     canRequestResubmission: boolean;
+    canRevoke: boolean;
   };
   onApprove?: () => void;
   onReject?: (reason: string) => void;
@@ -74,10 +75,13 @@ export default function WorkerVerificationContent({
       activeReviewStatus &&
       ["pending", "rejected", "resubmission_requested"].includes(String(worker.verification_status || "pending")),
   );
-  const requireReason = (action: (reason: string) => void) => {
+  const requireReason = (action: (reason: string) => void, options?: { confirmRevocation?: boolean }) => {
     const reason = rejectReason.trim();
     if (!reason) {
       alert("Please enter a reason before rejecting or revoking verification.");
+      return;
+    }
+    if (options?.confirmRevocation && !window.confirm("Revoke this approved verification? The account will lose verified access until reverified.")) {
       return;
     }
     action(reason);
@@ -176,7 +180,7 @@ export default function WorkerVerificationContent({
                 <p className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest opacity-30 mb-1">Reason</p>
                 <p className="font-bold text-on-surface leading-tight">{worker.verification_reason || "No reason recorded"}</p>
               </div>
-              {history.slice(0, 6).map((event) => (
+              {history.map((event) => (
                 <div key={event.id} className="border-t border-surface-container-highest/50 pt-3">
                   <p className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest opacity-30 mb-1">
                     {event.action.replaceAll("_", " ")} · Attempt {event.attemptNumber || "-"}
@@ -271,9 +275,9 @@ export default function WorkerVerificationContent({
                   </button>
                 )}
 
-                {capabilities.canReview && onRevoke && (
+                {capabilities.canRevoke && onRevoke && displayStatus === "approved" && (
                   <button
-                    onClick={() => requireReason(onRevoke)}
+                    onClick={() => requireReason(onRevoke, { confirmRevocation: true })}
                     className="px-10 h-16 bg-error/10 border border-error/20 text-error rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-error/20 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
                   >
                     <span className="material-symbols-outlined">gpp_bad</span>

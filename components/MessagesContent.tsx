@@ -22,11 +22,11 @@ interface MessagesContentProps {
   role: "client" | "worker";
 }
 
-function timeAgo(dateStr: string | null): string {
+function timeAgo(dateStr: string | null, nowLabel: string): string {
   if (!dateStr) return "";
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "Now";
+  if (mins < 1) return nowLabel;
   if (mins < 60) return `${mins}m`;
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return `${hrs}h`;
@@ -43,18 +43,18 @@ export default function MessagesContent({ conversations, loading, role }: Messag
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-1">
         <div className="flex flex-col gap-1">
           <p className="text-label-md uppercase tracking-[0.2em] text-primary opacity-80">
-            Inbox
+            {t("messages.inbox")}
           </p>
           <h1 className="text-[32px] md:text-[40px] font-bold text-on-surface leading-tight tracking-tight">
-            Communications <span className="text-primary">Hub</span>
+            {t("messages.titleMain")} <span className="text-primary">{t("messages.titleHighlight")}</span>
           </h1>
           <p className="text-body-md text-on-surface-variant max-w-md">
-            Manage your discussions with {role === "client" ? "professionals" : "clients"}.
+            {role === "client" ? t("messages.descClient") : t("messages.descWorker")}
           </p>
         </div>
         <div className="flex items-center gap-2 bg-surface-container-high px-4 py-2 rounded-full border border-surface-container-highest">
            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-           <span className="text-label-sm font-bold text-on-surface uppercase tracking-widest">Real-time Sync</span>
+           <span className="text-label-sm font-bold text-on-surface uppercase tracking-widest">{t("messages.realtime")}</span>
         </div>
       </header>
 
@@ -63,7 +63,7 @@ export default function MessagesContent({ conversations, loading, role }: Messag
          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant opacity-60 group-focus-within:text-primary group-focus-within:opacity-100 transition-all">search</span>
          <input 
            type="text" 
-           placeholder="Search conversations..." 
+           placeholder={t("messages.searchPlaceholder")} 
            className="w-full h-14 pl-12 pr-4 bg-surface-container-lowest border border-surface-container-highest rounded-[1.25rem] text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all"
          />
       </div>
@@ -80,14 +80,14 @@ export default function MessagesContent({ conversations, loading, role }: Messag
                 <span className="material-symbols-outlined text-[32px] text-on-surface-variant opacity-40">forum</span>
              </div>
              <div className="flex flex-col gap-1">
-                <h3 className="text-headline-md text-on-surface">No conversations yet</h3>
+                <h3 className="text-headline-md text-on-surface">{t("messages.emptyTitle")}</h3>
                 <p className="text-body-md text-on-surface-variant max-w-[240px]">
-                  Start a discussion to see your messages here.
+                  {t("messages.emptyDesc")}
                 </p>
              </div>
              {role === "client" && (
                 <Link href="/client/search" className="mt-2 h-12 px-8 flex items-center justify-center bg-on-surface text-surface-container-lowest rounded-2xl text-label-md font-bold uppercase tracking-widest hover:bg-primary transition-all">
-                  Find Workers
+                  {t("messages.findWorkers")}
                 </Link>
              )}
           </div>
@@ -121,12 +121,12 @@ export default function MessagesContent({ conversations, loading, role }: Messag
                       {conv.other_name}
                     </h3>
                     <span className="text-label-sm text-on-surface-variant opacity-40 shrink-0 font-bold">
-                       {timeAgo(conv.last_at)}
+                       {timeAgo(conv.last_at, t("messages.now"))}
                     </span>
                  </div>
                  <p className="text-label-sm text-primary uppercase tracking-widest opacity-80 mb-1">{conv.other_skill}</p>
                  <p className={`text-body-md truncate ${conv.unread > 0 ? "text-on-surface font-bold" : "text-on-surface-variant opacity-60"}`}>
-                   {conv.last_image ? "📷 Shared an image" : (conv.last_body || "Start a conversation...")}
+                   {conv.last_image ? t("messages.sharedImage") : (conv.last_body || t("messages.startConversation"))}
                  </p>
               </div>
 

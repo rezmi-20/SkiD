@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ShieldCheck } from "lucide-react";
 import { activateAdminAccount } from "@/lib/actions/admin-account";
+import { useLanguage } from "@/context/LanguageContext";
 
 export function AdminActivationForm({
   employeeId,
@@ -19,6 +20,7 @@ export function AdminActivationForm({
   department: string;
 }) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -30,7 +32,7 @@ export function AdminActivationForm({
         router.replace(result.redirectTo || "/admin/dashboard");
         router.refresh();
       } else {
-        setError(result.error || "Activation failed.");
+        setError(result.error || t("admin.activation.failed"));
       }
     });
   };
@@ -43,33 +45,33 @@ export function AdminActivationForm({
             <ShieldCheck className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-primary">Admin activation</p>
-            <h1 className="text-2xl font-bold text-on-surface">Set permanent credentials</h1>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-primary">{t("admin.activation.eyebrow")}</p>
+            <h1 className="text-2xl font-bold text-on-surface">{t("admin.activation.title")}</h1>
           </div>
         </div>
 
         <div className="mb-5 grid gap-3 rounded-lg border border-outline-variant bg-surface-container p-4 text-sm">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Employee ID</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">{t("admin.common.employeeId")}</p>
             <p className="font-mono font-bold text-on-surface">{employeeId}</p>
           </div>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Full name</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">{t("admin.common.fullName")}</p>
             <p className="font-bold text-on-surface">{fullName}</p>
           </div>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Work email</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">{t("admin.common.workEmail")}</p>
             <p className="font-semibold text-on-surface">{email}</p>
           </div>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Department</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">{t("admin.common.department")}</p>
             <p className="font-semibold text-on-surface">{department}</p>
           </div>
           <p className="text-on-surface-variant">{role.replaceAll("_", " ")} · {department}</p>
         </div>
 
         <div className="mb-4 rounded-lg border border-outline-variant bg-surface-container p-3 text-xs font-semibold text-on-surface-variant">
-          Password must be at least 10 characters and include uppercase, lowercase, number, and special character.
+          {t("admin.activation.passwordPolicy")}
         </div>
 
         {error && (
@@ -80,7 +82,7 @@ export function AdminActivationForm({
 
         <form action={submit} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-on-surface">New password</label>
+            <label className="text-xs font-bold text-on-surface">{t("admin.common.newPassword")}</label>
             <input
               name="password"
               type="password"
@@ -91,7 +93,7 @@ export function AdminActivationForm({
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-on-surface">Confirm password</label>
+            <label className="text-xs font-bold text-on-surface">{t("admin.common.confirmPassword")}</label>
             <input
               name="confirmPassword"
               type="password"
@@ -106,7 +108,7 @@ export function AdminActivationForm({
             disabled={isPending}
             className="w-full rounded-lg bg-primary py-2.5 text-xs font-bold uppercase tracking-wider text-on-primary disabled:opacity-60"
           >
-            {isPending ? "Activating..." : "Activate administrator account"}
+            {isPending ? t("admin.activation.submitting") : t("admin.activation.submit")}
           </button>
         </form>
       </div>

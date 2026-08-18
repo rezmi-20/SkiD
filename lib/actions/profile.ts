@@ -40,6 +40,7 @@ export async function getProfileData() {
       ? {
           ...profile,
           verification_status: clientIdentity?.status ?? profile.verification_status,
+          is_verified: clientIdentity?.isVerified ?? profile.is_verified,
           fayda_fan_number: undefined,
           fin_encrypted: undefined,
           fin_fingerprint: undefined,
@@ -93,8 +94,9 @@ export async function updateProfile(data: any) {
       currentProfile = rows[0];
     }
 
-    const isVerified = currentProfile?.is_verified || false;
-    const currentVerificationStatus = toClientDisplayStatus(currentProfile?.verification_status, currentProfile?.is_verified);
+    const clientIdentity = targetRole === "client" ? await getClientIdentityStatus(targetUserId) : null;
+    const isVerified = targetRole === "client" ? Boolean(clientIdentity?.isVerified) : Boolean(currentProfile?.is_verified);
+    const currentVerificationStatus = clientIdentity?.status ?? toClientDisplayStatus(currentProfile?.verification_status, currentProfile?.is_verified);
     const submittedFin = data.faydaFinNumber ?? data.fin;
     const submittedClientDoc = data.faydaDocDataUrl ?? data.faydaDocUrl;
     const hasSubmittedFin = typeof submittedFin === "string" && submittedFin.trim().length > 0;
@@ -111,7 +113,7 @@ export async function updateProfile(data: any) {
       if (currentVerificationStatus === "approved") {
         return { success: false, error: "Your Fayda identity is already verified." };
       }
-      if (currentVerificationStatus === "suspended" || currentVerificationStatus === "revoked") {
+      if (currentVerificationStatus === "suspended") {
         return { success: false, error: "This account cannot submit Fayda verification while identity access is restricted." };
       }
     }
@@ -250,8 +252,47 @@ export async function resubmitVerification(faydaDocUrl: string, faydaFinNumber?:
   }
 
   try {
+    const currentRows = await sql`
+      SELECT
+        wp.verification_status,
+        wp.is_verified,
+        u.is_suspended,
+        EXISTS (
+          SELECT 1
+          FROM verification_attempts va
+          WHERE va.account_user_id = wp.user_id
+            AND va.account_type = 'worker'
+            AND va.is_current = true
+            AND va.status = 'pending'
+        ) AS has_pending_attempt
+      FROM worker_profiles wp
+      JOIN users u ON u.id = wp.user_id
+      WHERE wp.user_id = ${session.user.id}
+      LIMIT 1
+    `;
+    const current = currentRows[0];
+    if (!current) {
+      return { success: false, error: "Worker profile not found." };
+    }
+
+    const currentStatus = current.is_suspended
+      ? "suspended"
+      : String(current.verification_status || (current.is_verified ? "approved" : "pending"));
+    if (currentStatus === "suspended") {
+      return { success: false, error: "This account cannot submit Fayda verification while suspended." };
+    }
+    if (currentStatus === "approved") {
+      return { success: false, error: "Your Fayda identity is already verified." };
+    }
+    if (currentStatus === "pending" || current.has_pending_attempt) {
+      return { success: false, error: "A verification request is already pending." };
+    }
+    if (currentStatus !== "rejected" && currentStatus !== "revoked") {
+      return { success: false, error: "Only rejected or revoked verification cases can be resubmitted here." };
+    }
+
     const protectedFin = protectFin(normalizedFin, session.user.id, "profile");
-    await sql`
+    const updated = await sql`
       UPDATE worker_profiles 
       SET 
         fayda_doc_url = ${faydaDocUrl}, 
@@ -262,8 +303,24 @@ export async function resubmitVerification(faydaDocUrl: string, faydaFinNumber?:
         verification_status = 'pending',
         is_verified = false
       WHERE user_id = ${session.user.id}
+        AND verification_status IN ('rejected', 'revoked')
+        AND NOT EXISTS (
+          SELECT 1
+          FROM verification_attempts va
+          WHERE va.account_user_id = ${session.user.id}
+            AND va.account_type = 'worker'
+            AND va.is_current = true
+            AND va.status = 'pending'
+        )
+      RETURNING user_id
     `;
-    await recordVerificationSubmission("worker", session.user.id, faydaDocUrl, protectedFin.finLast4);
+    if (updated.length === 0) {
+      return { success: false, error: "This verification case changed. Reload and try again." };
+    }
+    const submission = await recordVerificationSubmission("worker", session.user.id, faydaDocUrl, protectedFin.finLast4);
+    if (!submission) {
+      return { success: false, error: "A verification request is already pending." };
+    }
 
     revalidatePath("/worker/pending-verification");
     return { success: true };

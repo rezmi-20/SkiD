@@ -40,7 +40,7 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
                   </AvatarFallback>
                 </Avatar>
                 {worker.isVerified && (
-                  <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full border border-card p-0.5 shadow flex items-center justify-center" title="Verified Professional">
+                  <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full border border-card p-0.5 shadow flex items-center justify-center" title={t("search.verifiedProfessional")}>
                     <ShieldCheck size={12} className="stroke-[2.5]" />
                   </div>
                 )}
@@ -50,7 +50,7 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
                   {worker.name}
                 </h3>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Verified Contractor
+                  {t("search.verifiedContractor")}
                 </p>
               </div>
               
@@ -65,18 +65,18 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
             {/* Key-Value Details list vibe */}
             <div className="space-y-2 text-xs">
               <div className="flex justify-between items-center py-0.5">
-                <span className="text-muted-foreground font-medium flex items-center gap-1.5"><Wrench size={13} /> Specialization:</span>
+                <span className="text-muted-foreground font-medium flex items-center gap-1.5"><Wrench size={13} /> {t("search.specialization")}</span>
                 <span className="font-semibold text-foreground text-right">{worker.skill}</span>
               </div>
               <div className="flex justify-between items-center py-0.5">
-                <span className="text-muted-foreground font-medium flex items-center gap-1.5"><MapPin size={13} /> Distance:</span>
+                <span className="text-muted-foreground font-medium flex items-center gap-1.5"><MapPin size={13} /> {t("search.distanceLabel")}</span>
                 <span className="font-semibold text-foreground text-right">
-                  {worker.distance === "N/A" ? "Location unavailable" : `${worker.distance} km away`}
+                  {worker.distance === "N/A" ? t("search.locationUnavailable") : t("search.kmAway").replace("{distance}", String(worker.distance))}
                 </span>
               </div>
               <div className="flex justify-between items-center py-0.5">
-                <span className="text-muted-foreground font-medium flex items-center gap-1.5"><BadgeDollarSign size={13} /> Hourly Rate:</span>
-                <span className="font-bold text-foreground text-right">Standard / Dynamic</span>
+                <span className="text-muted-foreground font-medium flex items-center gap-1.5"><BadgeDollarSign size={13} /> {t("search.hourlyRate")}</span>
+                <span className="font-bold text-foreground text-right">{t("search.standardDynamic")}</span>
               </div>
             </div>
 
@@ -101,7 +101,7 @@ export default function WorkerCard({ worker }: WorkerCardProps) {
           <div className="pt-4 flex justify-end">
             <Button asChild size="sm" className="w-full sm:w-auto rounded-xl font-bold uppercase tracking-wider text-[10px] h-9 shadow-sm" variant="outline">
               <Link href={`/client/worker/${worker.id}`} className="flex items-center justify-center gap-1.5">
-                <span>View Profile</span>
+                <span>{t("worker.viewProfile")}</span>
                 <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
               </Link>
             </Button>

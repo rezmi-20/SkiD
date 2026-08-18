@@ -48,8 +48,8 @@ export default function StepIdCompliance({
                   <line x1="12" x2="12" y1="3" y2="15"></line>
                </svg>
             </div>
-            <p className="font-bold text-base text-zinc-300">Upload your Fayda document</p>
-            <p className="text-[11px] text-zinc-500 mt-2 font-black uppercase tracking-widest">Choose a file or drag it here</p>
+            <p className="font-bold text-base text-zinc-300">{t("register.fayda.uploadDocument")}</p>
+            <p className="text-[11px] text-zinc-500 mt-2 font-black uppercase tracking-widest">{t("register.fayda.chooseDrag")}</p>
           </>
         )}
         <div className="mt-5 flex items-center gap-3">
@@ -59,12 +59,12 @@ export default function StepIdCompliance({
             onClick={() => fileInputRef.current?.click()}
             className="px-5 h-11 rounded-2xl bg-green-400 text-black font-black text-[11px] uppercase tracking-widest disabled:opacity-60"
           >
-            {isProcessing ? "Preparing..." : formData.faydaDocUrl ? "Replace File" : "Choose File"}
+            {isProcessing ? t("register.fayda.preparing") : formData.faydaDocUrl ? t("register.fayda.replaceFile") : t("register.fayda.chooseFile")}
           </button>
           {formData.faydaDocUrl ? (
-            <span className="text-[11px] text-green-300 font-semibold">{fileName || "Document attached"}</span>
+            <span className="text-[11px] text-green-300 font-semibold">{fileName || t("register.fayda.documentAttached")}</span>
           ) : (
-            <span className="text-[11px] text-zinc-500 font-semibold">PNG, JPG, or WEBP under 10 MB</span>
+            <span className="text-[11px] text-zinc-500 font-semibold">{t("register.fayda.fileSpecs")}</span>
           )}
         </div>
         <input type="file" ref={fileInputRef} className="hidden" accept="image/png,image/jpeg,image/jpg,image/webp" onChange={handleFileUpload} />

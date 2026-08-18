@@ -2,7 +2,7 @@ import { sql } from "@/lib/db";
 import { createNotification } from "@/lib/actions/notifications";
 import { verifyChapaPayment, type ChapaApiError } from "@/lib/chapa";
 
-type PaymentSource = "webhook" | "return_url" | "client_confirm";
+type PaymentSource = "webhook" | "return_url" | "client_confirm" | "dispute_resolution";
 
 export interface PaymentProcessingResult {
   success: boolean;
@@ -73,11 +73,13 @@ export async function verifyAndReleasePayment({
   jobId,
   source,
   actorUserId = null,
+  authorizedDisputeId = null,
 }: {
   txRef: string;
   jobId?: string | null;
   source: PaymentSource;
   actorUserId?: string | null;
+  authorizedDisputeId?: string | null;
 }): Promise<PaymentProcessingResult> {
   console.info("[PAYMENT_VERIFY_START]", { txRef, jobId, source });
 
@@ -102,6 +104,8 @@ export async function verifyAndReleasePayment({
       p.status as payment_status,
       p.chapa_ref,
       p.chapa_reference,
+      p.financial_hold_status,
+      p.hold_dispute_id,
       j.status as job_status,
       j.title as job_title,
       j.client_id,
@@ -126,6 +130,9 @@ export async function verifyAndReleasePayment({
   }
 
   const payment = paymentRows[0];
+  const activeDisputeHold =
+    payment.financial_hold_status === "held" &&
+    (!authorizedDisputeId || String(payment.hold_dispute_id || "") !== String(authorizedDisputeId));
   if (payment.payment_status === "released") {
     console.info("[PAYMENT_VERIFY_ALREADY_RELEASED]", {
       txRef,
@@ -239,6 +246,37 @@ export async function verifyAndReleasePayment({
       paymentId: payment.payment_id,
       message: "Chapa verification did not match the local payment record.",
       verifiedData: verified,
+    };
+  }
+
+  if (activeDisputeHold) {
+    await sql`
+      UPDATE payments
+      SET chapa_reference = COALESCE(chapa_reference, ${verifiedData?.reference || null}),
+          chapa_status = ${String(verifiedStatus)},
+          chapa_response = ${JSON.stringify(verified)},
+          updated_at = now()
+      WHERE id = ${payment.payment_id}
+        AND status <> 'released'
+    `;
+
+    await writeAuditLog(actorUserId, "payment_release_blocked_by_dispute_hold", {
+      source,
+      txRef,
+      jobId: payment.job_id,
+      paymentId: payment.payment_id,
+      holdDisputeId: payment.hold_dispute_id,
+      providerVerified: true,
+    });
+    return {
+      success: false,
+      idempotent: false,
+      status: "held",
+      txRef,
+      jobId: payment.job_id,
+      paymentId: payment.payment_id,
+      chapaReference: verifiedData?.reference || undefined,
+      message: "Payment provider verification is recorded, but release is blocked by an active dispute hold.",
     };
   }
 

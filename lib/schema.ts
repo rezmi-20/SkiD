@@ -37,7 +37,12 @@ export const paymentStatusEnum = pgEnum("payment_status", [
 export const disputeStatusEnum = pgEnum("dispute_status", [
   "open",
   "under_review",
+  "awaiting_client_response",
+  "awaiting_worker_response",
+  "evidence_review",
   "resolved",
+  "dismissed",
+  "escalated",
   "rejected",
 ]);
 export const serviceCategoryEnum = pgEnum("service_category", [
@@ -334,6 +339,13 @@ export const payments = pgTable("payments", {
   chapaStatus: varchar("chapa_status", { length: 50 }),
   chapaResponse: json("chapa_response"),
   workerSubaccountId: text("worker_subaccount_id"),
+  financialHoldStatus: varchar("financial_hold_status", { length: 30 }).notNull().default("none"),
+  holdDisputeId: uuid("hold_dispute_id"),
+  holdReason: text("hold_reason"),
+  heldByAdminId: uuid("held_by_admin_id").references(() => adminEmployees.id),
+  heldAt: timestamp("held_at"),
+  holdReleasedAt: timestamp("hold_released_at"),
+  holdReleaseReason: text("hold_release_reason"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => [
@@ -410,27 +422,326 @@ export const disputes = pgTable("disputes", {
   jobId: uuid("job_id").notNull().references(() => jobs.id),
   clientId: uuid("client_id").notNull().references(() => users.id),
   workerId: uuid("worker_id").notNull().references(() => users.id),
+  title: varchar("title", { length: 160 }),
+  category: varchar("category", { length: 50 }),
+  requestedResolution: varchar("requested_resolution", { length: 50 }),
+  openedBy: uuid("opened_by").references(() => users.id),
+  openedByRole: varchar("opened_by_role", { length: 20 }),
+  contractId: uuid("contract_id").references(() => contracts.id),
+  paymentId: uuid("payment_id").references(() => payments.id),
   description: text("description").notNull(),
   evidenceUrls: text("evidence_urls").array(),
   status: disputeStatusEnum("status").default("open"),
   adminId: uuid("admin_id").references(() => users.id),
+  assignedAdminId: uuid("assigned_admin_id").references(() => adminEmployees.id),
+  assignedAt: timestamp("assigned_at"),
+  assignmentVersion: integer("assignment_version").notNull().default(0),
+  creationSnapshot: json("creation_snapshot"),
+  finalDecision: varchar("final_decision", { length: 50 }),
+  finalReason: text("final_reason"),
+  financialActionRequired: boolean("financial_action_required").notNull().default(false),
+  financialActionState: varchar("financial_action_state", { length: 50 }).notNull().default("none"),
+  financialActionUpdatedAt: timestamp("financial_action_updated_at"),
+  workflowFrozen: boolean("workflow_frozen").notNull().default(true),
+  conflictAdminIds: uuid("conflict_admin_ids").array(),
   resolutionNotes: text("resolution_notes"),
   resolvedAt: timestamp("resolved_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("dispute_job_idx").on(table.jobId),
+  index("dispute_client_idx").on(table.clientId),
+  index("dispute_worker_idx").on(table.workerId),
+  index("dispute_status_idx").on(table.status),
+  index("dispute_assigned_admin_idx").on(table.assignedAdminId),
+]);
+
+export const disputeEvents = pgTable("dispute_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  disputeId: uuid("dispute_id").notNull().references(() => disputes.id, { onDelete: "cascade" }),
+  actorType: varchar("actor_type", { length: 30 }).notNull(),
+  actorId: uuid("actor_id"),
+  eventType: varchar("event_type", { length: 60 }).notNull(),
+  oldStatus: varchar("old_status", { length: 50 }),
+  newStatus: varchar("new_status", { length: 50 }),
+  metadata: json("metadata"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("dispute_events_dispute_idx").on(table.disputeId, table.createdAt),
+]);
+
+export const disputeEvidence = pgTable("dispute_evidence", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  disputeId: uuid("dispute_id").notNull().references(() => disputes.id, { onDelete: "cascade" }),
+  uploadedBy: uuid("uploaded_by").notNull().references(() => users.id),
+  uploaderRole: varchar("uploader_role", { length: 20 }).notNull(),
+  fileUrl: text("file_url").notNull(),
+  fileName: varchar("file_name", { length: 255 }),
+  mimeType: varchar("mime_type", { length: 120 }).notNull(),
+  fileSize: integer("file_size").notNull(),
+  storageFingerprint: varchar("storage_fingerprint", { length: 128 }).notNull(),
+  isRemoved: boolean("is_removed").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("dispute_evidence_dispute_idx").on(table.disputeId, table.createdAt),
+]);
+
+export const disputeResponses = pgTable("dispute_responses", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  disputeId: uuid("dispute_id").notNull().references(() => disputes.id, { onDelete: "cascade" }),
+  requestedByAdminId: uuid("requested_by_admin_id").references(() => adminEmployees.id),
+  requestedFrom: varchar("requested_from", { length: 20 }).notNull(),
+  instruction: text("instruction").notNull(),
+  dueAt: timestamp("due_at"),
+  status: varchar("status", { length: 30 }).notNull().default("requested"),
+  responseText: text("response_text"),
+  respondedBy: uuid("responded_by").references(() => users.id),
+  respondedAt: timestamp("responded_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("dispute_responses_dispute_idx").on(table.disputeId, table.createdAt),
+]);
+
+export const disputeAdminNotes = pgTable("dispute_admin_notes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  disputeId: uuid("dispute_id").notNull().references(() => disputes.id, { onDelete: "cascade" }),
+  adminEmployeeId: uuid("admin_employee_id").notNull().references(() => adminEmployees.id),
+  note: text("note").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("dispute_notes_dispute_idx").on(table.disputeId, table.createdAt),
+]);
+
+export const disputeFinancialActions = pgTable("dispute_financial_actions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  disputeId: uuid("dispute_id").notNull().references(() => disputes.id, { onDelete: "cascade" }),
+  paymentId: uuid("payment_id").references(() => payments.id),
+  action: varchar("action", { length: 60 }).notNull(),
+  proposalStatus: varchar("proposal_status", { length: 40 }).notNull().default("proposed"),
+  amount: integer("amount"),
+  currency: varchar("currency", { length: 10 }).notNull().default("ETB"),
+  reason: text("reason").notNull(),
+  proposedByAdminId: uuid("proposed_by_admin_id").references(() => adminEmployees.id),
+  approvedByAdminId: uuid("approved_by_admin_id").references(() => adminEmployees.id),
+  rejectedByAdminId: uuid("rejected_by_admin_id").references(() => adminEmployees.id),
+  previousFinancialState: varchar("previous_financial_state", { length: 60 }),
+  newFinancialState: varchar("new_financial_state", { length: 60 }),
+  disputeStatusSnapshot: varchar("dispute_status_snapshot", { length: 50 }),
+  decisionSnapshot: varchar("decision_snapshot", { length: 50 }),
+  paymentStatusSnapshot: varchar("payment_status_snapshot", { length: 50 }),
+  holdStatusSnapshot: varchar("hold_status_snapshot", { length: 30 }),
+  providerActionReference: text("provider_action_reference"),
+  providerActionStatus: varchar("provider_action_status", { length: 60 }),
+  providerActionResponse: json("provider_action_response"),
+  idempotencyKey: varchar("idempotency_key", { length: 160 }).notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  approvedAt: timestamp("approved_at"),
+  rejectedAt: timestamp("rejected_at"),
+  executedAt: timestamp("executed_at"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("dispute_financial_actions_idempotency_unique_idx").on(table.idempotencyKey),
+  index("dispute_financial_actions_dispute_idx").on(table.disputeId, table.createdAt),
+  index("dispute_financial_actions_payment_idx").on(table.paymentId, table.createdAt),
+  index("dispute_financial_actions_status_idx").on(table.proposalStatus),
+]);
+
+export const supportTickets = pgTable("support_tickets", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  reference: varchar("reference", { length: 32 }).notNull(),
+  ownerId: uuid("owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  ownerRole: varchar("owner_role", { length: 20 }).notNull(),
+  category: varchar("category", { length: 50 }).notNull(),
+  priority: varchar("priority", { length: 20 }).notNull().default("normal"),
+  status: varchar("status", { length: 30 }).notNull().default("open"),
+  subject: varchar("subject", { length: 180 }).notNull(),
+  description: text("description").notNull(),
+  relatedJobId: uuid("related_job_id").references(() => jobs.id),
+  relatedContractId: uuid("related_contract_id").references(() => contracts.id),
+  relatedPaymentId: uuid("related_payment_id").references(() => payments.id),
+  linkedDisputeId: uuid("linked_dispute_id").references(() => disputes.id),
+  escalationType: varchar("escalation_type", { length: 40 }),
+  escalationReason: text("escalation_reason"),
+  assignedAdminId: uuid("assigned_admin_id").references(() => adminEmployees.id),
+  assignedAt: timestamp("assigned_at"),
+  assignmentVersion: integer("assignment_version").notNull().default(0),
+  resolutionType: varchar("resolution_type", { length: 50 }),
+  resolutionSummary: text("resolution_summary"),
+  resolvedByAdminId: uuid("resolved_by_admin_id").references(() => adminEmployees.id),
+  resolvedAt: timestamp("resolved_at"),
+  closedAt: timestamp("closed_at"),
+  idempotencyKey: varchar("idempotency_key", { length: 160 }).notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("support_tickets_reference_unique_idx").on(table.reference),
+  uniqueIndex("support_tickets_idempotency_unique_idx").on(table.idempotencyKey),
+  index("support_tickets_owner_idx").on(table.ownerId, table.status),
+  index("support_tickets_status_idx").on(table.status, table.updatedAt),
+  index("support_tickets_assigned_admin_idx").on(table.assignedAdminId, table.status),
+  index("support_tickets_related_job_idx").on(table.relatedJobId),
+]);
+
+export const supportMessages = pgTable("support_messages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  ticketId: uuid("ticket_id").notNull().references(() => supportTickets.id, { onDelete: "cascade" }),
+  actorType: varchar("actor_type", { length: 30 }).notNull(),
+  actorId: uuid("actor_id").notNull(),
+  message: text("message").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("support_messages_ticket_idx").on(table.ticketId, table.createdAt),
+]);
+
+export const supportEvents = pgTable("support_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  ticketId: uuid("ticket_id").notNull().references(() => supportTickets.id, { onDelete: "cascade" }),
+  actorType: varchar("actor_type", { length: 30 }).notNull(),
+  actorId: uuid("actor_id"),
+  eventType: varchar("event_type", { length: 60 }).notNull(),
+  oldStatus: varchar("old_status", { length: 30 }),
+  newStatus: varchar("new_status", { length: 30 }),
+  metadata: json("metadata"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("support_events_ticket_idx").on(table.ticketId, table.createdAt),
+]);
+
+export const supportInternalNotes = pgTable("support_internal_notes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  ticketId: uuid("ticket_id").notNull().references(() => supportTickets.id, { onDelete: "cascade" }),
+  adminEmployeeId: uuid("admin_employee_id").notNull().references(() => adminEmployees.id),
+  note: text("note").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("support_internal_notes_ticket_idx").on(table.ticketId, table.createdAt),
+]);
+
+export const supportAttachments = pgTable("support_attachments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  ticketId: uuid("ticket_id").notNull().references(() => supportTickets.id, { onDelete: "cascade" }),
+  uploadedBy: uuid("uploaded_by").notNull().references(() => users.id),
+  uploaderRole: varchar("uploader_role", { length: 20 }).notNull(),
+  fileUrl: text("file_url").notNull(),
+  fileName: varchar("file_name", { length: 255 }),
+  mimeType: varchar("mime_type", { length: 120 }).notNull(),
+  fileSize: integer("file_size").notNull(),
+  storageFingerprint: varchar("storage_fingerprint", { length: 128 }).notNull(),
+  isRemoved: boolean("is_removed").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("support_attachments_ticket_idx").on(table.ticketId, table.createdAt),
+]);
 
 // ─── Audit Logs ────────────────────────────────────────────────────────────────
 export const auditLogs = pgTable("audit_logs", {
   id: uuid("id").primaryKey().defaultRandom(),
+  actorType: varchar("actor_type", { length: 30 }),
   userId: uuid("user_id").references(() => users.id),
   adminEmployeeId: uuid("admin_employee_id").references(() => adminEmployees.id),
+  adminRole: varchar("admin_role", { length: 50 }),
   action: text("action").notNull(),
+  module: varchar("module", { length: 60 }),
+  targetType: varchar("target_type", { length: 60 }),
+  targetId: text("target_id"),
+  previousState: json("previous_state"),
+  newState: json("new_state"),
+  reason: text("reason"),
+  relatedReference: varchar("related_reference", { length: 120 }),
+  highRisk: boolean("high_risk").notNull().default(false),
+  proposedByAdminId: uuid("proposed_by_admin_id").references(() => adminEmployees.id),
+  approvedByAdminId: uuid("approved_by_admin_id").references(() => adminEmployees.id),
+  executedByType: varchar("executed_by_type", { length: 30 }),
   details: json("details"),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("audit_logs_created_idx").on(table.createdAt),
+  index("audit_logs_admin_idx").on(table.adminEmployeeId, table.createdAt),
+  index("audit_logs_action_idx").on(table.action, table.createdAt),
+  index("audit_logs_target_idx").on(table.targetType, table.targetId),
+  index("audit_logs_module_idx").on(table.module, table.createdAt),
+  index("audit_logs_high_risk_idx").on(table.highRisk, table.createdAt),
+]);
+
+export const adminMisconductReviews = pgTable("admin_misconduct_reviews", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  reference: varchar("reference", { length: 32 }).notNull(),
+  employeeId: uuid("employee_id").notNull().references(() => adminEmployees.id),
+  openedByAdminId: uuid("opened_by_admin_id").notNull().references(() => adminEmployees.id),
+  status: varchar("status", { length: 30 }).notNull().default("open"),
+  reason: text("reason").notNull(),
+  referencedAuditIds: uuid("referenced_audit_ids").array(),
+  outcome: varchar("outcome", { length: 50 }),
+  outcomeReason: text("outcome_reason"),
+  resolvedByAdminId: uuid("resolved_by_admin_id").references(() => adminEmployees.id),
+  resolvedAt: timestamp("resolved_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("admin_misconduct_reviews_reference_unique_idx").on(table.reference),
+  index("admin_misconduct_reviews_employee_idx").on(table.employeeId, table.status),
+  index("admin_misconduct_reviews_status_idx").on(table.status, table.createdAt),
+]);
+
+export const adminMisconductEvents = pgTable("admin_misconduct_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  reviewId: uuid("review_id").notNull().references(() => adminMisconductReviews.id, { onDelete: "cascade" }),
+  actorAdminId: uuid("actor_admin_id").references(() => adminEmployees.id),
+  eventType: varchar("event_type", { length: 60 }).notNull(),
+  oldStatus: varchar("old_status", { length: 30 }),
+  newStatus: varchar("new_status", { length: 30 }),
+  note: text("note"),
+  metadata: json("metadata"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("admin_misconduct_events_review_idx").on(table.reviewId, table.createdAt),
+]);
+
+export const appeals = pgTable("appeals", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  reference: varchar("reference", { length: 32 }).notNull(),
+  appealType: varchar("appeal_type", { length: 50 }).notNull(),
+  appellantUserId: uuid("appellant_user_id").notNull().references(() => users.id),
+  appellantRole: varchar("appellant_role", { length: 20 }).notNull(),
+  targetType: varchar("target_type", { length: 50 }).notNull(),
+  targetId: uuid("target_id").notNull(),
+  originalDecision: varchar("original_decision", { length: 80 }),
+  originalDecisionReason: text("original_decision_reason"),
+  originalAdminId: uuid("original_admin_id").references(() => adminEmployees.id),
+  status: varchar("status", { length: 40 }).notNull().default("appeal_requested"),
+  reason: varchar("reason", { length: 80 }).notNull(),
+  explanation: text("explanation").notNull(),
+  evidenceReferences: text("evidence_references").array(),
+  reviewedByAdminId: uuid("reviewed_by_admin_id").references(() => adminEmployees.id),
+  outcome: varchar("outcome", { length: 60 }),
+  outcomeReason: text("outcome_reason"),
+  resolvedAt: timestamp("resolved_at"),
+  idempotencyKey: varchar("idempotency_key", { length: 160 }).notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("appeals_reference_unique_idx").on(table.reference),
+  uniqueIndex("appeals_idempotency_unique_idx").on(table.idempotencyKey),
+  index("appeals_appellant_idx").on(table.appellantUserId, table.status),
+  index("appeals_target_idx").on(table.targetType, table.targetId),
+  index("appeals_status_idx").on(table.status, table.createdAt),
+]);
+
+export const appealEvents = pgTable("appeal_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  appealId: uuid("appeal_id").notNull().references(() => appeals.id, { onDelete: "cascade" }),
+  actorType: varchar("actor_type", { length: 30 }).notNull(),
+  actorId: uuid("actor_id"),
+  eventType: varchar("event_type", { length: 60 }).notNull(),
+  oldStatus: varchar("old_status", { length: 40 }),
+  newStatus: varchar("new_status", { length: 40 }),
+  metadata: json("metadata"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("appeal_events_appeal_idx").on(table.appealId, table.createdAt),
+]);
 
 export const verificationAttempts = pgTable("verification_attempts", {
   id: uuid("id").primaryKey().defaultRandom(),

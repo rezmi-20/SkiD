@@ -118,28 +118,28 @@ export function PlatformSettingsClient({ stats }: Props) {
         <div className="rounded-lg border border-outline-variant bg-surface-container-lowest p-5 transition-colors duration-300 shadow-sm space-y-4 h-fit">
           <h2 className="text-sm font-bold text-on-surface uppercase tracking-wider flex items-center gap-2">
             <Database className="w-4 h-4 text-primary" />
-            System Health
+            {t("admin.settings.health" as any)}
           </h2>
 
           <div className="space-y-3 pt-1 divide-y divide-outline-variant/60">
             <div className="flex items-center justify-between text-xs py-2">
-              <span className="font-semibold text-on-surface-variant">Total Users</span>
+              <span className="font-semibold text-on-surface-variant">{t("admin.settings.health.totalUsers" as any)}</span>
               <span className="font-bold text-on-surface font-mono">{stats.totalUsers}</span>
             </div>
             <div className="flex items-center justify-between text-xs py-2">
-              <span className="font-semibold text-on-surface-variant">Worker Accounts</span>
+              <span className="font-semibold text-on-surface-variant">{t("admin.settings.health.workerAccounts" as any)}</span>
               <span className="font-bold text-on-surface font-mono">{stats.totalWorkers}</span>
             </div>
             <div className="flex items-center justify-between text-xs py-2">
-              <span className="font-semibold text-on-surface-variant">Client Accounts</span>
+              <span className="font-semibold text-on-surface-variant">{t("admin.settings.health.clientAccounts" as any)}</span>
               <span className="font-bold text-on-surface font-mono">{stats.totalClients}</span>
             </div>
             <div className="flex items-center justify-between text-xs py-2">
-              <span className="font-semibold text-on-surface-variant">Total Jobs</span>
+              <span className="font-semibold text-on-surface-variant">{t("admin.settings.health.totalJobs" as any)}</span>
               <span className="font-bold text-on-surface font-mono">{stats.totalJobs}</span>
             </div>
             <div className="flex items-center justify-between text-xs py-2">
-              <span className="font-semibold text-on-surface-variant">Transactions</span>
+              <span className="font-semibold text-on-surface-variant">{t("admin.settings.health.transactions" as any)}</span>
               <span className="font-bold text-on-surface font-mono">{stats.totalPayments}</span>
             </div>
           </div>

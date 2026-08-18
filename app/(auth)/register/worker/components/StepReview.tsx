@@ -31,7 +31,7 @@ export default function StepReview({ formData }: StepReviewProps) {
          {formData.faydaDocUrl ? (
            <img src={formData.faydaDocUrl} alt="ID Upload" className="w-full h-full object-contain" />
          ) : (
-           <div className="text-zinc-700 text-xs font-bold">No Fayda document uploaded yet</div>
+           <div className="text-zinc-700 text-xs font-bold">{t("register.review.noFayda")}</div>
          )}
       </div>
       <label className="flex items-start gap-3 p-4 bg-zinc-900/50 border border-zinc-800 rounded-2xl cursor-pointer group hover:bg-zinc-800/50 transition-all">

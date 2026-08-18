@@ -31,9 +31,9 @@ export function CommunityModerationClient({ initialPosts, canModerate }: Props) 
 
   const handleToggleRemove = (postId: string, currentRemoved: boolean) => {
     const nextStatus = !currentRemoved;
-    const reason = window.prompt(nextStatus ? "Reason for hiding this post" : "Reason for restoring this post")?.trim();
+    const reason = window.prompt(nextStatus ? t("admin.community.reasonHide" as any) : t("admin.community.reasonRestore" as any))?.trim();
     if (!reason) {
-      alert("A moderation reason is required.");
+      alert(t("admin.community.reasonRequired" as any));
       return;
     }
     startTransition(async () => {
@@ -43,7 +43,7 @@ export function CommunityModerationClient({ initialPosts, canModerate }: Props) 
           prev.map((p) => (p.id === postId ? { ...p, isRemoved: nextStatus } : p))
         );
       } else {
-        alert(res.error || "Failed to update post status.");
+        alert(res.error || t("admin.community.updateFailed" as any));
       }
     });
   };
@@ -86,7 +86,7 @@ export function CommunityModerationClient({ initialPosts, canModerate }: Props) 
           <Search className="absolute left-3.5 top-3 w-4 h-4 text-on-surface-variant opacity-60" />
           <input
             type="text"
-            placeholder="Search by title, body, or author..."
+          placeholder={t("admin.community.searchPlaceholder" as any)}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-surface-container pl-10 pr-4 py-2.5 rounded-xl border border-outline-variant text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all"

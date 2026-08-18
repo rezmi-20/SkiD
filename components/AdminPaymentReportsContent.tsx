@@ -212,17 +212,17 @@ export default function AdminPaymentReportsContent({ report }: { report: AdminPa
                 </div>
 
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant opacity-50">Gross Invoice</p>
+                        <p className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant opacity-50">{t("admin.report.grossInvoice" as any)}</p>
                   <p className="text-sm font-bold text-on-surface mt-0.5">{formatMoney(payment.amount)}</p>
                 </div>
 
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant opacity-50">Platform Fee</p>
+                        <p className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant opacity-50">{t("admin.report.platformFee" as any)}</p>
                   <p className="text-sm font-semibold text-on-surface-variant mt-0.5">{formatMoney(payment.commissionAmount)}</p>
                 </div>
 
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant opacity-50 mb-1">Status</p>
+                        <p className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant opacity-50 mb-1">{t("admin.report.status" as any)}</p>
                   <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider border ${statusClass(payment.status)}`}>
                     {payment.status}
                   </span>

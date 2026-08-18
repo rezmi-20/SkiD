@@ -18,7 +18,9 @@ export async function POST(req: NextRequest) {
           ? "verification.reject"
           : nextStatus === "pending"
             ? "verification.request_resubmission"
-            : "verification.review",
+            : nextStatus === "revoked"
+              ? "verification.revoke"
+              : "verification.review",
     );
     const result = await updateWorkerVerificationStatus(workerId, nextStatus, reason, expectedAttemptId ?? null);
     if (!result.success) {

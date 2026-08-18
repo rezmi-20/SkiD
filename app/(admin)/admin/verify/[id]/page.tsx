@@ -12,6 +12,7 @@ export default async function WorkerVerificationPage({ params }: { params: Promi
     canApprove: hasAdminPermission(admin, "verification.approve"),
     canReject: hasAdminPermission(admin, "verification.reject"),
     canRequestResubmission: hasAdminPermission(admin, "verification.request_resubmission"),
+    canRevoke: hasAdminPermission(admin, "verification.revoke"),
   };
 
   const { id } = await params;

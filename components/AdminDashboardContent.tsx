@@ -47,7 +47,7 @@ export default function AdminDashboardContent({
       if (result.success) {
         setWorkers(prev => prev.filter(w => w.user_id !== userId));
       } else {
-        alert("Failed to update status");
+        alert(t("admin.dashboard.updateStatusFailed" as any));
       }
     });
   };
@@ -60,14 +60,14 @@ export default function AdminDashboardContent({
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-3">
              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary bg-primary/10 px-3 py-1 rounded-full">
-                Command Center
+                {t("admin.dashboard.legacyCommandCenter" as any)}
              </span>
              <span className="text-[10px] font-bold text-on-surface-variant opacity-40 uppercase tracking-widest">
                 {currentDate}
              </span>
           </div>
           <h1 className="text-[32px] md:text-[48px] font-black text-on-surface leading-tight tracking-tighter">
-            Welcome, <span className="text-primary italic">{adminName}</span>
+            {t("dashboard.welcome" as any)} <span className="text-primary italic">{adminName}</span>
           </h1>
         </div>
 
@@ -84,7 +84,7 @@ export default function AdminDashboardContent({
           }}
           className="flex items-center gap-3 px-6 py-3 bg-surface-container-high border border-surface-container-highest rounded-2xl text-secondary hover:bg-secondary hover:text-on-secondary transition-all group active:scale-95"
         >
-          <span className="text-xs font-black uppercase tracking-[0.2em]">Exit System</span>
+          <span className="text-xs font-black uppercase tracking-[0.2em]">{t("admin.exitSystem" as any)}</span>
           <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">logout</span>
         </button>
       </header>
@@ -92,11 +92,11 @@ export default function AdminDashboardContent({
       {/* ── Overview Statistics Cards (Top Row) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {[
-          { label: "Total Workers", value: stats.totalWorkers, icon: "engineering", color: "text-primary", bg: "bg-primary/10" },
-          { label: "Pending Fayda", value: stats.pendingVerifications, icon: "fingerprint", color: "text-secondary", bg: "bg-secondary/10" },
-          { label: "Active Contracts", value: stats.activeContracts, icon: "description", color: "text-primary", bg: "bg-primary/10" },
-          { label: "Jobs This Month", value: stats.completedJobsThisMonth, icon: "task_alt", color: "text-secondary", bg: "bg-secondary/10" },
-          { label: "Total Disputes", value: stats.totalDisputes, icon: "gavel", color: "text-error", bg: "bg-error/10" },
+          { label: t("admin.metric.totalWorkers" as any), value: stats.totalWorkers, icon: "engineering", color: "text-primary", bg: "bg-primary/10" },
+          { label: t("admin.metric.pendingVerif" as any), value: stats.pendingVerifications, icon: "fingerprint", color: "text-secondary", bg: "bg-secondary/10" },
+          { label: t("admin.metric.activeContracts" as any), value: stats.activeContracts, icon: "description", color: "text-primary", bg: "bg-primary/10" },
+          { label: t("admin.metric.jobsMonth" as any), value: stats.completedJobsThisMonth, icon: "task_alt", color: "text-secondary", bg: "bg-secondary/10" },
+          { label: t("admin.metric.disputes" as any), value: stats.totalDisputes, icon: "gavel", color: "text-error", bg: "bg-error/10" },
         ].map((kpi, i) => (
           <motion.div 
             key={i}
@@ -121,10 +121,10 @@ export default function AdminDashboardContent({
             <div className="flex items-center justify-between px-1">
                <div className="flex items-center gap-3">
                   <span className="material-symbols-outlined text-primary">verified_user</span>
-                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-on-surface">Identity Audit Queue</h2>
+                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-on-surface">{t("admin.dashboard.identityAuditQueue" as any)}</h2>
                </div>
                <span className="bg-primary/10 text-primary px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">
-                  {workers.length} Pending
+                  {workers.length} {t("admin.common.pending" as any)}
                </span>
             </div>
 
@@ -134,10 +134,10 @@ export default function AdminDashboardContent({
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="bg-surface-container-low/50">
-                          <th className="p-6 text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-40">Worker</th>
-                          <th className="p-6 text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-40">Contact / Skills</th>
-                          <th className="p-6 text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-40">Fayda ID</th>
-                          <th className="p-6 text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-40 text-right">Actions</th>
+                          <th className="p-6 text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-40">{t("admin.workers" as any)}</th>
+                          <th className="p-6 text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-40">{t("admin.dashboard.contactSkills" as any)}</th>
+                          <th className="p-6 text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-40">{t("admin.dashboard.faydaId" as any)}</th>
+                          <th className="p-6 text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-40 text-right">{t("admin.verification.actions" as any)}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-surface-container">
@@ -174,7 +174,7 @@ export default function AdminDashboardContent({
                                 <div className="flex flex-col gap-2">
                                   <div className="flex items-center gap-2 text-on-surface-variant">
                                     <span className="material-symbols-outlined text-[16px]">call</span>
-                                    <span className="text-xs font-bold">{w.phone || "No Phone"}</span>
+                                    <span className="text-xs font-bold">{w.phone || t("admin.dashboard.noPhone" as any)}</span>
                                   </div>
                                   <div className="flex flex-wrap gap-1">
                                     {w.skills?.slice(0, 2).map((s: string) => (
@@ -209,7 +209,7 @@ export default function AdminDashboardContent({
                                     onClick={() => handleAction(w.user_id, true)}
                                     disabled={isPending}
                                     className="w-10 h-10 rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-on-primary transition-all flex items-center justify-center shadow-lg shadow-primary/5 active:scale-90 disabled:opacity-50"
-                                    title="Approve Worker"
+                                    title={t("admin.dashboard.approveWorker" as any)}
                                   >
                                     <span className="material-symbols-outlined text-[20px] font-bold">check_circle</span>
                                   </button>
@@ -217,7 +217,7 @@ export default function AdminDashboardContent({
                                     onClick={() => handleAction(w.user_id, false)}
                                     disabled={isPending}
                                     className="w-10 h-10 rounded-xl bg-secondary/10 text-secondary hover:bg-secondary hover:text-on-secondary transition-all flex items-center justify-center shadow-lg shadow-secondary/5 active:scale-90 disabled:opacity-50"
-                                    title="Reject Worker"
+                                    title={t("admin.dashboard.rejectWorker" as any)}
                                   >
                                     <span className="material-symbols-outlined text-[20px] font-bold">cancel</span>
                                   </button>
@@ -235,8 +235,8 @@ export default function AdminDashboardContent({
                         <span className="material-symbols-outlined text-primary text-[40px] animate-pulse">verified</span>
                      </div>
                      <div className="space-y-1">
-                        <p className="text-sm font-black text-on-surface uppercase tracking-widest">Queue Clear</p>
-                        <p className="text-xs text-on-surface-variant opacity-40">All pending identities have been audited.</p>
+                        <p className="text-sm font-black text-on-surface uppercase tracking-widest">{t("admin.dashboard.queueClear" as any)}</p>
+                        <p className="text-xs text-on-surface-variant opacity-40">{t("admin.dashboard.queueClearDesc" as any)}</p>
                      </div>
                   </div>
                )}
@@ -248,13 +248,13 @@ export default function AdminDashboardContent({
             
             {/* Quick Actions */}
             <section className="space-y-4">
-               <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant opacity-40 px-1">Quick Actions</h2>
+               <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant opacity-40 px-1">{t("admin.quickActions" as any)}</h2>
                <div className="grid grid-cols-2 gap-3">
                   {[
-                    { label: "Verify Workers", icon: "how_to_reg", color: "bg-primary text-on-primary" },
-                    { label: "Disputes", icon: "gavel", color: "bg-surface-container-high text-on-surface" },
-                    { label: "Reports", icon: "bar_chart", color: "bg-surface-container-high text-on-surface" },
-                    { label: "Settings", icon: "settings", color: "bg-surface-container-high text-on-surface" },
+                    { label: t("admin.dashboard.verifyWorkers" as any), icon: "how_to_reg", color: "bg-primary text-on-primary" },
+                    { label: t("admin.disputes" as any), icon: "gavel", color: "bg-surface-container-high text-on-surface" },
+                    { label: t("admin.reports" as any), icon: "bar_chart", color: "bg-surface-container-high text-on-surface" },
+                    { label: t("admin.settings" as any), icon: "settings", color: "bg-surface-container-high text-on-surface" },
                   ].map((btn, i) => (
                     <button 
                       key={i}
@@ -269,7 +269,7 @@ export default function AdminDashboardContent({
 
             {/* Activity Feed */}
             <section className="space-y-4">
-               <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant opacity-40 px-1">Recent Activity</h2>
+               <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant opacity-40 px-1">{t("admin.activity.title" as any)}</h2>
                <div className="bg-surface-container-low border border-surface-container-highest rounded-[2.5rem] p-6 space-y-6">
                   {activityFeed.length > 0 ? (
                     <div className="space-y-6 relative">
@@ -287,7 +287,7 @@ export default function AdminDashboardContent({
                             </div>
                             <div className="flex flex-col gap-0.5">
                                <p className="text-[11px] font-black text-on-surface tracking-tight leading-tight">
-                                  {item.type === 'user_signup' ? 'New Registration' : 'Job Posted'}
+                                  {item.type === 'user_signup' ? t("admin.dashboard.newRegistration" as any) : t("admin.dashboard.activity.jobPosted" as any)}
                                </p>
                                <p className="text-[10px] text-on-surface-variant opacity-60 font-medium truncate max-w-[150px]">
                                   {item.title}
@@ -300,10 +300,10 @@ export default function AdminDashboardContent({
                        ))}
                     </div>
                   ) : (
-                    <p className="text-[10px] italic text-on-surface-variant opacity-40 text-center py-4">No recent activity detected.</p>
+                    <p className="text-[10px] italic text-on-surface-variant opacity-40 text-center py-4">{t("admin.dashboard.noRecentActivityDetected" as any)}</p>
                   )}
                   <button className="w-full py-3 rounded-xl border border-surface-container-highest text-[10px] font-black uppercase tracking-widest text-on-surface-variant hover:bg-surface-container-high transition-colors">
-                     View All logs
+                     {t("admin.dashboard.viewAllLogs" as any)}
                   </button>
                </div>
             </section>
@@ -330,7 +330,7 @@ export default function AdminDashboardContent({
               <div className="flex justify-between items-center mb-6">
                  <div className="flex items-center gap-4">
                     <span className="material-symbols-outlined text-primary">fingerprint</span>
-                    <h3 className="text-xl font-black text-white uppercase tracking-[0.2em]">Credential Audit</h3>
+                    <h3 className="text-xl font-black text-white uppercase tracking-[0.2em]">{t("admin.dashboard.credentialAudit" as any)}</h3>
                  </div>
                  <button 
                   onClick={() => setPreviewImage(null)}
@@ -342,7 +342,7 @@ export default function AdminDashboardContent({
               <div className="flex-grow bg-white/5 rounded-[3rem] overflow-hidden border border-white/10 relative shadow-2xl group">
                  <img src={previewImage} alt="Identity Document" className="w-full h-full object-contain" />
                  <div className="absolute inset-x-0 bottom-0 p-10 bg-gradient-to-t from-black/80 to-transparent flex justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                    <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.3em]">Confidential Platform Data • Encrypted Access</p>
+                    <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.3em]">{t("admin.dashboard.confidentialData" as any)}</p>
                  </div>
               </div>
             </motion.div>

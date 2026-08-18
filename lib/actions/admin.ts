@@ -23,7 +23,9 @@ function permissionForVerificationStatus(status: string) {
       ? "verification.reject"
       : status === "pending"
         ? "verification.request_resubmission"
-        : "verification.review";
+        : status === "revoked"
+          ? "verification.revoke"
+          : "verification.review";
 }
 
 const VERIFICATION_AUDIT_TRANSITION_MARKERS = ["worker_verification_status_changed", "client_verification_status_changed", "oldStatus", "newStatus"];

@@ -3,6 +3,7 @@ import { isAuthSessionUnavailableError } from "@/lib/auth/session-cookie";
 import { redirect } from "next/navigation";
 import AppShell from "@/components/shell/AppShell";
 import { getContractSetupStatus } from "@/lib/actions/contract-setup";
+import { maybeSendClientVerificationReminder } from "@/lib/client-verification-reminders";
 
 export default async function ClientLayout({
   children,
@@ -39,6 +40,8 @@ export default async function ClientLayout({
       throw error;
     }
   }
+
+  maybeSendClientVerificationReminder(session.user.id).catch(() => undefined);
 
   return (
     <AppShell

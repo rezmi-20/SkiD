@@ -24,6 +24,7 @@ const TYPE_CONFIG: Record<string, { icon: string; color: string; bg: string }> =
   completion_requested: { icon: "task_alt",      color: "text-primary",    bg: "bg-primary/10" },
   completion_accepted:  { icon: "verified",      color: "text-green-400",  bg: "bg-green-400/10" },
   completion_rejected:  { icon: "undo",          color: "text-error",      bg: "bg-error/10" },
+  dispute_update:       { icon: "gavel",         color: "text-rose-400",   bg: "bg-rose-400/10" },
   post_liked:         { icon: "thumb_up",        color: "text-primary",    bg: "bg-primary/10" },
   post_commented:     { icon: "forum",           color: "text-blue-400",   bg: "bg-blue-400/10" },
 };

@@ -51,6 +51,7 @@ const matrix = {
     "verification.approve",
     "verification.reject",
     "verification.request_resubmission",
+    "verification.revoke",
     "content.read",
     "content.moderate",
   ],
@@ -115,6 +116,7 @@ check("support admin can read support", hasPermission("user_support_admin", "act
 check("support admin denied admin creation", !hasPermission("user_support_admin", "active", "admin_accounts.create"));
 check("super admin can manage admin accounts", hasPermission("super_admin", "active", "admin_accounts.assign_role"));
 check("super admin does not inherit verification approve", !hasPermission("super_admin", "active", "verification.approve"));
+check("super admin does not inherit verification revoke", !hasPermission("super_admin", "active", "verification.revoke"));
 check("super admin does not inherit dispute resolve", !hasPermission("super_admin", "active", "disputes.resolve"));
 check("suspended admin permission denied", !hasPermission("content_verification_admin", "suspended", "verification.review"));
 check("inactive admin permission denied", !hasPermission("content_verification_admin", "activation_required", "verification.review"));

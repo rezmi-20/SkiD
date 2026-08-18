@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Briefcase, ExternalLink, Search, ShieldCheck, UserRound } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 type WorkerRow = {
   userId: string;
@@ -14,6 +15,7 @@ type WorkerRow = {
   isSuspended: boolean;
   maskedFin: string | null;
   hasDocument: boolean;
+  attemptNumber: number | null;
   createdAt: string;
   decidedAt: string | null;
   reviewerName: string | null;
@@ -29,6 +31,7 @@ type ClientRow = {
   isSuspended: boolean;
   maskedFin: string | null;
   hasDocument: boolean;
+  attemptNumber: number | null;
   createdAt: string;
   decidedAt: string | null;
   reviewerName: string | null;
@@ -49,18 +52,19 @@ function statusClass(status: string) {
   return "bg-amber-500/10 text-amber-500 border-amber-500/20";
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, label }: { status: string; label: string }) {
   return (
     <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${statusClass(status)}`}>
       <ShieldCheck className="h-3 w-3" />
-      {status.replace("_", " ")}
+      {label}
     </span>
   );
 }
 
 export function VerificationReviewTabs({ workers, clients, canOpenDetails, canReview }: Props) {
+  const { t } = useLanguage();
   const [tab, setTab] = useState<"workers" | "clients">("workers");
-  const [queue, setQueue] = useState<"pending" | "rejected" | "decided" | "all">("pending");
+  const [queue, setQueue] = useState<"pending" | "approved" | "rejected" | "revoked" | "suspended" | "resubmitted" | "all">("pending");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -73,21 +77,32 @@ export function VerificationReviewTabs({ workers, clients, canOpenDetails, canRe
   const ageLabel = (createdAt: string) => {
     const ms = Date.now() - new Date(createdAt).getTime();
     const days = Math.max(0, Math.floor(ms / 86_400_000));
-    if (days <= 0) return "today";
-    if (days === 1) return "1 day";
-    return `${days} days`;
+    if (days <= 0) return t("common.today");
+    if (days === 1) return `1 ${t("common.day")}`;
+    return `${days} ${t("common.days")}`;
   };
+
+  const statusLabel = (status: string) =>
+    status === "not_started" ? t("admin.clients.notVerified" as any) : t(`verification.status.${status}` as any);
 
   const matchesQueue = (status: string) => {
     if (queue === "all") return true;
     if (queue === "pending") return status === "pending";
-    if (queue === "rejected") return status === "rejected" || status === "resubmission_requested";
-    return status === "approved" || status === "suspended" || status === "revoked";
+    if (queue === "approved") return status === "approved";
+    if (queue === "rejected") return status === "rejected";
+    if (queue === "revoked") return status === "revoked";
+    if (queue === "suspended") return status === "suspended";
+    if (queue === "resubmitted") return true;
+    return false;
   };
 
-  const matchesFilters = (row: { status: string; createdAt: string; reviewerName: string | null }) => {
-    if (!matchesQueue(row.status)) return false;
-    if (statusFilter !== "all" && row.status !== statusFilter) return false;
+  const matchesFilters = (row: { status: string; attemptNumber: number | null; createdAt: string; reviewerName: string | null }) => {
+    if (statusFilter !== "all") {
+      if (row.status !== statusFilter) return false;
+    } else {
+      if (!matchesQueue(row.status)) return false;
+      if (queue === "resubmitted" && !(row.status === "resubmission_requested" || Number(row.attemptNumber || 1) > 1)) return false;
+    }
     if (dateFrom && new Date(row.createdAt) < new Date(`${dateFrom}T00:00:00`)) return false;
     if (dateTo && new Date(row.createdAt) > new Date(`${dateTo}T23:59:59`)) return false;
     if (normalizedReviewer && !String(row.reviewerName || "").toLowerCase().includes(normalizedReviewer)) return false;
@@ -98,7 +113,7 @@ export function VerificationReviewTabs({ workers, clients, canOpenDetails, canRe
     () =>
       workers.filter((worker) =>
         matchesFilters(worker) &&
-        (!resubmittedOnly || worker.status === "pending" || worker.status === "resubmission_requested") &&
+        (!resubmittedOnly || worker.status === "resubmission_requested" || Number(worker.attemptNumber || 1) > 1) &&
         [worker.fullName, worker.email, worker.phone, worker.status, worker.maskedFin, worker.reviewerName]
           .filter(Boolean)
           .some((value) => String(value).toLowerCase().includes(normalizedQuery)),
@@ -110,7 +125,7 @@ export function VerificationReviewTabs({ workers, clients, canOpenDetails, canRe
     () =>
       clients.filter((client) =>
         matchesFilters(client) &&
-        (!resubmittedOnly || client.status === "pending" || client.status === "resubmission_requested") &&
+        (!resubmittedOnly || client.status === "resubmission_requested" || Number(client.attemptNumber || 1) > 1) &&
         [client.fullName, client.email, client.phone, client.status, client.maskedFin, client.reviewerName]
           .filter(Boolean)
           .some((value) => String(value).toLowerCase().includes(normalizedQuery)),
@@ -121,10 +136,10 @@ export function VerificationReviewTabs({ workers, clients, canOpenDetails, canRe
   return (
     <div className="space-y-5 pb-10">
       <div className="rounded-xl border border-outline-variant bg-surface-container-low px-5 py-4">
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">Verification Panel</p>
-        <h1 className="mt-1 text-2xl font-bold text-on-surface">Fayda Review Queue</h1>
+        <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">{t("admin.verification.panel")}</p>
+        <h1 className="mt-1 text-2xl font-bold text-on-surface">{t("admin.verification.queueTitle")}</h1>
         <p className="mt-1 text-sm text-on-surface-variant">
-          Review worker and client identity status from one place.
+          {t("admin.verification.queueDesc")}
         </p>
       </div>
 
@@ -139,7 +154,7 @@ export function VerificationReviewTabs({ workers, clients, canOpenDetails, canRe
             }`}
           >
             <Briefcase className="h-4 w-4" />
-            Workers
+            {t("admin.verification.tab.workers")}
             <span className="rounded-full bg-black/10 px-2 py-0.5 font-mono">{workers.length}</span>
           </button>
           <button
@@ -150,7 +165,7 @@ export function VerificationReviewTabs({ workers, clients, canOpenDetails, canRe
             }`}
           >
             <UserRound className="h-4 w-4" />
-            Clients
+            {t("admin.verification.tab.clients")}
             <span className="rounded-full bg-black/10 px-2 py-0.5 font-mono">{clients.length}</span>
           </button>
         </div>
@@ -160,7 +175,7 @@ export function VerificationReviewTabs({ workers, clients, canOpenDetails, canRe
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search name, email, phone, or status"
+            placeholder={t("admin.verification.search")}
             className="w-full rounded-lg border border-outline-variant bg-surface-container py-2 pl-9 pr-3 text-sm text-on-surface outline-none focus:border-primary"
           />
         </div>
@@ -172,23 +187,27 @@ export function VerificationReviewTabs({ workers, clients, canOpenDetails, canRe
             onChange={(event) => setQueue(event.target.value as typeof queue)}
             className="rounded-lg border border-outline-variant bg-surface-container px-3 py-2 text-xs font-bold text-on-surface"
           >
-            <option value="pending">Pending queue</option>
-            <option value="rejected">Rejected/resubmitted</option>
-            <option value="decided">Recently decided</option>
-            <option value="all">All cases</option>
+            <option value="pending">{t("admin.verification.queue.pending")}</option>
+            <option value="approved">{t("admin.verification.queue.approved")}</option>
+            <option value="rejected">{t("admin.verification.queue.rejected")}</option>
+            <option value="revoked">{t("admin.verification.queue.revoked")}</option>
+            <option value="suspended">{t("admin.verification.queue.suspended")}</option>
+            <option value="resubmitted">{t("admin.verification.queue.resubmitted")}</option>
+            <option value="all">{t("admin.verification.queue.all")}</option>
           </select>
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
             className="rounded-lg border border-outline-variant bg-surface-container px-3 py-2 text-xs font-bold text-on-surface"
           >
-            <option value="all">All statuses</option>
-            <option value="pending">Pending</option>
-            <option value="resubmission_requested">Resubmission requested</option>
-            <option value="rejected">Rejected</option>
-            <option value="approved">Approved</option>
-            <option value="suspended">Suspended</option>
-            <option value="revoked">Revoked</option>
+            <option value="all">{t("admin.verification.status.all")}</option>
+            <option value="not_started">{t("admin.clients.notVerified" as any)}</option>
+            <option value="pending">{t("verification.status.pending")}</option>
+            <option value="resubmission_requested">{t("verification.status.resubmission_requested")}</option>
+            <option value="rejected">{t("verification.status.rejected")}</option>
+            <option value="approved">{t("verification.status.approved")}</option>
+            <option value="suspended">{t("verification.status.suspended")}</option>
+            <option value="revoked">{t("verification.status.revoked")}</option>
           </select>
           <input
             type="date"
@@ -205,7 +224,7 @@ export function VerificationReviewTabs({ workers, clients, canOpenDetails, canRe
           <input
             value={reviewerFilter}
             onChange={(event) => setReviewerFilter(event.target.value)}
-            placeholder="Reviewer"
+            placeholder={t("admin.verification.filter.reviewer")}
             className="rounded-lg border border-outline-variant bg-surface-container px-3 py-2 text-xs font-bold text-on-surface"
           />
           <label className="flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container px-3 py-2 text-xs font-bold text-on-surface">
@@ -214,7 +233,7 @@ export function VerificationReviewTabs({ workers, clients, canOpenDetails, canRe
               checked={resubmittedOnly}
               onChange={(event) => setResubmittedOnly(event.target.checked)}
             />
-            Resubmitted
+            {t("admin.verification.filter.resubmitted")}
           </label>
         </div>
       </div>
@@ -224,11 +243,11 @@ export function VerificationReviewTabs({ workers, clients, canOpenDetails, canRe
           <table className="w-full text-sm">
             <thead className="border-b border-outline-variant bg-surface-container/50 text-left">
               <tr>
-                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Worker</th>
-                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Status</th>
-                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">FIN / Document</th>
-                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Reviewer / Age</th>
-                <th className="px-4 py-3 text-right text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Action</th>
+                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">{t("admin.verification.col.worker")}</th>
+                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">{t("admin.common.status")}</th>
+                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">{t("admin.verification.col.finDoc")}</th>
+                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">{t("admin.verification.col.reviewerAge")}</th>
+                <th className="px-4 py-3 text-right text-[10px] font-black uppercase tracking-widest text-on-surface-variant">{t("admin.verification.col.action")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant">
@@ -240,15 +259,17 @@ export function VerificationReviewTabs({ workers, clients, canOpenDetails, canRe
                     {worker.phone && <p className="text-[10px] text-on-surface-variant/70">{worker.phone}</p>}
                   </td>
                   <td className="px-4 py-3">
-                    <StatusBadge status={worker.isSuspended ? "suspended" : worker.status} />
+                    <StatusBadge status={worker.isSuspended ? "suspended" : worker.status} label={statusLabel(worker.isSuspended ? "suspended" : worker.status)} />
                   </td>
                   <td className="px-4 py-3 text-xs font-bold text-on-surface-variant">
-                    <p>{worker.maskedFin || "FIN not recorded"}</p>
-                    <p className="text-[10px]">{worker.hasDocument ? "Document submitted" : "Document missing"}</p>
+                    <p>{worker.maskedFin || t("admin.verification.finMissing")}</p>
+                    <p className="text-[10px]">{worker.hasDocument ? t("admin.verification.documentSubmitted") : t("admin.verification.documentMissing")}</p>
                   </td>
                   <td className="px-4 py-3 text-xs font-bold text-on-surface-variant">
-                    <p>{worker.reviewerName || "Unassigned"}</p>
-                    <p className="text-[10px]">{ageLabel(worker.createdAt)}</p>
+                    <p>{worker.reviewerName || t("admin.verification.unassigned")}</p>
+                    <p className="text-[10px]">
+                      {t("admin.verification.currentAttempt")} {worker.attemptNumber || 1} · {ageLabel(worker.createdAt)}
+                    </p>
                   </td>
                   <td className="px-4 py-3 text-right">
                     {canOpenDetails && (
@@ -256,7 +277,7 @@ export function VerificationReviewTabs({ workers, clients, canOpenDetails, canRe
                         href={`/admin/verify/${worker.userId}`}
                         className="inline-flex items-center gap-1 rounded-lg border border-outline-variant bg-surface-container px-3 py-2 text-[11px] font-black uppercase tracking-wider text-on-surface hover:bg-surface-container-high"
                       >
-                        {canReview ? "Review" : "View details"} <ExternalLink className="h-3.5 w-3.5" />
+                        {canReview ? t("admin.verification.review") : t("admin.verification.viewDetails")} <ExternalLink className="h-3.5 w-3.5" />
                       </Link>
                     )}
                   </td>
@@ -265,7 +286,7 @@ export function VerificationReviewTabs({ workers, clients, canOpenDetails, canRe
               {filteredWorkers.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-4 py-12 text-center text-sm font-bold text-on-surface-variant">
-                    No workers match your search.
+                    {t("admin.verification.noWorkers")}
                   </td>
                 </tr>
               )}
@@ -275,11 +296,11 @@ export function VerificationReviewTabs({ workers, clients, canOpenDetails, canRe
           <table className="w-full text-sm">
             <thead className="border-b border-outline-variant bg-surface-container/50 text-left">
               <tr>
-                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Client</th>
-                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Status</th>
-                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">FIN / Document</th>
-                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Reviewer / Age</th>
-                <th className="px-4 py-3 text-right text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Action</th>
+                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">{t("admin.verification.col.client")}</th>
+                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">{t("admin.common.status")}</th>
+                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">{t("admin.verification.col.finDoc")}</th>
+                <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">{t("admin.verification.col.reviewerAge")}</th>
+                <th className="px-4 py-3 text-right text-[10px] font-black uppercase tracking-widest text-on-surface-variant">{t("admin.verification.col.action")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant">
@@ -291,15 +312,17 @@ export function VerificationReviewTabs({ workers, clients, canOpenDetails, canRe
                     {client.phone && <p className="text-[10px] text-on-surface-variant/70">{client.phone}</p>}
                   </td>
                   <td className="px-4 py-3">
-                    <StatusBadge status={client.isSuspended ? "suspended" : client.status} />
+                    <StatusBadge status={client.isSuspended ? "suspended" : client.status} label={statusLabel(client.isSuspended ? "suspended" : client.status)} />
                   </td>
                   <td className="px-4 py-3 text-xs font-bold text-on-surface-variant">
-                    <p>{client.maskedFin || "FIN not recorded"}</p>
-                    <p className="text-[10px]">{client.hasDocument ? "Document submitted" : "Document missing"}</p>
+                    <p>{client.maskedFin || t("admin.verification.finMissing")}</p>
+                    <p className="text-[10px]">{client.hasDocument ? t("admin.verification.documentSubmitted") : t("admin.verification.documentMissing")}</p>
                   </td>
                   <td className="px-4 py-3 text-xs font-bold text-on-surface-variant">
-                    <p>{client.reviewerName || "Unassigned"}</p>
-                    <p className="text-[10px]">{ageLabel(client.createdAt)}</p>
+                    <p>{client.reviewerName || t("admin.verification.unassigned")}</p>
+                    <p className="text-[10px]">
+                      {t("admin.verification.currentAttempt")} {client.attemptNumber || 1} · {ageLabel(client.createdAt)}
+                    </p>
                   </td>
                   <td className="px-4 py-3 text-right">
                     {canOpenDetails && (
@@ -307,7 +330,7 @@ export function VerificationReviewTabs({ workers, clients, canOpenDetails, canRe
                         href={`/admin/clients/${client.userId}/verify`}
                         className="inline-flex items-center gap-1 rounded-lg border border-outline-variant bg-surface-container px-3 py-2 text-[11px] font-black uppercase tracking-wider text-on-surface hover:bg-surface-container-high"
                       >
-                        {canReview ? "Review" : "View details"} <ExternalLink className="h-3.5 w-3.5" />
+                        {canReview ? t("admin.verification.review") : t("admin.verification.viewDetails")} <ExternalLink className="h-3.5 w-3.5" />
                       </Link>
                     )}
                   </td>
@@ -316,7 +339,7 @@ export function VerificationReviewTabs({ workers, clients, canOpenDetails, canRe
               {filteredClients.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-4 py-12 text-center text-sm font-bold text-on-surface-variant">
-                    No clients match your search.
+                    {t("admin.verification.noClients")}
                   </td>
                 </tr>
               )}

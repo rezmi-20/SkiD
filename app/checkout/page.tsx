@@ -2,12 +2,14 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useLanguage } from "@/context/LanguageContext";
 
 function formatMoney(value: number) {
   return `${Math.round(value).toLocaleString()} ETB`;
 }
 
 export default function CheckoutPage() {
+  const { t } = useLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialJobId = searchParams.get("job_id") || searchParams.get("jobId") || "";
@@ -36,7 +38,7 @@ export default function CheckoutPage() {
     setError("");
 
     if (!jobId.trim()) {
-      setError("Enter the completed job ID to open its secure Chapa checkout.");
+      setError(t("checkout.errJobId"));
       return;
     }
 
@@ -48,25 +50,25 @@ export default function CheckoutPage() {
       <div className="mx-auto grid max-w-5xl gap-4 lg:grid-cols-[1fr_340px]">
         <form onSubmit={handleSubmit} className="rounded-lg border border-surface-variant bg-surface-container-lowest p-5">
           <div className="mb-5">
-            <h1 className="text-2xl font-bold tracking-tight text-on-surface">Chapa Checkout</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-on-surface">{t("checkout.title")}</h1>
             <p className="mt-2 text-sm leading-6 text-on-surface-variant">
-              Enter the completed job details, then continue to the secure job payment screen.
+              {t("checkout.desc")}
             </p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="grid gap-1.5 sm:col-span-2">
-              <span className="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Completed Job ID</span>
+              <span className="text-xs font-bold uppercase tracking-wide text-on-surface-variant">{t("checkout.completedJobId")}</span>
               <input
                 value={jobId}
                 onChange={(event) => setJobId(event.target.value)}
                 className="h-11 rounded-lg border border-surface-variant bg-surface px-3 text-sm font-medium text-on-surface outline-none focus:border-primary"
-                placeholder="Job UUID"
+                placeholder={t("checkout.jobPlaceholder")}
               />
             </label>
 
             <label className="grid gap-1.5">
-              <span className="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Amount</span>
+              <span className="text-xs font-bold uppercase tracking-wide text-on-surface-variant">{t("checkout.amount")}</span>
               <input
                 type="number"
                 min="1"
@@ -77,7 +79,7 @@ export default function CheckoutPage() {
             </label>
 
             <label className="grid gap-1.5">
-              <span className="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Phone</span>
+              <span className="text-xs font-bold uppercase tracking-wide text-on-surface-variant">{t("checkout.phone")}</span>
               <input
                 value={phone}
                 onChange={(event) => setPhone(event.target.value)}
@@ -86,7 +88,7 @@ export default function CheckoutPage() {
             </label>
 
             <label className="grid gap-1.5">
-              <span className="text-xs font-bold uppercase tracking-wide text-on-surface-variant">First Name</span>
+              <span className="text-xs font-bold uppercase tracking-wide text-on-surface-variant">{t("checkout.firstName")}</span>
               <input
                 value={firstName}
                 onChange={(event) => setFirstName(event.target.value)}
@@ -95,7 +97,7 @@ export default function CheckoutPage() {
             </label>
 
             <label className="grid gap-1.5">
-              <span className="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Last Name</span>
+              <span className="text-xs font-bold uppercase tracking-wide text-on-surface-variant">{t("checkout.lastName")}</span>
               <input
                 value={lastName}
                 onChange={(event) => setLastName(event.target.value)}
@@ -104,7 +106,7 @@ export default function CheckoutPage() {
             </label>
 
             <label className="grid gap-1.5 sm:col-span-2">
-              <span className="text-xs font-bold uppercase tracking-wide text-on-surface-variant">Email</span>
+              <span className="text-xs font-bold uppercase tracking-wide text-on-surface-variant">{t("checkout.email")}</span>
               <input
                 type="email"
                 value={email}
@@ -125,29 +127,29 @@ export default function CheckoutPage() {
             className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-on-primary"
           >
             <span className="material-symbols-outlined text-[18px]">payments</span>
-            Pay with Chapa
+            {t("checkout.payWithChapa")}
           </button>
         </form>
 
         <aside className="rounded-lg border border-surface-variant bg-surface-container-lowest p-5">
-          <h2 className="text-sm font-bold text-on-surface">Payment Breakdown</h2>
+          <h2 className="text-sm font-bold text-on-surface">{t("checkout.breakdown")}</h2>
           <div className="mt-4 grid gap-2 text-sm">
             <div className="flex items-center justify-between">
-              <span className="text-on-surface-variant">Client pays</span>
+              <span className="text-on-surface-variant">{t("checkout.clientPays")}</span>
               <span className="font-semibold text-on-surface">{formatMoney(breakdown.total)}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-on-surface-variant">Platform fee</span>
+              <span className="text-on-surface-variant">{t("checkout.platformFee")}</span>
               <span className="font-semibold text-on-surface">{formatMoney(breakdown.commission)}</span>
             </div>
             <div className="flex items-center justify-between rounded-lg bg-surface-container-high px-3 py-2">
-              <span className="font-semibold text-on-surface">Worker receives</span>
+              <span className="font-semibold text-on-surface">{t("checkout.workerReceives")}</span>
               <span className="font-bold text-primary">{formatMoney(breakdown.workerShare)}</span>
             </div>
           </div>
 
           <p className="mt-4 border-t border-surface-variant pt-4 text-xs leading-5 text-on-surface-variant">
-            The final charge uses the job budget and client profile saved in DireSkill.
+            {t("checkout.note")}
           </p>
         </aside>
       </div>

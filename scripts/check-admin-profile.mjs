@@ -28,14 +28,14 @@ function check(label, ok) {
 check("admin profile route exists", page.includes("getAdminProfile") && page.includes("AdminProfileForm"));
 check("profile requires active admin", actions.includes("export async function getAdminProfile") && actions.includes("requireAdmin()"));
 check("username update action removed", !actions.includes("updateAdminUsername") && !form.includes('name="username"'));
-check("employee ID is read-only in profile", form.includes("Employee ID") && !form.includes('name="admin_employee_id"'));
+check("employee ID is read-only in profile", form.includes("admin.common.employeeId") && !form.includes('name="admin_employee_id"'));
 check("password change requires current password", actions.includes("updateAdminPassword") && actions.includes("Current password is incorrect"));
 check("password change validates strength and confirmation", actions.includes("validateStrongAdminPassword") && actions.includes("Password confirmation does not match"));
 check("password change updates admin employee credential", actions.includes("setCredentialPassword") && actions.includes("admin_employees"));
 check("password change clears admin session and redirects", actions.includes("clearAdminSession") && form.includes("router.replace"));
 check("profile UI has no role/status mutation fields", !form.includes('name="adminRole"') && !form.includes('name="adminStatus"'));
 check("admin profile link exists in sidebar", sidebar.includes('href: "/admin/profile"') && sidebar.includes("UserCircle"));
-check("admin profile link exists in top bar", topbar.includes('href="/admin/profile"') && topbar.includes("Profile"));
+check("admin profile link exists in top bar", topbar.includes('href="/admin/profile"') && topbar.includes("nav.profile"));
 check("secure admin creation uses operational roles only", actions.includes("OPERATIONAL_ADMIN_ROLES") && actions.includes("super_admin"));
 check("secure admin creation requires identity confirmation", actions.includes("identityConfirmed") && actions.includes("Offline identity and work-email confirmation is required"));
 check("manual identity reference input removed", !usersClient.includes("Masked/reference identifier") && !usersClient.includes("identityReference: \"\"") && !actions.includes("data.identityReference"));
@@ -46,8 +46,8 @@ check("admin creation validates required fields", actions.includes("Full Name is
 check("admin creation rejects sensitive notes", actions.includes("hasObviousSecret") && usersClient.includes("Do not enter passwords, FIN"));
 check("duplicate admin work email rejected", actions.includes("An administrator with this work email already exists") && actions.includes("admin_employees_work_email_unique_idx"));
 check("secure admin creation creates activation-required accounts", actions.includes("admin_status") && actions.includes("activation_required") && actions.includes("admin_activation_required"));
-check("secure admin creation shows temporary password once", usersClient.includes("Save these temporary credentials now") && usersClient.includes("temporaryCredentials") && usersClient.includes("The password will not be shown again"));
-check("creation result includes employee id, IVR, role, and expiry", usersClient.includes("Employee ID") && usersClient.includes("Identity Verification Reference") && usersClient.includes("Assigned role") && usersClient.includes("Temporary credential expiry"));
+check("secure admin creation shows temporary password once", usersClient.includes("admin.create.tempTitle") && usersClient.includes("temporaryCredentials") && usersClient.includes("admin.create.tempDesc"));
+check("creation result includes employee id, IVR, role, and expiry", usersClient.includes("admin.common.employeeId") && usersClient.includes("admin.create.identityReference") && usersClient.includes("admin.create.assignedRole") && usersClient.includes("admin.create.tempExpiry"));
 check("plaintext password is never inserted or logged", !/console\.(log|warn|error)\([^)]*(tempPassword|passwordHash|authPasswordHash)/.test(actions) && !actions.includes("${tempPassword},"));
 check("seed default requires activation without public email verification", seed.includes("admin_employees") && seed.includes("activation_required") && seed.includes("ALLOW_DEV_ADMIN_SEED_ACTIVE") && !seed.includes("emailVerified"));
 check("seed reset mode exists", seed.includes("ALLOW_DEV_ADMIN_SEED_RESET") && seed.includes("resetMode"));

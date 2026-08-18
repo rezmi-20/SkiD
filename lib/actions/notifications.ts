@@ -25,6 +25,8 @@ export type NotificationType =
   | "completion_accepted"
   | "completion_rejected"
   | "identity_verification_required"
+  | "dispute_update"
+  | "support_update"
   | "post_liked"
   | "post_commented";
 
