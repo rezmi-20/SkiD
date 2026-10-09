@@ -12,6 +12,7 @@ import {
   type AdminPrincipal,
 } from "@/lib/admin-authorization";
 import { decryptFin } from "@/lib/fin-protection";
+import { hasCompleteWorkerIdentity } from "@/lib/worker-verification";
 
 export type VerificationAccountType = "worker" | "client";
 export type VerificationDecisionStatus = "approved" | "rejected" | "resubmission_requested" | "suspended" | "revoked";
@@ -569,7 +570,14 @@ export async function decideVerificationCase(
   if (nextStatus !== "revoked" && !["pending", "rejected", "resubmission_requested"].includes(snapshot.oldStatus)) {
     return { success: false, status: 409, error: "This verification case is not pending review." };
   }
-  if (nextStatus === "approved" && (!snapshot.finLast4 || !snapshot.finEncrypted || !snapshot.documentRef)) {
+  if (
+    nextStatus === "approved" &&
+    !hasCompleteWorkerIdentity({
+      documentRef: snapshot.documentRef,
+      finLast4: snapshot.finLast4,
+      finEncrypted: snapshot.finEncrypted,
+    })
+  ) {
     return { success: false, status: 400, error: "Current FIN metadata and verification document are required before approval." };
   }
 

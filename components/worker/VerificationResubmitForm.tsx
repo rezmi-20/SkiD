@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { resubmitVerification } from "@/lib/actions/profile";
 import { useLanguage } from "@/context/LanguageContext";
 
-export default function VerificationResubmitForm({ mode = "resubmit" }: { mode?: "resubmit" | "reverify" }) {
+export default function VerificationResubmitForm({ mode = "resubmit" }: { mode?: "complete" | "resubmit" | "reverify" }) {
   const { t } = useLanguage();
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -94,7 +94,7 @@ export default function VerificationResubmitForm({ mode = "resubmit" }: { mode?:
       <div className="flex items-center gap-2 mb-1">
         <span className="material-symbols-outlined text-red-400 text-[18px]">upload_file</span>
         <p className="text-xs font-black text-zinc-300 uppercase tracking-widest">
-          {mode === "reverify" ? t("verification.reverify.title") : t("verification.resubmit.title")}
+          {mode === "complete" ? t("profile.completeFayda") : mode === "reverify" ? t("verification.reverify.title") : t("verification.resubmit.title")}
         </p>
       </div>
 
@@ -185,7 +185,7 @@ export default function VerificationResubmitForm({ mode = "resubmit" }: { mode?:
         ) : (
           <>
             <span className="material-symbols-outlined text-[18px]">send</span>
-            {mode === "reverify" ? t("verification.reverify.btn") : t("verification.resubmit.btn")}
+            {mode === "complete" ? t("verification.resubmit.btn") : mode === "reverify" ? t("verification.reverify.btn") : t("verification.resubmit.btn")}
           </>
         )}
       </button>

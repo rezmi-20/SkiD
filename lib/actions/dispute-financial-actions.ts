@@ -6,6 +6,7 @@ import { sql } from "@/lib/db";
 import { hasAdminPermission, requireAdminPermission } from "@/lib/admin-authorization";
 import { verifyAndReleasePayment } from "@/lib/payment-processing";
 import { writeGovernanceAudit } from "@/lib/actions/governance";
+import { DISPUTE_TERMINAL_STATUSES } from "@/lib/dispute-constants";
 
 const FINANCIAL_OUTCOMES = [
   "no_financial_action",
@@ -48,6 +49,10 @@ function maskReference(value: unknown) {
 
 function isProviderSuccess(value: unknown) {
   return String(value || "").toLowerCase() === "success";
+}
+
+function isTerminalDisputeStatus(value: unknown) {
+  return DISPUTE_TERMINAL_STATUSES.includes(String(value || "") as any);
 }
 
 async function notifyParticipant(userId: string, title: string, body: string, linkHref: string) {
@@ -96,6 +101,7 @@ async function getFinancialCase(disputeId: string) {
       d.final_reason,
       d.requested_resolution,
       d.assigned_admin_id,
+      d.conflict_admin_ids,
       d.client_id,
       d.worker_id,
       d.financial_action_state,
@@ -165,6 +171,13 @@ async function requireOperationalFinancialAdmin(disputeId: string) {
   }
   const financialCase = await getFinancialCase(disputeId);
   if (!financialCase) return { admin, financialCase: null, error: "Dispute financial case not found." };
+  const conflicts = Array.isArray(financialCase.conflict_admin_ids) ? financialCase.conflict_admin_ids.map(String) : [];
+  if (conflicts.includes(admin.id)) {
+    return { admin, financialCase: null, error: "You declared a conflict on this dispute." };
+  }
+  if (isTerminalDisputeStatus(financialCase.dispute_status)) {
+    return { admin, financialCase: null, error: "This dispute is terminal and read-only." };
+  }
   if (!financialCase.assigned_admin_id) {
     return { admin, financialCase: null, error: "Financial case operations require assignment to a dispute and payment admin." };
   }
@@ -205,8 +218,13 @@ export async function getDisputeFinancialCase(disputeId: string) {
     ...financialCase,
     chapa_ref_masked: maskReference(financialCase.chapa_ref),
     chapa_reference_masked: maskReference(financialCase.chapa_reference),
-    canOperate: admin.role === "dispute_payment_admin" && hasAdminPermission(admin, "disputes.resolve"),
-    canApproveHighRisk: admin.role === "super_admin" && hasAdminPermission(admin, "disputes.read"),
+    canOperate:
+      admin.role === "dispute_payment_admin" &&
+      hasAdminPermission(admin, "disputes.resolve") &&
+      !isTerminalDisputeStatus(financialCase.dispute_status) &&
+      financialCase.assigned_admin_id === admin.id &&
+      !(Array.isArray(financialCase.conflict_admin_ids) && financialCase.conflict_admin_ids.map(String).includes(admin.id)),
+    canApproveHighRisk: admin.role === "super_admin" && hasAdminPermission(admin, "disputes.read") && !isTerminalDisputeStatus(financialCase.dispute_status),
     actions,
   };
 }
@@ -445,6 +463,15 @@ export async function rejectFinancialAction(actionId: string, reason: string) {
   if (admin.role !== "super_admin") return { success: false, status: 403, error: "Only super admin may reject high-risk financial proposals." };
   const text = cleanText(reason);
   if (text.length < 10) return { success: false, status: 400, error: "Rejection reason is required." };
+  const actionRows = await sql`
+    SELECT d.status AS dispute_status
+    FROM dispute_financial_actions fa
+    JOIN disputes d ON d.id = fa.dispute_id
+    WHERE fa.id = ${actionId}
+    LIMIT 1
+  `;
+  if (actionRows.length === 0) return { success: false, status: 404, error: "Financial proposal not found." };
+  if (isTerminalDisputeStatus(actionRows[0].dispute_status)) return { success: false, status: 409, error: "This dispute is terminal and read-only." };
   const rows = await sql`
     UPDATE dispute_financial_actions
     SET proposal_status = 'rejected',
@@ -481,7 +508,7 @@ export async function approveFinancialAction(actionId: string) {
   if (admin.role !== "super_admin") return { success: false, status: 403, error: "Only super admin may approve high-risk financial proposals." };
 
   const rows = await sql`
-    SELECT fa.*, d.client_id, d.worker_id, d.final_decision, d.financial_action_state
+    SELECT fa.*, d.client_id, d.worker_id, d.status AS dispute_status, d.final_decision, d.financial_action_state
     FROM dispute_financial_actions fa
     JOIN disputes d ON d.id = fa.dispute_id
     WHERE fa.id = ${actionId}
@@ -489,6 +516,7 @@ export async function approveFinancialAction(actionId: string) {
   `;
   const action = rows[0];
   if (!action) return { success: false, status: 404, error: "Financial proposal not found." };
+  if (isTerminalDisputeStatus(action.dispute_status)) return { success: false, status: 409, error: "This dispute is terminal and read-only." };
   if (action.proposal_status !== "proposed") return { success: false, status: 409, error: "This proposal is no longer pending." };
   if (action.decision_snapshot && String(action.decision_snapshot) !== String(action.final_decision || "")) {
     return { success: false, status: 409, error: "The dispute decision changed after this proposal was created." };
@@ -551,7 +579,7 @@ export async function executeApprovedRelease(actionId: string) {
   const admin = await requireAdminPermission("disputes.resolve");
   if (admin.role !== "dispute_payment_admin") return { success: false, status: 403, error: "Only dispute and payment admins may execute approved release." };
   const rows = await sql`
-    SELECT fa.*, d.assigned_admin_id, d.job_id, d.client_id, d.worker_id, d.final_decision, p.chapa_ref, p.chapa_status, p.financial_hold_status, p.hold_dispute_id
+    SELECT fa.*, d.assigned_admin_id, d.conflict_admin_ids, d.status AS dispute_status, d.job_id, d.client_id, d.worker_id, d.final_decision, p.chapa_ref, p.chapa_status, p.financial_hold_status, p.hold_dispute_id
     FROM dispute_financial_actions fa
     JOIN disputes d ON d.id = fa.dispute_id
     JOIN payments p ON p.id = fa.payment_id
@@ -561,7 +589,11 @@ export async function executeApprovedRelease(actionId: string) {
   `;
   const action = rows[0];
   if (!action) return { success: false, status: 404, error: "Release action not found." };
-  if (action.assigned_admin_id && action.assigned_admin_id !== admin.id) return { success: false, status: 409, error: "Only the assigned dispute admin can execute this release." };
+  if (isTerminalDisputeStatus(action.dispute_status)) return { success: false, status: 409, error: "This dispute is terminal and read-only." };
+  const conflicts = Array.isArray(action.conflict_admin_ids) ? action.conflict_admin_ids.map(String) : [];
+  if (conflicts.includes(admin.id)) return { success: false, status: 403, error: "You declared a conflict on this dispute." };
+  if (!action.assigned_admin_id) return { success: false, status: 409, error: "This dispute must be claimed before release execution." };
+  if (action.assigned_admin_id !== admin.id) return { success: false, status: 409, error: "Only the assigned dispute admin can execute this release." };
   if (action.proposal_status !== "approved") return { success: false, status: 409, error: "Release must be approved by super admin first." };
   if (!action.chapa_ref) return { success: false, status: 409, error: "Release requires Chapa transaction reference." };
   if (action.decision_snapshot && String(action.decision_snapshot) !== String(action.final_decision || "")) {

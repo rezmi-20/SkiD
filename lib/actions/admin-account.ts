@@ -128,37 +128,50 @@ export async function loginAdminEmployee(formData: FormData) {
   const password = String(toFormValue(formData, "password") || "");
   const genericError = "Invalid Employee ID or password.";
 
-  const rows = await sql`
-    SELECT id, admin_employee_id, admin_role, admin_status, admin_activation_required,
-           password_hash, temp_credential_expires_at, session_version
-    FROM admin_employees
-    WHERE lower(admin_employee_id) = lower(${employeeId})
-    LIMIT 1
-  `;
-  const account = rows[0] ?? null;
-  if (!account || !(await verifyBetterAuthPassword(account.password_hash, password))) {
-    return { success: false, error: genericError };
-  }
-  if (account.admin_status === "suspended" || account.admin_status === "revoked") {
-    return { success: false, error: genericError };
-  }
-
-  const activationRequired = Boolean(account.admin_activation_required) || account.admin_status === "activation_required";
-  if (activationRequired) {
-    const expiresAt = account.temp_credential_expires_at ? new Date(account.temp_credential_expires_at) : null;
-    if (expiresAt && expiresAt.getTime() < Date.now()) {
-      return { success: false, error: "Temporary credential has expired." };
+  try {
+    const rows = await sql`
+      SELECT id, admin_employee_id, admin_role, admin_status, admin_activation_required,
+             password_hash, temp_credential_expires_at, session_version
+      FROM admin_employees
+      WHERE lower(admin_employee_id) = lower(${employeeId})
+      LIMIT 1
+    `;
+    const account = rows[0] ?? null;
+    if (!account || !(await verifyBetterAuthPassword(account.password_hash, password))) {
+      return { success: false, error: genericError };
     }
+    if (account.admin_status === "suspended" || account.admin_status === "revoked") {
+      return { success: false, error: genericError };
+    }
+
+    const activationRequired = Boolean(account.admin_activation_required) || account.admin_status === "activation_required";
+    if (activationRequired) {
+      const expiresAt = account.temp_credential_expires_at ? new Date(account.temp_credential_expires_at) : null;
+      if (expiresAt && expiresAt.getTime() < Date.now()) {
+        return { success: false, error: "Temporary credential has expired." };
+      }
+    }
+
+    await setAdminSession({
+      adminId: account.id,
+      employeeId: account.admin_employee_id,
+      role: account.admin_role,
+      sessionVersion: Number(account.session_version || 0),
+    });
+
+    return { success: true, redirectTo: activationRequired ? "/admin/activate" : "/admin/dashboard" };
+  } catch (error: any) {
+    console.error("[ADMIN_LOGIN_ERROR]", error?.message || error);
+    const isNetworkError =
+      String(error?.message || "").includes("fetch failed") ||
+      error?.name === "NeonDbError" ||
+      error?.code === "UND_ERR_CONNECT_TIMEOUT" ||
+      error?.cause?.code === "UND_ERR_CONNECT_TIMEOUT";
+    if (isNetworkError) {
+      return { success: false, error: "Unable to reach database service. Please check your internet connection and try again." };
+    }
+    return { success: false, error: genericError };
   }
-
-  await setAdminSession({
-    adminId: account.id,
-    employeeId: account.admin_employee_id,
-    role: account.admin_role,
-    sessionVersion: Number(account.session_version || 0),
-  });
-
-  return { success: true, redirectTo: activationRequired ? "/admin/activate" : "/admin/dashboard" };
 }
 
 export async function signOutAdminEmployee() {

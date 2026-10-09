@@ -314,6 +314,7 @@ export default function ContractDetails({ contract, userId }: Props) {
   const [isFinalizingDraft, setIsFinalizingDraft] = useState(false);
   const [isTermsActionLoading, setIsTermsActionLoading] = useState(false);
   const [isCompletionActionLoading, setIsCompletionActionLoading] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [showFinalizeModal, setShowFinalizeModal] = useState(false);
   const [termsRejectReason, setTermsRejectReason] = useState("");
   const [completionRejectReason, setCompletionRejectReason] = useState("");
@@ -358,6 +359,41 @@ export default function ContractDetails({ contract, userId }: Props) {
     additionalNotes: contract.additional_notes || "",
   });
   const displayPayment = draftForm.paymentAmount || contract.budget;
+
+  const handleDownloadPdf = async () => {
+    if (!contract.pdf_url || isDownloadingPdf) return;
+    setIsDownloadingPdf(true);
+
+    try {
+      const response = await fetch(contract.pdf_url, {
+        credentials: "include",
+        cache: "no-store",
+      });
+
+      if (response.status === 401) {
+        router.push("/login");
+        return;
+      }
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        alert(data?.error || "Contract PDF is not available yet.");
+        return;
+      }
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = `direskill-contract-${contract.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(objectUrl);
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
 
   const updateDraftField = (field: keyof typeof draftForm, value: string) => {
     setDraftForm((current) => ({ ...current, [field]: value }));
@@ -822,14 +858,16 @@ export default function ContractDetails({ contract, userId }: Props) {
               </div>
             )}
 
-            {contractStatus !== "ACTIVE" && contract.pdf_url && (
-              <a
-                href={contract.pdf_url}
+            {contract.pdf_url && (
+              <button
+                type="button"
+                onClick={handleDownloadPdf}
+                disabled={isDownloadingPdf}
                 className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-outline-variant px-4 text-xs font-black uppercase tracking-widest text-on-surface hover:border-primary/40"
               >
                 <span className="material-symbols-outlined text-[18px]">download</span>
-                Download PDF
-              </a>
+                {isDownloadingPdf ? "Downloading" : "Download PDF"}
+              </button>
             )}
           </div>
 

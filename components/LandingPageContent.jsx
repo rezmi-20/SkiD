@@ -55,17 +55,17 @@ export default function LandingPageContent({ userRole }) {
         {/* 2. Trust Indicators — build immediate credibility */}
         <TrustIndicators t={t} />
 
-        {/* 3. Social Proof / Stats Bento */}
+        {/* 3. Service Categories — immediate trade exploration */}
+        <Categories t={t} />
+
+        {/* 4. Social Proof / Stats Bento */}
         <StatsBento t={t} />
 
-        {/* 4. Problems & Solutions — address pain points first */}
+        {/* 5. Problems & Solutions — address pain points first */}
         <ProblemsSolutions t={t} />
 
-        {/* 5. How It Works — 7-step visual process */}
+        {/* 6. How It Works — 7-step visual process */}
         <Process t={t} />
-
-        {/* 6. Service Categories */}
-        <Categories t={t} />
 
         {/* 7. Features Matrix — tabbed by audience */}
         <FeaturesMatrix t={t} />
@@ -83,40 +83,48 @@ export default function LandingPageContent({ userRole }) {
         <FaqAccordion t={t} />
 
         {/* 12. Final CTA */}
-        <section className="py-24 px-4 md:px-8 lg:px-16 bg-zinc-950">
+        <section className="py-10 sm:py-20 md:py-24 px-3 sm:px-4 md:px-8 lg:px-16 bg-zinc-950">
           <div className="max-w-7xl mx-auto">
-            <div className="relative overflow-hidden rounded-[3rem] border border-white/8 bg-[#0c0c0e]">
-              {/* Background image */}
-              <div className="absolute inset-0 pointer-events-none">
-                <img
-                  src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&q=80&w=2000"
-                  className="w-full h-full object-cover opacity-20"
-                  alt=""
-                  aria-hidden="true"
-                  style={{ filter: "saturate(0.4)" }}
-                />
+            <div className="relative overflow-hidden rounded-2xl sm:rounded-[3rem] border border-white/8 bg-[#0c0c0e]">
+              {/* Server-rendered trade blueprint background (zero external image requests, never fails) */}
+              <div className="absolute inset-0 pointer-events-none opacity-20">
+                <svg viewBox="0 0 1200 600" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full object-cover">
+                  <defs>
+                    <radialGradient id="ctaGlow" cx="80%" cy="30%" r="60%">
+                      <stop offset="0%" stopColor="#4ade80" stopOpacity="0.3" />
+                      <stop offset="100%" stopColor="#0c0c0e" stopOpacity="0" />
+                    </radialGradient>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#ctaGlow)" />
+                  <g stroke="#ffffff" strokeWidth="0.5" strokeOpacity="0.08" fill="none">
+                    <circle cx="900" cy="300" r="300" strokeDasharray="8 6" />
+                    <circle cx="900" cy="300" r="200" stroke="#4ade80" strokeOpacity="0.15" />
+                    <line x1="600" y1="300" x2="1200" y2="300" />
+                    <line x1="900" y1="0" x2="900" y2="600" />
+                  </g>
+                </svg>
                 <div className="absolute inset-0 bg-gradient-to-r from-[#0c0c0e] via-[#0c0c0e]/85 to-transparent" />
               </div>
 
-              <div className="relative z-10 px-8 py-20 md:px-16 xl:px-24 max-w-2xl">
+              <div className="relative z-10 px-5 py-8 sm:px-12 sm:py-16 xl:px-24 max-w-2xl text-left">
                 <motion.h2
-                  initial={{ opacity: 0, y: 24 }}
+                  initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  className="text-4xl md:text-5xl xl:text-6xl font-black tracking-tighter text-white uppercase leading-[0.9] mb-4"
+                  className="text-2xl sm:text-4xl md:text-5xl xl:text-6xl font-black tracking-tighter text-white uppercase leading-[0.9] mb-2 sm:mb-4"
                 >
                   {t("cta.title").split(" ").slice(0, -1).join(" ")}{" "}
                   <span className="text-green-400 italic">{t("cta.title").split(" ").slice(-1)[0]}</span>
                 </motion.h2>
-                <p className="text-zinc-400 text-base font-medium leading-relaxed mb-8 max-w-md">
+                <p className="text-zinc-400 text-xs sm:text-base font-medium leading-relaxed mb-6 sm:mb-8 max-w-md">
                   {t("hero.subheadline")}
                 </p>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
                   <motion.a
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     href="/client/search"
-                    className="bg-green-400 text-black px-10 h-14 flex items-center justify-center rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-green-300 transition-all shadow-[0_8px_32px_rgba(74,222,128,0.3)]"
+                    className="w-full sm:w-auto bg-green-400 text-black px-6 sm:px-10 h-11 sm:h-14 flex items-center justify-center rounded-xl sm:rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-green-300 transition-all shadow-[0_8px_32px_rgba(74,222,128,0.3)] active:scale-95 text-center"
                   >
                     {t("cta.find")}
                   </motion.a>
@@ -124,7 +132,7 @@ export default function LandingPageContent({ userRole }) {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     href="/register/worker"
-                    className="bg-white/8 border border-white/10 text-white px-10 h-14 flex items-center justify-center rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-white/15 transition-all backdrop-blur-xl"
+                    className="w-full sm:w-auto bg-white/8 border border-white/10 text-white px-6 sm:px-10 h-11 sm:h-14 flex items-center justify-center rounded-xl sm:rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-white/15 transition-all backdrop-blur-xl active:scale-95 text-center"
                   >
                     {t("cta.join")}
                   </motion.a>

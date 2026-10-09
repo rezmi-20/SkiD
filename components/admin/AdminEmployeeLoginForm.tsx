@@ -40,19 +40,19 @@ export function AdminEmployeeLoginForm() {
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-primary">{t("admin.login.eyebrow")}</p>
             <h1 className="text-2xl font-bold text-on-surface">{t("admin.login.title")}</h1>
-            <p className="mt-1 text-xs font-semibold text-on-surface-variant">{t("admin.login.subtitle")}</p>
+            <p className="mt-1 text-xs font-semibold text-on-surface-variant">{t("admin.login.subtitle") || "Authorized employees only"}</p>
           </div>
         </div>
 
         {error && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">
-            {error === "Temporary credential has expired." ? error : t("admin.login.invalid")}
+            {error}
           </div>
         )}
 
         <form action={submit} className="space-y-4">
           <div className="space-y-1.5">
-            <label htmlFor="admin-employee-id" className="text-xs font-bold text-on-surface">{t("admin.common.employeeId")}</label>
+            <label htmlFor="admin-employee-id" className="text-xs font-bold text-on-surface">{t("admin.common.employeeId") || "Employee ID"}</label>
             <input
               id="admin-employee-id"
               name="employeeId"
@@ -63,7 +63,7 @@ export function AdminEmployeeLoginForm() {
             />
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="admin-password" className="text-xs font-bold text-on-surface">{t("admin.common.password")}</label>
+            <label htmlFor="admin-password" className="text-xs font-bold text-on-surface">{t("admin.common.password") || "Password"}</label>
             <div className="relative">
               <input
                 id="admin-password"

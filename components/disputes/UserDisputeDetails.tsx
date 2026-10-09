@@ -1,4 +1,6 @@
-import { submitDisputeResponse } from "@/lib/actions/disputes";
+import { addDisputeEvidence, submitDisputeResponse } from "@/lib/actions/disputes";
+import DisputeResponseForm from "@/components/disputes/DisputeResponseForm";
+import DisputeEvidenceUploadForm from "@/components/disputes/DisputeEvidenceUploadForm";
 
 function formatDate(value: string | Date | null | undefined) {
   return value ? new Date(value).toLocaleString() : "Not recorded";
@@ -6,12 +8,29 @@ function formatDate(value: string | Date | null | undefined) {
 
 export default function UserDisputeDetails({ data, role }: { data: any; role: "client" | "worker" }) {
   const { dispute, events, evidence, responses } = data;
+  const isTerminal = ["resolved", "dismissed"].includes(String(dispute.status || ""));
 
   async function submitResponse(formData: FormData) {
     "use server";
     const responseId = String(formData.get("responseId") || "");
     const responseText = String(formData.get("responseText") || "");
     const result = await submitDisputeResponse(responseId, responseText);
+    if (!result.success) throw new Error(result.error);
+  }
+
+  async function uploadEvidence(formData: FormData) {
+    "use server";
+    const url = String(formData.get("evidenceUrl") || "").trim();
+    const fileName = String(formData.get("fileName") || "Uploaded Evidence").trim();
+    const mimeType = String(formData.get("mimeType") || "image/png").trim();
+    const fileSize = Number(formData.get("fileSize") || 1);
+
+    const result = await addDisputeEvidence(dispute.id, {
+      url,
+      fileName,
+      mimeType,
+      fileSize,
+    });
     if (!result.success) throw new Error(result.error);
   }
 
@@ -33,26 +52,34 @@ export default function UserDisputeDetails({ data, role }: { data: any; role: "c
           <div className="mt-4 rounded-lg border border-primary/20 bg-primary/10 p-3 text-sm">
             <p className="font-black uppercase tracking-widest">Final decision: {String(dispute.final_decision).replaceAll("_", " ")}</p>
             <p className="mt-2 font-semibold">{dispute.final_reason}</p>
+            <div className="mt-3 grid gap-2 text-xs font-bold text-on-surface-variant md:grid-cols-3">
+              <p>Job: {dispute.current_job_status || "Not recorded"}</p>
+              <p>Contract: {dispute.current_contract_status || "Not recorded"}</p>
+              <p>Payment: {dispute.current_payment_status || "Not recorded"}</p>
+            </div>
           </div>
         )}
       </section>
 
       <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
-        <h2 className="text-sm font-black uppercase tracking-widest">Evidence</h2>
+        <h2 className="text-sm font-black uppercase tracking-widest">Evidence ({evidence.length})</h2>
         <div className="mt-3 grid gap-2 md:grid-cols-2">
-          {evidence.length === 0 ? <p className="text-sm font-bold text-on-surface-variant">No evidence uploaded.</p> : evidence.map((item: any) => (
-            <a key={item.id} href={`/api/disputes/${dispute.id}/evidence/${item.id}`} target="_blank" className="rounded-lg border border-outline-variant bg-surface-container p-3 text-sm font-bold text-primary">
+          {evidence.length === 0 ? <p className="text-sm font-bold text-on-surface-variant">No evidence uploaded yet.</p> : evidence.map((item: any) => (
+            <a key={item.id} href={`/api/disputes/${dispute.id}/evidence/${item.id}`} target="_blank" rel="noreferrer noopener" className="rounded-lg border border-outline-variant bg-surface-container p-3 text-sm font-bold text-primary hover:border-primary/40">
               {item.file_name || "Evidence"} · {item.mime_type}
             </a>
           ))}
         </div>
+        {!isTerminal && (
+          <DisputeEvidenceUploadForm disputeId={dispute.id} action={uploadEvidence} />
+        )}
       </section>
 
       <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
         <h2 className="text-sm font-black uppercase tracking-widest">Admin requests and responses</h2>
         <div className="mt-3 space-y-3">
           {responses.length === 0 ? <p className="text-sm font-bold text-on-surface-variant">No response requested.</p> : responses.map((response: any) => {
-            const canRespond = response.status === "requested" && response.requested_from === role;
+            const canRespond = !isTerminal && response.status === "requested" && response.requested_from === role;
             return (
               <div key={response.id} className="rounded-lg border border-outline-variant bg-surface-container p-3 text-sm">
                 <p className="font-black uppercase tracking-wider">{response.requested_from} response · {response.status}</p>
@@ -60,11 +87,7 @@ export default function UserDisputeDetails({ data, role }: { data: any; role: "c
                 <p className="mt-1 text-xs font-bold text-on-surface-variant">Due: {formatDate(response.due_at)}</p>
                 {response.response_text && <p className="mt-3 font-semibold">{response.response_text}</p>}
                 {canRespond && (
-                  <form action={submitResponse} className="mt-3 space-y-2">
-                    <input type="hidden" name="responseId" value={response.id} />
-                    <textarea name="responseText" required rows={4} className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest p-3" />
-                    <button className="h-10 rounded-lg bg-primary px-4 text-xs font-black uppercase tracking-widest text-on-primary">Submit Response</button>
-                  </form>
+                  <DisputeResponseForm responseId={response.id} action={submitResponse} />
                 )}
               </div>
             );

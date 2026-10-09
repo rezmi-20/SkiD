@@ -111,30 +111,34 @@ export default function ProfileContent({ user, stats, menuGroups, skills }: Prof
                 {user.initials}
               </AvatarFallback>
             </Avatar>
-            <div className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full border-4 border-background p-1.5 shadow-lg flex items-center justify-center">
-              <ShieldCheck size={18} />
-            </div>
+            {identityVerified && (
+              <div className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full border-4 border-background p-1.5 shadow-lg flex items-center justify-center">
+                <ShieldCheck size={18} />
+              </div>
+            )}
           </div>
 
           {/* User Name & Details */}
           <div className="flex items-center justify-center gap-1.5 mb-1">
             <h1 className="text-2xl font-extrabold text-foreground">{user.name}</h1>
-            <Badge className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-0.5 shadow-sm">
-              <CheckCircle2 size={12} className="fill-white text-blue-500" />
-            </Badge>
+            {identityVerified && (
+              <Badge className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-0.5 shadow-sm">
+                <CheckCircle2 size={12} className="fill-white text-blue-500" />
+              </Badge>
+            )}
           </div>
           <p className="text-sm text-muted-foreground font-medium mb-4">{user.email}</p>
 
           <div className="flex flex-wrap gap-2 justify-center">
             <Badge variant="outline" className="px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-card border-border">
-              {user.role === "worker" ? t("profile.verifiedProvider") : t("profile.clientAccount")}
+              {user.role === "worker" && identityVerified ? t("profile.verifiedProvider") : user.role === "worker" ? t("common.role.worker") : t("profile.clientAccount")}
             </Badge>
-            {user.role === "worker" && (
+            {user.role === "worker" && identityVerified && (
               <Badge variant="outline" className="px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
                 {t("profile.faydaActive")}
               </Badge>
             )}
-            {user.role === "client" && !identityVerified && (
+            {!identityVerified && (
               <Badge variant="outline" className="px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-600 border-amber-500/20">
                 {t("profile.faydaPending")}
               </Badge>

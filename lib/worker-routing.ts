@@ -6,6 +6,7 @@ export type WorkerLifecycleState = {
   isVerified?: boolean | null;
   isSuspended?: boolean | null;
   verificationStatus?: string | null;
+  identityComplete?: boolean | null;
 };
 
 export function getWorkerAccessRoute(state: WorkerLifecycleState) {
@@ -17,7 +18,7 @@ export function getWorkerAccessRoute(state: WorkerLifecycleState) {
     return "/login?error=suspended";
   }
 
-  if (state.verificationStatus !== "approved" || state.isVerified !== true) {
+  if (state.verificationStatus !== "approved" || state.isVerified !== true || state.identityComplete === false) {
     return WORKER_PENDING_VERIFICATION_ROUTE;
   }
 

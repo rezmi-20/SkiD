@@ -95,17 +95,17 @@ export default function ContractPaymentVisual({ t }) {
   };
 
   return (
-    <section id="contracts" className="py-24 md:py-32 px-4 md:px-8 lg:px-16 bg-zinc-950 relative overflow-hidden">
+    <section id="contracts" className="py-12 sm:py-20 md:py-32 px-4 md:px-8 lg:px-16 bg-zinc-950 relative overflow-hidden">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 xl:gap-20 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-12 xl:gap-20 items-start">
           
           {/* Left: Text */}
-          <div className="lg:sticky lg:top-28 space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-blue-500/20 bg-blue-500/5">
+          <div className="lg:sticky lg:top-28 space-y-3 sm:space-y-6 text-left">
+            <div className="inline-flex items-center gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full border border-blue-500/20 bg-blue-500/5">
               <span className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
-              <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{t("contract.section_label")}</span>
+              <span className="text-[9px] sm:text-[10px] font-black text-blue-400 uppercase tracking-widest">{t("contract.section_label")}</span>
             </div>
-            <h2 className="text-4xl md:text-5xl xl:text-6xl font-black tracking-tighter text-white uppercase leading-[0.85]">
+            <h2 className="text-2xl sm:text-5xl xl:text-6xl font-black tracking-tighter text-white uppercase leading-[0.85]">
               {t("contract.title").split(". ").map((part, i, arr) => (
                 <span key={i}>
                   {i === 2 ? <span className="text-green-400 italic">{part}</span> : part}
@@ -113,25 +113,25 @@ export default function ContractPaymentVisual({ t }) {
                 </span>
               ))}
             </h2>
-            <p className="text-zinc-500 text-base md:text-lg font-medium leading-relaxed max-w-md">
+            <p className="text-zinc-500 text-xs sm:text-base md:text-lg font-medium leading-relaxed max-w-md">
               {t("contract.subtitle")}
             </p>
 
             {/* Chapa badge */}
-            <div className="inline-flex items-center gap-3 px-4 py-3 rounded-2xl bg-blue-500/10 border border-blue-500/20">
-              <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center text-white font-black text-[9px] flex-shrink-0 shadow-[0_4px_16px_rgba(59,130,246,0.3)]">
+            <div className="inline-flex items-center gap-2.5 sm:gap-3 px-3 py-2 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl bg-blue-500/10 border border-blue-500/20">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-black text-[8px] sm:text-[9px] flex-shrink-0 shadow-[0_4px_16px_rgba(59,130,246,0.3)]">
                 CHAPA
               </div>
-              <p className="text-blue-300 text-xs font-semibold leading-snug max-w-[200px]">
+              <p className="text-blue-300 text-[11px] sm:text-xs font-semibold leading-snug max-w-[200px]">
                 {t("contract.chapa_note")}
               </p>
             </div>
           </div>
 
           {/* Right: Timeline steps */}
-          <div className="relative space-y-0">
+          <div className="relative space-y-0 text-left">
             {/* Vertical connector line */}
-            <div className="absolute left-[19px] top-10 bottom-10 w-px bg-white/5" />
+            <div className="absolute left-[15px] sm:left-[19px] top-8 bottom-8 w-px bg-white/5" />
 
             {steps.map((step, i) => {
               const colors = colorMap[step.color];
@@ -141,23 +141,23 @@ export default function ContractPaymentVisual({ t }) {
                   initial={{ opacity: 0, x: 16 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.07, duration: 0.45 }}
-                  className="relative flex gap-5 pb-8 last:pb-0"
+                  transition={{ delay: i * 0.06, duration: 0.45 }}
+                  className="relative flex gap-3.5 sm:gap-5 pb-5 sm:pb-8 last:pb-0"
                 >
                   {/* Dot on the timeline */}
-                  <div className="relative z-10 flex-shrink-0 mt-1">
-                    <div className={`w-10 h-10 rounded-2xl border ${colors.iconBg} ${colors.iconText} flex items-center justify-center`}>
+                  <div className="relative z-10 flex-shrink-0 mt-0.5">
+                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl border ${colors.iconBg} ${colors.iconText} flex items-center justify-center`}>
                       {step.icon}
                     </div>
                   </div>
 
                   {/* Content */}
-                  <div className="flex-1 pt-1 pb-2">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">{step.step}</span>
+                  <div className="flex-1 pt-0.5 pb-1">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-[8px] sm:text-[9px] font-black text-zinc-600 uppercase tracking-widest">{step.step}</span>
                     </div>
-                    <h3 className="text-sm font-black text-white uppercase tracking-tight mb-1">{step.title}</h3>
-                    <p className="text-zinc-500 text-xs font-medium leading-relaxed">{step.desc}</p>
+                    <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-tight mb-0.5">{step.title}</h3>
+                    <p className="text-zinc-500 text-[11px] sm:text-xs font-medium leading-relaxed">{step.desc}</p>
                   </div>
                 </motion.div>
               );

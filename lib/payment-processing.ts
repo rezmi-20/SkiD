@@ -102,6 +102,7 @@ export async function verifyAndReleasePayment({
       p.commission_amount,
       p.net_amount,
       p.status as payment_status,
+      p.chapa_status,
       p.chapa_ref,
       p.chapa_reference,
       p.financial_hold_status,
@@ -190,13 +191,21 @@ export async function verifyAndReleasePayment({
   const verifiedTxRef = extractVerifiedTxRef(verified, verifiedData);
   const verifiedAmount = extractVerifiedAmount(verified, verifiedData);
   const verifiedCurrency = extractVerifiedCurrency(verified, verifiedData);
+  const providerStatus = String(verifiedStatus || verified.status || "verification_failed");
+  const providerStatusKey = providerStatus.toLowerCase();
+  const providerStatusChanged = String(payment.chapa_status || "").toLowerCase() !== providerStatusKey;
+  const providerPendingStatuses = new Set(["pending", "created", "initiated", "processing"]);
+  const providerRequestSucceeded = isChapaSuccess(verified.status);
+  const transactionReferenceMatches = verifiedTxRef === txRef;
+  const providerAmountMatches = amountsMatch(payment.amount, verifiedAmount);
+  const providerCurrencyMatches = String(verifiedCurrency || "").toUpperCase() === "ETB";
 
   const isValid =
-    isChapaSuccess(verified.status) &&
+    providerRequestSucceeded &&
     isChapaSuccess(verifiedStatus) &&
-    verifiedTxRef === txRef &&
-    String(verifiedCurrency || "").toUpperCase() === "ETB" &&
-    amountsMatch(payment.amount, verifiedAmount);
+    transactionReferenceMatches &&
+    providerCurrencyMatches &&
+    providerAmountMatches;
 
   console.info("[PAYMENT_VERIFY_RESULT]", {
     txRef,
@@ -210,32 +219,56 @@ export async function verifyAndReleasePayment({
     success: isValid,
   });
 
+  if (!isValid && providerRequestSucceeded && transactionReferenceMatches && providerPendingStatuses.has(providerStatusKey)) {
+    await sql`
+      UPDATE payments
+      SET chapa_status = ${providerStatus},
+          chapa_response = ${JSON.stringify(verified)},
+          updated_at = now()
+      WHERE id = ${payment.payment_id}
+        AND status <> 'released'
+    `;
+
+    return {
+      success: false,
+      idempotent: false,
+      status: "held",
+      txRef,
+      jobId: payment.job_id,
+      paymentId: payment.payment_id,
+      message: "Payment is still pending at Chapa. Complete the checkout, then check again.",
+      verifiedData: verified,
+    };
+  }
+
   if (!isValid) {
     await sql`
       UPDATE payments
-      SET chapa_status = ${String(verifiedStatus || verified.status || "verification_failed")},
+      SET chapa_status = ${providerStatus},
           chapa_response = ${JSON.stringify(verified)},
           updated_at = now()
       WHERE id = ${payment.payment_id}
     `;
 
-    await writeAuditLog(actorUserId, "payment_verification_failed", {
-      source,
-      txRef,
-      jobId: payment.job_id,
-      expectedAmount: payment.amount,
-      verifiedAmount,
-      verifiedCurrency,
-      verifiedStatus,
-    });
+    if (providerStatusChanged) {
+      await writeAuditLog(actorUserId, "payment_verification_failed", {
+        source,
+        txRef,
+        jobId: payment.job_id,
+        expectedAmount: payment.amount,
+        verifiedAmount,
+        verifiedCurrency,
+        verifiedStatus,
+      });
 
-    await createNotification({
-      userId: payment.client_id,
-      type: "payment_failed",
-      title: "Payment Verification Failed",
-      body: `Payment verification for "${payment.job_title}" did not match Chapa records.`,
-      linkHref: `/client/pay/${payment.job_id}`,
-    });
+      await createNotification({
+        userId: payment.client_id,
+        type: "payment_failed",
+        title: "Payment Verification Failed",
+        body: `Payment verification for "${payment.job_title}" did not match Chapa records.`,
+        linkHref: `/client/pay/${payment.job_id}`,
+      });
+    }
 
     return {
       success: false,

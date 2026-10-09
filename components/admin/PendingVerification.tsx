@@ -19,6 +19,7 @@ interface Worker {
   verification_status?: string | null;
   is_verified?: boolean;
   is_suspended?: boolean | null;
+  identity_complete?: boolean | null;
 }
 
 interface PendingVerificationProps {
@@ -166,7 +167,7 @@ export function PendingVerification({
                       )}
                       {canApprove && (
                         <button
-                          disabled={isPending}
+                          disabled={isPending || worker.identity_complete === false}
                           onClick={() => handleAction(worker.user_id, true)}
                           className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded bg-green-50 text-green-700 hover:bg-green-100 font-bold transition-colors disabled:opacity-50 border border-green-200"
                         >

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" fill="none" width="100%" height="100%">
+  <defs>
+    <linearGradient id="quoteGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#181b22" />
+      <stop offset="50%" stop-color="#12151b" />
+      <stop offset="100%" stop-color="#0a0c10" />
+    </linearGradient>
+    <radialGradient id="cornerGlow" cx="90%" cy="10%" r="60%">
+      <stop offset="0%" stop-color="#4ade80" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#12151b" stop-opacity="0" />
+    </radialGradient>
+    <pattern id="dotMatrix" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1" fill="#ffffff" fill-opacity="0.04" />
+    </pattern>
+  </defs>
+
+  <rect width="100%" height="100%" fill="url(#quoteGrad)" />
+  <rect width="100%" height="100%" fill="url(#cornerGlow)" />
+  <rect width="100%" height="100%" fill="url(#dotMatrix)" />
+
+  <!-- Verification Seal Outline -->
+  <g transform="translate(620, 100)" opacity="0.08" stroke="#4ade80" stroke-width="2" fill="none">
+    <circle cx="60" cy="60" r="70" stroke-dasharray="6 4" />
+    <circle cx="60" cy="60" r="54" />
+    <polygon points="60,25 70,50 95,50 75,65 82,90 60,75 38,90 45,65 25,50 50,50" />
+  </g>
+</svg>

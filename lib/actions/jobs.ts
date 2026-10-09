@@ -73,6 +73,12 @@ export async function createJob(data: CreateJobInput) {
           AND u.is_suspended = false
           AND wp.is_verified = true
           AND wp.verification_status = 'approved'
+          AND wp.fayda_doc_url IS NOT NULL
+          AND length(wp.fayda_doc_url) > 0
+          AND wp.fin_last4 IS NOT NULL
+          AND length(wp.fin_last4) = 4
+          AND wp.fin_encrypted IS NOT NULL
+          AND length(wp.fin_encrypted) > 0
         LIMIT 1
       `;
 

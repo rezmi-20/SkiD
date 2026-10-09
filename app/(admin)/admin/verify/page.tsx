@@ -2,7 +2,7 @@ import { sql } from "@/lib/db";
 import { VerificationReviewTabs } from "@/components/admin/VerificationReviewTabs";
 import { getClientIdentityColumns, toClientDisplayStatus } from "@/lib/client-verification";
 import { maskFinLast4 } from "@/lib/fin-protection";
-import { toWorkerDisplayStatus } from "@/lib/worker-verification";
+import { hasCompleteWorkerIdentity, toWorkerDisplayStatus } from "@/lib/worker-verification";
 import { hasAdminPermission, requireAdminPermission } from "@/lib/admin-authorization";
 import { evaluateClientApprovedConsistency } from "@/lib/client-verification-consistency";
 
@@ -26,6 +26,7 @@ export default async function VerifyQueuePage() {
         ELSE false
       END AS has_document,
       wp.fin_last4,
+      wp.fin_encrypted,
       wp.avatar_url,
       wp.verification_status,
       wp.is_verified,
@@ -87,21 +88,29 @@ export default async function VerifyQueuePage() {
     [],
   );
 
-  const formattedWorkers = (workers || []).map((w: any) => ({
-    userId: w.user_id,
-    fullName: w.full_name || "Unknown worker",
-    status: toWorkerDisplayStatus(w.verification_status, w.is_verified, w.is_suspended),
-    isVerified: Boolean(w.is_verified),
-    isSuspended: Boolean(w.is_suspended),
-    maskedFin: maskFinLast4(w.fin_last4),
-    hasDocument: Boolean(w.has_document),
-    attemptNumber: w.attempt_number ? Number(w.attempt_number) : null,
-    createdAt: String(w.created_at),
-    decidedAt: w.verified_at ? String(w.verified_at) : null,
-    reviewerName: w.reviewer_name ?? null,
-    phone: w.phone,
-    email: w.email,
-  }));
+  const formattedWorkers = (workers || []).map((w: any) => {
+    const identityComplete = hasCompleteWorkerIdentity({
+      documentRef: w.has_document ? "present" : "",
+      finLast4: w.fin_last4,
+      finEncrypted: w.fin_encrypted,
+    });
+    const status = toWorkerDisplayStatus(w.verification_status, w.is_verified, w.is_suspended, identityComplete);
+    return {
+      userId: w.user_id,
+      fullName: w.full_name || "Unknown worker",
+      status,
+      isVerified: Boolean(w.is_verified && identityComplete),
+      isSuspended: Boolean(w.is_suspended),
+      maskedFin: maskFinLast4(w.fin_last4),
+      hasDocument: Boolean(w.has_document),
+      attemptNumber: w.attempt_number ? Number(w.attempt_number) : null,
+      createdAt: String(w.created_at),
+      decidedAt: w.verified_at ? String(w.verified_at) : null,
+      reviewerName: w.reviewer_name ?? null,
+      phone: w.phone,
+      email: w.email,
+    };
+  });
 
   const formattedClients = (clients || []).map((client: any) => {
     const rawStatus = toClientDisplayStatus(client.verification_status, client.is_verified);

@@ -30,11 +30,13 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const isRegistered = searchParams.get("registered") === "true";
   const needsVerification = searchParams.get("verify") === "true";
+  const resetSuccess = searchParams.get("reset") === "success";
 
   // Detect input type
   const isEmail = identifier.includes("@");
@@ -61,6 +63,7 @@ export default function LoginPage() {
               workerVerificationStatus?: string | null;
               workerIsSuspended?: boolean | null;
               workerIsVerified?: boolean | null;
+              workerIdentityComplete?: boolean | null;
             };
           }
         }
@@ -85,6 +88,9 @@ export default function LoginPage() {
     if (searchParams.get("error") === "suspended") {
       setError(t("auth.login.errSuspended"));
     }
+    if (searchParams.get("error") === "google") {
+      setError(t("auth.login.errGoogle"));
+    }
 
     const checkSession = async () => {
       try {
@@ -94,7 +100,7 @@ export default function LoginPage() {
         });
 
         if (res.ok) {
-          const { authenticated, role, isSuspended, workerVerificationStatus, workerIsSuspended, workerIsVerified } = await res.json();
+          const { authenticated, role, isSuspended, workerVerificationStatus, workerIsSuspended, workerIsVerified, workerIdentityComplete } = await res.json();
           if (authenticated === false) return;
           if (isSuspended) {
             setError(t("auth.login.errSuspended"));
@@ -108,6 +114,7 @@ export default function LoginPage() {
                 verificationStatus: workerVerificationStatus,
                 isSuspended: workerIsSuspended,
                 isVerified: workerIsVerified,
+                identityComplete: workerIdentityComplete,
               })
             );
           }
@@ -197,6 +204,7 @@ export default function LoginPage() {
               verificationStatus: session.workerVerificationStatus,
               isSuspended: session.workerIsSuspended,
               isVerified: session.workerIsVerified,
+              identityComplete: session.workerIdentityComplete,
             })
           );
           return;
@@ -208,6 +216,27 @@ export default function LoginPage() {
       setError(getLoginErrorMessage(err, t));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    setError("");
+
+    try {
+      const { error: signInError } = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: `${window.location.origin}/auth/callback`,
+        errorCallbackURL: `${window.location.origin}/login?error=google`,
+      });
+
+      if (signInError) {
+        setError(signInError.message || t("auth.login.errGoogle"));
+        setIsGoogleLoading(false);
+      }
+    } catch (err) {
+      setError(getLoginErrorMessage(err, t));
+      setIsGoogleLoading(false);
     }
   };
 
@@ -310,7 +339,7 @@ export default function LoginPage() {
               </motion.div>
             )}
 
-            {isRegistered && !error && (
+            {(isRegistered || resetSuccess) && !error && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -321,7 +350,7 @@ export default function LoginPage() {
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                     <polyline points="22 4 12 14.01 9 11.01"></polyline>
                   </svg>
-                  <span>{t("auth.login.created")}</span>
+                  <span>{resetSuccess ? t("auth.login.resetSuccess") : t("auth.login.created")}</span>
                 </div>
                 {needsVerification && (
                   <p className="text-[12px] text-zinc-400 font-medium ml-8 leading-relaxed">
@@ -430,7 +459,7 @@ export default function LoginPage() {
 
             {/* Forgot Password */}
             <div className="flex justify-end pt-1 pb-1">
-              <Link href="#" className="text-[13px] font-bold text-green-400 hover:text-green-300 transition-colors tracking-wide">
+              <Link href="/forgot-password" className="text-[13px] font-bold text-green-400 hover:text-green-300 transition-colors tracking-wide">
                 {t("auth.login.forgot")}
               </Link>
             </div>
@@ -460,14 +489,19 @@ export default function LoginPage() {
 
           {/* Social Buttons */}
           <div className="flex flex-col gap-3.5 w-full">
-            <button type="button" className="w-full h-[52px] flex items-center justify-center gap-3 bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 rounded-full font-medium text-[14px] text-white transition-colors active:scale-[0.98] shadow-sm">
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={isGoogleLoading}
+              className="w-full h-[52px] flex items-center justify-center gap-3 bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 rounded-full font-medium text-[14px] text-white transition-colors active:scale-[0.98] shadow-sm disabled:opacity-70"
+            >
               <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
               </svg>
-              {t("auth.login.google")}
+              {isGoogleLoading ? t("auth.login.redirecting") : t("auth.login.google")}
             </button>
             <button type="button" className="w-full h-[52px] flex items-center justify-center gap-3 bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 rounded-full font-medium text-[14px] text-white transition-colors active:scale-[0.98] shadow-sm">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">

@@ -7,6 +7,7 @@ import { isTrustedUploadReference } from "@/lib/security";
 import { maskFinLast4, protectFin, validateFin } from "@/lib/fin-protection";
 import { getClientIdentityColumns, getClientIdentityStatus, toClientDisplayStatus, validateClientIdentityDocument } from "@/lib/client-verification";
 import { recordVerificationSubmission } from "@/lib/verification-operations";
+import { hasCompleteWorkerIdentity, toWorkerDisplayStatus } from "@/lib/worker-verification";
 
 function maskDeprecatedIdentity(value: unknown) {
   const fan = String(value || "").trim();
@@ -36,11 +37,21 @@ export async function getProfileData() {
     }
 
     const clientIdentity = role === "client" ? await getClientIdentityStatus(userId) : null;
+    const workerIdentityComplete = role === "worker" && profile
+      ? hasCompleteWorkerIdentity({
+          documentRef: profile.fayda_doc_url,
+          finLast4: profile.fin_last4,
+          finEncrypted: profile.fin_encrypted,
+        })
+      : true;
+    const workerDisplayStatus = role === "worker" && profile
+      ? toWorkerDisplayStatus(profile.verification_status, profile.is_verified, user?.is_suspended, workerIdentityComplete)
+      : null;
     const safeProfile = profile
       ? {
           ...profile,
-          verification_status: clientIdentity?.status ?? profile.verification_status,
-          is_verified: clientIdentity?.isVerified ?? profile.is_verified,
+          verification_status: workerDisplayStatus ?? clientIdentity?.status ?? profile.verification_status,
+          is_verified: role === "worker" ? Boolean(profile.is_verified && workerIdentityComplete) : clientIdentity?.isVerified ?? profile.is_verified,
           fayda_fan_number: undefined,
           fin_encrypted: undefined,
           fin_fingerprint: undefined,
@@ -49,6 +60,7 @@ export async function getProfileData() {
           masked_fin: maskFinLast4(profile.fin_last4),
           has_fin: Boolean(profile.fin_last4),
           has_fayda_doc: Boolean(profile.fayda_doc_url),
+          identity_complete: role === "worker" ? workerIdentityComplete : undefined,
         }
       : profile;
 
@@ -256,6 +268,9 @@ export async function resubmitVerification(faydaDocUrl: string, faydaFinNumber?:
       SELECT
         wp.verification_status,
         wp.is_verified,
+        wp.fayda_doc_url,
+        wp.fin_last4,
+        wp.fin_encrypted,
         u.is_suspended,
         EXISTS (
           SELECT 1
@@ -275,9 +290,14 @@ export async function resubmitVerification(faydaDocUrl: string, faydaFinNumber?:
       return { success: false, error: "Worker profile not found." };
     }
 
+    const workerIdentityComplete = hasCompleteWorkerIdentity({
+      documentRef: current.fayda_doc_url,
+      finLast4: current.fin_last4,
+      finEncrypted: current.fin_encrypted,
+    });
     const currentStatus = current.is_suspended
       ? "suspended"
-      : String(current.verification_status || (current.is_verified ? "approved" : "pending"));
+      : toWorkerDisplayStatus(current.verification_status, current.is_verified, false, workerIdentityComplete);
     if (currentStatus === "suspended") {
       return { success: false, error: "This account cannot submit Fayda verification while suspended." };
     }
@@ -287,8 +307,8 @@ export async function resubmitVerification(faydaDocUrl: string, faydaFinNumber?:
     if (currentStatus === "pending" || current.has_pending_attempt) {
       return { success: false, error: "A verification request is already pending." };
     }
-    if (currentStatus !== "rejected" && currentStatus !== "revoked") {
-      return { success: false, error: "Only rejected or revoked verification cases can be resubmitted here." };
+    if (currentStatus !== "rejected" && currentStatus !== "revoked" && currentStatus !== "incomplete") {
+      return { success: false, error: "Only incomplete, rejected, or revoked verification cases can be submitted here." };
     }
 
     const protectedFin = protectFin(normalizedFin, session.user.id, "profile");
@@ -303,7 +323,20 @@ export async function resubmitVerification(faydaDocUrl: string, faydaFinNumber?:
         verification_status = 'pending',
         is_verified = false
       WHERE user_id = ${session.user.id}
-        AND verification_status IN ('rejected', 'revoked')
+        AND (
+          verification_status IN ('rejected', 'revoked')
+          OR (
+            verification_status = 'approved'
+            AND (
+              fayda_doc_url IS NULL
+              OR length(fayda_doc_url) = 0
+              OR fin_last4 IS NULL
+              OR length(fin_last4) <> 4
+              OR fin_encrypted IS NULL
+              OR length(fin_encrypted) = 0
+            )
+          )
+        )
         AND NOT EXISTS (
           SELECT 1
           FROM verification_attempts va

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import { completeJob, getWorkerJobs, startJob } from "@/lib/actions/jobs";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -77,6 +78,7 @@ export default function GigsPage() {
   const activeGigs = gigs.filter((g) => g.status === "in_progress");
   const acceptedGigs = gigs.filter((g) => g.status === "active" || g.status === "accepted");
   const completedGigs = gigs.filter((g) => ["completion_requested", "completed", "payment_pending", "paid", "closed"].includes(g.status));
+  const pendingRequests = gigs.filter((g) => g.status === "pending");
 
   const activeCount = activeGigs.length;
   const acceptedCount = acceptedGigs.length;
@@ -91,9 +93,23 @@ export default function GigsPage() {
           <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-on-surface">{t("worker.gigs.title")}</h1>
           <p className="text-on-surface-variant text-sm font-medium opacity-60">{t("worker.gigs.subtitle")}</p>
         </div>
-        <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 px-3 py-2 rounded-xl">
-          <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
-          <span className="text-[10px] font-black text-primary uppercase tracking-widest">{t("worker.gigs.badge_live")}</span>
+        <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
+          <Link
+            href="/worker/jobs"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-outline-variant bg-surface-container-high px-3 text-[10px] font-black uppercase tracking-widest text-on-surface-variant transition-all hover:border-primary/40 hover:text-primary active:scale-95"
+          >
+            <span className="material-symbols-outlined text-[16px]">inbox</span>
+            Job Requests
+            {pendingRequests.length > 0 && (
+              <span className="rounded-full bg-primary px-2 py-0.5 text-[9px] text-on-primary">
+                {pendingRequests.length}
+              </span>
+            )}
+          </Link>
+          <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 px-3 py-2 rounded-xl">
+            <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+            <span className="text-[10px] font-black text-primary uppercase tracking-widest">{t("worker.gigs.badge_live")}</span>
+          </div>
         </div>
       </div>
 
@@ -269,6 +285,13 @@ export default function GigsPage() {
             <p className="text-on-surface font-black text-lg">{t("worker.gigs.empty_title")}</p>
             <p className="text-on-surface-variant text-sm font-medium max-w-xs leading-relaxed opacity-60">{t("worker.gigs.empty_desc")}</p>
           </div>
+          <Link
+            href="/worker/jobs"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-xs font-black uppercase tracking-widest text-on-primary transition-all active:scale-95"
+          >
+            <span className="material-symbols-outlined text-[18px]">inbox</span>
+            Open Job Requests
+          </Link>
         </div>
       )}
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 type Step = "ready" | "processing" | "awaiting" | "confirmed" | "paid";
@@ -29,6 +29,7 @@ const PAYMENT_METHODS = [
 ];
 
 const POLL_INTERVAL_MS = 3000; // poll every 3 seconds
+const VERIFY_FALLBACK_AFTER_POLLS = 4;
 
 function formatMoney(value: number) {
   return `${Math.round(value).toLocaleString()} ETB`;
@@ -41,6 +42,13 @@ async function readPaymentResponse(res: Response) {
     return JSON.parse(text);
   } catch {
     throw new Error(res.ok ? "Payment response was invalid." : `Payment request failed (${res.status}).`);
+  }
+}
+
+function openCheckoutUrl(checkoutUrl: string) {
+  const checkoutWindow = window.open(checkoutUrl, "_blank", "noopener,noreferrer");
+  if (!checkoutWindow) {
+    window.location.href = checkoutUrl;
   }
 }
 
@@ -75,6 +83,7 @@ export default function PaymentPageContent({
   } | null>(null);
 
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const verifyingRef = useRef(false);
 
   const isProcessing = step === "processing";
   const feePercent = Math.round(commissionRate * 100);
@@ -87,24 +96,85 @@ export default function PaymentPageContent({
     }
   };
 
+  const completePaymentFromResponse = useCallback((data: {
+    paymentId?: string;
+    payment_id?: string;
+    chapaReference?: string | null;
+    breakdown?: { amount: number; commissionAmount: number; netAmount: number };
+  }) => {
+    stopPolling();
+    setConfirmedData({
+      paymentId: data.paymentId || data.payment_id || "",
+      chapaReference: data.chapaReference ?? null,
+      breakdown: data.breakdown || { amount, commissionAmount, netAmount },
+    });
+    setStep("confirmed");
+    setError(null);
+  }, [amount, commissionAmount, netAmount]);
+
+  const verifyPaymentWithProvider = useCallback(async ({ silent = false } = {}) => {
+    if (!txRef || verifyingRef.current) return false;
+    verifyingRef.current = true;
+
+    try {
+      const res = await fetch("/api/payments/chapa", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobId, txRef }),
+      });
+      const data = await readPaymentResponse(res) as {
+        success?: boolean;
+        status?: string;
+        error?: string;
+        message?: string;
+        paymentId?: string;
+        payment_id?: string;
+        chapaReference?: string | null;
+        breakdown?: { amount: number; commissionAmount: number; netAmount: number };
+      };
+
+      if (res.ok && (data.status === "released" || data.success)) {
+        completePaymentFromResponse(data);
+        return true;
+      }
+
+      if (!silent) {
+        setError(data.error || data.message || "Payment not confirmed yet. Please complete the payment in the Chapa tab, then try again.");
+      }
+      return false;
+    } catch {
+      if (!silent) setError("Could not check payment status. Please try again.");
+      return false;
+    } finally {
+      verifyingRef.current = false;
+    }
+  }, [completePaymentFromResponse, jobId, txRef]);
+
   useEffect(() => {
     if (step !== "awaiting" || !txRef) return;
 
+    let attempts = 0;
     pollingRef.current = setInterval(async () => {
       try {
         const res = await fetch(`/api/payments/status?txRef=${encodeURIComponent(txRef)}`);
-        if (!res.ok) return;
+        attempts += 1;
+        setPollCount(attempts);
+
+        if (!res.ok) {
+          if (attempts >= VERIFY_FALLBACK_AFTER_POLLS && attempts % VERIFY_FALLBACK_AFTER_POLLS === 0) {
+            await verifyPaymentWithProvider({ silent: true });
+          }
+          return;
+        }
+
         const data = await res.json();
         if (data.status === "released") {
-          stopPolling();
-          setConfirmedData({
-            paymentId: data.paymentId,
-            chapaReference: data.chapaReference,
-            breakdown: data.breakdown,
-          });
-          setStep("confirmed");
-        } else {
-          setPollCount((c) => c + 1);
+          completePaymentFromResponse(data);
+          return;
+        }
+
+        if (attempts >= VERIFY_FALLBACK_AFTER_POLLS && attempts % VERIFY_FALLBACK_AFTER_POLLS === 0) {
+          await verifyPaymentWithProvider({ silent: true });
         }
       } catch {
         // silently retry
@@ -112,7 +182,7 @@ export default function PaymentPageContent({
     }, POLL_INTERVAL_MS);
 
     return stopPolling;
-  }, [step, txRef]);
+  }, [completePaymentFromResponse, step, txRef, verifyPaymentWithProvider]);
 
   // cleanup on unmount
   useEffect(() => () => stopPolling(), []);
@@ -122,6 +192,7 @@ export default function PaymentPageContent({
     if (isProcessing) return;
     setStep("processing");
     setError(null);
+    setPollCount(0);
 
     try {
       const initRes = await fetch("/api/payments/chapa", {
@@ -136,8 +207,10 @@ export default function PaymentPageContent({
       };
       if (!initRes.ok && initRes.status === 409 && initData.txRef) {
         setTxRef(initData.txRef);
+        setPollCount(0);
         setStep("awaiting");
         setError(initData.error || "A payment is already pending verification. Complete it in Chapa, then check status here.");
+        if (initData.checkoutUrl) openCheckoutUrl(initData.checkoutUrl);
         return;
       }
       if (!initRes.ok) throw new Error(initData.error || "Payment initiation failed");
@@ -148,10 +221,7 @@ export default function PaymentPageContent({
       setTxRef(ref);
       setStep("awaiting");
 
-      const checkoutWindow = window.open(initData.checkoutUrl, "_blank", "noopener,noreferrer");
-      if (!checkoutWindow) {
-        window.location.href = initData.checkoutUrl;
-      }
+      openCheckoutUrl(initData.checkoutUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Payment failed");
       setStep("ready");
@@ -160,28 +230,7 @@ export default function PaymentPageContent({
 
   // --- Manual verify button ---
   const handleManualVerify = async () => {
-    if (!txRef) return;
-    try {
-      const res = await fetch("/api/payments/chapa", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobId, txRef }),
-      });
-      const data = await res.json();
-      if (res.ok && (data.status === "released" || data.success)) {
-        stopPolling();
-        setConfirmedData({
-          paymentId: data.paymentId || data.payment_id,
-          chapaReference: data.chapaReference,
-          breakdown: data.breakdown || { amount, commissionAmount, netAmount },
-        });
-        setStep("confirmed");
-      } else {
-        setError(data.error || "Payment not confirmed yet. Please complete the payment in the Chapa tab, then try again.");
-      }
-    } catch {
-      setError("Could not check payment status. Please try again.");
-    }
+    await verifyPaymentWithProvider();
   };
 
   return (
@@ -345,7 +394,7 @@ export default function PaymentPageContent({
           )}
 
           {/* Pay button — only when ready */}
-          {(step === "ready" || step === "processing") && !error && (
+          {(step === "ready" || step === "processing") && (
             <div className="border-t border-surface-variant pt-4">
               <button
                 onClick={handlePay}

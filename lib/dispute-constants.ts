@@ -41,10 +41,24 @@ export const DISPUTE_ACTIVE_STATUSES = [
   "escalated",
 ] as const;
 
+export const DISPUTE_TERMINAL_STATUSES = [
+  "resolved",
+  "dismissed",
+] as const;
+
 export const DISPUTE_RESOLUTION_DECISIONS = [
   "resolved_for_client",
   "resolved_for_worker",
   "resolved_by_agreement",
   "dismissed",
   "escalated",
+] as const;
+
+export const DISPUTE_OPERATIONAL_OUTCOMES = [
+  "restore_previous_state",
+  "redo_work",
+  "continue_work",
+  "client_no_payment_cancel",
+  "worker_payment_authorized",
+  "no_job_change",
 ] as const;

@@ -55,51 +55,49 @@ export default function ProblemsSolutions({ t }) {
   ];
 
   return (
-    <section id="problems" className="py-24 md:py-32 px-4 md:px-8 lg:px-16 bg-[#090b0e]">
+    <section id="problems" className="py-12 sm:py-20 md:py-32 px-4 md:px-8 lg:px-16 bg-[#090b0e]">
       <div className="max-w-7xl mx-auto">
         
         {/* Section Header */}
-        <div className="mb-12 text-left">
-          <h2 className="text-4xl md:text-5xl xl:text-6xl font-black tracking-tighter text-white uppercase leading-[0.9] max-w-3xl mb-4">
+        <div className="mb-6 sm:mb-12 text-left">
+          <h2 className="text-2xl sm:text-5xl xl:text-6xl font-black tracking-tighter text-white uppercase leading-[0.9] max-w-3xl mb-1.5 sm:mb-4">
             {t("problems.title").split(" ").slice(0, -2).join(" ")}{" "}
             <span className="text-red-400 italic">{t("problems.title").split(" ").slice(-2).join(" ")}</span>
           </h2>
-          <p className="text-zinc-500 text-base md:text-lg font-medium max-w-2xl leading-relaxed">
+          <p className="text-zinc-500 text-xs sm:text-base md:text-lg font-medium max-w-2xl leading-relaxed">
             {t("problems.subtitle")}
           </p>
         </div>
 
-        {/* Problem → Solution grid using PayCard style */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-12">
+        {/* Problem → Solution grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 gap-y-8 sm:gap-y-12">
           {items.map((item, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.1, duration: 0.6 }}
-              className="relative bg-[#13161c] border border-white/[0.04] rounded-2xl p-6 pt-10 flex flex-col justify-between group hover:border-white/[0.08] transition-all duration-300 shadow-xl"
+              transition={{ delay: i * 0.08, duration: 0.5 }}
+              className="relative bg-[#13161c] border border-white/[0.04] rounded-2xl p-4 pt-8 sm:p-6 sm:pt-10 flex flex-col justify-between group hover:border-white/[0.08] transition-all duration-300 shadow-xl"
             >
-              {/* Inner wrapper strictly containing background image so parent has no overflow-hidden */}
-              <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none z-0">
-                <img
-                  src={item.bgImg}
-                  className="w-full h-full object-cover opacity-20 group-hover:scale-105 transition-transform duration-500"
-                  alt=""
-                  aria-hidden="true"
-                />
+              {/* Server-side rendered vector background asset (never fails or times out) */}
+              <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none z-0 opacity-15">
+                <svg viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full object-cover">
+                  <path d="M 0 50 L 400 250" stroke="#ef4444" strokeWidth="0.75" strokeDasharray="6 4" />
+                  <circle cx="200" cy="150" r="90" stroke="#ffffff" strokeWidth="0.5" />
+                </svg>
                 <div className="absolute inset-0 bg-gradient-to-t from-[#13161c] via-[#13161c]/80 to-[#13161c]/30" />
               </div>
 
               {/* Overlapping top-left floating icon container */}
-              <div className="absolute -top-6 left-6 w-12 h-12 rounded-xl bg-[#1b1f28] border border-white/[0.08] flex items-center justify-center shadow-lg z-10 group-hover:scale-110 transition-transform duration-300">
+              <div className="absolute -top-4 sm:-top-6 left-4 sm:left-6 w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-[#1b1f28] border border-white/[0.08] flex items-center justify-center shadow-lg z-10 group-hover:scale-110 transition-transform duration-300">
                 {item.icon}
               </div>
 
               {/* Content body split in two */}
-              <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 flex-1">
+              <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6 pt-1 flex-1">
                 {/* Left side: Problem */}
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <span className="text-[8px] font-black text-red-400 tracking-wider uppercase block">
                     {t("problems.label")}
                   </span>
@@ -109,8 +107,8 @@ export default function ProblemsSolutions({ t }) {
                 </div>
 
                 {/* Right side: Solution */}
-                <div className="space-y-4 md:border-l md:border-white/5 md:pl-6">
-                  <div className="space-y-2">
+                <div className="space-y-2 sm:space-y-4 md:border-l md:border-white/5 md:pl-6 pt-2 md:pt-0 border-t border-white/5 md:border-t-0">
+                  <div className="space-y-1">
                     <span className="text-[8px] font-black text-green-400 tracking-wider uppercase block">
                       {t("problems.arrow_solution")}
                     </span>
@@ -120,19 +118,19 @@ export default function ProblemsSolutions({ t }) {
                   </div>
 
                   {/* Benefit */}
-                  <div className="pt-2 pl-3 border-l-2 border-green-400/30">
-                    <p className="text-[8px] font-black uppercase tracking-widest text-green-400/50 mb-0.5">
+                  <div className="pt-1 sm:pt-2 pl-2 sm:pl-3 border-l-2 border-green-400/30">
+                    <p className="text-[7px] sm:text-[8px] font-black uppercase tracking-widest text-green-400/50 mb-0.5">
                       {t("problems.arrow_benefit")}
                     </p>
-                    <p className="text-green-400 text-[10px] font-black uppercase tracking-tight">
+                    <p className="text-green-400 text-[9px] sm:text-[10px] font-black uppercase tracking-tight">
                       {item.benefit}
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Footer action link */}
-              <div className="relative z-10 pt-6 border-t border-white/5 mt-6">
+              {/* Footer action link (hidden on mobile to prevent excessive scrolling) */}
+              <div className="hidden sm:block relative z-10 pt-4 sm:pt-6 border-t border-white/5 mt-4 sm:mt-6">
                 <a
                   href="/client/search"
                   className="inline-flex items-center gap-1.5 text-xs font-black text-blue-400 hover:text-blue-300 transition-colors uppercase tracking-wider"

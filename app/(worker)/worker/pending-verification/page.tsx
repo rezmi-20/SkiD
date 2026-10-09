@@ -19,7 +19,7 @@ export default function PendingVerificationPage() {
       .then((data) => {
         if (!data || data.role !== "worker") {
           router.push("/login");
-        } else if (!data.is_suspended && data.verification_status === "approved" && data.is_verified) {
+        } else if (!data.is_suspended && data.verification_status === "approved" && data.is_verified && data.identity_complete !== false) {
           router.push("/worker/dashboard");
         } else {
           setWorker(data);
@@ -47,7 +47,8 @@ export default function PendingVerificationPage() {
   const isRejected = accountState === "rejected";
   const isSuspended = accountState === "suspended";
   const isRevoked = accountState === "revoked";
-  const canReverify = isRejected || isRevoked;
+  const isIncomplete = accountState === "incomplete";
+  const canReverify = isRejected || isRevoked || isIncomplete;
   const isPending = !canReverify && !isSuspended;
   const title = isSuspended
     ? t("verification.suspended.title")
@@ -135,9 +136,9 @@ export default function PendingVerificationPage() {
             </div>
           </div>
 
-          {/* Reverification form for rejected or revoked workers */}
+          {/* Verification form for incomplete, rejected, or revoked workers */}
           {canReverify && (
-            <VerificationResubmitForm mode={isRevoked ? "reverify" : "resubmit"} />
+            <VerificationResubmitForm mode={isIncomplete ? "complete" : isRevoked ? "reverify" : "resubmit"} />
           )}
 
           {isPending && (

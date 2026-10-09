@@ -107,7 +107,7 @@ async function initializeSplitPayment(input: {
   console.info("[CHAPA_PAYMENT_URLS]", {
     txRef: input.txRef,
     callbackUrl: callbackUrl || "(not sent)",
-    // No return_url: the Chapa-hosted receipt should not auto-redirect back to the app.
+    returnUrl: "(not sent)",
   });
 
   const data = await initializeChapaPayment({
@@ -118,7 +118,7 @@ async function initializeSplitPayment(input: {
     lastName,
     phoneNumber,
     callbackUrl,
-    returnUrl: input.returnUrl,
+    returnUrl: null,
     title: "DireSkill",
     description: input.title,
     subaccountId: input.subaccountId,

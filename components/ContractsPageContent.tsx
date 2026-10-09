@@ -37,6 +37,29 @@ export default function ContractsPageContent({ contracts = [], role }: Props) {
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const downloadContractPdf = async (pdfUrl: string, contractId: string) => {
+    const response = await fetch(pdfUrl, {
+      credentials: "include",
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      alert(data?.error || "Contract PDF is not available yet.");
+      return;
+    }
+
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = `direskill-contract-${contractId}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(objectUrl);
+  };
+
   const tabs = [
     { id: "all", label: t("contracts.all") },
     { id: "active", label: t("contracts.active") },
@@ -214,8 +237,16 @@ export default function ContractsPageContent({ contracts = [], role }: Props) {
                           </Link>
                         </Button>
                         
-                        {(contract.signed_at || contract.pdf_url) && (
-                          <Button variant="outline" size="icon" className="rounded-xl h-10 w-10 shrink-0 border-outline-variant hover:text-primary hover:border-primary active:scale-95 duration-150" title={t("contracts.downloadAgreement")}>
+                        {contract.pdf_url && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => downloadContractPdf(contract.pdf_url, contract.contract_id)}
+                            className="rounded-xl h-10 w-10 shrink-0 border-outline-variant hover:text-primary hover:border-primary active:scale-95 duration-150"
+                            title={t("contracts.downloadAgreement")}
+                            aria-label={t("contracts.downloadAgreement")}
+                          >
                             <Download size={14} />
                           </Button>
                         )}

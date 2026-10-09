@@ -89,74 +89,72 @@ export default function Process({ t }) {
   ];
 
   return (
-    <section id="howit" className="py-24 md:py-32 px-4 md:px-8 lg:px-16 bg-[#090b0e]">
+    <section id="howit" className="py-12 sm:py-20 md:py-32 px-4 md:px-8 lg:px-16 bg-[#090b0e]">
       <div className="max-w-7xl mx-auto">
         
         {/* Header */}
-        <div className="text-left mb-12 space-y-4">
-          <h2 className="text-4xl md:text-5xl xl:text-6xl font-black tracking-tighter text-white uppercase leading-[0.9] max-w-3xl">
+        <div className="text-left mb-6 sm:mb-12 space-y-2 sm:space-y-4">
+          <h2 className="text-2xl sm:text-5xl xl:text-6xl font-black tracking-tighter text-white uppercase leading-[0.9] max-w-3xl">
             {t("howit.title").split(" ").slice(0, -2).join(" ")}{" "}
             <span className="text-green-400 italic">{t("howit.title").split(" ").slice(-2).join(" ")}</span>
           </h2>
-          <p className="text-zinc-500 text-base md:text-lg font-medium max-w-xl leading-relaxed">
+          <p className="text-zinc-500 text-xs sm:text-base md:text-lg font-medium max-w-xl leading-relaxed">
             {t("howit.subtitle")}
           </p>
         </div>
 
-        {/* Steps Grid using PayCard style */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-x-6 gap-y-12">
+        {/* Steps Grid: Horizontal swipeable snap carousel on mobile, 7-col grid on desktop */}
+        <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-3 sm:pb-4 pt-5 sm:pt-6 snap-x snap-mandatory no-scrollbar md:grid md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 md:overflow-visible">
           {steps.map((step, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.05, duration: 0.5 }}
-              className={`relative bg-[#13161c] border rounded-2xl p-5 pt-9 flex flex-col justify-between group transition-all duration-300 shadow-xl ${
+              className={`w-[200px] min-w-[200px] max-w-[210px] snap-center sm:w-auto sm:min-w-0 sm:max-w-none relative bg-[#13161c] border rounded-2xl p-4 pt-7 sm:p-5 sm:pt-9 flex flex-col justify-between group transition-all duration-300 shadow-xl flex-shrink-0 ${
                 step.isPayment
                   ? "border-blue-500/20 hover:border-blue-500/40"
                   : "border-white/[0.04] hover:border-white/[0.08]"
               }`}
             >
-              {/* Inner wrapper strictly containing background image so parent has no overflow-hidden */}
-              <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none z-0">
-                <img
-                  src={step.bgImg}
-                  className="w-full h-full object-cover opacity-20 group-hover:scale-105 transition-transform duration-500"
-                  alt=""
-                  aria-hidden="true"
-                />
+              {/* Server-side rendered vector background asset (never fails or times out) */}
+              <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none z-0 opacity-15">
+                <svg viewBox="0 0 300 240" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full object-cover">
+                  <circle cx="150" cy="120" r="80" stroke="#4ade80" strokeWidth="0.75" strokeDasharray="4 4" />
+                  <line x1="50" y1="120" x2="250" y2="120" stroke="#ffffff" strokeWidth="0.5" />
+                </svg>
                 <div className="absolute inset-0 bg-gradient-to-t from-[#13161c] via-[#13161c]/80 to-[#13161c]/30" />
               </div>
 
               {/* Overlapping top-left floating icon container */}
-              <div className="absolute -top-6 left-6 w-11 h-11 rounded-xl bg-[#1b1f28] border border-white/[0.08] flex items-center justify-center shadow-lg z-10 group-hover:scale-110 transition-transform duration-300">
+              <div className="absolute -top-4 sm:-top-6 left-4 sm:left-6 w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-[#1b1f28] border border-white/[0.08] flex items-center justify-center shadow-lg z-10 group-hover:scale-110 transition-transform duration-300">
                 {step.icon}
               </div>
 
               {/* Step number watermark inside card top right */}
-              <div className="absolute top-2 right-4 text-[1.5rem] font-black text-white/[0.02] select-none pointer-events-none z-10">
+              <div className="absolute top-2 right-4 text-[1.2rem] sm:text-[1.5rem] font-black text-white/[0.03] select-none pointer-events-none z-10">
                 {step.num}
               </div>
 
               {/* Text content */}
-              <div className="space-y-3 flex-1 pt-1 relative z-10">
+              <div className="space-y-1.5 sm:space-y-3 flex-1 pt-1 relative z-10">
                 <h3 className="text-white text-xs font-bold tracking-tight leading-snug">
                   {step.title}
                 </h3>
-                <p className="text-[#8a929a] text-[11px] font-normal leading-relaxed">
+                <p className="text-[#8a929a] text-[10px] sm:text-[11px] font-normal leading-relaxed">
                   {step.desc}
                 </p>
               </div>
 
               {/* Footer step marker / badge */}
-              <div className="pt-4 mt-auto relative z-10">
+              <div className="pt-2.5 sm:pt-4 mt-auto relative z-10">
                 {step.isPayment ? (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[7px] font-black text-blue-400 uppercase tracking-widest">
                     via Chapa
                   </span>
                 ) : (
-                  <span className="text-[9px] font-black text-zinc-600 uppercase tracking-wider block">
+                  <span className="text-[8px] sm:text-[9px] font-black text-zinc-600 uppercase tracking-wider block">
                     Step {step.num}
                   </span>
                 )}

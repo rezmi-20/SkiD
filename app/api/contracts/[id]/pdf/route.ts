@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { getAdminPrincipal, hasAdminPermission } from "@/lib/admin-authorization";
+import { ensureStoredContractPdf } from "@/lib/contract-documents";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,12 @@ export async function GET(
     }
 
     if (!contract.final_pdf_base64) {
+      const regenerated = await ensureStoredContractPdf(id, _req.nextUrl.origin);
+      contract.final_pdf_base64 = regenerated.final_pdf_base64;
+      contract.document_hash = regenerated.document_hash;
+    }
+
+    if (!contract.final_pdf_base64) {
       return NextResponse.json({ error: "Final PDF has not been generated yet" }, { status: 404 });
     }
 
@@ -54,7 +61,7 @@ export async function GET(
     return new NextResponse(body, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="direskill-contract-${id}.pdf"`,
+        "Content-Disposition": `attachment; filename="direskill-contract-${id}.pdf"`,
         "Cache-Control": "no-store",
         "X-Document-Hash": contract.document_hash || "",
       },

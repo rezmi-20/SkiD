@@ -63,14 +63,14 @@ export default function Testimonials() {
   ];
 
   return (
-    <section id="reviews" className="py-24 md:py-32 bg-[#09090b] relative overflow-hidden">
+    <section id="reviews" className="py-12 sm:py-20 md:py-32 bg-[#09090b] relative overflow-hidden">
       {/* Header */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 mb-8 text-center space-y-4">
-        <h2 className="text-4xl md:text-5xl xl:text-6xl font-black tracking-tighter text-white uppercase leading-[0.9]">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 mb-6 sm:mb-8 text-center space-y-2 sm:space-y-4">
+        <h2 className="text-2xl sm:text-4xl md:text-5xl xl:text-6xl font-black tracking-tighter text-white uppercase leading-[0.9]">
           {t("testimonials.title").split(" ").slice(0, 3).join(" ")}{" "}
           <span className="text-green-400 italic">{t("testimonials.title").split(" ").slice(3).join(" ")}</span>
         </h2>
-        <p className="text-zinc-500 text-base md:text-lg font-medium max-w-xl mx-auto leading-relaxed">
+        <p className="text-zinc-500 text-xs sm:text-base md:text-lg font-medium max-w-xl mx-auto leading-relaxed">
           {t("testimonials.subtitle")}
         </p>
       </div>
@@ -80,39 +80,39 @@ export default function Testimonials() {
         <motion.div
           animate={{ x: ["0%", "-50%"] }}
           transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-          className="flex gap-5 py-4 whitespace-nowrap"
+          className="flex gap-3 sm:gap-5 py-2 sm:py-4 whitespace-nowrap"
         >
           {[...testimonials, ...testimonials, ...testimonials].map((item, i) => (
             <div
               key={i}
-              className="w-[340px] md:w-[380px] flex-shrink-0 bg-[#0c0c0e] border border-white/5 p-7 rounded-[2.5rem] flex flex-col justify-between hover:border-green-400/20 hover:bg-zinc-900/60 transition-all duration-300 text-left"
+              className="w-[260px] sm:w-[340px] md:w-[380px] flex-shrink-0 bg-[#0c0c0e] border border-white/5 p-4 sm:p-7 rounded-2xl sm:rounded-[2.5rem] flex flex-col justify-between hover:border-green-400/20 hover:bg-zinc-900/60 transition-all duration-300 text-left"
               style={{ whiteSpace: "normal" }}
             >
               {/* Stars */}
-              <div className="mb-5">
-                <div className="flex gap-1 mb-4">
+              <div className="mb-3 sm:mb-5">
+                <div className="flex gap-1 mb-2.5 sm:mb-4">
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <svg key={star} width="13" height="13" viewBox="0 0 24 24" fill="currentColor" className="text-amber-400">
+                    <svg key={star} width="11" height="11" viewBox="0 0 24 24" fill="currentColor" className="text-amber-400 sm:w-[13px] sm:h-[13px]">
                       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                     </svg>
                   ))}
                 </div>
-                <p className="text-zinc-300 text-sm font-medium leading-relaxed italic">
+                <p className="text-zinc-300 text-xs sm:text-sm font-medium leading-relaxed italic line-clamp-3 sm:line-clamp-none">
                   &ldquo;{item.text}&rdquo;
                 </p>
               </div>
 
               {/* Author */}
-              <div className="flex items-center gap-3 pt-5 border-t border-white/5">
-                <div className="w-11 h-11 rounded-xl bg-green-400 flex items-center justify-center font-black text-black text-base flex-shrink-0">
+              <div className="flex items-center gap-2.5 sm:gap-3 pt-3 sm:pt-5 border-t border-white/5">
+                <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-green-400 flex items-center justify-center font-black text-black text-sm sm:text-base flex-shrink-0">
                   {item.initial}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-black uppercase tracking-tight truncate">{item.name}</p>
-                  <p className="text-zinc-500 text-[9px] font-black uppercase tracking-[0.2em]">{item.role}</p>
+                  <p className="text-white text-xs sm:text-sm font-black uppercase tracking-tight truncate">{item.name}</p>
+                  <p className="text-zinc-500 text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em]">{item.role}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-[8px] font-black text-zinc-600 uppercase tracking-widest">{item.workerType}</p>
+                  <p className="hidden sm:block text-[8px] font-black text-zinc-600 uppercase tracking-widest">{item.workerType}</p>
                   <p className="text-[9px] font-black text-green-400">{item.jobsDone} jobs</p>
                 </div>
               </div>
@@ -120,9 +120,9 @@ export default function Testimonials() {
           ))}
         </motion.div>
 
-        {/* Edge fades */}
-        <div className="absolute inset-y-0 left-0 w-24 md:w-40 bg-gradient-to-r from-[#09090b] to-transparent z-10 pointer-events-none" />
-        <div className="absolute inset-y-0 right-0 w-24 md:w-40 bg-gradient-to-l from-[#09090b] to-transparent z-10 pointer-events-none" />
+        {/* Edge fades (reduced width on mobile to avoid covering half of 412px screen) */}
+        <div className="absolute inset-y-0 left-0 w-8 sm:w-24 md:w-40 bg-gradient-to-r from-[#09090b] to-transparent z-10 pointer-events-none" />
+        <div className="absolute inset-y-0 right-0 w-8 sm:w-24 md:w-40 bg-gradient-to-l from-[#09090b] to-transparent z-10 pointer-events-none" />
       </div>
     </section>
   );

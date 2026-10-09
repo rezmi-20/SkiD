@@ -23,6 +23,7 @@ interface WorkerVerificationContentProps {
     verified_at?: string | Date | null;
     reviewer_email?: string | null;
     is_suspended?: boolean | null;
+    identity_complete?: boolean | null;
   };
   attempt: {
     id: string;
@@ -66,7 +67,8 @@ export default function WorkerVerificationContent({
   onPending
 }: WorkerVerificationContentProps) {
   const [rejectReason, setRejectReason] = useState("");
-  const displayStatus = toWorkerDisplayStatus(worker.verification_status, worker.is_verified, worker.is_suspended);
+  const identityComplete = worker.identity_complete !== false;
+  const displayStatus = toWorkerDisplayStatus(worker.verification_status, worker.is_verified, worker.is_suspended, identityComplete);
   const profileReviewStatus = String(worker.verification_status || displayStatus || "pending");
   const activeReviewStatus = attempt?.status === "pending" || profileReviewStatus === "pending";
   const canRevealFin = Boolean(
@@ -246,6 +248,11 @@ export default function WorkerVerificationContent({
             </div>
           ) : (
             <>
+              {!identityComplete && (
+                <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-5 py-4 text-sm font-bold text-on-surface">
+                  Fayda document and protected FIN must both be submitted before this worker can be approved.
+                </div>
+              )}
               <textarea
                 value={rejectReason}
                 onChange={(event) => setRejectReason(event.target.value)}
@@ -257,7 +264,7 @@ export default function WorkerVerificationContent({
                 {capabilities.canApprove && onApprove && (
                   <button
                     onClick={onApprove}
-                    disabled={displayStatus === "approved"}
+                    disabled={displayStatus === "approved" || !identityComplete}
                     className="flex-1 h-16 bg-primary text-on-primary rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-30 disabled:scale-100 disabled:grayscale shadow-xl shadow-primary/20 flex items-center justify-center gap-3"
                   >
                     <span className="material-symbols-outlined">verified</span>

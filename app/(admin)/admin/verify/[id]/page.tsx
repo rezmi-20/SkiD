@@ -4,6 +4,7 @@ import { updateWorkerVerificationStatus } from "@/lib/actions/admin";
 import WorkerVerificationContent from "@/components/WorkerVerificationContent";
 import { hasAdminPermission, requireAdminPermission } from "@/lib/admin-authorization";
 import { ensureCurrentVerificationAttempt, getVerificationHistory } from "@/lib/verification-operations";
+import { hasCompleteWorkerIdentity, toWorkerDisplayStatus } from "@/lib/worker-verification";
 
 export default async function WorkerVerificationPage({ params }: { params: Promise<{ id: string }> }) {
   const admin = await requireAdminPermission("verification.read");
@@ -25,6 +26,7 @@ export default async function WorkerVerificationPage({ params }: { params: Promi
       wp.skills,
       wp.fayda_doc_url,
       wp.fin_last4,
+      wp.fin_encrypted,
       wp.verification_status,
       wp.verification_reason,
       wp.verified_at,
@@ -51,6 +53,12 @@ export default async function WorkerVerificationPage({ params }: { params: Promi
   }
 
   const maskedFin = worker.fin_last4 ? `********${worker.fin_last4}` : null;
+  const identityComplete = hasCompleteWorkerIdentity({
+    documentRef: worker.fayda_doc_url,
+    finLast4: worker.fin_last4,
+    finEncrypted: worker.fin_encrypted,
+  });
+  const displayStatus = toWorkerDisplayStatus(worker.verification_status, worker.is_verified, worker.is_suspended, identityComplete);
   const attempt = await ensureCurrentVerificationAttempt("worker", worker.user_id);
   const history = await getVerificationHistory("worker", worker.user_id);
 
@@ -84,7 +92,13 @@ export default async function WorkerVerificationPage({ params }: { params: Promi
 
   return (
     <WorkerVerificationContent 
-      worker={{ ...worker, masked_fin: maskedFin }}
+      worker={{
+        ...worker,
+        masked_fin: maskedFin,
+        identity_complete: identityComplete,
+        verification_status: displayStatus,
+        is_verified: Boolean(worker.is_verified && identityComplete),
+      }}
       attempt={attempt ? {
         id: String(attempt.id),
         attemptNumber: Number(attempt.attempt_number || attempt.attemptNumber || 1),

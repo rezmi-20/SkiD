@@ -20,6 +20,14 @@ export default async function WorkerDashboardPage() {
       wp.full_name,
       wp.is_verified,
       wp.verification_status,
+      (
+        wp.fayda_doc_url IS NOT NULL
+        AND length(wp.fayda_doc_url) > 0
+        AND wp.fin_last4 IS NOT NULL
+        AND length(wp.fin_last4) = 4
+        AND wp.fin_encrypted IS NOT NULL
+        AND length(wp.fin_encrypted) > 0
+      ) AS identity_complete,
       wp.district,
       wp.skills
     FROM users u
@@ -32,8 +40,9 @@ export default async function WorkerDashboardPage() {
   const workerRoute = getWorkerAccessRoute({
     role: session.user.role,
     isSuspended: worker?.is_suspended ?? false,
-    isVerified: worker?.is_verified ?? null,
-    verificationStatus: worker?.verification_status ?? null,
+    isVerified: Boolean(worker?.is_verified && worker?.identity_complete),
+    verificationStatus: worker?.identity_complete === false && worker?.verification_status === "approved" ? "incomplete" : worker?.verification_status ?? null,
+    identityComplete: worker?.identity_complete ?? null,
   });
 
   if (workerRoute !== WORKER_DASHBOARD_ROUTE) {
@@ -51,7 +60,7 @@ export default async function WorkerDashboardPage() {
   const workerData = {
     fullName: worker?.full_name || "Professional",
     firstName: (worker?.full_name || "Professional").split(" ")[0],
-    isVerified: worker?.is_verified || false,
+    isVerified: Boolean(worker?.is_verified && worker?.identity_complete),
     district: worker?.district || "Dire Dawa",
     skills: worker?.skills || [],
   };

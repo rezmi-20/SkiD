@@ -37,7 +37,15 @@ export default async function AuthCallbackPage() {
         SELECT
           u.is_suspended,
           wp.is_verified,
-          wp.verification_status
+          wp.verification_status,
+          (
+            wp.fayda_doc_url IS NOT NULL
+            AND length(wp.fayda_doc_url) > 0
+            AND wp.fin_last4 IS NOT NULL
+            AND length(wp.fin_last4) = 4
+            AND wp.fin_encrypted IS NOT NULL
+            AND length(wp.fin_encrypted) > 0
+          ) AS identity_complete
         FROM users u
         LEFT JOIN worker_profiles wp ON wp.user_id = u.id
         WHERE u.id = ${session.user.id}
@@ -49,8 +57,9 @@ export default async function AuthCallbackPage() {
         getWorkerAccessRoute({
           role,
           isSuspended: worker?.is_suspended ?? false,
-          isVerified: worker?.is_verified ?? null,
-          verificationStatus: worker?.verification_status ?? null,
+          isVerified: Boolean(worker?.is_verified && worker?.identity_complete),
+          verificationStatus: worker?.identity_complete === false && worker?.verification_status === "approved" ? "incomplete" : worker?.verification_status ?? null,
+          identityComplete: worker?.identity_complete ?? null,
         })
       );
     }
@@ -58,7 +67,7 @@ export default async function AuthCallbackPage() {
       redirect("/client/search");
     }
 
-    redirect("/login?error=unknown_role");
+    redirect("/complete-profile");
   } catch (error: any) {
     if (isRedirectError(error)) {
       throw error;

@@ -10,6 +10,8 @@ const paymentProcessing = read("lib/payment-processing.ts");
 const migration = read("scripts/migrate-dispute-financial-actions.mjs");
 const schema = read("lib/schema.ts");
 const adminPage = read("app/(admin)/admin/disputes/[id]/page.tsx");
+const adminTabs = read("components/admin/AdminDisputeCaseTabs.tsx");
+const adminDisputeUi = `${adminPage}\n${adminTabs}`;
 const chapa = read("lib/chapa.ts");
 const receipt = read("app/api/payments/[paymentId]/receipt/route.ts");
 
@@ -39,6 +41,10 @@ check("ledger has idempotency guard", schema.includes("idempotencyKey") && migra
 check("pending high-risk proposal dedupe exists", migration.includes("dispute_financial_pending_action_unique_idx") && migration.includes("proposal_status IN ('proposed', 'approved')"));
 check("ordinary financial operations require dispute/payment admin", financialActions.includes('admin.role !== "dispute_payment_admin"') && financialActions.includes("requireOperationalFinancialAdmin"));
 check("ordinary financial operations require assigned dispute admin", financialActions.includes("Financial case operations require assignment") && financialActions.includes("financialCase.assigned_admin_id !== admin.id"));
+check("ordinary financial operations block conflicted admins", financialActions.includes("You declared a conflict on this dispute.") && financialActions.includes("conflict_admin_ids"));
+check("terminal disputes block routine financial operations", financialActions.includes("DISPUTE_TERMINAL_STATUSES") && financialActions.includes("This dispute is terminal and read-only.") && financialActions.includes("isTerminalDisputeStatus(financialCase.dispute_status)"));
+check("financial execution requires exact assignment", financialActions.includes("This dispute must be claimed before release execution.") && financialActions.includes("action.assigned_admin_id !== admin.id"));
+check("financial execution blocked after terminal resolution", financialActions.includes("isTerminalDisputeStatus(action.dispute_status)") && financialActions.includes("Release action not found"));
 check("financial decisions require evidence and recorded responses", financialActions.includes("requireFinancialDecisionReadiness") && financialActions.includes("submittedResponseCount") && financialActions.includes("pendingResponseCount"));
 check("super admin approval is separate from execution", financialActions.includes("approveFinancialAction") && financialActions.includes('admin.role !== "super_admin"') && financialActions.includes("executeApprovedRelease"));
 check("release uses payment-domain verification helper", financialActions.includes("verifyAndReleasePayment({") && financialActions.includes('source: "dispute_resolution"'));
@@ -57,8 +63,9 @@ check("participants are notified", financialActions.includes("notifyParticipant"
 check("dispute events are recorded", financialActions.includes("recordFinancialEvent") && financialActions.includes("payment_released_after_dispute"));
 check("stale approvals have dispute decision snapshots", schema.includes("decisionSnapshot") && migration.includes("decision_snapshot") && financialActions.includes("The dispute decision changed after this proposal was created"));
 check("receipts require verified released payment", receipt.includes("Receipt is available only after verified payment release") && receipt.includes('payment.status !== "released"'));
-check("admin UI exposes hold/propose/approve/execute controls", adminPage.includes("Controlled Payment Actions") && adminPage.includes("Hold Payment") && adminPage.includes("Approve") && adminPage.includes("Execute Release"));
-check("admin UI does not expose raw provider payload", !adminPage.includes("chapa_response") && !adminPage.includes("provider_action_response"));
-check("refund completion copy is conservative", adminPage.includes("Refund outcomes remain review-required"));
+check("admin UI exposes hold/propose/approve/execute controls", adminDisputeUi.includes("Controlled Payment Actions") && adminDisputeUi.includes("Hold Payment") && adminDisputeUi.includes("Approve") && adminDisputeUi.includes("Execute Release"));
+check("admin UI hides financial controls on terminal disputes", adminDisputeUi.includes("Financial Case Read-Only") && adminDisputeUi.includes("Terminal disputes cannot place holds") && adminDisputeUi.includes("!isTerminal && canOperate && canResolve"));
+check("admin UI does not expose raw provider payload", !adminDisputeUi.includes("chapa_response") && !adminDisputeUi.includes("provider_action_response"));
+check("refund completion copy is conservative", adminDisputeUi.includes("Refund outcomes remain review/provider/manual-confirmation based"));
 
 process.exit(failed ? 1 : 0);

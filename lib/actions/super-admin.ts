@@ -5,6 +5,7 @@ import { isSuperAdmin } from "@/lib/config";
 import { revalidatePath } from "next/cache";
 import { getClientIdentityColumns } from "@/lib/client-verification";
 import { getWorkerIdentityColumns } from "@/lib/worker-verification-server";
+import { toWorkerDisplayStatus } from "@/lib/worker-verification";
 import {
   assertCanModifyAdminAccount,
   requireAdminPermission,
@@ -34,6 +35,17 @@ export async function getAllUsers() {
     getClientIdentityColumns(),
     getWorkerIdentityColumns(),
   ]);
+  const workerIdentityCompleteSql =
+    workerColumns.has("fayda_doc_url") && workerColumns.has("fin_last4") && workerColumns.has("fin_encrypted")
+      ? `(
+          wp.fayda_doc_url IS NOT NULL
+          AND length(wp.fayda_doc_url) > 0
+          AND wp.fin_last4 IS NOT NULL
+          AND length(wp.fin_last4) = 4
+          AND wp.fin_encrypted IS NOT NULL
+          AND length(wp.fin_encrypted) > 0
+        )`
+      : "false";
 
   const rows = await sql.query(`
     SELECT
@@ -52,6 +64,7 @@ export async function getAllUsers() {
       creator.email AS "adminCreatedByEmail",
       ${workerColumns.has("is_verified") ? "wp.is_verified" : "NULL"} AS "workerIsVerified",
       ${workerColumns.has("verification_status") ? "wp.verification_status" : "NULL"} AS "workerVerificationStatus",
+      ${workerIdentityCompleteSql} AS "workerIdentityComplete",
       ${clientColumns.has("is_verified") ? "cp.is_verified" : "NULL"} AS "clientIsVerified",
       ${clientColumns.has("verification_status") ? "cp.verification_status" : "NULL"} AS "clientVerificationStatus",
       COALESCE(wp.full_name, cp.full_name) AS "fullName",
@@ -63,27 +76,33 @@ export async function getAllUsers() {
     ORDER BY u.created_at DESC
   `, []);
 
-  const publicUsers = (rows || []).map((r: any) => ({
-    id: r.id as string,
-    email: r.email as string,
-    phone: (r.phone ?? null) as string | null,
-    role: r.role as "client" | "worker" | "admin",
-    isSuspended: r.isSuspended as boolean,
-    workerIsVerified: (r.workerIsVerified ?? null) as boolean | null,
-    workerVerificationStatus: (r.workerVerificationStatus ?? null) as string | null,
-    clientIsVerified: (r.clientIsVerified ?? null) as boolean | null,
-    clientVerificationStatus: (r.clientVerificationStatus ?? null) as string | null,
-    createdAt: String(r.createdAt),
-    fullName: (r.adminFullName ?? r.fullName ?? null) as string | null,
-    avatarUrl: (r.avatarUrl ?? null) as string | null,
-    adminRole: (r.adminRole ?? null) as string | null,
-    adminStatus: (r.adminStatus ?? null) as string | null,
-    adminActivationRequired: (r.adminActivationRequired ?? null) as boolean | null,
-    adminUsername: (r.adminUsername ?? null) as string | null,
-    adminFullName: (r.adminFullName ?? null) as string | null,
-    adminCreatedByEmail: (r.adminCreatedByEmail ?? null) as string | null,
-    adminCreatedAt: r.adminCreatedAt ? String(r.adminCreatedAt) : null,
-  }));
+  const publicUsers = (rows || []).map((r: any) => {
+    const role = r.role as "client" | "worker" | "admin";
+    const workerIdentityComplete = role === "worker" ? Boolean(r.workerIdentityComplete) : true;
+    return {
+      id: r.id as string,
+      email: r.email as string,
+      phone: (r.phone ?? null) as string | null,
+      role,
+      isSuspended: r.isSuspended as boolean,
+      workerIsVerified: role === "worker" ? Boolean(r.workerIsVerified && workerIdentityComplete) : null,
+      workerVerificationStatus: role === "worker"
+        ? toWorkerDisplayStatus(r.workerVerificationStatus, r.workerIsVerified, r.isSuspended, workerIdentityComplete)
+        : null,
+      clientIsVerified: (r.clientIsVerified ?? null) as boolean | null,
+      clientVerificationStatus: (r.clientVerificationStatus ?? null) as string | null,
+      createdAt: String(r.createdAt),
+      fullName: (r.adminFullName ?? r.fullName ?? null) as string | null,
+      avatarUrl: (r.avatarUrl ?? null) as string | null,
+      adminRole: (r.adminRole ?? null) as string | null,
+      adminStatus: (r.adminStatus ?? null) as string | null,
+      adminActivationRequired: (r.adminActivationRequired ?? null) as boolean | null,
+      adminUsername: (r.adminUsername ?? null) as string | null,
+      adminFullName: (r.adminFullName ?? null) as string | null,
+      adminCreatedByEmail: (r.adminCreatedByEmail ?? null) as string | null,
+      adminCreatedAt: r.adminCreatedAt ? String(r.adminCreatedAt) : null,
+    };
+  });
 
   const employeeRows = await sql`
     SELECT

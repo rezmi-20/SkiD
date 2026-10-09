@@ -23,7 +23,15 @@ export async function GET(req: NextRequest) {
         u.role,
         u.is_suspended,
         wp.is_verified AS worker_is_verified,
-        wp.verification_status AS worker_verification_status
+        wp.verification_status AS worker_verification_status,
+        (
+          wp.fayda_doc_url IS NOT NULL
+          AND length(wp.fayda_doc_url) > 0
+          AND wp.fin_last4 IS NOT NULL
+          AND length(wp.fin_last4) = 4
+          AND wp.fin_encrypted IS NOT NULL
+          AND length(wp.fin_encrypted) > 0
+        ) AS worker_identity_complete
       FROM users u
       LEFT JOIN worker_profiles wp ON wp.user_id = u.id
       WHERE u.id = ${userId}
@@ -44,8 +52,9 @@ export async function GET(req: NextRequest) {
       emailVerified: session.user.emailVerified,
       authenticated: true,
       isSuspended: userRow.is_suspended ?? false,
-      workerIsVerified: userRow.worker_is_verified ?? null,
-      workerVerificationStatus: userRow.worker_verification_status ?? null,
+      workerIsVerified: Boolean(userRow.worker_is_verified && userRow.worker_identity_complete),
+      workerVerificationStatus: userRow.worker_identity_complete === false && userRow.worker_verification_status === "approved" ? "incomplete" : userRow.worker_verification_status ?? null,
+      workerIdentityComplete: userRow.worker_identity_complete ?? null,
       workerIsSuspended: userRow.is_suspended ?? false,
     });
 

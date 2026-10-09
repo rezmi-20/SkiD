@@ -19,6 +19,7 @@ interface WorkerData {
   verificationStatus?: string | null;
   isVerified: boolean;
   isSuspended?: boolean | null;
+  identityComplete?: boolean | null;
   hasDocument: boolean;
   createdAt: string;
 }
@@ -48,14 +49,14 @@ export function WorkersManagementClient({ initialWorkers, verificationCapabiliti
 
     const matchesStatus =
       statusFilter === "all" ||
-      (statusFilter === "verified" && toWorkerDisplayStatus(w.verificationStatus, w.isVerified, w.isSuspended) === "approved") ||
-      (statusFilter === "pending" && toWorkerDisplayStatus(w.verificationStatus, w.isVerified, w.isSuspended) !== "approved");
+      (statusFilter === "verified" && toWorkerDisplayStatus(w.verificationStatus, w.isVerified, w.isSuspended, w.identityComplete !== false) === "approved") ||
+      (statusFilter === "pending" && toWorkerDisplayStatus(w.verificationStatus, w.isVerified, w.isSuspended, w.identityComplete !== false) !== "approved");
 
     return matchesSearch && matchesStatus;
   });
 
   const displayStatus = (worker: WorkerData) =>
-    toWorkerDisplayStatus(worker.verificationStatus, worker.isVerified, worker.isSuspended);
+    toWorkerDisplayStatus(worker.verificationStatus, worker.isVerified, worker.isSuspended, worker.identityComplete !== false);
   const actionLabel = (worker: WorkerData) => {
     const status = displayStatus(worker);
     if (!verificationCapabilities.canReview || status === "approved" || status === "revoked") {

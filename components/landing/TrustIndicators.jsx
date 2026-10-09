@@ -66,64 +66,63 @@ export default function TrustIndicators({ t }) {
   ];
 
   return (
-    <section id="trust" className="py-24 md:py-32 px-4 md:px-8 lg:px-16 bg-[#090b0e] border-y border-white/[0.03]">
+    <section id="trust" className="py-12 sm:py-20 md:py-32 px-4 md:px-8 lg:px-16 bg-[#090b0e] border-y border-white/[0.03]">
       <div className="max-w-7xl mx-auto">
         
         {/* Section Header */}
-        <div className="text-left mb-20 space-y-3">
-          <span className="text-[10px] font-black tracking-[0.3em] text-green-400 uppercase">
+        <div className="text-left mb-6 sm:mb-16 space-y-1.5 sm:space-y-3">
+          <span className="text-[9px] sm:text-[10px] font-black tracking-[0.25em] text-green-400 uppercase">
             Guaranteed Trust
           </span>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-white uppercase tracking-tight">
+          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white uppercase tracking-tight">
             {t("trust.title").split(" ").slice(0, -1).join(" ")}{" "}
             <span className="text-green-400 italic">{t("trust.title").split(" ").slice(-1)[0]}</span>
           </h2>
         </div>
 
-        {/* Premium floating-icon cards grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-x-6 gap-y-12 pt-6">
+        {/* Premium floating-icon cards (Horizontal snap carousel on mobile, 5-col grid on desktop) */}
+        <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-3 sm:pb-4 pt-5 sm:pt-6 snap-x snap-mandatory no-scrollbar md:grid md:grid-cols-2 lg:grid-cols-5 md:overflow-visible">
           {badges.map((b, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.08, duration: 0.6 }}
-              className="relative bg-[#13161c] border border-white/[0.04] rounded-2xl p-6 pt-10 flex flex-col justify-between group hover:border-white/[0.08] transition-all duration-300 shadow-xl"
+              transition={{ delay: i * 0.06, duration: 0.5 }}
+              className="w-[220px] min-w-[220px] max-w-[230px] snap-center sm:w-auto sm:min-w-0 sm:max-w-none relative bg-[#13161c] border border-white/[0.04] rounded-2xl p-4 pt-8 sm:p-6 sm:pt-10 flex flex-col justify-between group hover:border-white/[0.08] transition-all duration-300 shadow-xl flex-shrink-0"
             >
-              {/* Inner wrapper strictly containing the background image so parent has no overflow-hidden */}
-              <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none z-0">
-                <img
-                  src={b.bgImg}
-                  className="w-full h-full object-cover opacity-20 group-hover:scale-105 transition-transform duration-500"
-                  alt=""
-                  aria-hidden="true"
-                />
+              {/* Server-side rendered vector background asset (never fails or times out) */}
+              <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none z-0 opacity-15">
+                <svg viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full object-cover">
+                  <circle cx="200" cy="150" r="120" stroke="#4ade80" strokeWidth="0.75" strokeDasharray="6 4" />
+                  <circle cx="200" cy="150" r="80" stroke="#ffffff" strokeWidth="0.5" />
+                  <line x1="80" y1="150" x2="320" y2="150" stroke="#ffffff" strokeWidth="0.5" strokeOpacity="0.4" />
+                </svg>
                 <div className="absolute inset-0 bg-gradient-to-t from-[#13161c] via-[#13161c]/80 to-[#13161c]/30" />
               </div>
 
-              {/* Overlapping top-left floating icon container matching the template image */}
-              <div className="absolute -top-6 left-6 w-12 h-12 rounded-xl bg-[#1b1f28] border border-white/[0.08] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 z-10">
+              {/* Overlapping top-left floating icon container */}
+              <div className="absolute -top-4 sm:-top-6 left-4 sm:left-6 w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-[#1b1f28] border border-white/[0.08] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 z-10">
                 {b.icon}
               </div>
 
               {/* Card Body */}
-              <div className="space-y-4 flex-1 relative z-10">
+              <div className="space-y-2 sm:space-y-4 flex-1 relative z-10 pt-1">
                 <div>
-                  <span className="text-[8px] font-black text-zinc-500 tracking-wider uppercase block mb-1">
+                  <span className="text-[8px] font-black text-zinc-500 tracking-wider uppercase block mb-0.5">
                     {b.tag}
                   </span>
-                  <h3 className="text-white text-sm font-bold tracking-tight leading-snug">
+                  <h3 className="text-white text-xs sm:text-sm font-bold tracking-tight leading-snug">
                     {b.title}
                   </h3>
                 </div>
-                <p className="text-[#8a929a] text-xs font-normal leading-relaxed">
+                <p className="text-[#8a929a] text-[10px] sm:text-xs font-normal leading-relaxed">
                   {b.desc}
                 </p>
               </div>
 
-              {/* Card Footer Link */}
-              <div className="pt-6 mt-auto relative z-10">
+              {/* Card Footer Link (hidden on mobile to keep card heights ultra compact) */}
+              <div className="hidden sm:block pt-4 sm:pt-6 mt-auto relative z-10">
                 <a
                   href="/client/search"
                   className="inline-flex items-center gap-1.5 text-xs font-black text-blue-400 hover:text-blue-300 transition-colors uppercase tracking-wider"

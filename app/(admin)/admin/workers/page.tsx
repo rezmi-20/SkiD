@@ -1,6 +1,7 @@
 import { sql } from "@/lib/db";
 import { WorkersManagementClient } from "@/components/admin/WorkersManagementClient";
 import { hasAdminPermission, requireAdminPermission } from "@/lib/admin-authorization";
+import { hasCompleteWorkerIdentity, toWorkerDisplayStatus } from "@/lib/worker-verification";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,8 @@ export default async function WorkersPage() {
       wp.experience_years AS "experienceYears",
       wp.district,
       wp.bio,
+      wp.fin_last4 AS "finLast4",
+      wp.fin_encrypted AS "finEncrypted",
       wp.verification_status AS "verificationStatus",
       wp.is_verified AS "isVerified",
       wp.created_at AS "createdAt",
@@ -39,21 +42,29 @@ export default async function WorkersPage() {
   `;
 
   // Map to matching schema types
-  const formattedWorkers = (workersData || []).map((w: any) => ({
-    userId: w.userId,
-    fullName: w.fullName,
-    email: w.email,
-    phone: w.phone,
-    bio: w.bio,
-    skills: w.skills,
-    district: w.district,
-    experienceYears: w.experienceYears,
-    verificationStatus: w.verificationStatus,
-    isVerified: w.isVerified,
-    isSuspended: w.isSuspended,
-    hasDocument: w.hasDocument,
-    createdAt: String(w.createdAt),
-  }));
+  const formattedWorkers = (workersData || []).map((w: any) => {
+    const identityComplete = hasCompleteWorkerIdentity({
+      documentRef: w.hasDocument ? "present" : "",
+      finLast4: w.finLast4,
+      finEncrypted: w.finEncrypted,
+    });
+    return {
+      userId: w.userId,
+      fullName: w.fullName,
+      email: w.email,
+      phone: w.phone,
+      bio: w.bio,
+      skills: w.skills,
+      district: w.district,
+      experienceYears: w.experienceYears,
+      verificationStatus: toWorkerDisplayStatus(w.verificationStatus, w.isVerified, w.isSuspended, identityComplete),
+      isVerified: Boolean(w.isVerified && identityComplete),
+      isSuspended: w.isSuspended,
+      identityComplete,
+      hasDocument: w.hasDocument,
+      createdAt: String(w.createdAt),
+    };
+  });
 
   return <WorkersManagementClient initialWorkers={formattedWorkers} verificationCapabilities={verificationCapabilities} />;
 }

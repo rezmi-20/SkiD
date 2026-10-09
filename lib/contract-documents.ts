@@ -2,7 +2,6 @@ import crypto from "node:crypto";
 import PDFDocument from "pdfkit";
 import QRCode from "qrcode";
 import { sql } from "@/lib/db";
-import { createNotification } from "@/lib/actions/notifications";
 import { maskFinLast4 } from "@/lib/fin-protection";
 
 function formatDate(value: unknown) {
@@ -47,6 +46,17 @@ function drawDireSkillSeal(doc: PDFKit.PDFDocument, x: number, y: number, size: 
   doc.text("Dire Dawa, Ethiopia", x, y + 76, { width: size, align: "center" });
   doc.font("Helvetica-Bold").text("EST. 2026", x, y + 90, { width: size, align: "center" });
   doc.restore();
+}
+
+async function createContractNotification(userId: string, title: string, body: string, linkHref: string) {
+  try {
+    await sql`
+      INSERT INTO notifications (user_id, type, title, body, link_href)
+      VALUES (${userId}, 'contract_signed', ${title}, ${body}, ${linkHref})
+    `;
+  } catch (error) {
+    console.error("[CREATE_CONTRACT_NOTIFICATION_ERROR]", error);
+  }
 }
 
 async function buildContractPdfBuffer(contract: any, signatures: any[], qrDataUrl: string, documentHash: string) {
@@ -142,6 +152,145 @@ async function buildContractPdfBuffer(contract: any, signatures: any[], qrDataUr
 
   doc.end();
   return done;
+}
+
+export async function ensureStoredContractPdf(contractId: string, publicBaseUrl?: string) {
+  const rows = await sql`
+    SELECT
+      c.*,
+      j.client_id,
+      j.worker_id,
+      j.budget,
+      cp.full_name as client_name,
+      cp.is_verified as client_verified,
+      cp.fin_last4 as client_fin_last4,
+      cp.verification_provider as client_verification_provider,
+      cp.verification_reference as client_verification_reference,
+      cp.verification_status as client_verification_status,
+      cp.verified_at as client_verified_at,
+      wp.full_name as worker_name,
+      wp.is_verified as worker_verified,
+      wp.fin_last4 as worker_fin_last4,
+      wp.verification_provider as worker_verification_provider,
+      wp.verification_reference as worker_verification_reference,
+      wp.verification_status as worker_verification_status,
+      wp.verified_at as worker_verified_at
+    FROM contracts c
+    JOIN jobs j ON c.job_id = j.id
+    LEFT JOIN client_profiles cp ON j.client_id = cp.user_id
+    LEFT JOIN worker_profiles wp ON j.worker_id = wp.user_id
+    WHERE c.id = ${contractId}
+    LIMIT 1
+  `;
+
+  if (rows.length === 0) {
+    throw new Error("Contract not found");
+  }
+
+  const contract = rows[0];
+  if (contract.final_pdf_base64 && contract.pdf_url) {
+    return contract;
+  }
+
+  if (!["ACTIVE", "FULLY_SIGNED"].includes(contract.status)) {
+    return contract;
+  }
+
+  const signatures = await sql`
+    SELECT
+      cs.*,
+      COALESCE(cp.full_name, wp.full_name, u.email) as name
+    FROM contract_signatures cs
+    JOIN users u ON cs.user_id = u.id
+    LEFT JOIN client_profiles cp ON cs.user_id = cp.user_id
+    LEFT JOIN worker_profiles wp ON cs.user_id = wp.user_id
+    WHERE cs.contract_id = ${contractId}
+    ORDER BY cs.signed_at ASC
+  `;
+
+  if (signatures.length < 2) {
+    return contract;
+  }
+
+  const signatureByRole = new Map<string, any>(signatures.map((signature: any) => [signature.role, signature]));
+  const identityVerificationSnapshot = [
+    {
+      partyUserId: contract.client_id,
+      role: "client",
+      verifiedLegalName: contract.client_name,
+      maskedFin: maskFinLast4(contract.client_fin_last4),
+      verificationProvider: contract.client_verification_provider || "Fayda",
+      verificationReference: contract.client_verification_reference || null,
+      verificationStatus: contract.client_verification_status || (contract.client_verified ? "approved" : "incomplete"),
+      verificationTimestamp: contract.client_verified_at || null,
+      signingTimestamp: signatureByRole.get("client")?.signed_at || null,
+    },
+    {
+      partyUserId: contract.worker_id,
+      role: "worker",
+      verifiedLegalName: contract.worker_name,
+      maskedFin: maskFinLast4(contract.worker_fin_last4),
+      verificationProvider: contract.worker_verification_provider || "Fayda",
+      verificationReference: contract.worker_verification_reference || null,
+      verificationStatus: contract.worker_verification_status || (contract.worker_verified ? "approved" : "pending"),
+      verificationTimestamp: contract.worker_verified_at || null,
+      signingTimestamp: signatureByRole.get("worker")?.signed_at || null,
+    },
+  ];
+  const finalizedSnapshot = {
+    ...(contract.finalized_snapshot && typeof contract.finalized_snapshot === "object" ? contract.finalized_snapshot : {}),
+    identityVerificationSnapshot,
+  };
+
+  const canonicalPayload = JSON.stringify({
+    contractId,
+    finalizedSnapshot,
+    signatures: signatures.map((signature: any) => ({
+      userId: signature.user_id,
+      role: signature.role,
+      signedAt: signature.signed_at,
+      consentConfirmed: signature.consent_confirmed,
+    })),
+  });
+  const documentHash = crypto.createHash("sha256").update(canonicalPayload).digest("hex");
+  const appUrl = publicBaseUrl || process.env.NEXT_PUBLIC_APP_URL || process.env.BASE_URL;
+  if (!appUrl) {
+    throw new Error("Public application URL is not configured.");
+  }
+  const verificationUrl = `${appUrl.replace(/\/$/, "")}/contracts/${contractId}?hash=${documentHash}`;
+  const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, {
+    errorCorrectionLevel: "M",
+    margin: 1,
+    width: 240,
+  });
+
+  const pdfBuffer = await buildContractPdfBuffer(contract, signatures, qrCodeDataUrl, documentHash);
+  const pdfUrl = `/api/contracts/${contractId}/pdf`;
+  const updatedRows = await sql`
+    UPDATE contracts
+    SET
+      status = CASE WHEN status = 'FULLY_SIGNED' THEN 'ACTIVE' ELSE status END,
+      finalized_snapshot = ${JSON.stringify(finalizedSnapshot)},
+      pdf_url = ${pdfUrl},
+      final_pdf_base64 = ${pdfBuffer.toString("base64")},
+      document_hash = ${documentHash},
+      qr_code_data_url = ${qrCodeDataUrl},
+      activated_at = COALESCE(activated_at, NOW()),
+      updated_at = NOW()
+    WHERE id = ${contractId}
+      AND status IN ('ACTIVE', 'FULLY_SIGNED')
+    RETURNING *
+  `;
+
+  if (contract.status === "FULLY_SIGNED" && updatedRows.length > 0) {
+    await sql`
+      UPDATE jobs
+      SET status = 'active', updated_at = NOW()
+      WHERE id = ${contract.job_id}
+    `;
+  }
+
+  return updatedRows[0] ?? contract;
 }
 
 export async function activateContractAfterFullSignature(contractId: string) {
@@ -290,21 +439,19 @@ export async function activateContractAfterFullSignature(contractId: string) {
     VALUES (${contract.client_id}, 'contract_activated', ${JSON.stringify({ contractId, jobId: contract.job_id })})
   `;
 
-  await createNotification({
-    userId: contract.client_id,
-    type: "contract_signed",
-    title: "Contract Activated",
-    body: `The final PDF is ready and work for "${contract.job_title}" is now in progress.`,
-    linkHref: `/contracts/${contractId}`,
-  });
+  await createContractNotification(
+    contract.client_id,
+    "Contract Activated",
+    `The final PDF is ready and work for "${contract.job_title}" is now in progress.`,
+    `/contracts/${contractId}`,
+  );
 
-  await createNotification({
-    userId: contract.worker_id,
-    type: "contract_signed",
-    title: "Contract Activated",
-    body: `The final PDF is ready and work for "${contract.job_title}" is now in progress.`,
-    linkHref: `/contracts/${contractId}`,
-  });
+  await createContractNotification(
+    contract.worker_id,
+    "Contract Activated",
+    `The final PDF is ready and work for "${contract.job_title}" is now in progress.`,
+    `/contracts/${contractId}`,
+  );
 
   return updatedRows[0];
 }

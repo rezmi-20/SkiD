@@ -151,27 +151,27 @@ export default function FeaturesMatrix({ t }) {
   };
 
   return (
-    <section id="features" className="py-24 md:py-32 px-4 md:px-8 lg:px-16 bg-zinc-950">
+    <section id="features" className="py-12 sm:py-20 md:py-32 px-4 md:px-8 lg:px-16 bg-zinc-950">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8 md:mb-12 space-y-4">
-          <h2 className="text-4xl md:text-5xl xl:text-6xl font-black tracking-tighter text-white uppercase leading-[0.9] max-w-3xl mx-auto">
+        <div className="text-center mb-5 sm:mb-12 space-y-1.5 sm:space-y-4">
+          <h2 className="text-2xl sm:text-5xl xl:text-6xl font-black tracking-tighter text-white uppercase leading-[0.9] max-w-3xl mx-auto">
             {t("features.title").split(" ").slice(0, 3).join(" ")}{" "}
             <span className="text-green-400 italic">{t("features.title").split(" ").slice(3).join(" ")}</span>
           </h2>
-          <p className="text-zinc-500 text-base md:text-lg font-medium max-w-xl mx-auto leading-relaxed">
+          <p className="text-zinc-500 text-xs sm:text-base md:text-lg font-medium max-w-xl mx-auto leading-relaxed">
             {t("features.subtitle")}
           </p>
         </div>
 
         {/* Tabs */}
-        <div className="flex justify-center mb-8">
-          <div className="inline-flex items-center gap-1 p-1 bg-zinc-900/80 border border-white/5 rounded-2xl">
+        <div className="flex justify-center mb-5 sm:mb-8">
+          <div className="inline-flex items-center gap-1 p-1 bg-zinc-900/80 border border-white/5 rounded-xl sm:rounded-2xl max-w-full overflow-x-auto no-scrollbar">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-200 ${
+                className={`px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all duration-200 whitespace-nowrap ${
                   activeTab === tab.id
                     ? "bg-green-400 text-black shadow-[0_4px_16px_rgba(74,222,128,0.25)]"
                     : "text-zinc-500 hover:text-white"
@@ -191,22 +191,22 @@ export default function FeaturesMatrix({ t }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start"
+            className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 items-start"
           >
             {/* Feature list */}
-            <div className="p-6 xl:p-8 rounded-[2rem] bg-[#0c0c0e] border border-white/5">
-              <ul className="space-y-3">
+            <div className="p-4 sm:p-6 xl:p-8 rounded-2xl sm:rounded-[2rem] bg-[#0c0c0e] border border-white/5 text-left">
+              <ul className="space-y-2 sm:space-y-3">
                 {features[activeTab].map((feature, i) => (
-                  <li key={i} className="flex items-center gap-3">
+                  <li key={i} className="flex items-center gap-2 sm:gap-3">
                     <CheckIcon />
-                    <span className="text-zinc-300 text-sm font-medium">{feature}</span>
+                    <span className="text-zinc-300 text-xs sm:text-sm font-medium">{feature}</span>
                   </li>
                 ))}
               </ul>
-              <div className="mt-6 pt-6 border-t border-white/5">
+              <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-white/5">
                 <a
                   href={panelContent[activeTab].cta.href}
-                  className="inline-flex items-center gap-2 bg-green-400 text-black px-6 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-300 transition-all"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-green-400 text-black px-6 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-300 transition-all text-center"
                 >
                   {panelContent[activeTab].cta.label}
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -215,10 +215,10 @@ export default function FeaturesMatrix({ t }) {
             </div>
 
             {/* Visual preview */}
-            <div className="p-6 xl:p-8 rounded-[2rem] bg-zinc-900/50 border border-white/5 space-y-5">
+            <div className="p-4 sm:p-6 xl:p-8 rounded-2xl sm:rounded-[2rem] bg-zinc-900/50 border border-white/5 space-y-3 sm:space-y-5 text-left">
               <div>
-                <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">{panelContent[activeTab].badge}</span>
-                <h3 className={`text-xl md:text-2xl font-black uppercase tracking-tight ${panelContent[activeTab].accent} mt-1`}>
+                <span className="text-[8px] sm:text-[9px] font-black text-zinc-600 uppercase tracking-widest">{panelContent[activeTab].badge}</span>
+                <h3 className={`text-base sm:text-xl md:text-2xl font-black uppercase tracking-tight ${panelContent[activeTab].accent} mt-0.5 sm:mt-1`}>
                   {panelContent[activeTab].headline}
                 </h3>
               </div>

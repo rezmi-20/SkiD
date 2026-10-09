@@ -1,6 +1,7 @@
 import { sql } from "@/lib/db";
 import { AdminDashboardClient } from "@/components/admin/AdminDashboardClient";
 import { hasAdminPermission, requireAdmin } from "@/lib/admin-authorization";
+import { hasCompleteWorkerIdentity, toWorkerDisplayStatus } from "@/lib/worker-verification";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,12 @@ export default async function AdminDashboardPage() {
       JOIN users u ON u.id = wp.user_id
       WHERE wp.is_verified = false
          OR wp.verification_status IS DISTINCT FROM 'approved'
+         OR wp.fayda_doc_url IS NULL
+         OR length(wp.fayda_doc_url) = 0
+         OR wp.fin_last4 IS NULL
+         OR length(wp.fin_last4) <> 4
+         OR wp.fin_encrypted IS NULL
+         OR length(wp.fin_encrypted) = 0
          OR u.is_suspended = true
     ` : Promise.resolve([{ count: 0 }]),
     sql`SELECT COUNT(*)::int AS count FROM jobs WHERE status = 'active'`,
@@ -55,6 +62,8 @@ export default async function AdminDashboardPage() {
         THEN true
         ELSE false
       END AS has_document,
+      wp.fin_last4,
+      wp.fin_encrypted,
       wp.avatar_url,
       wp.verification_status,
       wp.is_verified,
@@ -66,10 +75,35 @@ export default async function AdminDashboardPage() {
     JOIN users u ON wp.user_id = u.id
     WHERE wp.is_verified = false
        OR wp.verification_status IS DISTINCT FROM 'approved'
+       OR wp.fayda_doc_url IS NULL
+       OR length(wp.fayda_doc_url) = 0
+       OR wp.fin_last4 IS NULL
+       OR length(wp.fin_last4) <> 4
+       OR wp.fin_encrypted IS NULL
+       OR length(wp.fin_encrypted) = 0
        OR u.is_suspended = true
     ORDER BY wp.created_at DESC
     LIMIT 10
   ` : [];
+
+  const pendingWorkers = (unverifiedWorkers || []).map((worker: any) => {
+    const identityComplete = hasCompleteWorkerIdentity({
+      documentRef: worker.has_document ? "present" : "",
+      finLast4: worker.fin_last4,
+      finEncrypted: worker.fin_encrypted,
+    });
+    return {
+      ...worker,
+      verification_status: toWorkerDisplayStatus(
+        worker.verification_status,
+        worker.is_verified,
+        worker.is_suspended,
+        identityComplete,
+      ),
+      is_verified: Boolean(worker.is_verified && identityComplete),
+      identity_complete: identityComplete,
+    };
+  });
 
   // ── Activity Feed ───────────────────────────────────────────────────
   const recentUsers = await sql`
@@ -104,7 +138,7 @@ export default async function AdminDashboardPage() {
       revenueDisplay={revenueDisplay}
       disputeCount={disputeCount[0]?.count ?? 0}
       activityFeed={activityFeed}
-      unverifiedWorkers={unverifiedWorkers as any[]}
+      unverifiedWorkers={pendingWorkers as any[]}
       verificationCapabilities={verificationCapabilities}
     />
   );
