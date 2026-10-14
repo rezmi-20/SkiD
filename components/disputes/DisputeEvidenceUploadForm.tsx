@@ -2,17 +2,32 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  FileText,
+  Film,
+  Image as ImageIcon,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  X,
+  Plus,
+} from "lucide-react";
 
 type Props = {
   disputeId: string;
   action: (formData: FormData) => Promise<{ success: boolean; error?: string; status?: number } | void>;
 };
 
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export default function DisputeEvidenceUploadForm({ disputeId, action }: Props) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [mode, setMode] = useState<"file" | "url">("file");
-  const [uploading, setUploading] = useState(false);
+  const [uploadingCategory, setUploadingCategory] = useState<"photo" | "video" | "pdf" | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -22,57 +37,87 @@ export default function DisputeEvidenceUploadForm({ disputeId, action }: Props) 
   const [evidenceName, setEvidenceName] = useState("");
   const [evidenceMime, setEvidenceMime] = useState("image/png");
   const [evidenceSize, setEvidenceSize] = useState(1024);
+  const [selectedCategory, setSelectedCategory] = useState<"photo" | "video" | "pdf">("photo");
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const resetForm = () => {
+    setEvidenceUrl("");
+    setEvidenceName("");
+    setError(null);
+    setSuccess(null);
+    setUploadingCategory(null);
+    if (photoInputRef.current) photoInputRef.current.value = "";
+    if (videoInputRef.current) videoInputRef.current.value = "";
+    if (pdfInputRef.current) pdfInputRef.current.value = "";
+  };
+
+  const handleFileSelect = async (category: "photo" | "video" | "pdf", file?: File) => {
     if (!file) return;
-
     setError(null);
     setSuccess(null);
 
-    // Validate size (max 8MB)
-    if (file.size > 8 * 1024 * 1024) {
-      setError("File exceeds maximum allowed size of 8 MB.");
-      return;
-    }
-
     const mime = file.type || "application/octet-stream";
-    const allowed = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
-    if (!allowed.includes(mime)) {
-      setError("Supported file types are PNG, JPEG, WebP, and PDF.");
-      return;
+
+    if (category === "photo") {
+      if (!mime.startsWith("image/")) {
+        setError("Please choose a valid photo (PNG, JPG, WebP).");
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        setError("Photo must be under 10 MB.");
+        return;
+      }
+    } else if (category === "video") {
+      if (!mime.startsWith("video/")) {
+        setError("Please choose a valid video clip (MP4, WebM, MOV).");
+        return;
+      }
+      if (file.size > 35 * 1024 * 1024) {
+        setError("Video must be under 35 MB.");
+        return;
+      }
+    } else if (category === "pdf") {
+      if (mime !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+        setError("Please choose a valid PDF document.");
+        return;
+      }
+      if (file.size > 20 * 1024 * 1024) {
+        setError("PDF document must be under 20 MB.");
+        return;
+      }
     }
 
-    setEvidenceName(file.name);
-    setEvidenceMime(mime);
+    const cleanedName = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+    setEvidenceName(cleanedName);
+    setEvidenceMime(category === "pdf" ? "application/pdf" : mime);
     setEvidenceSize(file.size);
+    setSelectedCategory(category);
 
-    // If it's an image, upload via /api/upload
-    if (file.type.startsWith("image/")) {
-      setUploading(true);
-      try {
-        const body = new FormData();
-        body.append("file", file);
-        const res = await fetch("/api/upload", { method: "POST", body });
-        const data = await res.json();
-        if (res.ok && data.url) {
-          setEvidenceUrl(data.url);
-          setSuccess("Image uploaded to secure storage. Ready to attach.");
-        } else {
-          setError(data.error || "Storage upload failed. You can switch to URL mode to provide a link.");
-          setMode("url");
-        }
-      } catch {
-        setError("Failed to upload file. Please check connection or provide a document link.");
-        setMode("url");
-      } finally {
-        setUploading(false);
+    setUploadingCategory(category);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body,
+        signal: AbortSignal.timeout(15000),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setEvidenceUrl(data.url);
+        setSuccess(`Evidence ${category} file uploaded and ready to attach.`);
+      } else {
+        setError(data.error || "Upload storage failed. Please try again.");
       }
-    } else {
-      // PDF or non-image
-      setSuccess("Document selected. If secure upload is external, confirm or provide the document URL.");
+    } catch {
+      setError("Network timeout during upload. Please try again.");
+    } finally {
+      setUploadingCategory(null);
     }
   };
 
@@ -81,7 +126,7 @@ export default function DisputeEvidenceUploadForm({ disputeId, action }: Props) 
     if (submitting) return;
 
     if (!evidenceUrl.trim()) {
-      setError("Evidence storage URL is required.");
+      setError("Please choose and upload a photo, video, or PDF file first.");
       return;
     }
 
@@ -104,14 +149,11 @@ export default function DisputeEvidenceUploadForm({ disputeId, action }: Props) 
       }
 
       setSuccess("Evidence attached successfully!");
-      setEvidenceUrl("");
-      setEvidenceName("");
-      if (fileInputRef.current) fileInputRef.current.value = "";
       setTimeout(() => {
         setIsOpen(false);
-        setSuccess(null);
+        resetForm();
         router.refresh();
-      }, 1000);
+      }, 700);
     } catch (err: any) {
       setError(err?.message || "An unexpected error occurred.");
     } finally {
@@ -121,155 +163,225 @@ export default function DisputeEvidenceUploadForm({ disputeId, action }: Props) 
 
   if (!isOpen) {
     return (
-      <div className="mt-4">
-        <button
-          type="button"
-          onClick={() => setIsOpen(true)}
-          className="inline-flex h-10 items-center justify-center rounded-lg border border-primary/40 bg-primary/10 px-4 text-xs font-black uppercase tracking-widest text-primary transition-colors hover:bg-primary/20"
-        >
-          + Upload Additional Evidence
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={() => {
+          resetForm();
+          setIsOpen(true);
+        }}
+        className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-bold text-foreground hover:bg-accent/60 transition-colors shadow-xs"
+      >
+        <Plus className="h-3.5 w-3.5 text-primary" />
+        Upload Evidence (Photo, Video, or PDF)
+      </button>
     );
   }
 
   return (
-    <div className="mt-4 rounded-xl border border-primary/20 bg-surface-container-low p-4">
-      <div className="flex items-center justify-between border-b border-outline-variant/50 pb-3">
+    <div className="rounded-md border border-border/80 bg-card p-4 space-y-4 shadow-2xs">
+      <div className="flex items-center justify-between border-b border-border/60 pb-3">
         <div>
-          <h3 className="text-xs font-black uppercase tracking-widest text-on-surface">Upload Dispute Evidence</h3>
-          <p className="mt-0.5 text-xs text-on-surface-variant">
-            Attach photos, receipts, or documents supporting your claim (PNG, JPG, WebP, PDF up to 8MB).
+          <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+            Attach Dispute Evidence
+          </h3>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
+            Choose from 3 evidence formats: Photo, Video, or PDF document.
           </p>
         </div>
         <button
           type="button"
           onClick={() => {
             setIsOpen(false);
-            setError(null);
-            setSuccess(null);
+            resetForm();
           }}
-          className="text-xs font-bold text-on-surface-variant hover:text-on-surface"
+          className="text-muted-foreground hover:text-foreground p-1 transition-colors"
         >
-          Cancel
-        </button>
-      </div>
-
-      <div className="mt-3 flex gap-2">
-        <button
-          type="button"
-          onClick={() => setMode("file")}
-          className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
-            mode === "file" ? "bg-surface-container-highest text-on-surface" : "text-on-surface-variant hover:bg-surface-container"
-          }`}
-        >
-          Upload File
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("url")}
-          className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
-            mode === "url" ? "bg-surface-container-highest text-on-surface" : "text-on-surface-variant hover:bg-surface-container"
-          }`}
-        >
-          Storage URL
+          <X className="h-4 w-4" />
         </button>
       </div>
 
       {error && (
-        <div className="mt-3 rounded-lg border border-error/30 bg-error/10 p-3 text-xs font-bold text-error">
-          {error}
+        <div className="flex items-start gap-2 rounded-md border border-destructive/25 bg-destructive/10 p-2.5 text-xs text-destructive font-semibold">
+          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+          <span>{error}</span>
         </div>
       )}
 
       {success && (
-        <div className="mt-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs font-bold text-emerald-700 dark:text-emerald-300">
-          {success}
+        <div className="flex items-center gap-2 rounded-md border border-emerald-500/20 bg-emerald-500/10 p-2.5 text-xs text-emerald-700 dark:text-emerald-300 font-semibold">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
+          <span>{success}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="mt-3 space-y-3">
-        {mode === "file" ? (
-          <div>
-            <label className="block text-[10px] font-black uppercase tracking-wider text-on-surface-variant">
-              Select Document or Photo
-            </label>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".png,.jpg,.jpeg,.webp,.pdf,image/png,image/jpeg,image/webp,application/pdf"
-              onChange={handleFileChange}
-              disabled={uploading || submitting}
-              className="mt-1 block w-full text-xs text-on-surface-variant file:mr-3 file:rounded-lg file:border-0 file:bg-surface-container-highest file:px-3 file:py-2 file:text-xs file:font-bold file:text-on-surface hover:file:bg-primary hover:file:text-on-primary"
-            />
-            {uploading && <p className="mt-1 text-xs text-primary animate-pulse">Uploading file to secure storage...</p>}
-          </div>
-        ) : null}
-
-        <div>
-          <label className="block text-[10px] font-black uppercase tracking-wider text-on-surface-variant">
-            Evidence Title / Description
-          </label>
-          <input
-            type="text"
-            required
-            maxLength={120}
-            value={evidenceName}
-            onChange={(e) => setEvidenceName(e.target.value)}
-            placeholder="e.g. Work site photos, completion receipt, repair invoice"
-            disabled={submitting}
-            className="mt-1 w-full rounded-lg border border-outline-variant bg-surface-container p-2.5 text-xs text-on-surface"
-          />
-        </div>
-
-        {mode === "url" && (
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="sm:col-span-2">
-              <label className="block text-[10px] font-black uppercase tracking-wider text-on-surface-variant">
-                Trusted Storage URL
-              </label>
-              <input
-                type="url"
-                required
-                value={evidenceUrl}
-                onChange={(e) => setEvidenceUrl(e.target.value)}
-                placeholder="https://res.cloudinary.com/..."
-                disabled={submitting}
-                className="mt-1 w-full rounded-lg border border-outline-variant bg-surface-container p-2.5 text-xs text-on-surface"
-              />
+      {/* 3 Upload Cards */}
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+        {/* 1. Photo */}
+        <div className="rounded-md border border-border/90 bg-muted/20 p-3 flex flex-col justify-between space-y-2.5">
+          <div className="flex items-center gap-2">
+            <div className="rounded-md bg-emerald-500/10 p-1.5 text-emerald-700 dark:text-emerald-300">
+              <ImageIcon className="h-4 w-4" />
             </div>
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-wider text-on-surface-variant">
-                File Type
+              <p className="text-xs font-bold text-foreground">Photo</p>
+              <p className="text-[10px] text-muted-foreground">PNG, JPG (&lt;10MB)</p>
+            </div>
+          </div>
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            onChange={(e) => handleFileSelect("photo", e.target.files?.[0])}
+            disabled={uploadingCategory !== null || submitting}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => photoInputRef.current?.click()}
+            disabled={uploadingCategory !== null || submitting}
+            className="w-full inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-bold text-foreground hover:bg-accent/60 transition-colors disabled:opacity-50"
+          >
+            {uploadingCategory === "photo" ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Plus className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                Choose Photo
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* 2. Video */}
+        <div className="rounded-md border border-border/90 bg-muted/20 p-3 flex flex-col justify-between space-y-2.5">
+          <div className="flex items-center gap-2">
+            <div className="rounded-md bg-blue-500/10 p-1.5 text-blue-700 dark:text-blue-300">
+              <Film className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-foreground">Video</p>
+              <p className="text-[10px] text-muted-foreground">MP4, MOV (&lt;35MB)</p>
+            </div>
+          </div>
+          <input
+            ref={videoInputRef}
+            type="file"
+            accept="video/mp4,video/webm,video/quicktime,video/ogg"
+            onChange={(e) => handleFileSelect("video", e.target.files?.[0])}
+            disabled={uploadingCategory !== null || submitting}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => videoInputRef.current?.click()}
+            disabled={uploadingCategory !== null || submitting}
+            className="w-full inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-bold text-foreground hover:bg-accent/60 transition-colors disabled:opacity-50"
+          >
+            {uploadingCategory === "video" ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Plus className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                Choose Video
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* 3. PDF Document */}
+        <div className="rounded-md border border-border/90 bg-muted/20 p-3 flex flex-col justify-between space-y-2.5">
+          <div className="flex items-center gap-2">
+            <div className="rounded-md bg-amber-500/10 p-1.5 text-amber-700 dark:text-amber-300">
+              <FileText className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-foreground">Document</p>
+              <p className="text-[10px] text-muted-foreground">PDF (&lt;20MB)</p>
+            </div>
+          </div>
+          <input
+            ref={pdfInputRef}
+            type="file"
+            accept="application/pdf,.pdf"
+            onChange={(e) => handleFileSelect("pdf", e.target.files?.[0])}
+            disabled={uploadingCategory !== null || submitting}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => pdfInputRef.current?.click()}
+            disabled={uploadingCategory !== null || submitting}
+            className="w-full inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-bold text-foreground hover:bg-accent/60 transition-colors disabled:opacity-50"
+          >
+            {uploadingCategory === "pdf" ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Plus className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                Choose PDF
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-3 pt-1">
+        {evidenceUrl && (
+          <div className="rounded-md bg-muted/40 p-3 border border-border/70 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-foreground">Selected File Ready:</span>
+              <span className="text-muted-foreground">{formatBytes(evidenceSize)}</span>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                Evidence Title / Label
               </label>
-              <select
-                value={evidenceMime}
-                onChange={(e) => setEvidenceMime(e.target.value)}
+              <input
+                type="text"
+                required
+                maxLength={120}
+                value={evidenceName}
+                onChange={(e) => setEvidenceName(e.target.value)}
+                placeholder="e.g. Workmanship defect photo, signed agreement, site recording"
                 disabled={submitting}
-                className="mt-1 w-full rounded-lg border border-outline-variant bg-surface-container p-2.5 text-xs text-on-surface"
-              >
-                <option value="image/png">PNG Image</option>
-                <option value="image/jpeg">JPEG Image</option>
-                <option value="image/webp">WEBP Image</option>
-                <option value="application/pdf">PDF Document</option>
-              </select>
+                className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary focus:border-primary"
+              />
             </div>
           </div>
         )}
 
-        <div className="flex items-center gap-3 pt-2">
+        <div className="flex items-center gap-2 pt-1">
           <button
             type="submit"
-            disabled={uploading || submitting || (!evidenceUrl && mode === "file")}
-            className="h-10 rounded-lg bg-primary px-4 text-xs font-black uppercase tracking-widest text-on-primary transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={uploadingCategory !== null || submitting || !evidenceUrl}
+            className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-primary px-4 text-xs font-bold uppercase tracking-wider text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:pointer-events-none transition-opacity shadow-xs"
           >
-            {submitting ? "Attaching..." : "Attach Evidence"}
+            {submitting ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Attaching to Case...
+              </>
+            ) : (
+              "Attach Evidence"
+            )}
           </button>
           <button
             type="button"
-            onClick={() => setIsOpen(false)}
+            onClick={() => {
+              setIsOpen(false);
+              resetForm();
+            }}
             disabled={submitting}
-            className="h-10 rounded-lg border border-outline-variant px-4 text-xs font-bold text-on-surface-variant hover:bg-surface-container"
+            className="h-9 rounded-md border border-border px-3 text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors"
           >
             Cancel
           </button>

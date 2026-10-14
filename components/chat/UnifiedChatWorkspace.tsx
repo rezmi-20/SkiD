@@ -27,6 +27,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { getProfileData } from "@/lib/actions/profile";
+import { playNotificationSound } from "@/lib/sound";
 
 interface Conversation {
   id: string;
@@ -189,36 +190,66 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
     }
   }, [conversationId]);
 
+  const initialMountRef = useRef(false);
+  const convPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   // Fetch Messages for current conversation
   const fetchMessages = useCallback(async () => {
     if (!conversationId) return;
     try {
-      const res = await fetch(`/api/conversations/${conversationId}/messages`);
+      const res = await fetch(`/api/conversations/${conversationId}/messages`, { cache: "no-store" });
       if (!res.ok) return;
       const data = await res.json();
-      setMessages(data.messages || []);
+      const newMessages: Message[] = data.messages || [];
+
+      setMessages((prev) => {
+        const prevIds = new Set(prev.map((m) => m.id));
+        const hasNewOtherMsg = newMessages.some(
+          (m: Message) => !prevIds.has(m.id) && m.sender_id !== myProfile?.id
+        );
+
+        if (initialMountRef.current && hasNewOtherMsg) {
+          playNotificationSound();
+        }
+
+        if (newMessages.length >= prev.length || hasNewOtherMsg) {
+          return newMessages;
+        }
+        return prev;
+      });
     } catch (e) {
       console.error(e);
     }
-  }, [conversationId]);
+  }, [conversationId, myProfile?.id]);
 
-  // Initial load
+  // Initial load and periodic conversation list polling (every 4s)
   useEffect(() => {
     fetchConversations();
+
+    if (convPollingRef.current) clearInterval(convPollingRef.current);
+    convPollingRef.current = setInterval(fetchConversations, 4000);
+
+    return () => {
+      if (convPollingRef.current) clearInterval(convPollingRef.current);
+    };
   }, [fetchConversations]);
 
-  // Initial load of messages & start polling
+  // Initial load of messages & start fast polling (every 2.5s)
   useEffect(() => {
     if (conversationId) {
       setLoadingMessages(true);
-      fetchMessages().finally(() => setLoadingMessages(false));
-      
+      fetchMessages().finally(() => {
+        setLoadingMessages(false);
+        initialMountRef.current = true;
+      });
+
       if (pollingRef.current) clearInterval(pollingRef.current);
-      pollingRef.current = setInterval(fetchMessages, 3000);
+      pollingRef.current = setInterval(fetchMessages, 2500);
     } else {
       setMessages([]);
       setCurrentConv(null);
       setOtherWorkerProfile(null);
+      initialMountRef.current = false;
     }
 
     return () => {
@@ -272,10 +303,36 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
 
   const sendMessage = async () => {
     if (sending || uploading) return;
-    if (!text.trim() && !imageFile) return;
+    const pendingBody = text.trim();
+    if (!pendingBody && !imageFile) return;
 
     setSending(true);
     setError(null);
+
+    // Optimistic UI append
+    const optimisticId = `temp-${Date.now()}`;
+    const optimisticMsg: Message = {
+      id: optimisticId,
+      sender_id: myProfile?.id || "me",
+      body: pendingBody || null,
+      image_url: imagePreview,
+      created_at: new Date().toISOString(),
+      sender_name: myProfile?.name || "You",
+      sender_avatar: null,
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+    setText("");
+
+    // Update conversation last snippet in sidebar immediately
+    if (conversationId) {
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === conversationId
+            ? { ...c, last_body: pendingBody || "Photo", last_at: new Date().toISOString() }
+            : c
+        )
+      );
+    }
 
     try {
       let imageUrl: string | null = null;
@@ -287,6 +344,8 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
         const uploadRes = await fetch("/api/upload", { method: "POST", body: fd });
         if (!uploadRes.ok) {
           setError("Failed to upload image. Please try again.");
+          setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
+          setText(pendingBody);
           setSending(false);
           setUploading(false);
           return;
@@ -299,21 +358,24 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
       const res = await fetch(`/api/conversations/${conversationId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: text.trim() || null, imageUrl }),
+        body: JSON.stringify({ body: pendingBody || null, imageUrl }),
       });
 
       if (!res.ok) {
         const data = await res.json();
         setError(data.error || "Failed to send message");
+        setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
+        setText(pendingBody);
         return;
       }
 
-      setText("");
       clearImage();
       await fetchMessages();
       fetchConversations();
     } catch {
       setError("Connection error. Please try again.");
+      setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
+      setText(pendingBody);
     } finally {
       setSending(false);
     }

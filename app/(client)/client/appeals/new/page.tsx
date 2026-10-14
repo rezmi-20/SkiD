@@ -1,44 +1,58 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { createAppeal } from "@/lib/actions/governance";
-import { APPEAL_REASONS, APPEAL_TYPES } from "@/lib/governance-constants";
+import { auth } from "@/lib/auth";
+import { sql } from "@/lib/db";
+import AppealForm, { EligibleDispute } from "@/components/governance/AppealForm";
 
 export const dynamic = "force-dynamic";
 
-export default function NewClientAppealPage() {
-  async function submit(formData: FormData) {
-    "use server";
-    const result = await createAppeal({
-      appealType: String(formData.get("appealType") || "") as any,
-      targetId: String(formData.get("targetId") || ""),
-      reason: String(formData.get("reason") || "") as any,
-      explanation: String(formData.get("explanation") || ""),
-      evidenceReferences: String(formData.get("evidenceReferences") || "").split(",").map((v) => v.trim()).filter(Boolean),
-    });
-    if (!result.success) throw new Error(result.error);
-    redirect("/client/appeals");
-  }
+export default async function NewClientAppealPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ targetId?: string; appealType?: string }>;
+}) {
+  const session = await auth();
+  const params = searchParams ? await searchParams : {};
+  const defaultTargetId = params.targetId || "";
+  const defaultAppealType = params.appealType || "dispute_resolution";
 
-  return <AppealForm role="client" submit={submit} />;
-}
+  // Query eligible resolved disputes for client with any active appeal status
+  const eligibleDisputes: EligibleDispute[] = session?.user?.id
+    ? (
+        await sql`
+          SELECT 
+            d.id, 
+            d.title, 
+            d.final_decision, 
+            d.resolved_at,
+            a.id AS existing_appeal_id,
+            a.reference AS existing_appeal_reference,
+            a.status AS existing_appeal_status
+          FROM disputes d
+          LEFT JOIN appeals a 
+            ON a.target_id = d.id 
+            AND a.appellant_user_id = ${session.user.id}
+            AND a.status IN ('appeal_requested', 'appeal_under_review')
+          WHERE d.client_id = ${session.user.id}
+            AND d.status = 'resolved'
+          ORDER BY d.resolved_at DESC
+          LIMIT 10
+        `
+      ).map((row: any) => ({
+        id: String(row.id),
+        title: String(row.title || "Dispute Case"),
+        final_decision: String(row.final_decision || "Resolved"),
+        resolved_at: row.resolved_at,
+        existingAppealId: row.existing_appeal_id ? String(row.existing_appeal_id) : null,
+        existingAppealReference: row.existing_appeal_reference ? String(row.existing_appeal_reference) : null,
+        existingAppealStatus: row.existing_appeal_status ? String(row.existing_appeal_status) : null,
+      }))
+    : [];
 
-function AppealForm({ role, submit }: { role: "client"; submit: (formData: FormData) => Promise<void> }) {
   return (
-    <div className="mx-auto max-w-3xl space-y-6 pb-20">
-      <Link href={`/${role}/appeals`} className="text-xs font-black uppercase tracking-widest text-primary">Back to appeals</Link>
-      <header><p className="text-xs font-black uppercase tracking-widest text-primary">Appeal</p><h1 className="text-3xl font-black">Request governance review</h1></header>
-      <form action={submit} className="space-y-4 rounded-2xl border border-outline-variant bg-surface-container-lowest p-5">
-        <select name="appealType" required className="w-full rounded-lg border border-outline-variant bg-surface-container p-3 text-sm">
-          {APPEAL_TYPES.map((value) => <option key={value} value={value}>{value.replaceAll("_", " ")}</option>)}
-        </select>
-        <input name="targetId" required placeholder="Original decision ID" className="w-full rounded-lg border border-outline-variant bg-surface-container p-3 text-sm" />
-        <select name="reason" required className="w-full rounded-lg border border-outline-variant bg-surface-container p-3 text-sm">
-          {APPEAL_REASONS.map((value) => <option key={value} value={value}>{value.replaceAll("_", " ")}</option>)}
-        </select>
-        <textarea name="explanation" required rows={6} placeholder="Explain what changed or what was incorrect" className="w-full rounded-lg border border-outline-variant bg-surface-container p-3 text-sm" />
-        <input name="evidenceReferences" placeholder="Evidence references, comma separated" className="w-full rounded-lg border border-outline-variant bg-surface-container p-3 text-sm" />
-        <button className="h-11 rounded-lg bg-primary px-4 text-xs font-black uppercase tracking-widest text-on-primary">Submit Appeal</button>
-      </form>
-    </div>
+    <AppealForm
+      role="client"
+      defaultTargetId={defaultTargetId}
+      defaultAppealType={defaultAppealType}
+      eligibleDisputes={eligibleDisputes}
+    />
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { Loader2, RefreshCw, CheckCircle2, Receipt, Printer, CreditCard, ShieldCheck } from "lucide-react";
 
 type Step = "ready" | "processing" | "awaiting" | "confirmed" | "paid";
 
@@ -320,7 +321,7 @@ export default function PaymentPageContent({
           {step === "awaiting" && (
             <div className="space-y-4 border-t border-surface-variant pt-4">
               <div className="flex flex-col items-center gap-3 rounded-lg bg-surface-container-low px-4 py-6 text-center">
-                <span className="material-symbols-outlined animate-spin text-[36px] text-primary">progress_activity</span>
+                <Loader2 className="h-9 w-9 animate-spin text-primary" />
                 <p className="text-sm font-bold text-on-surface">Waiting for payment confirmation…</p>
                 <p className="text-xs leading-5 text-on-surface-variant">
                   Complete your payment in the Chapa tab that just opened.<br />
@@ -331,10 +332,10 @@ export default function PaymentPageContent({
               </div>
               <button
                 onClick={handleManualVerify}
-                className="flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-primary text-sm font-bold text-primary hover:bg-primary/10"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-primary text-sm font-bold text-primary hover:bg-primary/10 transition"
               >
-                <span className="material-symbols-outlined text-[18px]">refresh</span>
-                I have paid — Check Status
+                <RefreshCw className="h-4 w-4" />
+                <span>I have paid — Check Status</span>
               </button>
             </div>
           )}
@@ -343,7 +344,7 @@ export default function PaymentPageContent({
           {step === "confirmed" && confirmedData && (
             <div className="space-y-3 border-t border-surface-variant pt-4">
               <div className="flex flex-col items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 px-4 py-5 text-center">
-                <span className="material-symbols-outlined text-[36px] text-primary">check_circle</span>
+                <CheckCircle2 className="h-9 w-9 text-primary" />
                 <p className="text-sm font-bold text-primary">Payment Confirmed!</p>
                 <p className="text-xs text-on-surface-variant">The payment has been verified and released to the worker.</p>
               </div>
@@ -352,15 +353,15 @@ export default function PaymentPageContent({
                   href={`/api/payments/${confirmedData.paymentId}/receipt`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-surface-variant text-sm font-bold text-on-surface hover:bg-surface-container-high"
+                  className="flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-surface-variant text-sm font-bold text-on-surface hover:bg-surface-container-high transition"
                 >
-                  <span className="material-symbols-outlined text-[18px]">receipt_long</span>
-                  Download PDF Receipt
+                  <Receipt className="h-4 w-4" />
+                  <span>Download PDF Receipt</span>
                 </a>
               )}
               <button
                 onClick={() => router.push("/client/contracts")}
-                className="flex h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-bold text-on-primary"
+                className="flex h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-bold text-on-primary hover:opacity-95 transition"
               >
                 Back to Contracts
               </button>
@@ -372,14 +373,14 @@ export default function PaymentPageContent({
             <div className="flex flex-col gap-2 border-t border-surface-variant pt-4 sm:flex-row">
               <button
                 onClick={() => window.print()}
-                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-surface-variant text-sm font-bold text-on-surface hover:bg-surface-container-high"
+                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-surface-variant text-sm font-bold text-on-surface hover:bg-surface-container-high transition"
               >
-                <span className="material-symbols-outlined text-[18px]">print</span>
-                Print
+                <Printer className="h-4 w-4" />
+                <span>Print</span>
               </button>
               <button
                 onClick={() => router.push("/client/contracts")}
-                className="flex h-11 flex-1 items-center justify-center rounded-lg bg-primary px-4 text-sm font-bold text-on-primary"
+                className="flex h-11 flex-1 items-center justify-center rounded-lg bg-primary px-4 text-sm font-bold text-on-primary hover:opacity-95 transition"
               >
                 Back to Contracts
               </button>
@@ -399,12 +400,14 @@ export default function PaymentPageContent({
               <button
                 onClick={handlePay}
                 disabled={isProcessing}
-                className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-on-primary disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-on-primary disabled:cursor-not-allowed disabled:opacity-60 transition"
               >
-                <span className="material-symbols-outlined text-[18px]">
-                  {isProcessing ? "progress_activity" : "payments"}
-                </span>
-                {isProcessing ? "Opening Chapa…" : `Pay ${formatMoney(amount)}`}
+                {isProcessing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CreditCard className="h-4 w-4" />
+                )}
+                <span>{isProcessing ? "Opening Chapa…" : `Pay ${formatMoney(amount)}`}</span>
               </button>
             </div>
           )}

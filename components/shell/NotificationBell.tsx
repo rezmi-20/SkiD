@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Bell, BellDot } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { playNotificationSound } from "@/lib/sound";
 
 export default function NotificationBell({ role }: { role: "client" | "worker" }) {
   const [count, setCount] = useState(0);
+  const prevCountRef = useRef<number | null>(null);
   const inFlightRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
   const href = role === "client" ? "/client/notifications" : "/worker/notifications";
@@ -34,6 +35,11 @@ export default function NotificationBell({ role }: { role: "client" | "worker" }
 
         const data = await response.json().catch(() => null);
         if (typeof data?.count === "number") {
+          // Play notification chime when new notifications enter while user is active
+          if (prevCountRef.current !== null && data.count > prevCountRef.current) {
+            playNotificationSound();
+          }
+          prevCountRef.current = data.count;
           setCount(data.count);
         }
       } catch {
@@ -47,11 +53,24 @@ export default function NotificationBell({ role }: { role: "client" | "worker" }
     }
 
     loadUnreadCount();
-    const interval = window.setInterval(loadUnreadCount, 60_000);
+
+    // Check every 10 seconds for real-time notification updates
+    const interval = window.setInterval(loadUnreadCount, 10_000);
+
+    // Refresh immediately whenever the tab comes into focus
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        loadUnreadCount();
+      }
+    };
+    window.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("focus", loadUnreadCount);
 
     return () => {
       active = false;
       window.clearInterval(interval);
+      window.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("focus", loadUnreadCount);
       abortRef.current?.abort();
     };
   }, [role]);
@@ -65,14 +84,15 @@ export default function NotificationBell({ role }: { role: "client" | "worker" }
         "text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
       )}
     >
-      {count > 0 ? <BellDot size={18} /> : <Bell size={18} />}
+      {count > 0 ? (
+        <BellDot size={18} className="text-primary animate-pulse" />
+      ) : (
+        <Bell size={18} />
+      )}
       {count > 0 && (
-        <Badge
-          variant="destructive"
-          className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full text-[9px] font-black px-1 flex items-center justify-center border-2 border-background"
-        >
+        <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-black text-on-primary ring-2 ring-background shadow-sm">
           {count > 99 ? "99+" : count}
-        </Badge>
+        </span>
       )}
     </Link>
   );

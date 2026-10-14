@@ -17,12 +17,21 @@ export function isTrustedUploadReference(
   const text = value.trim();
   if (!text) return false;
 
+  // Allow local uploaded files served via /uploads/...
+  if (text.startsWith("/uploads/")) {
+    return true;
+  }
+
   if (options.allowDataImage && DATA_IMAGE_PREFIX.test(text)) {
     return text.length <= MAX_DATA_IMAGE_LENGTH;
   }
 
   try {
     const url = new URL(text);
+    // Allow localhost in development
+    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+      return url.pathname.startsWith("/uploads/");
+    }
     if (url.protocol !== "https:") return false;
     const host = url.hostname.toLowerCase();
     return trustedUploadHosts().some((trustedHost) => host === trustedHost || host.endsWith(`.${trustedHost}`));

@@ -294,6 +294,36 @@ export async function getUserSupportTickets(query = "", status = "all") {
   `;
 }
 
+export async function getUserSupportRecords() {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) return { jobs: [], contracts: [] };
+    const userId = session.user.id;
+    const isWorker = session.user.role === "worker";
+    const userCol = isWorker ? "worker_id" : "client_id";
+
+    const [jobs, contracts] = await Promise.all([
+      sql.query(
+        `SELECT id, title, status FROM jobs WHERE ${userCol} = $1 ORDER BY updated_at DESC LIMIT 20`,
+        [userId]
+      ),
+      sql.query(
+        `SELECT c.id, c.status, c.payment_amount, j.title AS job_title
+         FROM contracts c
+         JOIN jobs j ON j.id = c.job_id
+         WHERE j.${userCol} = $1
+         ORDER BY c.updated_at DESC LIMIT 20`,
+        [userId]
+      ),
+    ]);
+
+    return { jobs: jobs || [], contracts: contracts || [] };
+  } catch (error) {
+    console.error("getUserSupportRecords error:", error);
+    return { jobs: [], contracts: [] };
+  }
+}
+
 export async function getUserSupportTicketDetails(ticketId: string) {
   const session = await auth();
   if (!session?.user?.id) return null;
@@ -334,7 +364,7 @@ export async function getUserSupportTicketDetails(ticketId: string) {
   if (!ticket) return null;
   const [messages, events, attachments] = await Promise.all([
     sql`
-      SELECT actor_type, message, created_at
+      SELECT id, actor_type, message, created_at
       FROM support_messages
       WHERE ticket_id = ${ticketId}
       ORDER BY created_at ASC
@@ -474,7 +504,7 @@ export async function getAdminSupportTicketDetails(ticketId: string) {
   const ticket = rows[0] ?? null;
   if (!ticket) return null;
   const [messages, events, notes, attachments] = await Promise.all([
-    sql`SELECT actor_type, message, created_at FROM support_messages WHERE ticket_id = ${ticketId} ORDER BY created_at ASC`,
+    sql`SELECT id, actor_type, message, created_at FROM support_messages WHERE ticket_id = ${ticketId} ORDER BY created_at ASC`,
     sql`SELECT event_type, actor_type, old_status, new_status, metadata, created_at FROM support_events WHERE ticket_id = ${ticketId} ORDER BY created_at ASC`,
     sql`
       SELECT n.note, n.created_at, ae.full_name AS admin_name
@@ -507,6 +537,9 @@ export async function claimSupportTicket(ticketId: string, expectedVersion: numb
   if (error) return { success: false, status: 403, error };
   const ticket = await getTicketForAdmin(ticketId);
   if (!ticket) return { success: false, status: 404, error: "Support ticket not found." };
+  if (ticket.assigned_admin_id === admin.id) {
+    return { success: true, status: 200, message: "Already assigned to you." };
+  }
   const assignedToOther = ticket.assigned_admin_id && ticket.assigned_admin_id !== admin.id;
   const text = cleanText(reason, 1000);
   if (assignedToOther && text.length < 10) return { success: false, status: 409, error: "Reassignment requires a reason." };

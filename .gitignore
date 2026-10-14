@@ -40,3 +40,8 @@ next-env.d.ts
 .tools/
 scratch/
 .agents/
+
+# user uploaded test files
+/public/uploads/*
+!/public/uploads/.gitkeep
+

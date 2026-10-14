@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { verifyAndReleasePayment, type PaymentProcessingResult } from "@/lib/payment-processing";
+import { CheckCircle2, AlertCircle, Receipt, LayoutDashboard, CreditCard } from "lucide-react";
 
 
 
@@ -111,9 +112,11 @@ export default async function PaymentSuccessPage({
               <div
                 className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-lg border ${statusTone(result.success)}`}
               >
-                <span className="material-symbols-outlined text-[22px]">
-                  {result.success ? "check_circle" : "error"}
-                </span>
+                {result.success ? (
+                  <CheckCircle2 className="h-6 w-6 text-primary" />
+                ) : (
+                  <AlertCircle className="h-6 w-6 text-error" />
+                )}
               </div>
               <h1 className="text-2xl font-bold tracking-tight text-on-surface">
                 {result.success ? "Payment Confirmed" : "Payment Not Confirmed"}
@@ -147,8 +150,8 @@ export default async function PaymentSuccessPage({
                 rel="noopener noreferrer"
                 className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary hover:bg-primary/95 px-4 text-sm font-bold text-on-primary transition-colors duration-200"
               >
-                <span className="material-symbols-outlined text-[18px]">receipt_long</span>
-                Download PDF Receipt
+                <Receipt className="h-4 w-4" />
+                <span>Download PDF Receipt</span>
               </a>
             </div>
           )}
@@ -175,17 +178,17 @@ export default async function PaymentSuccessPage({
         <div className="grid gap-2 sm:grid-cols-2">
           <Link
             href={dashboardHref}
-            className="flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-on-primary"
+            className="flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-on-primary transition"
           >
-            <span className="material-symbols-outlined text-[18px]">dashboard</span>
-            Go to Dashboard
+            <LayoutDashboard className="h-4 w-4" />
+            <span>Go to Dashboard</span>
           </Link>
           <Link
             href="/client/payments"
-            className="flex h-11 items-center justify-center gap-2 rounded-lg border border-surface-variant bg-surface-container-lowest px-4 text-sm font-bold text-on-surface hover:bg-surface-container-high"
+            className="flex h-11 items-center justify-center gap-2 rounded-lg border border-surface-variant bg-surface-container-lowest px-4 text-sm font-bold text-on-surface hover:bg-surface-container-high transition"
           >
-            <span className="material-symbols-outlined text-[18px]">payments</span>
-            Make Another Payment
+            <CreditCard className="h-4 w-4" />
+            <span>Make Another Payment</span>
           </Link>
         </div>
       </div>

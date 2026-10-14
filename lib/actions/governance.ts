@@ -119,6 +119,9 @@ export async function writeGovernanceAudit(input: {
 
 function periodRange(period = "last_7_days", from?: string, to?: string) {
   const now = new Date();
+  if (period === "all_time") {
+    return { start: new Date("2020-01-01"), end: now };
+  }
   if (period === "today") {
     const start = new Date(now);
     start.setHours(0, 0, 0, 0);
@@ -573,7 +576,7 @@ export async function getUserAppealDetails(appealId: string) {
   const session = await auth();
   if (!session?.user?.id || !isUuid(appealId)) return null;
   const rows = await sql`
-    SELECT id, reference, appeal_type, target_type, target_id, status, reason, explanation, outcome, outcome_reason, created_at, updated_at, resolved_at
+    SELECT id, reference, appeal_type, target_type, target_id, status, reason, explanation, evidence_references, outcome, outcome_reason, created_at, updated_at, resolved_at
     FROM appeals
     WHERE id = ${appealId}
       AND appellant_user_id = ${session.user.id}

@@ -21,9 +21,14 @@ const ALLOWED_EVIDENCE_MIME_TYPES = new Set([
   "image/png",
   "image/jpeg",
   "image/webp",
+  "image/gif",
   "application/pdf",
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+  "video/ogg",
 ]);
-const MAX_EVIDENCE_BYTES = 8 * 1024 * 1024;
+const MAX_EVIDENCE_BYTES = 35 * 1024 * 1024;
 
 type DisputeCategory = (typeof DISPUTE_CATEGORIES)[number];
 type RequestedResolution = (typeof DISPUTE_REQUESTED_RESOLUTIONS)[number];

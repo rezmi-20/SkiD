@@ -65,8 +65,11 @@ export const auth = async () => {
           (session.user as any).role = rows[0].isSuspended ? "suspended" : rows[0].role;
         }
       } catch (fallbackError) {
-        console.error("Auth wrapper role fallback failed", fallbackError);
+        console.warn("Auth wrapper role fallback warning:", fallbackError instanceof Error ? fallbackError.message : fallbackError);
       }
+    } else if (/fetch failed|timeout|ETIMEDOUT|ConnectTimeoutError|connection/i.test(message)) {
+      // Degrade gracefully during intermittent network latency/reconnects without crashing page rendering
+      console.warn("Auth wrapper database unreachable; continuing with signed session cache:", message);
     } else {
       console.error("Auth wrapper role fetch failed", err);
     }
