@@ -27,3 +27,13 @@
 - [x] **Design Token Harmonization:** Modernized `/admin/appeals`, `/client/appeals`, and `/worker/appeals` pages to strict 8px radius system, status chips, and stats summaries.
 - [x] **Compliance & Workflow Verification:** Full pass on `npm run check:governance-controls`, `npm run check:workflow`, `npm run check:auth`, and `npm run check:dispute-workflow` with 0 errors.
 
+### 3. Logged Manual UAT Fixes (To-Do Later)
+- [ ] **Rating Redirect Graceful Fallback (Test 14):** Prevent 1-second abrupt redirect on `/worker/rate/[id]` and `/client/rate/[id]` when payment is not yet in `released` status; show an informative alert and return link instead.
+- [ ] **Notification Bell UI Glitch (Test 3 & 4):** Fix notification page where icon names display as oversized text instead of SVG icons.
+- [ ] **Messages Link 404 from Notification (Test 4):** Correct `/messages` link in notification page to route to `/[role]/messages`.
+- [ ] **Worker Earnings Export Statement (Test 4):** Implement statement download/export on `/worker/earnings`.
+- [ ] **Server Action / Auth Me Error Handling (Test 3 & 18):** Handle `GET /api/auth/me 401` gracefully without throwing unhandled promise rejections on `/login`.
+- [ ] **Contract Signatures Client Verification Guard (Test 10):** Enforce identity verification requirement before clients or workers can create contract PINs and sign agreements.
+- [ ] **Realtime State Sync (Test 9 & 11):** Eliminate manual page refresh when counterpart accepts/rejects terms or requests completion.
+
+
