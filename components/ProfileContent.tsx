@@ -86,145 +86,77 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-2 sm:px-6 lg:px-8 pb-32 pt-2 animate-in fade-in duration-300">
+    <div className="w-full max-w-md md:max-w-4xl mx-auto px-3 sm:px-6 pb-32 animate-in fade-in duration-300">
       
-      {/* ── SCREEN TITLE ────────────────────────────────────────────── */}
-      <div className="pt-2 pb-5 text-center md:text-left flex items-center justify-between border-b border-border/40 mb-6">
-        <div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-foreground tracking-tight">
-            Account Profile
-          </h1>
-          <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">
-            Manage your credentials, electronic signature security, contracts, and payments
-          </p>
+      {/* ── 1. TITLE (Centered "Profile" - 100% Reference Match) ─────── */}
+      <div className="pt-2 pb-5 text-center">
+        <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
+          Profile
+        </h1>
+      </div>
+
+      {/* ── 2. USER PROFILE HEADER (Pixel-Perfect from Inspiration) ──── */}
+      <div className="flex items-center justify-between gap-3 mb-6 px-1">
+        <div className="flex items-center gap-3.5 min-w-0">
+          {/* Avatar with mint/green badge container */}
+          <div className="relative shrink-0">
+            <div className="h-16 w-16 rounded-full bg-[#bbf7d0] dark:bg-[#143d22] p-0.5 flex items-center justify-center">
+              <Avatar className="h-full w-full rounded-full">
+                {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
+                <AvatarFallback className="bg-[#bbf7d0] text-[#166534] font-black text-lg">
+                  {user.initials}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+            {/* Status icon badge pinned to bottom right */}
+            <div className="absolute -bottom-0.5 -right-0.5 h-6 w-6 rounded-full bg-[#86efac] border-2 border-background flex items-center justify-center text-[#14532d] shadow-sm">
+              <UserCheck className="h-3.5 w-3.5 stroke-[2.5]" />
+            </div>
+          </div>
+
+          {/* Name & Email */}
+          <div className="min-w-0">
+            <h2 className="text-lg sm:text-xl font-extrabold text-foreground truncate leading-tight">
+              {user.name}
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate mt-0.5 font-medium">
+              {user.email}
+            </p>
+          </div>
         </div>
 
-        {/* Desktop Quick Settings Button */}
+        {/* Floating Dark Circular Settings Button */}
         <Link
           href={settingsHref}
-          className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-[#181d24] text-white hover:bg-[#252b35] transition-all text-xs font-bold shadow-sm"
+          className="h-12 w-12 rounded-full bg-[#181d24] dark:bg-[#1e2329] text-white flex items-center justify-center shadow-md active:scale-90 transition-transform shrink-0"
+          title="Settings"
+          aria-label="Settings"
         >
-          <Settings className="h-4 w-4" />
-          <span>Edit Profile</span>
+          <Settings className="h-5 w-5 stroke-[1.8]" />
         </Link>
       </div>
 
-      {/* ── RESPONSIVE MAIN GRID (1-col mobile, 12-col desktop) ──────── */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8">
-        
-        {/* ── LEFT COLUMN (Identity & Quick Stats) ─────────────────── */}
-        <div className="md:col-span-5 lg:col-span-4 space-y-5">
-          
-          {/* Identity Card */}
-          <div className="rounded-[2rem] bg-card border border-border p-5 sm:p-6 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center justify-between gap-3 mb-4">
-              <div className="flex items-center gap-3.5 min-w-0">
-                {/* Avatar with mint/green badge ring */}
-                <div className="relative shrink-0">
-                  <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-[#bbf7d0] dark:bg-[#143d22] p-1 flex items-center justify-center">
-                    <Avatar className="h-full w-full rounded-full">
-                      {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
-                      <AvatarFallback className="bg-[#bbf7d0] text-[#166534] font-black text-lg sm:text-xl">
-                        {user.initials}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                  {/* Status icon badge */}
-                  <div className="absolute -bottom-0.5 -right-0.5 h-6 w-6 rounded-full bg-[#8eed5d] border-2 border-background flex items-center justify-center text-[#14532d] shadow-sm">
-                    {user.is_verified ? (
-                      <CheckCircle2 className="h-3.5 w-3.5 stroke-[2.5]" />
-                    ) : (
-                      <UserCheck className="h-3.5 w-3.5 stroke-[2.5]" />
-                    )}
-                  </div>
-                </div>
-
-                {/* Name, Role & Email */}
-                <div className="min-w-0">
-                  <h2 className="text-lg sm:text-xl font-extrabold text-foreground truncate leading-tight">
-                    {user.name}
-                  </h2>
-                  <p className="text-xs text-muted-foreground truncate mt-0.5 font-medium">
-                    {user.email}
-                  </p>
-                  <div className="hidden md:flex items-center gap-1.5 mt-2 flex-wrap">
-                    <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-[#a4fe47]/15 text-[#3a6613] dark:text-[#a4fe47] border-[#a4fe47]/30">
-                      {isWorker ? "Verified Skilled Pro" : "Verified Client"}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-
-              {/* Mobile-only Settings Gear Icon */}
-              <Link
-                href={settingsHref}
-                className="md:hidden h-12 w-12 rounded-full bg-[#181d24] dark:bg-[#1e2329] text-white flex items-center justify-center shadow-md active:scale-90 transition-transform shrink-0"
-                title="Settings"
-                aria-label="Settings"
-              >
-                <Settings className="h-5 w-5 stroke-[1.8]" />
-              </Link>
-            </div>
-
-            {/* Desktop-Only Creative Profile Telemetry (Kept clean on mobile) */}
-            <div className="hidden md:block border-t border-border/60 pt-4 space-y-2.5 text-xs">
-              {user.phone && (
-                <div className="flex items-center justify-between p-2.5 rounded-xl bg-muted/30">
-                  <span className="flex items-center gap-1.5 text-muted-foreground font-medium"><Phone className="h-3.5 w-3.5 text-primary" /> Phone:</span>
-                  <span className="font-bold text-foreground">+251 {user.phone}</span>
-                </div>
-              )}
-              {user.district && (
-                <div className="flex items-center justify-between p-2.5 rounded-xl bg-muted/30">
-                  <span className="flex items-center gap-1.5 text-muted-foreground font-medium"><MapPin className="h-3.5 w-3.5 text-emerald-500" /> District:</span>
-                  <span className="font-bold text-foreground">{user.district}, Addis Ababa</span>
-                </div>
-              )}
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-muted/30">
-                <span className="flex items-center gap-1.5 text-muted-foreground font-medium"><ShieldCheck className="h-3.5 w-3.5 text-indigo-400" /> Fayda FIN:</span>
-                <span className="font-mono font-bold text-foreground bg-primary/10 px-2 py-0.5 rounded text-[11px] text-primary">{user.maskedFin || "********9654"}</span>
-              </div>
-            </div>
-
-            {/* Worker Skills Chips */}
-            {skills.length > 0 && (
-              <div className="border-t border-border/60 pt-3 mt-3">
-                <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-2">
-                  Specialized Trades
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {skills.map((skill) => (
-                    <span key={skill} className="px-2.5 py-1 rounded-lg bg-[#4c7a36]/10 text-[#4c7a36] dark:text-[#8eed5d] text-[11px] font-bold border border-[#4c7a36]/20">
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Verification Status Banner if pending */}
-          {!user.is_verified && (
-            <div className="rounded-[1.75rem] border border-amber-500/30 bg-amber-500/10 p-4 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <ShieldAlert className="h-5 w-5 text-amber-500 shrink-0" />
-                <div className="text-xs">
-                  <p className="font-bold text-foreground">Fayda Verification</p>
-                  <p className="text-muted-foreground text-[11px]">Upload ID for fast approval</p>
-                </div>
-              </div>
-              <Link
-                href={settingsHref + "?verify=1"}
-                className="text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded-xl shrink-0"
-              >
-                Upload
-              </Link>
-            </div>
-          )}
+      {/* ── Desktop-Only Creative Account Details Card ──────────────── */}
+      <div className="hidden md:grid md:grid-cols-3 gap-3 mb-6 p-4 rounded-[1.75rem] bg-card border border-border/60 shadow-sm text-xs">
+        <div className="flex items-center gap-2 p-2 rounded-xl bg-muted/40">
+          <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-[#a4fe47]/15 text-[#3a6613] dark:text-[#a4fe47] border-[#a4fe47]/30">
+            {isWorker ? "Verified Skilled Pro" : "Verified Client"}
+          </Badge>
+          <span className="text-muted-foreground font-medium truncate">{user.district ? `${user.district}, AA` : "Addis Ababa"}</span>
         </div>
+        {user.phone && (
+          <div className="flex items-center justify-between p-2 rounded-xl bg-muted/40">
+            <span className="flex items-center gap-1.5 text-muted-foreground font-medium"><Phone className="h-3.5 w-3.5 text-primary" /> Phone:</span>
+            <span className="font-bold text-foreground">+251 {user.phone}</span>
+          </div>
+        )}
+        <div className="flex items-center justify-between p-2 rounded-xl bg-muted/40">
+          <span className="flex items-center gap-1.5 text-muted-foreground font-medium"><ShieldCheck className="h-3.5 w-3.5 text-indigo-400" /> Fayda FIN:</span>
+          <span className="font-mono font-bold text-foreground bg-primary/10 px-2 py-0.5 rounded text-[11px] text-primary">{user.maskedFin || "********9654"}</span>
+        </div>
+      </div>
 
-        {/* ── RIGHT COLUMN (Work & Contracts + General Hub) ─────────── */}
-        <div className="md:col-span-7 lg:col-span-8 space-y-6">
+      <div className="space-y-6">
           
           {/* 1. "Work & Contracts" Domain Capsule */}
           <div>
@@ -410,6 +342,5 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
           </div>
         </div>
       </div>
-    </div>
   );
 }
