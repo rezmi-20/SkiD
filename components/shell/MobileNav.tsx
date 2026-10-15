@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Compass, MessageSquare, User } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Home, Search, Users, MessageSquare, User } from "lucide-react";
 
 interface MobileNavProps {
   role: "client" | "worker";
@@ -11,6 +10,8 @@ interface MobileNavProps {
 
 export default function MobileNav({ role }: MobileNavProps) {
   const pathname = usePathname();
+
+  const exploreHref = role === "worker" ? "/worker/jobs" : "/client/search";
 
   const navItems = [
     {
@@ -21,11 +22,18 @@ export default function MobileNav({ role }: MobileNavProps) {
       activeIcon: <Home className="h-4 w-4 stroke-[2.5]" />,
     },
     {
+      id: "explore",
+      label: "Explore",
+      href: exploreHref,
+      icon: <Search className="h-5 w-5 stroke-[2]" />,
+      activeIcon: <Search className="h-4 w-4 stroke-[2.5]" />,
+    },
+    {
       id: "community",
       label: "Community",
       href: `/${role}/community`,
-      icon: <Compass className="h-5 w-5 stroke-[2]" />,
-      activeIcon: <Compass className="h-4 w-4 stroke-[2.5]" />,
+      icon: <Users className="h-5 w-5 stroke-[2]" />,
+      activeIcon: <Users className="h-4 w-4 stroke-[2.5]" />,
     },
     {
       id: "chat",
@@ -44,8 +52,8 @@ export default function MobileNav({ role }: MobileNavProps) {
   ];
 
   return (
-    <nav className="lg:hidden fixed bottom-4 inset-x-4 z-50 pointer-events-none flex justify-center pb-safe">
-      <div className="pointer-events-auto w-full max-w-sm h-[68px] rounded-full bg-[#181d24]/95 dark:bg-[#13171d]/95 backdrop-blur-xl border border-white/10 px-3 flex items-center justify-between shadow-[0_12px_40px_rgba(0,0,0,0.45)]">
+    <nav className="lg:hidden fixed bottom-3 inset-x-2 sm:inset-x-4 z-50 pointer-events-none flex justify-center pb-safe">
+      <div className="pointer-events-auto w-full max-w-md h-[66px] rounded-full bg-[#181d24]/95 dark:bg-[#13171d]/95 backdrop-blur-xl border border-white/10 px-2 sm:px-3 flex items-center justify-between shadow-[0_12px_40px_rgba(0,0,0,0.5)]">
         {navItems.map((item) => {
           const isActive =
             item.href === `/${role}/dashboard`
@@ -56,17 +64,17 @@ export default function MobileNav({ role }: MobileNavProps) {
             <Link
               key={item.id}
               href={item.href}
-              className="relative flex items-center justify-center transition-all duration-300"
+              className="relative flex items-center justify-center transition-all duration-200 touch-manipulation"
             >
               {isActive ? (
-                /* Active Tab: Vibrant Lime Pill Button (Pixel-perfect from inspiration) */
-                <div className="flex items-center gap-2 bg-[#b5f23d] text-black font-extrabold text-xs px-4 py-2.5 rounded-full shadow-[0_4px_16px_rgba(181,242,61,0.35)] animate-in zoom-in-95 duration-200">
+                /* Active Tab: Vibrant Lime Pill Button using palette rgba(164, 254, 71) */
+                <div className="flex items-center gap-1.5 bg-[#a4fe47] text-[#0d1406] font-black text-xs px-3 sm:px-3.5 py-2 rounded-full shadow-[0_4px_16px_rgba(164,254,71,0.35)] animate-in zoom-in-95 duration-200 shrink-0">
                   {item.activeIcon}
-                  <span className="tracking-tight">{item.label}</span>
+                  <span className="tracking-tight text-[11px] sm:text-xs">{item.label}</span>
                 </div>
               ) : (
-                /* Inactive Tab: Minimal Icon with thumb target */
-                <div className="flex items-center justify-center h-12 w-12 rounded-full text-[#8a929e] hover:text-white active:scale-90 transition-all">
+                /* Inactive Tab: Minimal Icon with thumb-friendly hit target */
+                <div className="flex items-center justify-center h-11 w-11 rounded-full text-[#8a929e] hover:text-white active:scale-90 transition-all">
                   {item.icon}
                 </div>
               )}
