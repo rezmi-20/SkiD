@@ -17,30 +17,27 @@ import {
   Plus,
   Clock,
   TrendingUp,
-  CheckCircle,
+  CheckCircle2,
   ArrowUpRight,
   Zap,
   Users,
   Activity,
   ChevronRight,
-  Calendar,
   Wrench,
   Paintbrush,
   Plug,
   Droplets,
   MoreHorizontal,
-  Star,
   BarChart2,
+  ShieldCheck,
+  MapPin,
+  Headphones,
+  KeyRound,
+  Sparkles,
+  Check,
+  ArrowRight,
+  ShieldAlert,
 } from "lucide-react";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-} from "recharts";
 
 /* ── Types ─────────────────────────────────────────────────────────── */
 interface ClientDashboardContentProps {
@@ -56,58 +53,39 @@ interface ClientDashboardContentProps {
   recentJobs: any[];
 }
 
-/* ── Chart data (replace with real DB queries) ──────────────────────── */
-const ACTIVITY_DATA = [
-  { month: "Jan", value: 0 },
-  { month: "Feb", value: 1200 },
-  { month: "Mar", value: 900 },
-  { month: "Apr", value: 3400 },
-  { month: "May", value: 2800 },
-  { month: "Jun", value: 5800 },
-  { month: "Jul", value: 4900 },
-];
-
 /* ── Service category cards ─────────────────────────────────────────── */
 const SERVICES = [
   {
-    labelKey: "clientDashboard.service.electrical",
+    label: "Electrical",
     category: "electrical",
-    icon: <Plug size={20} />,
+    icon: <Plug className="h-5 w-5" />,
     color: "from-amber-500/20 to-amber-500/5",
     iconBg: "bg-amber-500/15 text-amber-500",
-    countKey: "clientDashboard.service.electricalCount",
+    desc: "Wiring, fixtures, repair",
   },
   {
-    labelKey: "clientDashboard.service.plumbing",
+    label: "Plumbing",
     category: "plumbing",
-    icon: <Droplets size={20} />,
+    icon: <Droplets className="h-5 w-5" />,
     color: "from-blue-500/20 to-blue-500/5",
     iconBg: "bg-blue-500/15 text-blue-500",
-    countKey: "clientDashboard.service.plumbingCount",
+    desc: "Pipes, leaks, drainage",
   },
   {
-    labelKey: "clientDashboard.service.painting",
+    label: "Painting",
     category: "painting",
-    icon: <Paintbrush size={20} />,
+    icon: <Paintbrush className="h-5 w-5" />,
     color: "from-pink-500/20 to-pink-500/5",
     iconBg: "bg-pink-500/15 text-pink-500",
-    countKey: "clientDashboard.service.paintingCount",
+    desc: "Interior & exterior coats",
   },
   {
-    labelKey: "clientDashboard.service.carpentry",
+    label: "Carpentry",
     category: "carpentry",
-    icon: <Wrench size={20} />,
+    icon: <Wrench className="h-5 w-5" />,
     color: "from-emerald-500/20 to-emerald-500/5",
     iconBg: "bg-emerald-500/15 text-emerald-500",
-    countKey: "clientDashboard.service.carpentryCount",
-  },
-  {
-    labelKey: "clientDashboard.service.all",
-    category: "",
-    icon: <MoreHorizontal size={20} />,
-    color: "from-primary/20 to-primary/5",
-    iconBg: "bg-primary/15 text-primary",
-    countKey: "clientDashboard.service.viewAll",
+    desc: "Doors, cabinets, framing",
   },
 ] as const;
 
@@ -122,17 +100,6 @@ function statusStyle(status: string) {
   }
 }
 
-/* ── Custom tooltip ─────────────────────────────────────────────────── */
-function ChartTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-xl border border-border bg-card shadow-xl px-4 py-3 text-sm">
-      <p className="text-muted-foreground text-xs mb-1">{label}</p>
-      <p className="font-bold text-foreground">{payload[0].value.toLocaleString()} ETB</p>
-    </div>
-  );
-}
-
 /* ══════════════════════════════════════════════════════════════════════ */
 export default function ClientDashboardContent({
   userData,
@@ -142,344 +109,631 @@ export default function ClientDashboardContent({
   const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const activeCount      = activeContracts.length;
-  const totalBudget      = activeContracts.reduce((sum, c) => {
+  const activeCount   = activeContracts.length;
+  const totalBudget   = activeContracts.reduce((sum, c) => {
     const v = parseFloat(String(c.budget || "0").replace(/[^0-9.]/g, ""));
     return sum + (isNaN(v) ? 0 : v);
   }, 0);
-  const uniqueWorkers    = new Set(activeContracts.map((c) => c.worker_name || c.partner_name).filter(Boolean)).size;
-  const initials         = userData.fullName ? userData.fullName.slice(0, 2).toUpperCase() : "DS";
+  const uniqueWorkers = new Set(activeContracts.map((c) => c.worker_name || c.partner_name).filter(Boolean)).size;
+  const initials      = userData.fullName ? userData.fullName.slice(0, 2).toUpperCase() : "CL";
+
+  // Calculate onboarding progress (out of 4 steps)
+  const isVerified = Boolean(userData.identityVerified);
+  const hasJobs = recentJobs.length > 0;
+  const hasContracts = activeContracts.length > 0;
+  // Step 1: ID Verified, Step 2: Contract PIN configured (estimated/prompted), Step 3: Browse/Post, Step 4: Pay
+  const completedStepsCount = (isVerified ? 1 : 0) + (hasContracts ? 2 : hasJobs ? 1 : 0);
+
   const statusLabel = (status?: string) => {
     switch (status?.toLowerCase()) {
-      case "in_progress": return t("clientDashboard.status.inProgress");
-      case "accepted": return t("clientDashboard.status.accepted");
-      case "completed": return t("clientDashboard.status.completed");
-      case "pending": return t("clientDashboard.status.pending");
-      case "posted": return t("clientDashboard.status.posted");
-      default: return t("clientDashboard.status.active");
+      case "in_progress": return "In Progress";
+      case "accepted": return "Accepted";
+      case "completed": return "Completed";
+      case "pending": return "Pending";
+      case "posted": return "Posted";
+      default: return status || "Active";
     }
   };
 
   return (
-    <FadeContent blur duration={0.4} className="space-y-5 max-w-full">
-      {!userData.identityVerified && (
-        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-bold text-foreground">{t("clientDashboard.verifyRequired")}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {t("clientDashboard.verifyRequiredDesc")}
-            </p>
+    <FadeContent blur duration={0.3} className="space-y-4 max-w-full pb-8">
+      {/* ── 0. IDENTITY VERIFICATION CALLOUT (Mobile-Optimized) ──────── */}
+      {!isVerified && (
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="h-9 w-9 rounded-xl bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0 mt-0.5">
+              <ShieldAlert className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-foreground">Complete Your Identity Verification</p>
+              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                Fayda or Kebele ID verification protects you and allows seamless electronic contract signing.
+              </p>
+            </div>
           </div>
-          <Button asChild size="sm" className="rounded-xl font-semibold shrink-0">
-            <Link href="/client/profile/settings?verify=1&returnTo=/client/dashboard">{t("clientDashboard.verifyNow")}</Link>
+          <Button asChild size="default" className="rounded-xl font-semibold shrink-0 h-11 w-full sm:w-auto touch-manipulation">
+            <Link href="/client/profile/settings?verify=1&returnTo=/client/dashboard">
+              Verify ID Now
+            </Link>
           </Button>
         </div>
       )}
 
-      {/* ══ ROW 1 — Hero + Stats Panel ════════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* ── 1. THUMB-FRIENDLY QUICK ACTION CAROUSEL (Mobile First) ────── */}
+      <div className="overflow-x-auto no-scrollbar -mx-2 px-2 py-1">
+        <div className="flex items-center gap-2.5 min-w-max">
+          <Link
+            href="/client/search"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold shadow-sm shadow-primary/20 active:scale-95 transition-transform touch-manipulation"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Find & Hire Pro</span>
+          </Link>
 
-        {/* Hero Card — dark gradient, spans 2 cols */}
-        <div className="lg:col-span-2 relative overflow-hidden rounded-2xl border border-border min-h-[210px] flex flex-col justify-between p-7"
+          <Link
+            href="/client/search?view=map"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-card border border-border text-foreground text-xs font-semibold hover:border-primary/40 active:scale-95 transition-all touch-manipulation"
+          >
+            <MapPin className="h-4 w-4 text-emerald-500" />
+            <span>Map Search</span>
+          </Link>
+
+          <Link
+            href="/client/contract-setup"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-card border border-border text-foreground text-xs font-semibold hover:border-primary/40 active:scale-95 transition-all touch-manipulation"
+          >
+            <KeyRound className="h-4 w-4 text-amber-500" />
+            <span>Contract PIN</span>
+          </Link>
+
+          <Link
+            href="/client/payments"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-card border border-border text-foreground text-xs font-semibold hover:border-primary/40 active:scale-95 transition-all touch-manipulation"
+          >
+            <CreditCard className="h-4 w-4 text-indigo-500" />
+            <span>Direct Payments</span>
+          </Link>
+
+          <Link
+            href="/client/messages"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-card border border-border text-foreground text-xs font-semibold hover:border-primary/40 active:scale-95 transition-all touch-manipulation"
+          >
+            <MessageSquare className="h-4 w-4 text-sky-500" />
+            <span>Messages</span>
+          </Link>
+
+          <Link
+            href="/client/support"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-card border border-border text-foreground text-xs font-semibold hover:border-primary/40 active:scale-95 transition-all touch-manipulation"
+          >
+            <Headphones className="h-4 w-4 text-violet-500" />
+            <span>Live Support</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* ── 2. HERO + KEY STATS (Mobile Stack) ───────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
+        {/* Hero Card */}
+        <div
+          className="lg:col-span-2 relative overflow-hidden rounded-2xl border border-border min-h-[190px] flex flex-col justify-between p-5 sm:p-7"
           style={{
-            background: "linear-gradient(135deg, #0d1f14 0%, #0a2818 40%, #051a0e 100%)",
+            background: "linear-gradient(135deg, #0d1f14 0%, #0a2818 45%, #051a0e 100%)",
           }}
         >
-          {/* Glow blobs */}
+          {/* Ambient Glows */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-24 w-40 h-40 bg-emerald-400/5 rounded-full blur-2xl pointer-events-none" />
-          {/* Grid texture */}
-          <div
-            className="absolute inset-0 opacity-[0.04] pointer-events-none"
-            style={{
-              backgroundImage: "linear-gradient(var(--color-primary) 1px, transparent 1px), linear-gradient(90deg, var(--color-primary) 1px, transparent 1px)",
-              backgroundSize: "40px 40px",
-            }}
-          />
+          <div className="absolute bottom-0 left-20 w-40 h-40 bg-emerald-400/5 rounded-full blur-2xl pointer-events-none" />
 
-          <div className="relative z-10">
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-primary/80 mb-3">
-              <Zap size={11} className="text-primary" />
-              {t("clientDashboard.platform")}
+          {/* Top greeting on mobile */}
+          <div className="flex items-center justify-between z-10 mb-2">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-primary/90">
+              <Zap className="h-3 w-3 text-primary" />
+              Client Command Hub
             </span>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-white leading-tight mb-1">
-              {t("clientDashboard.hireVerified")}<br />{t("clientDashboard.professionals")}
-            </h1>
-            <p className="text-sm text-white/50 mb-6 max-w-xs">
-              {t("clientDashboard.heroDesc")}
-            </p>
-            <div className="flex items-center gap-3">
-              <Button asChild size="sm" className="rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-5 gap-1.5 shadow-lg shadow-primary/20">
-                <Link href="/client/search"><Plus size={14} /> {t("clientDashboard.postJob")}</Link>
-              </Button>
-              <Button asChild size="sm" variant="outline" className="rounded-xl border-white/20 text-white bg-white/5 hover:bg-white/10 font-semibold px-5 gap-1.5">
-                <Link href="/client/contracts">{t("clientDashboard.viewContracts")}</Link>
-              </Button>
+            <div className="flex items-center gap-2">
+              <div className="text-right">
+                <p className="text-[11px] text-white/50">{userData.greeting}</p>
+                <p className="text-xs font-bold text-white leading-none">{userData.firstName || "Client"}</p>
+              </div>
+              <Avatar className="h-8 w-8 border border-primary/40">
+                {userData.avatarUrl && <AvatarImage src={userData.avatarUrl} alt={userData.fullName} />}
+                <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">{initials}</AvatarFallback>
+              </Avatar>
             </div>
           </div>
 
-          {/* Greeting tag top-right */}
-          <div className="absolute top-5 right-5 flex items-center gap-2.5">
-            <div className="text-right hidden sm:block">
-              <p className="text-xs text-white/40 font-medium">{userData.greeting}</p>
-              <p className="text-sm font-bold text-white">{userData.firstName}</p>
-            </div>
-            <div className="relative">
-              <Avatar className="h-10 w-10 border-2 border-primary/40">
-                {userData.avatarUrl && <AvatarImage src={userData.avatarUrl} alt={userData.fullName} />}
-                <AvatarFallback className="bg-primary text-primary-foreground font-bold text-sm">{initials}</AvatarFallback>
-              </Avatar>
-              <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-400 border-2 border-[#0d1f14]" />
-            </div>
+          <div className="relative z-10 my-2">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-white leading-snug">
+              Hire Verified Skilled Professionals
+            </h1>
+            <p className="text-xs text-white/60 mt-1 max-w-md leading-relaxed">
+              Find electricians, plumbers, and painters across Addis Ababa with 2-party digital contracts and instant Chapa payments.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2.5 z-10 pt-2 flex-wrap">
+            <Button asChild size="sm" className="rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-4 h-10 touch-manipulation">
+              <Link href="/client/search">
+                <Search className="h-3.5 w-3.5 mr-1.5" /> Find Pro Near You
+              </Link>
+            </Button>
+            <Button asChild size="sm" variant="outline" className="rounded-xl border-white/20 text-white bg-white/5 hover:bg-white/10 font-semibold px-4 h-10 touch-manipulation">
+              <Link href="/client/contracts">
+                My Contracts
+              </Link>
+            </Button>
           </div>
         </div>
 
-        {/* Stats Panel — right col */}
-        <div className="flex flex-col gap-3">
-          {/* Total spending */}
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex-1">
+        {/* Stats Summary Panel */}
+        <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
+          {/* Total Budget Card */}
+          <div className="col-span-2 lg:col-span-1 rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm">
             <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("clientDashboard.totalBudget")}</p>
-              <BarChart2 size={14} className="text-muted-foreground" />
+              <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Active Budget</p>
+              <BarChart2 className="h-4 w-4 text-primary" />
             </div>
-            <p className="text-3xl font-black tracking-tight mt-1">
-              <CountUp to={totalBudget} duration={1.5} separator="," />
-              <span className="text-sm font-semibold text-muted-foreground ml-1">ETB</span>
+            <p className="text-2xl sm:text-3xl font-black tracking-tight mt-1">
+              <CountUp to={totalBudget} duration={1.2} separator="," />
+              <span className="text-xs font-semibold text-muted-foreground ml-1.5">ETB</span>
             </p>
-            <div className="mt-3 flex items-center gap-1.5 text-xs text-emerald-500 font-semibold">
-              <TrendingUp size={12} />
-              <span>{t("clientDashboard.acrossContracts").replace("{count}", String(activeCount))}</span>
+            <div className="mt-2.5 flex items-center gap-1.5 text-xs text-emerald-500 font-medium">
+              <TrendingUp className="h-3.5 w-3.5" />
+              <span>{activeCount} active digital contract{activeCount !== 1 ? "s" : ""}</span>
             </div>
           </div>
 
-          {/* Quick stats grid */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-              <div className="p-2 rounded-xl bg-primary/10 text-primary w-fit mb-2">
-                <Briefcase size={15} />
-              </div>
-              <p className="text-2xl font-black"><CountUp to={activeCount} duration={1.2} /></p>
-              <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{t("clientDashboard.contracts")}</p>
+          {/* Quick Counter Cards (2 cols on all devices) */}
+          <div className="rounded-2xl border border-border bg-card p-3.5 shadow-sm">
+            <div className="p-2 rounded-xl bg-primary/10 text-primary w-fit mb-1.5">
+              <Briefcase className="h-4 w-4" />
             </div>
-            <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-              <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-500 w-fit mb-2">
-                <Users size={15} />
-              </div>
-              <p className="text-2xl font-black"><CountUp to={uniqueWorkers} duration={1.2} /></p>
-              <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{t("clientDashboard.workers")}</p>
+            <p className="text-xl font-black"><CountUp to={activeCount} duration={1} /></p>
+            <p className="text-[11px] text-muted-foreground font-medium">Active Contracts</p>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card p-3.5 shadow-sm">
+            <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-500 w-fit mb-1.5">
+              <Users className="h-4 w-4" />
             </div>
+            <p className="text-xl font-black"><CountUp to={uniqueWorkers} duration={1} /></p>
+            <p className="text-[11px] text-muted-foreground font-medium">Hired Workers</p>
           </div>
         </div>
       </div>
 
-      {/* ══ ROW 2 — Service Categories (horizontal scroll) ════════════ */}
-      <div>
+      {/* ── 3. FIRST-TIME USER ONBOARDING TRACKER (Feature Discovery) ─ */}
+      <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("clientDashboard.browseServices")}</p>
-          <Link href="/client/search" className="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
-            {t("clientDashboard.seeAll")} <ChevronRight size={12} />
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">Getting Started Guide</p>
+          </div>
+          <span className="text-[11px] font-semibold text-muted-foreground">
+            {completedStepsCount} of 4 completed
+          </span>
+        </div>
+
+        {/* Progress bar */}
+        <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden mb-4">
+          <div
+            className="h-full bg-primary transition-all duration-500"
+            style={{ width: `${Math.max(25, (completedStepsCount / 4) * 100)}%` }}
+          />
+        </div>
+
+        {/* 4 Interactive Step Tiles */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          {/* Step 1: Verification */}
+          <Link
+            href="/client/profile/settings?verify=1"
+            className={`flex items-start gap-3 p-3 rounded-xl border transition-all touch-manipulation ${
+              isVerified ? "border-emerald-500/30 bg-emerald-500/5" : "border-border bg-muted/20 hover:border-primary/40"
+            }`}
+          >
+            <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+              isVerified ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground font-bold text-xs"
+            }`}>
+              {isVerified ? <Check className="h-4 w-4" /> : "1"}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-foreground flex items-center gap-1">
+                Verify Identity {isVerified && <CheckCircle2 className="h-3 w-3 text-emerald-500" />}
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                {isVerified ? "Fayda ID approved" : "Upload Kebele / Fayda ID"}
+              </p>
+            </div>
+          </Link>
+
+          {/* Step 2: Contract PIN */}
+          <Link
+            href="/client/contract-setup"
+            className="flex items-start gap-3 p-3 rounded-xl border border-border bg-muted/20 hover:border-primary/40 transition-all touch-manipulation"
+          >
+            <div className="h-7 w-7 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+              <KeyRound className="h-3.5 w-3.5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-foreground">Set Contract PIN</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                6-digit electronic signing PIN
+              </p>
+            </div>
+          </Link>
+
+          {/* Step 3: Browse Map & Hire */}
+          <Link
+            href="/client/search"
+            className="flex items-start gap-3 p-3 rounded-xl border border-border bg-muted/20 hover:border-primary/40 transition-all touch-manipulation"
+          >
+            <div className="h-7 w-7 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+              <Search className="h-3.5 w-3.5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-foreground">Discover Skilled Pros</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                Map view or trade categories
+              </p>
+            </div>
+          </Link>
+
+          {/* Step 4: Chapa Direct Payment */}
+          <Link
+            href="/client/payments"
+            className="flex items-start gap-3 p-3 rounded-xl border border-border bg-muted/20 hover:border-primary/40 transition-all touch-manipulation"
+          >
+            <div className="h-7 w-7 rounded-lg bg-indigo-500/10 text-indigo-500 flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+              <CreditCard className="h-3.5 w-3.5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-foreground">Direct Chapa Billing</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                Telebirr / CBE Birr receipt proof
+              </p>
+            </div>
           </Link>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      </div>
+
+      {/* ── 4. POPULAR TRADE CATEGORIES (Mobile Horizontal Chips) ───── */}
+      <div>
+        <div className="flex items-center justify-between mb-2.5">
+          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Find Trades Near You</p>
+          <Link href="/client/search" className="text-xs text-primary font-semibold flex items-center gap-0.5 hover:underline">
+            View All <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
           {SERVICES.map((svc) => (
             <Link
-              key={svc.labelKey}
-              href={svc.category ? `/client/search?category=${svc.category}` : "/client/search"}
-              className={`group flex flex-col items-center gap-2.5 rounded-2xl border border-border bg-gradient-to-b ${svc.color} p-4 text-center hover:border-primary/30 hover:shadow-md transition-all`}
+              key={svc.category}
+              href={`/client/search?category=${svc.category}`}
+              className={`flex items-center gap-3 p-3 rounded-2xl border border-border bg-gradient-to-br ${svc.color} hover:border-primary/30 active:scale-95 transition-all touch-manipulation`}
             >
-              <div className={`p-3 rounded-xl ${svc.iconBg} group-hover:scale-110 transition-transform`}>
+              <div className={`p-2.5 rounded-xl ${svc.iconBg} shrink-0`}>
                 {svc.icon}
               </div>
-              <div>
-                <p className="text-sm font-semibold text-foreground">{t(svc.labelKey)}</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{t(svc.countKey)}</p>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-foreground truncate">{svc.label}</p>
+                <p className="text-[10px] text-muted-foreground truncate">{svc.desc}</p>
               </div>
             </Link>
           ))}
         </div>
       </div>
 
-      {/* ══ ROW 3 — Chart + Search ════════════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-
-        {/* Area Chart */}
-        <div className="lg:col-span-2 rounded-2xl border border-border bg-card shadow-sm p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-sm font-bold">{t("clientDashboard.spendingOverview")}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{t("clientDashboard.lastSevenMonths")}</p>
+      {/* ── 5. HUB AND SPOKE OVERVIEW CARDS (Mobile-First 2-Col Grid) ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+        {/* Spoke 1: Pro Discovery & Map */}
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                  <MapPin className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">Interactive Map Discovery</p>
+                  <p className="text-xs text-muted-foreground">Find vetted workers closest to your location</p>
+                </div>
+              </div>
             </div>
-            <span className="flex items-center gap-1.5 text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full">
-              <Activity size={11} /> {t("clientDashboard.live")}
-            </span>
+
+            <div className="relative my-3">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="e.g. Electrician in Bole, Addis Ababa..."
+                className="pl-9 h-11 rounded-xl bg-background border-border text-xs touch-manipulation"
+              />
+            </div>
           </div>
-          <ResponsiveContainer width="100%" height={180}>
-            <AreaChart data={ACTIVITY_DATA} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-              <defs>
-                <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-              <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }} axisLine={false} tickLine={false} />
-              <RechartsTooltip content={<ChartTooltip />} cursor={{ stroke: "var(--color-border)", strokeWidth: 1 }} />
-              <Area type="monotone" dataKey="value" stroke="var(--color-primary)" strokeWidth={2.5} fill="url(#areaGrad)" dot={false} activeDot={{ r: 5, fill: "var(--color-primary)", strokeWidth: 0 }} />
-            </AreaChart>
-          </ResponsiveContainer>
+
+          <div className="flex items-center gap-2 pt-1">
+            <Button asChild size="default" className="rounded-xl flex-1 h-10 text-xs font-bold touch-manipulation">
+              <Link href={`/client/search?q=${encodeURIComponent(searchQuery)}`}>
+                Search Workers
+              </Link>
+            </Button>
+            <Button asChild size="default" variant="outline" className="rounded-xl h-10 text-xs font-semibold touch-manipulation">
+              <Link href="/client/search?view=map">
+                Open Map
+              </Link>
+            </Button>
+          </div>
         </div>
 
-        {/* Search + Find Pro */}
-        <div className="rounded-2xl border border-border bg-card shadow-sm p-5 flex flex-col gap-4">
+        {/* Spoke 2: Smart Digital Contracts */}
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between">
           <div>
-            <p className="text-sm font-bold">{t("clientDashboard.findProfessional")}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{t("clientDashboard.searchVerifiedWorkers")}</p>
-          </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={15} />
-            <Input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t("clientDashboard.searchExample")}
-              className="pl-9 h-10 rounded-xl bg-background border-border text-sm"
-            />
-          </div>
-          <Button size="sm" className="rounded-xl h-10 font-semibold gap-2" asChild>
-            <Link href={`/client/search?q=${encodeURIComponent(searchQuery)}`}>
-              <Search size={14} /> {t("clientDashboard.searchWorkers")}
-            </Link>
-          </Button>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-500">
+                  <Briefcase className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">Digital Contracts Hub</p>
+                  <p className="text-xs text-muted-foreground">2-party signed electronic agreements with audit hash</p>
+                </div>
+              </div>
+              <Badge variant="outline" className="text-[10px] font-bold text-primary border-primary/20 bg-primary/5">
+                {activeCount} Active
+              </Badge>
+            </div>
 
-          <div className="border-t border-border pt-4 space-y-2.5">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{t("clientDashboard.quickLinks")}</p>
-            {[
-              { label: t("clientDashboard.myContracts"), href: "/client/contracts", icon: <Briefcase size={13} /> },
-              { label: t("clientDashboard.payments"), href: "/client/payments", icon: <CreditCard size={13} /> },
-              { label: t("clientDashboard.messages"), href: "/client/messages", icon: <MessageSquare size={13} /> },
-            ].map((l) => (
-              <Link key={l.href} href={l.href} className="flex items-center justify-between py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors group">
-                <span className="flex items-center gap-2">{l.icon}{l.label}</span>
-                <ChevronRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
+            <div className="bg-muted/30 rounded-xl p-3 border border-border/60 my-2 text-xs space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Contract Security PIN:</span>
+                <span className="font-semibold text-foreground flex items-center gap-1">
+                  <KeyRound className="h-3 w-3 text-amber-500" /> Configured
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Tamper Protection:</span>
+                <span className="font-semibold text-emerald-500">SHA-256 + QR Verified</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 pt-1">
+            <Button asChild size="default" variant="outline" className="rounded-xl flex-1 h-10 text-xs font-bold touch-manipulation">
+              <Link href="/client/contracts">
+                View All Contracts
               </Link>
-            ))}
+            </Button>
+            <Button asChild size="default" variant="ghost" className="rounded-xl h-10 text-xs font-semibold text-primary touch-manipulation">
+              <Link href="/client/contract-setup">
+                PIN Settings
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        {/* Spoke 3: Chapa Direct Payments & Invoices */}
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
+                  <CreditCard className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">Direct Billing (Chapa)</p>
+                  <p className="text-xs text-muted-foreground">Direct non-escrow payment to workers with receipts</p>
+                </div>
+              </div>
+              <Badge variant="outline" className="text-[10px] font-bold text-emerald-500 border-emerald-500/20 bg-emerald-500/5">
+                Telebirr / CBE
+              </Badge>
+            </div>
+
+            <p className="text-xs text-muted-foreground my-2 leading-relaxed">
+              Payments go directly from your mobile wallet or bank to the skilled worker upon milestone completion. Download verified receipts anytime.
+            </p>
+          </div>
+
+          <div className="pt-1">
+            <Button asChild size="default" className="rounded-xl w-full h-10 text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white touch-manipulation">
+              <Link href="/client/payments">
+                Manage Invoices & Receipts
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        {/* Spoke 4: Real-Time Chat & Support */}
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-violet-500/10 text-violet-500">
+                  <Headphones className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">Support & Direct Chat</p>
+                  <p className="text-xs text-muted-foreground">Instant resolution with live audio chime updates</p>
+                </div>
+              </div>
+              <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-500">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" /> Live
+              </span>
+            </div>
+
+            <p className="text-xs text-muted-foreground my-2 leading-relaxed">
+              Have questions about a contract or need assistance? Open a support ticket with our team or chat with your hired workers in real-time.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 pt-1">
+            <Button asChild size="default" variant="outline" className="rounded-xl flex-1 h-10 text-xs font-bold touch-manipulation">
+              <Link href="/client/support">
+                <Headphones className="h-3.5 w-3.5 mr-1.5" /> Support Tickets
+              </Link>
+            </Button>
+            <Button asChild size="default" variant="outline" className="rounded-xl flex-1 h-10 text-xs font-bold touch-manipulation">
+              <Link href="/client/messages">
+                <MessageSquare className="h-3.5 w-3.5 mr-1.5" /> Messages
+              </Link>
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* ══ ROW 4 — Active Contracts table + Activity feed ════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-
-        {/* Contracts — table style, 3 cols */}
-        <div className="lg:col-span-3">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("clientDashboard.activeContracts")}</p>
-            <Link href="/client/contracts" className="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
-              {t("clientDashboard.viewAll")} <ChevronRight size={12} />
-            </Link>
+      {/* ── 6. ACTIVE CONTRACTS (Mobile Card List + Desktop Table) ────── */}
+      <div className="rounded-2xl border border-border bg-card shadow-sm p-4 sm:p-5">
+        <div className="flex items-center justify-between mb-3.5">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Active Work Agreements</p>
+            <p className="text-xs text-foreground font-semibold mt-0.5">
+              {activeCount > 0 ? `${activeCount} contract${activeCount > 1 ? "s" : ""} in progress` : "No ongoing contracts"}
+            </p>
           </div>
-
-          <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-            {activeCount > 0 ? (
-              <>
-                {/* Table header */}
-                <div className="grid grid-cols-12 gap-2 px-4 py-2.5 bg-muted/40 border-b border-border text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  <span className="col-span-5">{t("clientDashboard.workerJob")}</span>
-                  <span className="col-span-3">{t("clientDashboard.status")}</span>
-                  <span className="col-span-2">{t("clientDashboard.budget")}</span>
-                  <span className="col-span-2 text-right">{t("clientDashboard.action")}</span>
-                </div>
-                <div className="divide-y divide-border">
-                  {activeContracts.slice(0, 5).map((contract) => {
-                    const wi = (contract.worker_name || contract.partner_name || "W").slice(0, 2).toUpperCase();
-                    return (
-                      <div key={contract.id || contract.contract_id} className="grid grid-cols-12 gap-2 items-center px-4 py-3 hover:bg-muted/20 transition-colors">
-                        <div className="col-span-5 flex items-center gap-2.5 min-w-0">
-                          <Avatar className="h-8 w-8 border border-border shrink-0">
-                            {(contract.worker_avatar || contract.partner_avatar) && <AvatarImage src={contract.worker_avatar || contract.partner_avatar} />}
-                            <AvatarFallback className="text-[10px] font-bold bg-muted">{wi}</AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0">
-                            <p className="text-xs font-semibold truncate">{contract.job_title}</p>
-                            <p className="text-[10px] text-muted-foreground truncate">{contract.worker_name || contract.partner_name}</p>
-                          </div>
-                        </div>
-                        <div className="col-span-3">
-                          <Badge variant="outline" className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border ${statusStyle(contract.job_status)}`}>
-                            {statusLabel(contract.job_status)}
-                          </Badge>
-                        </div>
-                        <div className="col-span-2">
-                          <p className="text-xs font-semibold">{contract.budget ? `${contract.budget}` : "—"}</p>
-                          <p className="text-[9px] text-muted-foreground">ETB</p>
-                        </div>
-                        <div className="col-span-2 flex justify-end">
-                          <Button variant="ghost" size="sm" className="h-7 text-xs rounded-lg px-2 text-primary hover:bg-primary/10" asChild>
-                            <Link href={`/contracts/${contract.id || contract.contract_id}`}><ArrowUpRight size={13} /></Link>
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            ) : (
-              <div className="flex flex-col items-center py-14 gap-3 text-center">
-                <div className="h-12 w-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground">
-                  <Briefcase size={22} />
-                </div>
-                <div>
-                  <p className="font-semibold text-sm">{t("clientDashboard.noActiveContracts")}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{t("clientDashboard.postJobStart")}</p>
-                </div>
-                <Button size="sm" className="rounded-xl gap-1.5 mt-1" asChild>
-                  <Link href="/client/search"><Plus size={14} /> {t("clientDashboard.findPro")}</Link>
-                </Button>
-              </div>
-            )}
-          </div>
+          <Link href="/client/contracts" className="text-xs text-primary font-semibold flex items-center gap-1 hover:underline">
+            View All <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
         </div>
 
-        {/* Activity feed — 2 cols */}
-        <div className="lg:col-span-2">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("clientDashboard.history")}</p>
-            <span className="text-[10px] text-muted-foreground">{recentJobs.length} {t("clientDashboard.requests")}</span>
-          </div>
-
-          <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-            {recentJobs.length > 0 ? (
-              <div className="divide-y divide-border">
-                {recentJobs.slice(0, 7).map((job, idx) => {
-                  const colors = ["text-primary bg-primary/10", "text-indigo-500 bg-indigo-500/10", "text-amber-500 bg-amber-500/10", "text-pink-500 bg-pink-500/10"];
-                  return (
-                    <div key={job.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors">
-                      <div className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 ${colors[idx % colors.length]}`}>
-                        <Clock size={13} />
+        {activeCount > 0 ? (
+          <div>
+            {/* MOBILE VIEW (< 640px): Stacked Cards with 44px+ touch targets */}
+            <div className="sm:hidden space-y-3">
+              {activeContracts.slice(0, 4).map((contract) => {
+                const wi = (contract.worker_name || contract.partner_name || "W").slice(0, 2).toUpperCase();
+                const contractId = contract.id || contract.contract_id;
+                return (
+                  <div key={contractId} className="rounded-xl border border-border bg-muted/15 p-3.5 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Avatar className="h-9 w-9 border border-border shrink-0">
+                          {(contract.worker_avatar || contract.partner_avatar) && (
+                            <AvatarImage src={contract.worker_avatar || contract.partner_avatar} />
+                          )}
+                          <AvatarFallback className="text-xs font-bold bg-muted">{wi}</AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-foreground truncate">{contract.job_title}</p>
+                          <p className="text-[11px] text-muted-foreground truncate">{contract.worker_name || contract.partner_name || "Assigned Pro"}</p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold truncate">{job.title}</p>
-                        <p className="text-[10px] text-muted-foreground">
-                          {new Date(job.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                        </p>
-                      </div>
-                      <Badge variant="outline" className={`rounded-full text-[9px] font-bold uppercase px-1.5 py-0 border shrink-0 ${statusStyle(job.status)}`}>
-                        {statusLabel(job.status || "posted")}
+                      <Badge variant="outline" className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border shrink-0 ${statusStyle(contract.job_status)}`}>
+                        {statusLabel(contract.job_status)}
                       </Badge>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1 border-t border-border/60 text-xs">
+                      <div>
+                        <span className="text-[10px] uppercase text-muted-foreground">Budget: </span>
+                        <span className="font-extrabold text-foreground">{contract.budget ? `${Number(contract.budget).toLocaleString()} ETB` : "—"}</span>
+                      </div>
+                      <Button asChild size="sm" className="rounded-xl h-9 px-3.5 text-xs font-bold touch-manipulation">
+                        <Link href={`/contracts/${contractId}`}>
+                          View Details <ArrowRight className="h-3 w-3 ml-1" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* DESKTOP VIEW (>= 640px): Clean Table Layout */}
+            <div className="hidden sm:block rounded-xl border border-border overflow-hidden">
+              <div className="grid grid-cols-12 gap-2 px-4 py-2.5 bg-muted/40 border-b border-border text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                <span className="col-span-5">Worker / Job</span>
+                <span className="col-span-3">Status</span>
+                <span className="col-span-2">Budget</span>
+                <span className="col-span-2 text-right">Action</span>
+              </div>
+              <div className="divide-y divide-border">
+                {activeContracts.slice(0, 5).map((contract) => {
+                  const wi = (contract.worker_name || contract.partner_name || "W").slice(0, 2).toUpperCase();
+                  const contractId = contract.id || contract.contract_id;
+                  return (
+                    <div key={contractId} className="grid grid-cols-12 gap-2 items-center px-4 py-3 hover:bg-muted/20 transition-colors">
+                      <div className="col-span-5 flex items-center gap-2.5 min-w-0">
+                        <Avatar className="h-8 w-8 border border-border shrink-0">
+                          {(contract.worker_avatar || contract.partner_avatar) && (
+                            <AvatarImage src={contract.worker_avatar || contract.partner_avatar} />
+                          )}
+                          <AvatarFallback className="text-[10px] font-bold bg-muted">{wi}</AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold truncate">{contract.job_title}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">{contract.worker_name || contract.partner_name}</p>
+                        </div>
+                      </div>
+                      <div className="col-span-3">
+                        <Badge variant="outline" className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border ${statusStyle(contract.job_status)}`}>
+                          {statusLabel(contract.job_status)}
+                        </Badge>
+                      </div>
+                      <div className="col-span-2">
+                        <p className="text-xs font-semibold">{contract.budget ? `${Number(contract.budget).toLocaleString()}` : "—"}</p>
+                        <p className="text-[9px] text-muted-foreground">ETB</p>
+                      </div>
+                      <div className="col-span-2 flex justify-end">
+                        <Button variant="ghost" size="sm" className="h-8 text-xs rounded-lg px-2 text-primary hover:bg-primary/10" asChild>
+                          <Link href={`/contracts/${contractId}`}>
+                            Open <ArrowUpRight className="h-3.5 w-3.5 ml-1" />
+                          </Link>
+                        </Button>
+                      </div>
                     </div>
                   );
                 })}
               </div>
-            ) : (
-              <div className="py-12 flex flex-col items-center gap-2 text-center">
-                <Activity size={24} className="text-muted-foreground/30" />
-                <p className="text-xs text-muted-foreground font-medium">{t("clientDashboard.noHistoryYet")}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-border p-8 flex flex-col items-center justify-center text-center gap-2.5">
+            <div className="h-11 w-11 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground">
+              <Briefcase className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="font-bold text-sm text-foreground">No active work contracts</p>
+              <p className="text-xs text-muted-foreground mt-0.5 max-w-sm">
+                When you hire an electrician, plumber, or painter, your digital contract with QR verification will show here.
+              </p>
+            </div>
+            <Button size="default" className="rounded-xl gap-1.5 mt-2 h-10 font-bold touch-manipulation" asChild>
+              <Link href="/client/search">
+                <Plus className="h-4 w-4" /> Find a Pro Now
+              </Link>
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* ── 7. RECENT REQUESTS & ACTIVITY ───────────────────────────── */}
+      {recentJobs.length > 0 && (
+        <div className="rounded-2xl border border-border bg-card shadow-sm p-4 sm:p-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Recent Job Posts</p>
+            <span className="text-[11px] text-muted-foreground">{recentJobs.length} posted</span>
+          </div>
+
+          <div className="divide-y divide-border">
+            {recentJobs.slice(0, 5).map((job) => (
+              <div key={job.id} className="py-2.5 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-foreground truncate">{job.title}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {new Date(job.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                  </p>
+                </div>
+                <Badge variant="outline" className={`rounded-full text-[9px] font-bold uppercase px-2 py-0.5 border shrink-0 ${statusStyle(job.status)}`}>
+                  {statusLabel(job.status)}
+                </Badge>
               </div>
-            )}
+            ))}
           </div>
         </div>
-      </div>
+      )}
     </FadeContent>
   );
 }

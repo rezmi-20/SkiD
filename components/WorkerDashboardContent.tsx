@@ -29,16 +29,13 @@ import {
   BarChart3,
   FileText,
   MessageSquare,
+  KeyRound,
+  Headphones,
+  Sparkles,
+  Check,
+  ArrowRight,
+  ShieldAlert,
 } from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-} from "recharts";
 
 interface WorkerDashboardContentProps {
   worker: {
@@ -59,16 +56,6 @@ interface WorkerDashboardContentProps {
   greeting: string;
 }
 
-const EARNINGS_DATA = [
-  { month: "Jan", earnings: 0 },
-  { month: "Feb", earnings: 800 },
-  { month: "Mar", earnings: 2200 },
-  { month: "Apr", earnings: 1500 },
-  { month: "May", earnings: 3800 },
-  { month: "Jun", earnings: 2900 },
-  { month: "Jul", earnings: 4600 },
-];
-
 function statusStyle(status: string) {
   switch (status?.toLowerCase()) {
     case "in_progress": return "bg-blue-500/10 text-blue-400 border-blue-500/20";
@@ -79,52 +66,11 @@ function statusStyle(status: string) {
   }
 }
 
-function EarningsTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-xl border border-border bg-card shadow-xl px-4 py-3 text-sm">
-      <p className="text-muted-foreground text-xs mb-1">{label}</p>
-      <p className="font-bold text-foreground">{payload[0].value.toLocaleString()} ETB</p>
-    </div>
-  );
-}
-
-function PerformanceRing({ pct, label }: { pct: number; label: string }) {
-  const r = 36;
-  const circ = 2 * Math.PI * r;
-  const offset = circ - (pct / 100) * circ;
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <svg width={88} height={88} viewBox="0 0 88 88">
-        <circle cx={44} cy={44} r={r} fill="none" stroke="var(--color-border)" strokeWidth={7} />
-        <circle
-          cx={44} cy={44} r={r}
-          fill="none"
-          stroke="url(#ringGrad)"
-          strokeWidth={7}
-          strokeLinecap="round"
-          strokeDasharray={circ}
-          strokeDashoffset={offset}
-          transform="rotate(-90 44 44)"
-        />
-        <defs>
-          <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="0">
-            <stop stopColor="#6366f1" />
-            <stop offset="1" stopColor="#8b5cf6" />
-          </linearGradient>
-        </defs>
-        <text x={44} y={49} textAnchor="middle" fontSize="13" fontWeight="900" fill="currentColor">{pct}%</text>
-      </svg>
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-    </div>
-  );
-}
-
 export default function WorkerDashboardContent({
   worker,
   stats,
-  pendingJobs,
-  recentJobs,
+  pendingJobs = [],
+  recentJobs = [],
   greeting,
 }: WorkerDashboardContentProps) {
   const router = useRouter();
@@ -132,16 +78,19 @@ export default function WorkerDashboardContent({
   const [rejecting, setRejecting] = useState<string | null>(null);
 
   const initials = worker.fullName
-    .split(" ")
-    .map((n: string) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+    ? worker.fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
+    : "PR";
 
   const completionRate =
     stats.completedJobs + stats.activeJobs > 0
       ? Math.round((stats.completedJobs / (stats.completedJobs + stats.activeJobs)) * 100)
       : 0;
+
+  // Onboarding completion (out of 4)
+  const isVerified = Boolean(worker.isVerified);
+  const hasSkills = worker.skills.length > 0;
+  const hasJobs = stats.activeJobs > 0 || stats.completedJobs > 0;
+  const completedStepsCount = (isVerified ? 1 : 0) + (hasSkills ? 1 : 0) + (hasJobs ? 2 : 1);
 
   const handleAccept = async (jobId: string) => {
     setAccepting(jobId);
@@ -160,305 +109,553 @@ export default function WorkerDashboardContent({
   };
 
   return (
-    <FadeContent blur duration={0.4} className="space-y-5 max-w-full">
+    <FadeContent blur duration={0.3} className="space-y-4 max-w-full pb-8">
+      {/* ── 0. UNVERIFIED CALLOUT BANNER (Mobile Optimized) ─────────── */}
+      {!isVerified && (
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="h-9 w-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+              <ShieldAlert className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-foreground">Worker Verification Required</p>
+              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                Submit your Fayda ID or Kebele card to receive job requests and receive direct Chapa payouts.
+              </p>
+            </div>
+          </div>
+          <Button asChild size="default" className="rounded-xl font-semibold shrink-0 h-11 w-full sm:w-auto touch-manipulation bg-amber-600 hover:bg-amber-500 text-white">
+            <Link href="/worker/profile/settings?verify=1">
+              Submit ID for Verification
+            </Link>
+          </Button>
+        </div>
+      )}
 
-      {/* ROW 1 — Hero + KPI */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* ── 1. THUMB-FRIENDLY QUICK ACTION CAROUSEL ─────────────────── */}
+      <div className="overflow-x-auto no-scrollbar -mx-2 px-2 py-1">
+        <div className="flex items-center gap-2.5 min-w-max">
+          <Link
+            href="/worker/jobs"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm shadow-indigo-500/20 active:scale-95 transition-transform touch-manipulation"
+          >
+            <Briefcase className="h-4 w-4" />
+            <span>Browse Jobs</span>
+          </Link>
 
-        {/* Hero — dark indigo/slate */}
+          <Link
+            href="/worker/contracts"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-card border border-border text-foreground text-xs font-semibold hover:border-indigo-500/40 active:scale-95 transition-all touch-manipulation"
+          >
+            <FileText className="h-4 w-4 text-emerald-400" />
+            <span>My Contracts</span>
+          </Link>
+
+          <Link
+            href="/worker/contract-setup"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-card border border-border text-foreground text-xs font-semibold hover:border-indigo-500/40 active:scale-95 transition-all touch-manipulation"
+          >
+            <KeyRound className="h-4 w-4 text-amber-400" />
+            <span>Contract PIN</span>
+          </Link>
+
+          <Link
+            href="/worker/earnings"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-card border border-border text-foreground text-xs font-semibold hover:border-indigo-500/40 active:scale-95 transition-all touch-manipulation"
+          >
+            <Wallet className="h-4 w-4 text-indigo-400" />
+            <span>Earnings</span>
+          </Link>
+
+          <Link
+            href="/worker/messages"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-card border border-border text-foreground text-xs font-semibold hover:border-indigo-500/40 active:scale-95 transition-all touch-manipulation"
+          >
+            <MessageSquare className="h-4 w-4 text-sky-400" />
+            <span>Messages</span>
+          </Link>
+
+          <Link
+            href="/worker/support"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-card border border-border text-foreground text-xs font-semibold hover:border-indigo-500/40 active:scale-95 transition-all touch-manipulation"
+          >
+            <Headphones className="h-4 w-4 text-violet-400" />
+            <span>Support</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* ── 2. HERO + KPI PANEL ─────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
+        {/* Hero Card */}
         <div
-          className="lg:col-span-2 relative overflow-hidden rounded-2xl border border-border min-h-[210px] flex flex-col justify-between p-7"
+          className="lg:col-span-2 relative overflow-hidden rounded-2xl border border-border min-h-[190px] flex flex-col justify-between p-5 sm:p-7"
           style={{ background: "linear-gradient(135deg, #0f0c29 0%, #1a1044 45%, #0c0a22 100%)" }}
         >
           <div className="absolute top-0 right-0 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-20 w-48 h-48 bg-violet-500/8 rounded-full blur-2xl pointer-events-none" />
-          <div
-            className="absolute inset-0 opacity-[0.06] pointer-events-none"
-            style={{ backgroundImage: "radial-gradient(circle, #818cf8 1px, transparent 1px)", backgroundSize: "28px 28px" }}
-          />
 
-          <div className="relative z-10">
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-indigo-400/80 mb-3">
-              <Zap size={11} className="text-indigo-400" />
+          {/* Top worker identity strip */}
+          <div className="flex items-center justify-between z-10 mb-2">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-indigo-400/90">
+              <Zap className="h-3 w-3 text-indigo-400" />
               Professional Workbench
             </span>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-white leading-tight mb-1">
-              {greeting},<br />{worker.firstName}
+            <div className="flex items-center gap-2">
+              <div className="text-right">
+                <p className="text-[11px] text-white/50">{greeting}</p>
+                <p className="text-xs font-bold text-white leading-none">{worker.firstName}</p>
+              </div>
+              <Avatar className="h-8 w-8 border border-indigo-500/40">
+                <AvatarFallback className="bg-indigo-600 text-white font-bold text-xs">{initials}</AvatarFallback>
+              </Avatar>
+            </div>
+          </div>
+
+          <div className="relative z-10 my-2">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-white leading-snug">
+              Welcome back, {worker.firstName}
             </h1>
-            <p className="text-sm text-white/45 mb-6 flex items-center gap-1.5 flex-wrap">
-              <MapPin size={12} className="text-indigo-400 shrink-0" />
-              {worker.district}
+            <p className="text-xs text-white/60 mt-1 max-w-md leading-relaxed flex items-center gap-1.5 flex-wrap">
+              <MapPin className="h-3 w-3 text-indigo-400 shrink-0" />
+              <span>{worker.district || "Addis Ababa"}</span>
               {worker.skills.length > 0 && <span className="text-white/30">·</span>}
-              {worker.skills.slice(0, 2).join(", ")}
+              <span>{worker.skills.slice(0, 3).join(", ") || "Trades Pro"}</span>
             </p>
-            <div className="flex items-center gap-3 flex-wrap">
-              <Button asChild size="sm" className="rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-5 gap-1.5 shadow-lg shadow-indigo-500/20">
-                <Link href="/worker/jobs"><Briefcase size={14} /> Browse Jobs</Link>
-              </Button>
-              <Button asChild size="sm" variant="outline" className="rounded-xl border-white/15 text-white bg-white/5 hover:bg-white/10 font-semibold px-5 gap-1.5">
-                <Link href="/worker/contracts">My Contracts</Link>
-              </Button>
-            </div>
           </div>
 
-          <div className="absolute top-5 right-5 flex items-center gap-2.5">
-            <div className="text-right hidden sm:block">
-              <p className="text-xs text-white/35 font-medium">Status</p>
-              <p className="text-sm font-bold text-white flex items-center gap-1 justify-end">
-                {worker.isVerified
-                  ? <><ShieldCheck size={12} className="text-indigo-400" /> Verified</>
-                  : <><Clock size={12} className="text-amber-400" /> Unverified</>
-                }
-              </p>
-            </div>
-            <Avatar className="h-10 w-10 border-2 border-indigo-500/40">
-              <AvatarFallback className="bg-indigo-600 text-white font-bold text-sm">{initials}</AvatarFallback>
-            </Avatar>
-          </div>
-        </div>
-
-        {/* Right KPI stack */}
-        <div className="flex flex-col gap-3">
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex-1">
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Earned</p>
-              <Wallet size={14} className="text-muted-foreground" />
-            </div>
-            <p className="text-3xl font-black tracking-tight mt-1">
-              <CountUp to={stats.revenue} duration={1.5} separator="," />
-              <span className="text-sm font-semibold text-muted-foreground ml-1">ETB</span>
-            </p>
-            <div className="mt-3 flex items-center gap-1.5 text-xs text-indigo-400 font-semibold">
-              <TrendingUp size={12} />
-              <span>Across {stats.completedJobs} completed jobs</span>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-              <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 w-fit mb-2"><Bell size={15} /></div>
-              <p className="text-2xl font-black"><CountUp to={stats.pendingJobs} duration={1.2} /></p>
-              <p className="text-[11px] text-muted-foreground font-medium mt-0.5">Pending</p>
-            </div>
-            <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 w-fit mb-2"><Activity size={15} /></div>
-              <p className="text-2xl font-black"><CountUp to={stats.activeJobs} duration={1.2} /></p>
-              <p className="text-[11px] text-muted-foreground font-medium mt-0.5">Active</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ROW 2 — Bar Chart + Performance */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 rounded-2xl border border-border bg-card shadow-sm p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-sm font-bold">Earnings Overview</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Monthly earnings — last 7 months</p>
-            </div>
-            <span className="flex items-center gap-1.5 text-xs font-semibold text-indigo-400 bg-indigo-500/10 px-3 py-1 rounded-full">
-              <BarChart3 size={11} /> ETB
-            </span>
-          </div>
-          <ResponsiveContainer width="100%" height={180}>
-            <BarChart data={EARNINGS_DATA} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-              <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }} axisLine={false} tickLine={false} />
-              <RechartsTooltip content={<EarningsTooltip />} cursor={{ fill: "rgba(99,102,241,0.08)" }} />
-              <defs>
-                <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#6366f1" />
-                  <stop offset="100%" stopColor="#8b5cf6" />
-                </linearGradient>
-              </defs>
-              <Bar dataKey="earnings" fill="url(#barGrad)" radius={[6, 6, 0, 0]} maxBarSize={36} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="rounded-2xl border border-border bg-card shadow-sm p-5 flex flex-col gap-4">
-          <div>
-            <p className="text-sm font-bold">Performance</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Your completion &amp; response rate</p>
-          </div>
-          <div className="flex items-center justify-around py-2">
-            <PerformanceRing pct={completionRate} label="Completion" />
-            <PerformanceRing pct={100} label="Response" />
-          </div>
-          <div className="border-t border-border pt-3 space-y-2">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Quick links</p>
-            {[
-              { label: "My Contracts", href: "/worker/contracts", icon: <FileText size={13} /> },
-              { label: "Earnings", href: "/worker/earnings", icon: <Wallet size={13} /> },
-              { label: "Messages", href: "/worker/messages", icon: <MessageSquare size={13} /> },
-            ].map((l) => (
-              <Link key={l.href} href={l.href} className="flex items-center justify-between py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors group">
-                <span className="flex items-center gap-2">{l.icon}{l.label}</span>
-                <ChevronRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
+          <div className="flex items-center gap-2.5 z-10 pt-2 flex-wrap">
+            <Button asChild size="sm" className="rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 h-10 touch-manipulation">
+              <Link href="/worker/jobs">
+                <Briefcase className="h-3.5 w-3.5 mr-1.5" /> Browse Open Jobs
               </Link>
-            ))}
+            </Button>
+            <Button asChild size="sm" variant="outline" className="rounded-xl border-white/20 text-white bg-white/5 hover:bg-white/10 font-semibold px-4 h-10 touch-manipulation">
+              <Link href="/worker/contracts">
+                My Contracts
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        {/* Total Earned & KPI Stack */}
+        <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
+          <div className="col-span-2 lg:col-span-1 rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Total Payouts</p>
+              <Wallet className="h-4 w-4 text-indigo-400" />
+            </div>
+            <p className="text-2xl sm:text-3xl font-black tracking-tight mt-1">
+              <CountUp to={stats.revenue} duration={1.2} separator="," />
+              <span className="text-xs font-semibold text-muted-foreground ml-1.5">ETB</span>
+            </p>
+            <div className="mt-2.5 flex items-center gap-1.5 text-xs text-indigo-400 font-medium">
+              <TrendingUp className="h-3.5 w-3.5" />
+              <span>{stats.completedJobs} completed jobs · Direct Chapa Payout</span>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card p-3.5 shadow-sm">
+            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 w-fit mb-1.5">
+              <Bell className="h-4 w-4" />
+            </div>
+            <p className="text-xl font-black"><CountUp to={stats.pendingJobs} duration={1} /></p>
+            <p className="text-[11px] text-muted-foreground font-medium">Pending Requests</p>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card p-3.5 shadow-sm">
+            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 w-fit mb-1.5">
+              <Activity className="h-4 w-4" />
+            </div>
+            <p className="text-xl font-black"><CountUp to={stats.activeJobs} duration={1} /></p>
+            <p className="text-[11px] text-muted-foreground font-medium">Active Jobs</p>
           </div>
         </div>
       </div>
 
-      {/* ROW 3 — Pending Requests */}
-      <div>
+      {/* ── 3. WORKER ONBOARDING TRACKER (Feature Discovery) ────────── */}
+      <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Pending Requests</p>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 text-[11px] font-bold">
-            <Bell size={10} /> {pendingJobs.length} new
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-indigo-400" />
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">Pro Setup Checklist</p>
+          </div>
+          <span className="text-[11px] font-semibold text-muted-foreground">
+            {completedStepsCount} of 4 steps ready
           </span>
         </div>
 
-        {pendingJobs.length > 0 ? (
-          <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-            <div className="hidden sm:grid grid-cols-12 gap-2 px-5 py-2.5 bg-muted/40 border-b border-border text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              <span className="col-span-5">Client / Job</span>
-              <span className="col-span-3">Budget</span>
-              <span className="col-span-4 text-right">Action</span>
+        <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden mb-4">
+          <div
+            className="h-full bg-indigo-500 transition-all duration-500"
+            style={{ width: `${Math.max(25, (completedStepsCount / 4) * 100)}%` }}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          {/* Step 1: Verification */}
+          <Link
+            href="/worker/profile/settings?verify=1"
+            className={`flex items-start gap-3 p-3 rounded-xl border transition-all touch-manipulation ${
+              isVerified ? "border-emerald-500/30 bg-emerald-500/5" : "border-border bg-muted/20 hover:border-indigo-500/40"
+            }`}
+          >
+            <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+              isVerified ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground font-bold text-xs"
+            }`}>
+              {isVerified ? <Check className="h-4 w-4" /> : "1"}
             </div>
-            <div className="divide-y divide-border">
-              {pendingJobs.slice(0, 6).map((job: any) => {
-                const ci = (job.client_name || "C").slice(0, 2).toUpperCase();
-                return (
-                  <div key={job.id} className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center px-5 py-4 hover:bg-muted/20 transition-colors">
-                    <div className="col-span-5 flex items-center gap-3 min-w-0">
-                      <Avatar className="h-9 w-9 border border-border shrink-0">
-                        {job.client_avatar && <AvatarImage src={job.client_avatar} />}
-                        <AvatarFallback className="text-[11px] font-bold bg-indigo-500/10 text-indigo-400">{ci}</AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold truncate">{job.title}</p>
-                        <p className="text-[10px] text-muted-foreground truncate">{job.client_name || "Client"}</p>
-                      </div>
-                    </div>
-                    <div className="col-span-3">
-                      <p className="text-xs font-bold">{Number(job.budget || 0).toLocaleString()}</p>
-                      <p className="text-[10px] text-muted-foreground">ETB</p>
-                    </div>
-                    <div className="col-span-4 flex items-center gap-2 sm:justify-end">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 rounded-xl text-[11px] font-semibold gap-1.5 border-red-500/20 text-red-400 hover:bg-red-500/10"
-                        onClick={() => handleReject(job.id)}
-                        disabled={rejecting === job.id}
-                      >
-                        <X size={12} /> Decline
-                      </Button>
-                      <Button
-                        size="sm"
-                        className="h-8 rounded-xl text-[11px] font-semibold gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white"
-                        onClick={() => handleAccept(job.id)}
-                        disabled={accepting === job.id}
-                      >
-                        <CheckCheck size={12} /> Accept
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-foreground flex items-center gap-1">
+                Fayda / Kebele ID {isVerified && <CheckCircle2 className="h-3 w-3 text-emerald-500" />}
+              </p>
+              <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                {isVerified ? "Verified pro status active" : "Submit National / Kebele ID"}
+              </p>
+            </div>
+          </Link>
+
+          {/* Step 2: Contract PIN */}
+          <Link
+            href="/worker/contract-setup"
+            className="flex items-start gap-3 p-3 rounded-xl border border-border bg-muted/20 hover:border-indigo-500/40 transition-all touch-manipulation"
+          >
+            <div className="h-7 w-7 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+              <KeyRound className="h-3.5 w-3.5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-foreground">Set Contract PIN</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                6-digit electronic signature PIN
+              </p>
+            </div>
+          </Link>
+
+          {/* Step 3: Skills & Hourly Rate */}
+          <Link
+            href="/worker/profile"
+            className={`flex items-start gap-3 p-3 rounded-xl border transition-all touch-manipulation ${
+              hasSkills ? "border-emerald-500/30 bg-emerald-500/5" : "border-border bg-muted/20 hover:border-indigo-500/40"
+            }`}
+          >
+            <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+              hasSkills ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground font-bold text-xs"
+            }`}>
+              {hasSkills ? <Check className="h-4 w-4" /> : "3"}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-foreground">Trade Skills & Rate</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                {hasSkills ? `${worker.skills.length} skills listed` : "Set hourly rate & trades"}
+              </p>
+            </div>
+          </Link>
+
+          {/* Step 4: Chapa Direct Payouts */}
+          <Link
+            href="/worker/earnings"
+            className="flex items-start gap-3 p-3 rounded-xl border border-border bg-muted/20 hover:border-indigo-500/40 transition-all touch-manipulation"
+          >
+            <div className="h-7 w-7 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+              <Wallet className="h-3.5 w-3.5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-foreground">Direct Telebirr / Bank</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                Zero escrow delays on completion
+              </p>
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      {/* ── 4. FOUR HUB SPOKE CARDS (Mobile Responsive Grid) ────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+        {/* Spoke 1: Job Discovery */}
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400">
+                  <Briefcase className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">Job Discovery Hub</p>
+                  <p className="text-xs text-muted-foreground">Find local client job requests matching your trades</p>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground my-2.5 leading-relaxed">
+              Explore open positions for electrical repairs, plumbing, painting, or woodwork across all districts in Addis Ababa.
+            </p>
+          </div>
+
+          <div className="pt-1">
+            <Button asChild size="default" className="rounded-xl w-full h-10 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white touch-manipulation">
+              <Link href="/worker/jobs">
+                <Briefcase className="h-3.5 w-3.5 mr-1.5" /> View Available Jobs
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        {/* Spoke 2: Digital Contracts & PIN */}
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
+                  <FileText className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">Digital Work Agreements</p>
+                  <p className="text-xs text-muted-foreground">2-party signed electronic agreements with audit hashes</p>
+                </div>
+              </div>
+              <Badge variant="outline" className="text-[10px] font-bold text-emerald-400 border-emerald-500/20 bg-emerald-500/5">
+                {stats.activeJobs} In Progress
+              </Badge>
+            </div>
+
+            <div className="bg-muted/30 rounded-xl p-3 border border-border/60 my-2 text-xs space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Security PIN:</span>
+                <span className="font-semibold text-foreground flex items-center gap-1">
+                  <KeyRound className="h-3 w-3 text-amber-400" /> Active
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Verification:</span>
+                <span className="font-semibold text-emerald-400">SHA-256 + QR Protected</span>
+              </div>
             </div>
           </div>
+
+          <div className="flex items-center gap-2 pt-1">
+            <Button asChild size="default" variant="outline" className="rounded-xl flex-1 h-10 text-xs font-bold touch-manipulation">
+              <Link href="/worker/contracts">
+                My Contracts
+              </Link>
+            </Button>
+            <Button asChild size="default" variant="ghost" className="rounded-xl h-10 text-xs font-semibold text-indigo-400 touch-manipulation">
+              <Link href="/worker/contract-setup">
+                Setup PIN
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        {/* Spoke 3: Earnings & Chapa Direct Payouts */}
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400">
+                  <Wallet className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">Direct Telebirr / Bank Payouts</p>
+                  <p className="text-xs text-muted-foreground">Direct non-escrow payment on job completion</p>
+                </div>
+              </div>
+              <Badge variant="outline" className="text-[10px] font-bold text-amber-400 border-amber-500/20 bg-amber-500/5">
+                Zero Escrow Hold
+              </Badge>
+            </div>
+
+            <p className="text-xs text-muted-foreground my-2.5 leading-relaxed">
+              Clients pay your milestone directly through Chapa using Telebirr, CBE Birr, or card. Receipts are generated instantly.
+            </p>
+          </div>
+
+          <div className="pt-1">
+            <Button asChild size="default" variant="outline" className="rounded-xl w-full h-10 text-xs font-bold touch-manipulation">
+              <Link href="/worker/earnings">
+                View Payout History
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        {/* Spoke 4: Client Chat & Live Support */}
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-violet-500/10 text-violet-400">
+                  <Headphones className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">Communication & Support</p>
+                  <p className="text-xs text-muted-foreground">Direct chat with clients & dedicated admin support</p>
+                </div>
+              </div>
+              <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" /> Audio Chime
+              </span>
+            </div>
+
+            <p className="text-xs text-muted-foreground my-2.5 leading-relaxed">
+              Communicate directly with hiring clients in real-time or get priority support assistance for any contract inquiries.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 pt-1">
+            <Button asChild size="default" variant="outline" className="rounded-xl flex-1 h-10 text-xs font-bold touch-manipulation">
+              <Link href="/worker/support">
+                <Headphones className="h-3.5 w-3.5 mr-1.5" /> Support
+              </Link>
+            </Button>
+            <Button asChild size="default" variant="outline" className="rounded-xl flex-1 h-10 text-xs font-bold touch-manipulation">
+              <Link href="/worker/messages">
+                <MessageSquare className="h-3.5 w-3.5 mr-1.5" /> Client Chat
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 5. PENDING JOB REQUESTS (Mobile Touch Cards) ─────────────── */}
+      <div className="rounded-2xl border border-border bg-card shadow-sm p-4 sm:p-5">
+        <div className="flex items-center justify-between mb-3.5">
+          <div className="flex items-center gap-2">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Pending Inquiries</p>
+            {pendingJobs.length > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 text-[10px] font-bold">
+                <Bell className="h-3 w-3" /> {pendingJobs.length} new
+              </span>
+            )}
+          </div>
+        </div>
+
+        {pendingJobs.length > 0 ? (
+          <div className="space-y-3">
+            {pendingJobs.slice(0, 6).map((job: any) => {
+              const ci = (job.client_name || "C").slice(0, 2).toUpperCase();
+              return (
+                <div key={job.id} className="rounded-xl border border-border bg-muted/15 p-3.5 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Avatar className="h-9 w-9 border border-border shrink-0">
+                        {job.client_avatar && <AvatarImage src={job.client_avatar} />}
+                        <AvatarFallback className="text-xs font-bold bg-indigo-500/10 text-indigo-400">{ci}</AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-foreground truncate">{job.title}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">{job.client_name || "Client Inquiry"}</p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-xs font-extrabold text-foreground">{Number(job.budget || 0).toLocaleString()} ETB</p>
+                      <p className="text-[9px] text-muted-foreground">Proposed Budget</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1 border-t border-border/60">
+                    <Button
+                      size="default"
+                      variant="outline"
+                      className="flex-1 h-10 rounded-xl text-xs font-bold gap-1.5 border-red-500/30 text-red-400 hover:bg-red-500/10 touch-manipulation"
+                      onClick={() => handleReject(job.id)}
+                      disabled={rejecting === job.id}
+                    >
+                      <X className="h-3.5 w-3.5" /> Decline
+                    </Button>
+                    <Button
+                      size="default"
+                      className="flex-1 h-10 rounded-xl text-xs font-bold gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white touch-manipulation"
+                      onClick={() => handleAccept(job.id)}
+                      disabled={accepting === job.id}
+                    >
+                      <CheckCheck className="h-3.5 w-3.5" /> Accept Job
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         ) : (
-          <div className="rounded-2xl border border-dashed border-border bg-card/50 p-12 flex flex-col items-center gap-3 text-center">
-            <div className="h-12 w-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
-              <ChevronsUp size={22} />
+          <div className="rounded-xl border border-dashed border-border p-8 flex flex-col items-center justify-center text-center gap-2.5">
+            <div className="h-11 w-11 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+              <ChevronsUp className="h-5 w-5" />
             </div>
             <div>
-              <p className="font-semibold text-sm">No pending requests</p>
-              <p className="text-xs text-muted-foreground mt-0.5 max-w-xs">Keep your profile updated to attract more clients.</p>
+              <p className="font-bold text-sm text-foreground">No pending job inquiries</p>
+              <p className="text-xs text-muted-foreground mt-0.5 max-w-sm">
+                Keep your profile and skills updated so clients searching for trades in your district can reach you.
+              </p>
             </div>
-            <Button size="sm" variant="outline" className="rounded-xl gap-1.5 mt-1" asChild>
-              <Link href="/worker/profile">Update Profile</Link>
+            <Button size="default" variant="outline" className="rounded-xl gap-1.5 mt-2 h-10 font-bold touch-manipulation" asChild>
+              <Link href="/worker/profile">Update Profile & Skills</Link>
             </Button>
           </div>
         )}
       </div>
 
-      {/* ROW 4 — Job History + Skills */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-3">
+      {/* ── 6. RECENT JOBS & SKILLS ──────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
+        {/* Recent Jobs */}
+        <div className="lg:col-span-2 rounded-2xl border border-border bg-card shadow-sm p-4 sm:p-5">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Job History</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Recent Jobs</p>
             <Link href="/worker/jobs" className="text-xs text-indigo-400 font-semibold hover:underline flex items-center gap-1">
-              View All <ChevronRight size={12} />
+              View All <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </div>
-          <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-            {recentJobs.length > 0 ? (
-              <>
-                <div className="grid grid-cols-12 gap-2 px-4 py-2.5 bg-muted/40 border-b border-border text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  <span className="col-span-6">Job</span>
-                  <span className="col-span-3">Status</span>
-                  <span className="col-span-2">Budget</span>
-                  <span className="col-span-1" />
-                </div>
-                <div className="divide-y divide-border">
-                  {recentJobs.map((job: any) => (
-                    <div key={job.id} className="grid grid-cols-12 gap-2 items-center px-4 py-3 hover:bg-muted/20 transition-colors">
-                      <div className="col-span-6 min-w-0">
-                        <p className="text-xs font-semibold truncate">{job.title}</p>
-                        <p className="text-[10px] text-muted-foreground">{job.client_name || "Client"}</p>
-                      </div>
-                      <div className="col-span-3">
-                        <Badge variant="outline" className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border ${statusStyle(job.status)}`}>
-                          {(job.status || "pending").replace("_", " ")}
-                        </Badge>
-                      </div>
-                      <div className="col-span-2">
-                        <p className="text-xs font-semibold">{Number(job.budget || 0).toLocaleString()}</p>
-                        <p className="text-[9px] text-muted-foreground">ETB</p>
-                      </div>
-                      <div className="col-span-1 flex justify-end">
-                        <Button variant="ghost" size="sm" className="h-7 w-7 rounded-lg p-0 text-indigo-400 hover:bg-indigo-500/10" asChild>
-                          <Link href="/worker/jobs"><ArrowUpRight size={13} /></Link>
-                        </Button>
-                      </div>
+
+          {recentJobs.length > 0 ? (
+            <div className="divide-y divide-border">
+              {recentJobs.slice(0, 5).map((job: any) => (
+                <div key={job.id} className="py-2.5 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-foreground truncate">{job.title}</p>
+                    <p className="text-[10px] text-muted-foreground">{job.client_name || "Client"}</p>
+                  </div>
+                  <div className="flex items-center gap-2.5 shrink-0">
+                    <div className="text-right">
+                      <p className="text-xs font-bold text-foreground">{Number(job.budget || 0).toLocaleString()} ETB</p>
                     </div>
-                  ))}
+                    <Badge variant="outline" className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border ${statusStyle(job.status)}`}>
+                      {(job.status || "pending").replace("_", " ")}
+                    </Badge>
+                  </div>
                 </div>
-              </>
-            ) : (
-              <div className="flex flex-col items-center py-12 gap-2 text-center">
-                <Briefcase size={24} className="text-muted-foreground/30" />
-                <p className="text-xs text-muted-foreground font-medium">No job history yet</p>
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-8 flex flex-col items-center justify-center text-center gap-2">
+              <Briefcase className="h-5 w-5 text-muted-foreground/40" />
+              <p className="text-xs text-muted-foreground">No recent jobs completed yet</p>
+            </div>
+          )}
         </div>
 
-        <div className="lg:col-span-2 flex flex-col gap-4">
-          <div className="rounded-2xl border border-border bg-card shadow-sm p-5">
+        {/* Worker Skills */}
+        <div className="rounded-2xl border border-border bg-card shadow-sm p-4 sm:p-5 flex flex-col justify-between">
+          <div>
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Completed Jobs</p>
-              <CheckCircle2 size={15} className="text-emerald-400" />
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Active Trade Skills</p>
+              <Star className="h-4 w-4 text-amber-400" />
             </div>
-            <p className="text-4xl font-black tracking-tight">
-              <CountUp to={stats.completedJobs} duration={1.5} />
-            </p>
-            <div className="mt-3 flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
-              <Star size={11} className="fill-emerald-400" /> Completion rate: {completionRate}%
-            </div>
-          </div>
 
-          <div className="rounded-2xl border border-border bg-card shadow-sm p-5 flex-1">
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Your Skills</p>
             {worker.skills.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5 my-2">
                 {worker.skills.map((skill: string) => (
-                  <span key={skill} className="inline-flex items-center rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 text-[11px] font-semibold text-indigo-400">
+                  <span key={skill} className="inline-flex items-center rounded-lg border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-1 text-[11px] font-semibold text-indigo-400">
                     {skill}
                   </span>
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col gap-2">
-                <p className="text-xs text-muted-foreground">No skills added yet.</p>
-                <Link href="/worker/profile/settings" className="text-xs font-semibold text-indigo-400 hover:underline">Add skills ?</Link>
-              </div>
+              <p className="text-xs text-muted-foreground my-2">No skills selected yet.</p>
             )}
+          </div>
+
+          <div className="pt-2">
+            <Button asChild size="default" variant="outline" className="rounded-xl w-full h-10 text-xs font-bold touch-manipulation">
+              <Link href="/worker/profile/settings">Edit Skills & Rates</Link>
+            </Button>
           </div>
         </div>
       </div>

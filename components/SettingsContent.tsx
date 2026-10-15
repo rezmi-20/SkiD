@@ -5,6 +5,24 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { updateProfile } from "@/lib/actions/profile";
 import { useLanguage } from "@/context/LanguageContext";
+import {
+  User,
+  Wrench,
+  Landmark,
+  Shield,
+  Bell,
+  ArrowLeft,
+  Loader2,
+  CheckCircle2,
+  Camera,
+  Eye,
+  EyeOff,
+  X,
+  Plus,
+  CreditCard,
+  Lock,
+  ChevronRight,
+} from "lucide-react";
 
 interface Props {
   initialData: any;
@@ -259,7 +277,7 @@ export default function SettingsContent({ initialData, role }: Props) {
       <header className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
            <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center bg-surface-container rounded-full hover:bg-surface-container-high transition-all active:scale-90">
-              <span className="material-symbols-outlined">arrow_back</span>
+              <ArrowLeft className="h-4 w-4" />
            </button>
            <button 
              form="settings-form"
@@ -269,9 +287,9 @@ export default function SettingsContent({ initialData, role }: Props) {
              }`}
            >
               {isPending ? (
-                <span className="material-symbols-outlined animate-spin text-[18px]">sync</span>
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : success ? (
-                <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                <CheckCircle2 className="h-4 w-4" />
               ) : (
                 t("settings.saveChanges")
               )}
@@ -300,7 +318,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                   : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container border border-surface-container-highest/30"
                }`}
              >
-                <span className="material-symbols-outlined text-[20px]">{s.icon}</span>
+                 {s.id === "personal" ? <User className="h-4 w-4" /> : s.id === "professional" ? <Wrench className="h-4 w-4" /> : s.id === "payout" ? <Landmark className="h-4 w-4" /> : s.id === "security" ? <Shield className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
                 {s.label}
              </button>
            ))}
@@ -338,7 +356,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                        </div>
                        {!initialData.is_verified && !uploading && (
                          <div className="absolute inset-0 bg-black/40 rounded-[2.5rem] opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                            <span className="material-symbols-outlined text-white">camera_alt</span>
+                            <Camera className="h-5 w-5 text-white" />
                          </div>
                        )}
                        {uploading && (
@@ -348,7 +366,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                        )}
                        {initialData.is_verified && (
                          <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary text-on-primary rounded-full border-4 border-surface flex items-center justify-center shadow-lg">
-                            <span className="material-symbols-outlined text-[16px] filled">verified</span>
+                            <CheckCircle2 className="h-4 w-4 text-on-primary" />
                          </div>
                        )}
                        <input
@@ -385,7 +403,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                          }`}
                        />
                        {initialData.is_verified && (
-                         <span className="material-symbols-outlined absolute right-4 top-[42px] text-primary text-[18px]">verified</span>
+                         <CheckCircle2 className="absolute right-4 top-[42px] text-primary h-4 w-4" />
                        )}
                     </div>
                     <div className="space-y-2">
@@ -426,9 +444,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                              title={showFin ? t("settings.hideFin") : t("settings.showFin")}
                              className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
                            >
-                             <span className="material-symbols-outlined text-[20px]">
-                               {showFin ? "visibility_off" : "visibility"}
-                             </span>
+                             {showFin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                            </button>
                          )}
                        </div>
@@ -546,12 +562,12 @@ export default function SettingsContent({ initialData, role }: Props) {
                           <span key={i} className="px-5 py-2.5 bg-primary/10 text-primary border border-primary/20 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
                              {s}
                              <button type="button" onClick={() => setFormData({...formData, skills: formData.skills.filter((_: string, idx: number) => idx !== i)})}>
-                                <span className="material-symbols-outlined text-[16px]">close</span>
+                                <X className="h-3.5 w-3.5" />
                              </button>
                           </span>
                         ))}
                         <button type="button" className="px-5 py-2.5 bg-surface-container-high border border-surface-container-highest rounded-2xl text-[10px] font-black uppercase tracking-widest text-on-surface-variant flex items-center gap-2 hover:bg-primary/5 hover:text-primary transition-all">
-                           <span className="material-symbols-outlined text-[16px]">add</span>
+                           <Plus className="h-3.5 w-3.5" />
                            {t("settings.addSkill")}
                         </button>
                      </div>
@@ -593,9 +609,11 @@ export default function SettingsContent({ initialData, role }: Props) {
                       <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
                         hasChapaSubaccount ? "bg-primary/10 text-primary" : "bg-surface-container-high text-on-surface-variant"
                       }`}>
-                        <span className="material-symbols-outlined">
-                          {hasChapaSubaccount ? "verified" : "account_balance"}
-                        </span>
+                        {hasChapaSubaccount ? (
+                          <CheckCircle2 className="h-6 w-6" />
+                        ) : (
+                          <Landmark className="h-6 w-6" />
+                        )}
                       </div>
                       <div className="min-w-0">
                         <h3 className="text-sm font-black uppercase tracking-widest text-on-surface">
@@ -679,9 +697,11 @@ export default function SettingsContent({ initialData, role }: Props) {
                         disabled={payoutStatus === "loading" || !payoutForm.accountName || !payoutForm.accountNumber || !payoutForm.bankCode}
                         className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 text-xs font-black uppercase tracking-widest text-on-primary transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
                       >
-                        <span className={`material-symbols-outlined text-[18px] ${payoutStatus === "loading" ? "animate-spin" : ""}`}>
-                          {payoutStatus === "loading" ? "sync" : "add_card"}
-                        </span>
+                        {payoutStatus === "loading" ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <CreditCard className="h-4 w-4" />
+                        )}
                         {payoutStatus === "loading" ? t("settings.connecting") : t("settings.connectChapaPayout")}
                       </button>
                     </div>
@@ -710,7 +730,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                   <div className="p-8 bg-surface-container-low/50 border border-surface-container-highest rounded-[3rem] space-y-6">
                      <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center">
-                           <span className="material-symbols-outlined">lock</span>
+                           <Lock className="h-5 w-5" />
                         </div>
                         <div>
                            <h3 className="text-sm font-black text-on-surface uppercase tracking-widest">{t("settings.accountSecurity")}</h3>
@@ -721,11 +741,11 @@ export default function SettingsContent({ initialData, role }: Props) {
                      <div className="flex flex-col gap-3">
                         <button type="button" className="w-full h-14 bg-surface-container-lowest border border-surface-container-highest rounded-2xl flex items-center justify-between px-6 hover:border-primary/30 transition-all group">
                            <span className="text-xs font-bold text-on-surface uppercase tracking-widest">{t("settings.changePin")}</span>
-                           <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">chevron_right</span>
+                           <ChevronRight className="h-4 w-4 text-on-surface-variant group-hover:text-primary transition-colors" />
                         </button>
                         <button type="button" className="w-full h-14 bg-surface-container-lowest border border-surface-container-highest rounded-2xl flex items-center justify-between px-6 hover:border-primary/30 transition-all group">
                            <span className="text-xs font-bold text-on-surface uppercase tracking-widest">{t("settings.updatePassword")}</span>
-                           <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">chevron_right</span>
+                           <ChevronRight className="h-4 w-4 text-on-surface-variant group-hover:text-primary transition-colors" />
                         </button>
                      </div>
                   </div>

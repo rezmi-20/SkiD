@@ -6,6 +6,18 @@ import { useState } from "react";
 import ProtectedVerificationDocumentViewer from "@/components/admin/ProtectedVerificationDocumentViewer";
 import VerificationFinReveal from "@/components/admin/VerificationFinReveal";
 import { toWorkerDisplayStatus } from "@/lib/worker-verification";
+import {
+  ArrowLeft,
+  User,
+  History,
+  Wrench,
+  Fingerprint,
+  FileQuestion,
+  CheckCircle2,
+  Ban,
+  ShieldAlert,
+  Clock,
+} from "lucide-react";
 
 interface WorkerVerificationContentProps {
   worker: {
@@ -100,7 +112,7 @@ export default function WorkerVerificationContent({
             href="/admin/verify" 
             className="text-[10px] font-black uppercase tracking-[0.3em] text-primary hover:opacity-70 transition-all flex items-center gap-2"
           >
-            <span className="material-symbols-outlined text-[14px]">arrow_back</span>
+            <ArrowLeft className="h-3.5 w-3.5" />
             Back to Command
           </Link>
           <div className="space-y-1">
@@ -132,7 +144,7 @@ export default function WorkerVerificationContent({
         <aside className="space-y-10 order-2 md:order-1">
           <section className="space-y-6">
             <h3 className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-40 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[16px]">person</span>
+              <User className="h-4 w-4" />
               Profile Metadata
             </h3>
             <div className="space-y-5 bg-surface-container-low p-6 rounded-[2rem] border border-surface-container-highest/50">
@@ -162,7 +174,7 @@ export default function WorkerVerificationContent({
 
           <section className="space-y-6">
             <h3 className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-40 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[16px]">history</span>
+              <History className="h-4 w-4" />
               Case Timeline
             </h3>
             <div className="space-y-3 bg-surface-container-low p-6 rounded-[2rem] border border-surface-container-highest/50">
@@ -201,7 +213,7 @@ export default function WorkerVerificationContent({
 
           <section className="space-y-6">
              <h3 className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-40 flex items-center gap-2">
-                <span className="material-symbols-outlined text-[16px]">construction</span>
+                <Wrench className="h-4 w-4" />
                 Service Taxonomy
              </h3>
              <div className="flex flex-wrap gap-2 pt-1">
@@ -223,7 +235,7 @@ export default function WorkerVerificationContent({
           >
              <div className="p-6 border-b border-surface-container-highest flex justify-between items-center bg-surface-container-high">
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-on-surface opacity-60">Fayda National ID Scan</h3>
-                <span className="material-symbols-outlined text-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.3)]">fingerprint</span>
+                <Fingerprint className="h-5 w-5 text-primary" />
              </div>
              <div className="p-10 bg-black/50 flex items-center justify-center min-h-[500px] relative group">
                 <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none z-10" />
@@ -235,7 +247,7 @@ export default function WorkerVerificationContent({
                   />
                 ) : (
                   <div className="flex flex-col items-center gap-6 text-on-surface-variant opacity-20">
-                    <span className="material-symbols-outlined text-[80px]">file_open</span>
+                    <FileQuestion className="h-16 w-16" />
                     <p className="text-body-md font-bold uppercase tracking-widest">No Document Attached</p>
                   </div>
                 )}
@@ -267,7 +279,7 @@ export default function WorkerVerificationContent({
                     disabled={displayStatus === "approved" || !identityComplete}
                     className="flex-1 h-16 bg-primary text-on-primary rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-30 disabled:scale-100 disabled:grayscale shadow-xl shadow-primary/20 flex items-center justify-center gap-3"
                   >
-                    <span className="material-symbols-outlined">verified</span>
+                    <CheckCircle2 className="h-4 w-4" />
                     {displayStatus === "approved" ? 'Approved' : 'Approve'}
                   </button>
                 )}
@@ -277,7 +289,7 @@ export default function WorkerVerificationContent({
                     onClick={() => requireReason(onReject)}
                     className="px-10 h-16 bg-surface-container-high border border-surface-container-highest text-secondary rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-surface-container-highest active:scale-[0.98] transition-all flex items-center justify-center gap-3"
                   >
-                    <span className="material-symbols-outlined">block</span>
+                    <Ban className="h-4 w-4" />
                     Reject
                   </button>
                 )}
@@ -287,7 +299,7 @@ export default function WorkerVerificationContent({
                     onClick={() => requireReason(onRevoke, { confirmRevocation: true })}
                     className="px-10 h-16 bg-error/10 border border-error/20 text-error rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-error/20 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
                   >
-                    <span className="material-symbols-outlined">gpp_bad</span>
+                    <ShieldAlert className="h-4 w-4" />
                     Revoke Verification
                   </button>
                 )}
@@ -298,7 +310,7 @@ export default function WorkerVerificationContent({
                     disabled={displayStatus === "pending"}
                     className="px-10 h-16 bg-surface-container-high border border-surface-container-highest text-on-surface rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-surface-container-highest active:scale-[0.98] transition-all disabled:opacity-30 flex items-center justify-center gap-3"
                   >
-                    <span className="material-symbols-outlined">pending_actions</span>
+                    <Clock className="h-4 w-4" />
                     Request Resubmission
                   </button>
                 )}
