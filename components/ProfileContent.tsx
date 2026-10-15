@@ -5,29 +5,23 @@ import { useTheme } from "next-themes";
 import { authClient } from "@/lib/auth/client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  ShieldCheck, 
-  Globe, 
-  Calendar, 
-  Settings, 
-  LogOut, 
-  CheckCircle2, 
-  MapPin, 
-  Lock, 
-  Moon, 
-  Sun,
+import {
+  Settings,
+  Package,
+  Truck,
   Star,
-  Activity,
-  Hash,
-  CreditCard
+  Heart,
+  ShieldCheck,
+  Moon,
+  MessageCircle,
+  LogOut,
+  ArrowRight,
+  UserCheck,
+  CreditCard,
+  Scale,
+  FileText,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 
 interface ProfileContentProps {
   user: {
@@ -44,27 +38,16 @@ interface ProfileContentProps {
     verificationStatus?: string;
     maskedFin?: string | null;
   };
-  stats: {
+  stats?: {
     label: string;
     value: string;
   }[];
-  menuGroups: {
-    group: string;
-    items: {
-      label: string;
-      subtitle: string;
-      icon: string;
-      link?: string;
-      onClick?: () => void;
-      isLoading?: boolean;
-      isSuccess?: boolean;
-    }[];
-  }[];
+  menuGroups?: any[];
   skills?: string[];
 }
 
-export default function ProfileContent({ user, stats, menuGroups, skills }: ProfileContentProps) {
-  const { t, language, setLanguage } = useLanguage();
+export default function ProfileContent({ user }: ProfileContentProps) {
+  const { t } = useLanguage();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -73,286 +56,251 @@ export default function ProfileContent({ user, stats, menuGroups, skills }: Prof
   }, []);
 
   if (!mounted) return null;
-  const identityVerified = Boolean(user.is_verified && user.maskedFin);
-  const verificationHref = user.role === "worker" ? "/worker/pending-verification" : "/client/profile/settings?verify=1&returnTo=/client/profile";
-  const verificationLabel = (() => {
-    if (identityVerified) return t("profile.verified");
-    switch (user.verificationStatus) {
-      case "pending": return t("verification.status.pending");
-      case "approved": return t("verification.status.approved");
-      case "rejected": return t("verification.status.rejected");
-      case "resubmission_requested": return t("verification.status.resubmission_requested");
-      case "suspended": return t("verification.status.suspended");
-      case "revoked": return t("verification.status.revoked");
-      default: return t("profile.incomplete");
-    }
-  })();
+
+  const isDarkMode = theme === "dark";
+  const toggleTheme = () => {
+    setTheme(isDarkMode ? "light" : "dark");
+  };
+
+  const isWorker = user.role === "worker";
+  const contractsHref = isWorker ? "/worker/contracts" : "/client/contracts";
+  const paymentsHref = isWorker ? "/worker/earnings" : "/client/payments";
+  const settingsHref = isWorker ? "/worker/profile/settings" : "/client/profile/settings";
+  const securityHref = isWorker ? "/worker/contract-setup" : "/client/contract-setup";
+  const supportHref = isWorker ? "/worker/support" : "/client/support";
+  const disputesHref = isWorker ? "/worker/disputes" : "/client/disputes";
+
+  const handleSignOut = () => {
+    authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          window.location.href = "/login";
+        },
+      },
+    });
+  };
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-5xl mx-auto pb-24">
-      
-      {/* ── HEADER BLOCK (No card border/box, blends with page background) ── */}
-      <div className="relative py-8 flex flex-col items-center text-center">
-        {/* Subtle grid pattern background to blend in */}
-        <div
-          className="absolute inset-0 opacity-[0.02] pointer-events-none"
-          style={{
-            backgroundImage: "radial-gradient(var(--color-primary) 1px, transparent 1px)",
-            backgroundSize: "24px 24px",
-          }}
-        />
+    <div className="w-full max-w-md mx-auto px-2 sm:px-4 pb-32 animate-in fade-in duration-300">
+      {/* ── 1. TITLE (Centered "Profile") ────────────────────────────── */}
+      <div className="pt-2 pb-5 text-center">
+        <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
+          Profile
+        </h1>
+      </div>
 
-        <div className="relative z-10 flex flex-col items-center">
-          {/* Avatar Section */}
-          <div className="relative mb-4">
-            <Avatar className="h-28 w-28 border-4 border-background shadow-xl">
-              {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
-              <AvatarFallback className="bg-primary/10 text-primary font-bold text-3xl">
-                {user.initials}
-              </AvatarFallback>
-            </Avatar>
-            {identityVerified && (
-              <div className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full border-4 border-background p-1.5 shadow-lg flex items-center justify-center">
-                <ShieldCheck size={18} />
-              </div>
-            )}
+      {/* ── 2. USER PROFILE HEADER ───────────────────────────────────── */}
+      <div className="flex items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-3.5 min-w-0">
+          {/* Avatar with mint/green badge container */}
+          <div className="relative shrink-0">
+            <div className="h-16 w-16 rounded-full bg-[#bbf7d0] dark:bg-[#143d22] p-0.5 flex items-center justify-center">
+              <Avatar className="h-full w-full rounded-full">
+                {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
+                <AvatarFallback className="bg-[#bbf7d0] text-[#166534] font-black text-lg">
+                  {user.initials}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+            {/* Status icon badge pinned to bottom right */}
+            <div className="absolute -bottom-0.5 -right-0.5 h-6 w-6 rounded-full bg-[#86efac] border-2 border-background flex items-center justify-center text-[#14532d] shadow-sm">
+              <UserCheck className="h-3.5 w-3.5 stroke-[2.5]" />
+            </div>
           </div>
 
-          {/* User Name & Details */}
-          <div className="flex items-center justify-center gap-1.5 mb-1">
-            <h1 className="text-2xl font-extrabold text-foreground">{user.name}</h1>
-            {identityVerified && (
-              <Badge className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-0.5 shadow-sm">
-                <CheckCircle2 size={12} className="fill-white text-blue-500" />
-              </Badge>
-            )}
+          {/* Name & Email */}
+          <div className="min-w-0">
+            <h2 className="text-lg sm:text-xl font-extrabold text-foreground truncate leading-tight">
+              {user.name}
+            </h2>
+            <p className="text-xs text-muted-foreground truncate mt-0.5 font-medium">
+              {user.email}
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground font-medium mb-4">{user.email}</p>
+        </div>
 
-          <div className="flex flex-wrap gap-2 justify-center">
-            <Badge variant="outline" className="px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-card border-border">
-              {user.role === "worker" && identityVerified ? t("profile.verifiedProvider") : user.role === "worker" ? t("common.role.worker") : t("profile.clientAccount")}
-            </Badge>
-            {user.role === "worker" && identityVerified && (
-              <Badge variant="outline" className="px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                {t("profile.faydaActive")}
-              </Badge>
-            )}
-            {!identityVerified && (
-              <Badge variant="outline" className="px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-600 border-amber-500/20">
-                {t("profile.faydaPending")}
-              </Badge>
-            )}
-          </div>
+        {/* Circular Settings Gear Button */}
+        <Link
+          href={settingsHref}
+          className="h-12 w-12 rounded-full bg-[#181d24] dark:bg-[#1e2329] text-white flex items-center justify-center shadow-md active:scale-90 transition-transform shrink-0"
+          title="Settings"
+          aria-label="Settings"
+        >
+          <Settings className="h-5 w-5 stroke-[1.8]" />
+        </Link>
+      </div>
+
+      {/* ── 3. "MY ORDERS" / WORK & CONTRACTS BANNER ─────────────────── */}
+      <div className="mb-6">
+        <h3 className="text-sm font-black text-foreground tracking-tight mb-2.5">
+          {isWorker ? "My Work & Orders" : "My Orders"}
+        </h3>
+
+        {/* Sleek Dark Capsule Container (Pixel-perfect from screenshot) */}
+        <div className="rounded-[2rem] bg-[#0e1115] text-white p-5 shadow-xl flex items-center justify-around">
+          {/* Item 1: Packed / Active Contracts */}
+          <Link
+            href={contractsHref}
+            className="flex flex-col items-center group transition-transform active:scale-95 touch-manipulation"
+          >
+            <div className="relative">
+              <Package className="h-6 w-6 text-white stroke-[1.75]" />
+              <span className="absolute -top-1.5 -right-2 bg-[#ef4444] text-white text-[9px] font-black h-4 w-4 rounded-full flex items-center justify-center shadow-sm">
+                1
+              </span>
+            </div>
+            <span className="text-xs font-semibold text-white/90 mt-2">
+              {isWorker ? "Active Jobs" : "Packed"}
+            </span>
+          </Link>
+
+          {/* Item 2: Delivery / In Progress */}
+          <Link
+            href={contractsHref}
+            className="flex flex-col items-center group transition-transform active:scale-95 touch-manipulation"
+          >
+            <div className="relative">
+              <Truck className="h-6 w-6 text-white stroke-[1.75]" />
+              <span className="absolute -top-1.5 -right-2 bg-[#ef4444] text-white text-[9px] font-black h-4 w-4 rounded-full flex items-center justify-center shadow-sm">
+                1
+              </span>
+            </div>
+            <span className="text-xs font-semibold text-white/90 mt-2">
+              {isWorker ? "In Progress" : "Delivery"}
+            </span>
+          </Link>
+
+          {/* Item 3: Give a Rating / Feedback */}
+          <Link
+            href={isWorker ? "/worker/jobs" : "/client/search"}
+            className="flex flex-col items-center group transition-transform active:scale-95 touch-manipulation"
+          >
+            <Star className="h-6 w-6 text-white stroke-[1.75]" />
+            <span className="text-xs font-semibold text-white/90 mt-2">
+              Give a Rating
+            </span>
+          </Link>
         </div>
       </div>
 
-      {/* ── KPI/STATS ROW (Clean, borderless grid items) ── */}
-      <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto border-t border-b border-border/60 py-6">
-        {stats.map((stat, i) => (
-          <div key={i} className="flex flex-col items-center justify-center text-center">
-            <span className="text-2xl md:text-3xl font-black text-foreground">{stat.value}</span>
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">{stat.label}</span>
-          </div>
-        ))}
-      </div>
+      {/* ── 4. "GENERAL" SECTION ─────────────────────────────────────── */}
+      <div>
+        <h3 className="text-sm font-black text-foreground tracking-tight mb-2.5">
+          General
+        </h3>
 
-      {/* ── SKILLS ROW (Worker Only) ── */}
-      {skills && skills.length > 0 && (
-        <div className="space-y-3 max-w-3xl mx-auto">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-center">{t("profile.professionalSkills")}</p>
-          <div className="flex flex-wrap gap-2 justify-center">
-            {skills.map((skill, i) => (
-              <Badge key={i} variant="secondary" className="px-3.5 py-1.5 text-xs rounded-xl font-semibold bg-indigo-500/10 text-indigo-600 border-none">
-                {skill}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ── PROFILE DETAILS GRID (Directly on page background) ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 pt-4">
-        
-        {/* Card 1: Personal Details */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-border/80">
-            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-foreground">{t("profile.personalDetails")}</h2>
-            <Link href={user.role === "worker" ? "/worker/profile/settings" : "/client/profile/settings"}>
-              <Button variant="ghost" size="sm" className="h-7 text-xs text-primary rounded-lg gap-1 hover:bg-primary/5 px-2">
-                <Settings size={12} /> {t("profile.edit")}
-              </Button>
-            </Link>
-          </div>
-
-          <div className="space-y-1 text-sm">
-            {[
-              { label: t("profile.fullName"), value: user.name },
-              { label: t("profile.dateOfBirth"), value: user.dateOfBirth || t("profile.defaultDob") },
-              { label: t("profile.gender"), value: user.gender || t("profile.genderMale") },
-              { label: t("profile.nationality"), value: t("profile.nationalityEthiopian") },
-              { label: t("profile.address"), value: user.district ? `${user.district}, Dire Dawa` : t("profile.defaultAddress") },
-              { label: t("profile.phoneNumber"), value: user.phone || t("profile.defaultPhone") },
-              { label: t("checkout.email"), value: user.email },
-            ].map((row, i) => (
-              <div key={i} className="flex justify-between items-center py-2.5 border-b border-border/40 last:border-0">
-                <span className="text-muted-foreground font-medium">{row.label}</span>
-                <span className="font-semibold text-foreground text-right">{row.value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Card 2: Account Details */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-border/80">
-            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-foreground">{t("profile.accountDetails")}</h2>
-            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[9px] uppercase tracking-wider rounded-full px-2 py-0">{t("profile.active")}</Badge>
-          </div>
-
-          <div className="space-y-1 text-sm">
-            {[
-              { label: t("profile.displayName"), value: user.name.toLowerCase().replace(/\s+/g, "_") + "_ds" },
-              { label: t("profile.accountCreated"), value: t("profile.accountCreatedDate") },
-              { label: t("profile.lastLogin"), value: new Date().toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) },
-              { label: t("profile.membershipStatus"), value: t("profile.premiumMember") },
-              { label: t("profile.accountVerification"), value: verificationLabel, isBadge: true },
-              { label: t("profile.faydaFin"), value: user.maskedFin || t("profile.notRecorded") },
-              { label: t("footer.language"), value: language === "en" ? "English" : language === "am" ? "Amharic" : "Afaan Oromo" },
-              { label: t("profile.timeZone"), value: t("profile.eastAfricaTime") },
-            ].map((row, i) => (
-              <div key={i} className="flex justify-between items-center py-2.5 border-b border-border/40 last:border-0">
-                <span className="text-muted-foreground font-medium">{row.label}</span>
-                {row.isBadge ? (
-                  <Badge variant="outline" className={`${identityVerified ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-amber-500/10 text-amber-600 border-amber-500/20"} rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider`}>
-                    {row.value}
-                  </Badge>
-                ) : (
-                  <span className="font-semibold text-foreground text-right">{row.value}</span>
-                )}
-              </div>
-            ))}
-          </div>
-          {!identityVerified && (
-            <Button asChild size="sm" className="rounded-xl text-xs font-semibold">
-              <Link href={verificationHref}>{t("profile.completeFayda")}</Link>
-            </Button>
-          )}
-        </div>
-
-        {/* Card 3: Security Settings */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-border/80">
-            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-foreground">{t("profile.securitySettings")}</h2>
-            <Lock size={12} className="text-muted-foreground" />
-          </div>
-
-          <div className="space-y-1 text-sm">
-            {[
-              { label: t("profile.passwordLastChanged"), value: t("profile.passwordLastChangedDate") },
-              { label: t("profile.twoFactor"), value: t("profile.enabled"), isBadge: true },
-              { label: t("profile.securityQuestionsSet"), value: t("profile.yes") },
-              { label: t("profile.loginNotifications"), value: t("profile.enabled"), isBadge: true },
-              { label: t("profile.connectedDevices"), value: t("profile.twoDevices") },
-              { label: t("profile.recentAccountActivity"), value: t("profile.noSuspiciousActivity") },
-            ].map((row, i) => (
-              <div key={i} className="flex justify-between items-center py-2.5 border-b border-border/40 last:border-0">
-                <span className="text-muted-foreground font-medium">{row.label}</span>
-                {row.isBadge ? (
-                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
-                    {row.value}
-                  </Badge>
-                ) : (
-                  <span className="font-semibold text-foreground text-right">{row.value}</span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Card 4: Preferences & App Settings */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-border/80">
-            <h2 className="text-xs font-bold uppercase tracking-[0.15em] text-foreground">{t("profile.preferences")}</h2>
-            <Globe size={12} className="text-muted-foreground" />
-          </div>
-
-          <div className="space-y-4 text-sm pt-2">
-            {/* Language Toggle */}
-            <div className="flex justify-between items-center py-1">
-              <span className="text-muted-foreground font-medium">{t("footer.language")}</span>
-              <div className="flex items-center gap-1 bg-muted rounded-xl p-0.5 border border-border">
-                <button 
-                  onClick={() => setLanguage("en")} 
-                  className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
-                    language === "en" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  EN
-                </button>
-                <button 
-                  onClick={() => setLanguage("am")} 
-                  className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
-                    language === "am" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  አማ
-                </button>
-                <button
-                  onClick={() => setLanguage("om")}
-                  className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
-                    language === "om" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  OM
-                </button>
-              </div>
+        <div className="space-y-2.5">
+          {/* Row 1: Wishlist / Saved / My Contracts */}
+          <Link
+            href={contractsHref}
+            className="rounded-[1.75rem] bg-[#f1f3f6] dark:bg-[#151a21] p-3.5 sm:p-4 flex items-center justify-between shadow-sm active:scale-[0.99] transition-all touch-manipulation"
+          >
+            <div className="h-11 w-11 rounded-full bg-[#181d24] text-white flex items-center justify-center shrink-0">
+              <Heart className="h-4 w-4 stroke-[2]" />
             </div>
+            <span className="text-xs sm:text-sm font-bold text-foreground flex-1 ml-3.5">
+              Wishlist & Saved Pros
+            </span>
+            <ArrowRight className="h-4 w-4 text-foreground/70 shrink-0" />
+          </Link>
 
-            {/* Dark Mode Switch */}
-            <div className="flex justify-between items-center py-1">
-              <span className="text-muted-foreground font-medium">{t("profile.darkModeAppearance")}</span>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")} 
-                className="h-8 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground gap-1 px-3 border border-border"
-              >
-                {theme === "dark" ? <Sun size={11} /> : <Moon size={11} />}
-                <span className="text-[9px] font-bold uppercase tracking-wider">{theme === "dark" ? t("profile.activated") : t("profile.deactivated")}</span>
-              </Button>
+          {/* Row 2: Security & Contract PIN */}
+          <Link
+            href={securityHref}
+            className="rounded-[1.75rem] bg-[#f1f3f6] dark:bg-[#151a21] p-3.5 sm:p-4 flex items-center justify-between shadow-sm active:scale-[0.99] transition-all touch-manipulation"
+          >
+            <div className="h-11 w-11 rounded-full bg-[#181d24] text-white flex items-center justify-center shrink-0">
+              <ShieldCheck className="h-4 w-4 stroke-[2]" />
             </div>
+            <span className="text-xs sm:text-sm font-bold text-foreground flex-1 ml-3.5">
+              Security
+            </span>
+            <ArrowRight className="h-4 w-4 text-foreground/70 shrink-0" />
+          </Link>
 
-            <Separator className="bg-border/60 my-2" />
-
-            <div className="flex flex-col gap-2 pt-1">
-              <Button 
-                variant="outline" 
-                className="w-full justify-start rounded-xl text-xs font-semibold h-10 border-border text-foreground hover:bg-muted"
-                asChild
-              >
-                <Link href={user.role === "worker" ? "/worker/profile/settings" : "/client/profile/settings"}>
-                  <Settings size={13} className="mr-2 text-muted-foreground" /> {t("profile.accountProfileSettings")}
-                </Link>
-              </Button>
-              <Button 
-                variant="ghost" 
-                onClick={() => authClient.signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/login"; } } })}
-                className="w-full justify-start rounded-xl text-xs font-semibold h-10 text-destructive hover:bg-destructive/10 hover:text-destructive"
-              >
-                <LogOut size={13} className="mr-2" /> {t("profile.signOut")}
-              </Button>
+          {/* Row 3: Dark Theme (Interactive Toggle Switch) */}
+          <div
+            onClick={toggleTheme}
+            className="rounded-[1.75rem] bg-[#f1f3f6] dark:bg-[#151a21] p-3.5 sm:p-4 flex items-center justify-between shadow-sm cursor-pointer active:scale-[0.99] transition-all touch-manipulation"
+          >
+            <div className="h-11 w-11 rounded-full bg-[#181d24] text-white flex items-center justify-center shrink-0">
+              <Moon className="h-4 w-4 stroke-[2]" />
+            </div>
+            <span className="text-xs sm:text-sm font-bold text-foreground flex-1 ml-3.5">
+              Dark Theme
+            </span>
+            {/* iOS-style toggle pill */}
+            <div
+              className={`w-12 h-7 rounded-full p-0.5 transition-colors duration-200 flex items-center ${
+                isDarkMode ? "bg-[#b5f23d]" : "bg-[#d1d5db]"
+              }`}
+            >
+              <div
+                className={`h-6 w-6 rounded-full bg-white shadow-md transition-transform duration-200 ${
+                  isDarkMode ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
             </div>
           </div>
+
+          {/* Row 4: Payments & Invoices (Chapa) */}
+          <Link
+            href={paymentsHref}
+            className="rounded-[1.75rem] bg-[#f1f3f6] dark:bg-[#151a21] p-3.5 sm:p-4 flex items-center justify-between shadow-sm active:scale-[0.99] transition-all touch-manipulation"
+          >
+            <div className="h-11 w-11 rounded-full bg-[#181d24] text-white flex items-center justify-center shrink-0">
+              <CreditCard className="h-4 w-4 stroke-[2]" />
+            </div>
+            <span className="text-xs sm:text-sm font-bold text-foreground flex-1 ml-3.5">
+              Payments & Billing (Chapa)
+            </span>
+            <ArrowRight className="h-4 w-4 text-foreground/70 shrink-0" />
+          </Link>
+
+          {/* Row 5: Contact Us & Live Support */}
+          <Link
+            href={supportHref}
+            className="rounded-[1.75rem] bg-[#f1f3f6] dark:bg-[#151a21] p-3.5 sm:p-4 flex items-center justify-between shadow-sm active:scale-[0.99] transition-all touch-manipulation"
+          >
+            <div className="h-11 w-11 rounded-full bg-[#181d24] text-white flex items-center justify-center shrink-0">
+              <MessageCircle className="h-4 w-4 stroke-[2]" />
+            </div>
+            <span className="text-xs sm:text-sm font-bold text-foreground flex-1 ml-3.5">
+              Contact Us
+            </span>
+            <ArrowRight className="h-4 w-4 text-foreground/70 shrink-0" />
+          </Link>
+
+          {/* Row 6: Disputes & Governance */}
+          <Link
+            href={disputesHref}
+            className="rounded-[1.75rem] bg-[#f1f3f6] dark:bg-[#151a21] p-3.5 sm:p-4 flex items-center justify-between shadow-sm active:scale-[0.99] transition-all touch-manipulation"
+          >
+            <div className="h-11 w-11 rounded-full bg-[#181d24] text-white flex items-center justify-center shrink-0">
+              <Scale className="h-4 w-4 stroke-[2]" />
+            </div>
+            <span className="text-xs sm:text-sm font-bold text-foreground flex-1 ml-3.5">
+              Disputes & Appeals
+            </span>
+            <ArrowRight className="h-4 w-4 text-foreground/70 shrink-0" />
+          </Link>
+
+          {/* Row 7: Logout (Red accent) */}
+          <button
+            onClick={handleSignOut}
+            type="button"
+            className="w-full rounded-[1.75rem] bg-[#f1f3f6] dark:bg-[#151a21] p-3.5 sm:p-4 flex items-center justify-between shadow-sm active:scale-[0.99] transition-all touch-manipulation text-left"
+          >
+            <div className="h-11 w-11 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center shrink-0">
+              <LogOut className="h-4 w-4 stroke-[2]" />
+            </div>
+            <span className="text-xs sm:text-sm font-bold text-red-600 dark:text-red-400 flex-1 ml-3.5">
+              Logout
+            </span>
+            <ArrowRight className="h-4 w-4 text-red-500 shrink-0" />
+          </button>
         </div>
       </div>
-      
-      {/* ── Footer ── */}
-      <footer className="text-center py-8">
-        <p className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest">
-          {t("profile.footer")}
-        </p>
-      </footer>
     </div>
   );
 }

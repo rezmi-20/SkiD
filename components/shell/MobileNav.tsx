@@ -2,97 +2,74 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useLanguage } from "@/context/LanguageContext";
-import { TranslationKey } from "@/lib/translations";
+import { Home, Compass, MessageSquare, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  LayoutDashboard,
-  Search,
-  FileText,
-  CreditCard,
-  MessageSquare,
-  User,
-  Briefcase,
-  Wallet,
-  Users,
-  Scale,
-  Gavel,
-  LifeBuoy,
-} from "lucide-react";
 
-interface NavItem {
-  key: TranslationKey;
-  label: string;
-  href: string;
-  icon: React.ReactNode;
+interface MobileNavProps {
+  role: "client" | "worker";
 }
 
-const CLIENT_NAV: NavItem[] = [
-  { key: "nav.dashboard", label: "Home", href: "/client/dashboard", icon: <LayoutDashboard size={20} /> },
-  { key: "nav.discover", label: "Discover", href: "/client/search", icon: <Search size={20} /> },
-  { key: "nav.contracts", label: "Contracts", href: "/client/contracts", icon: <FileText size={20} /> },
-  { key: "nav.payments", label: "Payments", href: "/client/payments", icon: <CreditCard size={20} /> },
-  { key: "nav.disputes", label: "Disputes", href: "/client/disputes", icon: <Scale size={20} /> },
-  { key: "nav.appeals" as any, label: "Appeals", href: "/client/appeals", icon: <Gavel size={20} /> },
-  { key: "nav.support", label: "Support", href: "/client/support", icon: <LifeBuoy size={20} /> },
-  { key: "nav.chat", label: "Chat", href: "/client/messages", icon: <MessageSquare size={20} /> },
-  { key: "nav.feed", label: "Community", href: "/client/community", icon: <Users size={20} /> },
-  { key: "nav.profile", label: "Profile", href: "/client/profile", icon: <User size={20} /> },
-];
-
-const WORKER_NAV: NavItem[] = [
-  { key: "nav.dashboard", label: "Home", href: "/worker/dashboard", icon: <LayoutDashboard size={20} /> },
-  { key: "nav.mygigs", label: "Gigs", href: "/worker/gigs", icon: <Briefcase size={20} /> },
-  { key: "nav.contracts", label: "Contracts", href: "/worker/contracts", icon: <FileText size={20} /> },
-  { key: "nav.earnings", label: "Earnings", href: "/worker/earnings", icon: <Wallet size={20} /> },
-  { key: "nav.disputes", label: "Disputes", href: "/worker/disputes", icon: <Scale size={20} /> },
-  { key: "nav.appeals" as any, label: "Appeals", href: "/worker/appeals", icon: <Gavel size={20} /> },
-  { key: "nav.support", label: "Support", href: "/worker/support", icon: <LifeBuoy size={20} /> },
-  { key: "nav.chat", label: "Chat", href: "/worker/messages", icon: <MessageSquare size={20} /> },
-  { key: "nav.feed", label: "Community", href: "/worker/community", icon: <Users size={20} /> },
-  { key: "nav.profile", label: "Profile", href: "/worker/profile", icon: <User size={20} /> },
-];
-
-export default function MobileNav({ role }: { role: "client" | "worker" }) {
+export default function MobileNav({ role }: MobileNavProps) {
   const pathname = usePathname();
-  const { t } = useLanguage();
-  const navItems = role === "client" ? CLIENT_NAV : WORKER_NAV;
 
-  // Show max 5 most important items on mobile
-  const visibleItems = navItems.slice(0, 5);
+  const navItems = [
+    {
+      id: "home",
+      label: "Home",
+      href: `/${role}/dashboard`,
+      icon: <Home className="h-5 w-5 stroke-[2]" />,
+      activeIcon: <Home className="h-4 w-4 stroke-[2.5]" />,
+    },
+    {
+      id: "community",
+      label: "Community",
+      href: `/${role}/community`,
+      icon: <Compass className="h-5 w-5 stroke-[2]" />,
+      activeIcon: <Compass className="h-4 w-4 stroke-[2.5]" />,
+    },
+    {
+      id: "chat",
+      label: "Chat",
+      href: `/${role}/messages`,
+      icon: <MessageSquare className="h-5 w-5 stroke-[2]" />,
+      activeIcon: <MessageSquare className="h-4 w-4 stroke-[2.5]" />,
+    },
+    {
+      id: "profile",
+      label: "Profile",
+      href: `/${role}/profile`,
+      icon: <User className="h-5 w-5 stroke-[2]" />,
+      activeIcon: <User className="h-4 w-4 stroke-[2.5]" />,
+    },
+  ];
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 pb-safe">
-      <div className="flex items-center h-16 border-t border-border bg-background/95 backdrop-blur-xl">
-        {visibleItems.map((item) => {
+    <nav className="lg:hidden fixed bottom-4 inset-x-4 z-50 pointer-events-none flex justify-center pb-safe">
+      <div className="pointer-events-auto w-full max-w-sm h-[68px] rounded-full bg-[#181d24]/95 dark:bg-[#13171d]/95 backdrop-blur-xl border border-white/10 px-3 flex items-center justify-between shadow-[0_12px_40px_rgba(0,0,0,0.45)]">
+        {navItems.map((item) => {
           const isActive =
-            pathname === item.href ||
-            (item.href !== "/" && pathname?.startsWith(item.href));
+            item.href === `/${role}/dashboard`
+              ? pathname === item.href
+              : pathname?.startsWith(item.href);
 
           return (
             <Link
-              key={item.href}
+              key={item.id}
               href={item.href}
-              className="flex flex-col flex-1 items-center justify-center gap-1 min-h-[44px] transition-colors"
+              className="relative flex items-center justify-center transition-all duration-300"
             >
-              <span
-                className={cn(
-                  "flex items-center justify-center w-10 h-7 rounded-full transition-all duration-200",
-                  isActive
-                    ? "bg-primary/15 text-primary"
-                    : "text-muted-foreground"
-                )}
-              >
-                {item.icon}
-              </span>
-              <span
-                className={cn(
-                  "text-[10px] font-medium transition-colors",
-                  isActive ? "text-primary font-semibold" : "text-muted-foreground"
-                )}
-              >
-                {item.label}
-              </span>
+              {isActive ? (
+                /* Active Tab: Vibrant Lime Pill Button (Pixel-perfect from inspiration) */
+                <div className="flex items-center gap-2 bg-[#b5f23d] text-black font-extrabold text-xs px-4 py-2.5 rounded-full shadow-[0_4px_16px_rgba(181,242,61,0.35)] animate-in zoom-in-95 duration-200">
+                  {item.activeIcon}
+                  <span className="tracking-tight">{item.label}</span>
+                </div>
+              ) : (
+                /* Inactive Tab: Minimal Icon with thumb target */
+                <div className="flex items-center justify-center h-12 w-12 rounded-full text-[#8a929e] hover:text-white active:scale-90 transition-all">
+                  {item.icon}
+                </div>
+              )}
             </Link>
           );
         })}
