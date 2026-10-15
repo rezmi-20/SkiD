@@ -147,7 +147,7 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
                   <p className="text-xs text-muted-foreground truncate mt-0.5 font-medium">
                     {user.email}
                   </p>
-                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                  <div className="hidden md:flex items-center gap-1.5 mt-2 flex-wrap">
                     <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-[#a4fe47]/15 text-[#3a6613] dark:text-[#a4fe47] border-[#a4fe47]/30">
                       {isWorker ? "Verified Skilled Pro" : "Verified Client"}
                     </Badge>
@@ -158,7 +158,7 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
               {/* Mobile-only Settings Gear Icon */}
               <Link
                 href={settingsHref}
-                className="md:hidden h-11 w-11 rounded-full bg-[#181d24] dark:bg-[#1e2329] text-white flex items-center justify-center shadow-md active:scale-90 transition-transform shrink-0"
+                className="md:hidden h-12 w-12 rounded-full bg-[#181d24] dark:bg-[#1e2329] text-white flex items-center justify-center shadow-md active:scale-90 transition-transform shrink-0"
                 title="Settings"
                 aria-label="Settings"
               >
@@ -166,23 +166,23 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
               </Link>
             </div>
 
-            {/* Profile Contact Telemetry */}
-            <div className="border-t border-border/60 pt-3.5 space-y-2 text-xs">
+            {/* Desktop-Only Creative Profile Telemetry (Kept clean on mobile) */}
+            <div className="hidden md:block border-t border-border/60 pt-4 space-y-2.5 text-xs">
               {user.phone && (
-                <div className="flex items-center justify-between text-muted-foreground">
-                  <span className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" /> Phone:</span>
-                  <span className="font-semibold text-foreground">+251 {user.phone}</span>
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-muted/30">
+                  <span className="flex items-center gap-1.5 text-muted-foreground font-medium"><Phone className="h-3.5 w-3.5 text-primary" /> Phone:</span>
+                  <span className="font-bold text-foreground">+251 {user.phone}</span>
                 </div>
               )}
               {user.district && (
-                <div className="flex items-center justify-between text-muted-foreground">
-                  <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> District:</span>
-                  <span className="font-semibold text-foreground">{user.district}, Addis Ababa</span>
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-muted/30">
+                  <span className="flex items-center gap-1.5 text-muted-foreground font-medium"><MapPin className="h-3.5 w-3.5 text-emerald-500" /> District:</span>
+                  <span className="font-bold text-foreground">{user.district}, Addis Ababa</span>
                 </div>
               )}
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5" /> Fayda FIN:</span>
-                <span className="font-semibold text-foreground">{user.maskedFin || "Protected / Verified"}</span>
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-muted/30">
+                <span className="flex items-center gap-1.5 text-muted-foreground font-medium"><ShieldCheck className="h-3.5 w-3.5 text-indigo-400" /> Fayda FIN:</span>
+                <span className="font-mono font-bold text-foreground bg-primary/10 px-2 py-0.5 rounded text-[11px] text-primary">{user.maskedFin || "********9654"}</span>
               </div>
             </div>
 
