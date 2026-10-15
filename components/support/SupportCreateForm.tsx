@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createSupportTicket } from "@/lib/actions/support";
-import { SUPPORT_CATEGORIES } from "@/lib/support-constants";
+import { SUPPORT_CATEGORIES, SUPPORT_PRIORITIES } from "@/lib/support-constants";
 import { Upload, X, FileText, CheckCircle2, AlertCircle } from "lucide-react";
 
 interface SupportCreateFormProps {
@@ -18,7 +18,8 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
   const [error, setError] = useState<string | null>(null);
 
   // Form fields
-  const [category, setCategory] = useState<string>("general");
+  const [category, setCategory] = useState<string>("account_access");
+  const [priority, setPriority] = useState<string>("normal");
   const [subject, setSubject] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [relatedType, setRelatedType] = useState<"none" | "job" | "contract">("none");
@@ -88,6 +89,7 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
       try {
         const result = await createSupportTicket({
           category: category as any,
+          priority: priority as any,
           subject: subject.trim(),
           description: description.trim(),
           relatedJobId: relatedType === "job" ? selectedJobId || null : null,
@@ -133,24 +135,44 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
         </div>
       )}
 
-      {/* Category */}
-      <div>
-        <label htmlFor="category" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-on-surface">
-          Category <span className="text-red-500">*</span>
-        </label>
-        <select
-          id="category"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          required
-          className="w-full rounded-lg border border-outline-variant bg-surface-container p-3 text-sm font-medium text-on-surface outline-none transition focus:border-primary focus:ring-1 focus:ring-primary"
-        >
-          {SUPPORT_CATEGORIES.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-            </option>
-          ))}
-        </select>
+      {/* Category & Priority Grid */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="category" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-on-surface">
+            Category <span className="text-red-500">*</span>
+          </label>
+          <select
+            id="category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            required
+            className="w-full rounded-lg border border-outline-variant bg-surface-container p-3 text-sm font-medium text-on-surface outline-none transition focus:border-primary focus:ring-1 focus:ring-primary"
+          >
+            {SUPPORT_CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="priority" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-on-surface">
+            Priority / Urgency <span className="text-red-500">*</span>
+          </label>
+          <select
+            id="priority"
+            value={priority}
+            onChange={(e) => setPriority(e.target.value)}
+            required
+            className="w-full rounded-lg border border-outline-variant bg-surface-container p-3 text-sm font-medium text-on-surface outline-none transition focus:border-primary focus:ring-1 focus:ring-primary"
+          >
+            <option value="low">Low (General inquiry, no time pressure)</option>
+            <option value="normal">Normal (Standard assistance)</option>
+            <option value="high">High (Active job or payment issue)</option>
+            <option value="urgent">Urgent (Immediate safety or dispute risk)</option>
+          </select>
+        </div>
       </div>
 
       {/* Subject */}

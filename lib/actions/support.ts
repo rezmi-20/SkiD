@@ -164,6 +164,7 @@ async function ensureAssignedSupportAdmin(ticket: any, adminId: string) {
 
 export async function createSupportTicket(input: {
   category: SupportCategory;
+  priority?: (typeof SUPPORT_PRIORITIES)[number];
   subject: string;
   description: string;
   relatedJobId?: string | null;
@@ -196,6 +197,7 @@ export async function createSupportTicket(input: {
 
   const key = idempotencyKey([session.user.id, input.category, subject, description, relatedJobId, relatedContractId, relatedPaymentId]);
   const reference = await nextSupportReference();
+  const priority = input.priority && isOneOf(SUPPORT_PRIORITIES, input.priority) ? input.priority : "normal";
   try {
     const rows = await sql`
       INSERT INTO support_tickets (
@@ -217,7 +219,7 @@ export async function createSupportTicket(input: {
         ${session.user.id},
         ${ownerRole},
         ${input.category},
-        'normal',
+        ${priority},
         'open',
         ${subject},
         ${description},
@@ -373,6 +375,7 @@ export async function getUserSupportTicketDetails(ticketId: string) {
       SELECT event_type, actor_type, old_status, new_status, metadata, created_at
       FROM support_events
       WHERE ticket_id = ${ticketId}
+        AND event_type <> 'internal_note_added'
       ORDER BY created_at ASC
     `,
     sql`

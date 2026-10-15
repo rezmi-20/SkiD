@@ -394,25 +394,30 @@ export default function UserSupportDetails({ data, role }: { data: any; role: "c
         )}
       </div>
 
-      {/* Event Audit Trail (Clean Timeline) */}
-      <details className="group rounded-xl border border-outline-variant/40 bg-surface-container-lowest/30 p-4">
-        <summary className="flex cursor-pointer items-center justify-between text-xs font-bold uppercase tracking-wider text-on-surface-variant select-none">
-          <span>Ticket Activity History ({events.length})</span>
-          <span className="text-primary group-open:rotate-180 transition-transform">▼</span>
-        </summary>
-        <div className="mt-3 space-y-2.5 pt-2 border-t border-outline-variant/20">
-          {events.map((event: any, i: number) => (
-            <div key={`${event.event_type}-${event.created_at}-${i}`} className="flex items-center justify-between text-xs text-on-surface-variant py-1">
-              <span className="font-semibold text-on-surface">
-                {String(event.event_type).replaceAll("_", " ").toUpperCase()}
-              </span>
-              <span className="text-[11px] font-medium">
-                {formatDate(event.created_at)}
-              </span>
+      {/* Event Audit Trail (Clean Timeline - Staff Notes strictly hidden) */}
+      {(() => {
+        const visibleEvents = (events || []).filter((e: any) => e.event_type !== "internal_note_added");
+        return (
+          <details className="group rounded-xl border border-outline-variant/40 bg-surface-container-lowest/30 p-4">
+            <summary className="flex cursor-pointer items-center justify-between text-xs font-bold uppercase tracking-wider text-on-surface-variant select-none">
+              <span>Ticket Activity History ({visibleEvents.length})</span>
+              <span className="text-primary group-open:rotate-180 transition-transform">▼</span>
+            </summary>
+            <div className="mt-3 space-y-2.5 pt-2 border-t border-outline-variant/20">
+              {visibleEvents.map((event: any, i: number) => (
+                <div key={`${event.event_type}-${event.created_at}-${i}`} className="flex items-center justify-between text-xs text-on-surface-variant py-1">
+                  <span className="font-semibold text-on-surface">
+                    {String(event.event_type).replaceAll("_", " ").toUpperCase()}
+                  </span>
+                  <span className="text-[11px] font-medium">
+                    {formatDate(event.created_at)}
+                  </span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </details>
+          </details>
+        );
+      })()}
     </div>
   );
 }
