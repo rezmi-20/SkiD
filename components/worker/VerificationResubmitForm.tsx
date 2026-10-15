@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { resubmitVerification } from "@/lib/actions/profile";
 import { useLanguage } from "@/context/LanguageContext";
+import { CheckCircle2, UploadCloud, FileCheck, IdCard, AlertCircle, Send, Loader2 } from "lucide-react";
 
 export default function VerificationResubmitForm({ mode = "resubmit" }: { mode?: "complete" | "resubmit" | "reverify" }) {
   const { t } = useLanguage();
@@ -77,7 +78,7 @@ export default function VerificationResubmitForm({ mode = "resubmit" }: { mode?:
     return (
       <div className="flex flex-col items-center gap-4 p-6 bg-green-500/10 border border-green-500/20 rounded-2xl text-center">
         <div className="w-12 h-12 bg-green-400/20 rounded-2xl flex items-center justify-center">
-          <span className="material-symbols-outlined text-green-400 text-[28px]">check_circle</span>
+          <CheckCircle2 className="h-7 w-7 text-green-400" />
         </div>
         <div>
           <p className="text-green-400 font-black text-sm">{t("verification.resubmit.success_title")}</p>
@@ -92,7 +93,7 @@ export default function VerificationResubmitForm({ mode = "resubmit" }: { mode?:
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-1">
-        <span className="material-symbols-outlined text-red-400 text-[18px]">upload_file</span>
+        <UploadCloud className="h-4 w-4 text-red-400" />
         <p className="text-xs font-black text-zinc-300 uppercase tracking-widest">
           {mode === "complete" ? t("profile.completeFayda") : mode === "reverify" ? t("verification.reverify.title") : t("verification.resubmit.title")}
         </p>
@@ -131,12 +132,12 @@ export default function VerificationResubmitForm({ mode = "resubmit" }: { mode?:
       >
         {uploading ? (
           <>
-            <div className="w-8 h-8 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin" />
+            <Loader2 className="w-8 h-8 text-zinc-400 animate-spin" />
             <p className="text-xs text-zinc-400">{t("verification.resubmit.uploading")}</p>
           </>
         ) : uploadedUrl ? (
           <>
-            <span className="material-symbols-outlined text-green-400 text-[32px]">task</span>
+            <FileCheck className="h-8 w-8 text-green-400" />
             <div className="text-center">
               <p className="text-xs font-bold text-green-400">{t("verification.resubmit.ready")}</p>
               <p className="text-[10px] text-zinc-500 mt-0.5 truncate max-w-[200px]">{fileName}</p>
@@ -145,7 +146,7 @@ export default function VerificationResubmitForm({ mode = "resubmit" }: { mode?:
           </>
         ) : (
           <>
-            <span className="material-symbols-outlined text-zinc-500 text-[32px]">id_card</span>
+            <IdCard className="h-8 w-8 text-zinc-500" />
             <div className="text-center">
               <p className="text-xs font-bold text-zinc-300">{t("verification.resubmit.upload_prompt")}</p>
               <p className="text-[10px] text-zinc-600 mt-0.5">{t("verification.resubmit.file_specs")}</p>
@@ -165,8 +166,8 @@ export default function VerificationResubmitForm({ mode = "resubmit" }: { mode?:
       {/* Error */}
       {error && (
         <p className="text-xs text-red-400 font-medium flex items-center gap-2">
-          <span className="material-symbols-outlined text-[14px]">error</span>
-          {error}
+          <AlertCircle className="h-4 w-4" />
+          <span>{error}</span>
         </p>
       )}
 
@@ -179,13 +180,13 @@ export default function VerificationResubmitForm({ mode = "resubmit" }: { mode?:
       >
         {submitting ? (
           <>
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            {t("verification.resubmit.submitting")}
+            <Loader2 className="w-4 h-4 text-white animate-spin" />
+            <span>{t("verification.resubmit.submitting")}</span>
           </>
         ) : (
           <>
-            <span className="material-symbols-outlined text-[18px]">send</span>
-            {mode === "complete" ? t("verification.resubmit.btn") : mode === "reverify" ? t("verification.reverify.btn") : t("verification.resubmit.btn")}
+            <Send className="h-4 w-4" />
+            <span>{mode === "complete" ? t("profile.completeFayda") : mode === "reverify" ? t("verification.reverify.btn") : t("verification.resubmit.btn")}</span>
           </>
         )}
       </button>

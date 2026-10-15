@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { FileSignature, ShieldCheck } from "lucide-react";
 
 interface Props {
   completed: boolean;
@@ -30,7 +31,7 @@ export default function ContractSetupPrompt({ completed, setupHref }: Props) {
       <div className="w-full max-w-md rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-2xl">
         <div className="flex items-start gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <span className="material-symbols-outlined">contract_edit</span>
+            <FileSignature className="h-6 w-6" />
           </div>
           <div className="min-w-0">
             <p className="text-[10px] font-black uppercase tracking-widest text-primary">DireSkill Contracts</p>
@@ -44,10 +45,10 @@ export default function ContractSetupPrompt({ completed, setupHref }: Props) {
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <Link
             href={setupHref}
-            className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-xs font-black uppercase tracking-widest text-on-primary"
+            className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-xs font-black uppercase tracking-widest text-on-primary hover:opacity-95 transition"
           >
-            <span className="material-symbols-outlined text-[18px]">shield_lock</span>
-            Set Up Now
+            <ShieldCheck className="h-4 w-4" />
+            <span>Set Up Now</span>
           </Link>
           <button
             type="button"

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import StatusBadge from "@/components/shell/StatusBadge";
+import { CheckCircle2, XCircle } from "lucide-react";
 
 export interface WorkerJobCardData {
   id: string;
@@ -138,23 +139,23 @@ export default function JobCard({
                   {loading === "accept" ? (
                     <span className="h-4 w-4 rounded-full border-2 border-on-primary border-t-transparent animate-spin" />
                   ) : (
-                    <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                    <CheckCircle2 className="h-4 w-4" />
                   )}
-                  Accept Invitation
+                  <span>Accept Invitation</span>
                 </button>
                 <button
                   type="button"
                   onClick={handleReject}
                   disabled={!onReject || loading !== null}
                   title={!onReject ? "Decline invitation is unavailable" : "Decline hiring invitation"}
-                  className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-outline-variant bg-surface-container px-4 text-xs font-black uppercase tracking-widest text-on-surface-variant disabled:cursor-not-allowed disabled:opacity-70"
+                  className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-outline-variant bg-surface-container px-4 text-xs font-black uppercase tracking-widest text-on-surface-variant disabled:cursor-not-allowed disabled:opacity-70 transition hover:bg-surface-container-high"
                 >
                   {loading === "reject" ? (
                     <span className="h-4 w-4 rounded-full border-2 border-on-surface-variant border-t-transparent animate-spin" />
                   ) : (
-                    <span className="material-symbols-outlined text-[18px]">cancel</span>
+                    <XCircle className="h-4 w-4" />
                   )}
-                  Decline
+                  <span>Decline</span>
                 </button>
                 <Link
                   href="/worker/jobs"

@@ -13,6 +13,7 @@ import {
 import { confirmJobCompletion, rejectJobCompletion } from "@/lib/actions/jobs";
 import PinVerificationModal from "@/components/shell/PinVerificationModal";
 import StatusBadge from "@/components/shell/StatusBadge";
+import { CheckCircle2, Clock, XCircle, ShieldCheck, Download, Check, ArrowLeft, Save, Lock, PenTool } from "lucide-react";
 
 interface Props {
   contract: any;
@@ -50,9 +51,11 @@ function SignatureRow({ label, name, signedAt }: { label: string; name: string |
         <p className="mt-1 truncate text-sm font-black text-on-surface">{name || "Unknown"}</p>
       </div>
       <div className="flex shrink-0 items-center gap-2">
-        <span className={`material-symbols-outlined text-[18px] ${signed ? "text-primary" : "text-on-surface-variant"}`}>
-          {signed ? "check_circle" : "schedule"}
-        </span>
+        {signed ? (
+          <CheckCircle2 className="h-4 w-4 text-primary" />
+        ) : (
+          <Clock className="h-4 w-4 text-on-surface-variant" />
+        )}
         <div className="text-right">
           <p className={`text-xs font-black ${signed ? "text-primary" : "text-on-surface-variant"}`}>
             {signed ? "Signed" : "Pending"}
@@ -74,10 +77,12 @@ function VerificationStatusRow({ label, verified, maskedFin }: { label: string; 
         </p>
       </div>
       <span className={`inline-flex items-center gap-1.5 text-xs font-black ${verified && maskedFin ? "text-primary" : "text-error"}`}>
-        <span className="material-symbols-outlined text-[16px]">
-          {verified && maskedFin ? "check_circle" : "cancel"}
-        </span>
-        {verified && maskedFin ? "Verified" : "Not verified"}
+        {verified && maskedFin ? (
+          <CheckCircle2 className="h-4 w-4" />
+        ) : (
+          <XCircle className="h-4 w-4" />
+        )}
+        <span>{verified && maskedFin ? "Verified" : "Not verified"}</span>
       </span>
     </div>
   );
@@ -100,7 +105,7 @@ function DocumentEvidenceCard({
     <div className="rounded-lg border border-primary/20 bg-primary/10 p-5">
       <div className="flex items-start gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-on-primary">
-          <span className="material-symbols-outlined text-[20px]">verified</span>
+          <ShieldCheck className="h-5 w-5" />
         </div>
         <div className="min-w-0">
           <p className="text-[10px] font-black uppercase tracking-widest text-primary">Activated Evidence</p>
@@ -127,10 +132,10 @@ function DocumentEvidenceCard({
       {pdfUrl && (
         <a
           href={pdfUrl}
-          className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-primary bg-surface-container-lowest px-4 text-xs font-black uppercase tracking-widest text-primary hover:bg-primary hover:text-on-primary"
+          className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-primary bg-surface-container-lowest px-4 text-xs font-black uppercase tracking-widest text-primary hover:bg-primary hover:text-on-primary transition"
         >
-          <span className="material-symbols-outlined text-[18px]">download</span>
-          Download PDF
+          <Download className="h-4 w-4" />
+          <span>Download PDF</span>
         </a>
       )}
     </div>
@@ -276,7 +281,7 @@ function ContractWorkflowStepper({
                     aria-current={isActive ? "step" : undefined}
                   >
                     {isComplete ? (
-                      <span className="material-symbols-outlined text-[13px]">check</span>
+                      <Check className="h-3 w-3" />
                     ) : (
                       index + 1
                     )}
@@ -565,10 +570,10 @@ export default function ContractDetails({ contract, userId }: Props) {
         <div>
           <Link
             href={backHref}
-            className="mb-4 inline-flex h-10 items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 text-xs font-black uppercase tracking-widest text-on-surface hover:border-primary/40"
+            className="mb-4 inline-flex h-10 items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 text-xs font-black uppercase tracking-widest text-on-surface hover:border-primary/40 transition"
           >
-            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-            Back
+            <ArrowLeft className="h-4 w-4" />
+            <span>Back</span>
           </Link>
           <p className="text-xs font-black uppercase tracking-widest text-on-surface-variant">Service Agreement</p>
           <h1 className="mt-2 text-3xl font-black tracking-tight text-on-surface md:text-4xl">
@@ -686,19 +691,19 @@ export default function ContractDetails({ contract, userId }: Props) {
                     {isSavingDraft ? (
                       <span className="h-4 w-4 rounded-full border-2 border-on-primary border-t-transparent animate-spin" />
                     ) : (
-                      <span className="material-symbols-outlined text-[18px]">save</span>
+                      <Save className="h-4 w-4" />
                     )}
-                    {isSavingDraft ? "Saving" : "Save Draft"}
+                    <span>{isSavingDraft ? "Saving..." : "Save Draft"}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowFinalizeModal(true)}
                     disabled={isSavingDraft || isFinalizingDraft || !canFinalizeDraft}
                     title={!canFinalizeDraft ? "Worker acceptance is required before finalization" : "Finalize accepted terms"}
-                    className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-lg bg-on-surface px-4 text-xs font-black uppercase tracking-widest text-surface-container-lowest disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-lg bg-on-surface px-4 text-xs font-black uppercase tracking-widest text-surface-container-lowest disabled:cursor-not-allowed disabled:opacity-60 transition"
                   >
-                    <span className="material-symbols-outlined text-[18px]">lock</span>
-                    Finalize Draft
+                    <Lock className="h-4 w-4" />
+                    <span>Finalize Draft</span>
                   </button>
                 </div>
               )}
@@ -842,10 +847,10 @@ export default function ContractDetails({ contract, userId }: Props) {
                   type="button"
                   onClick={() => setIsPinModalOpen(true)}
                   disabled={isSigning || !hasAllSignatureConsent || !bothPartiesVerified}
-                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-xs font-black uppercase tracking-widest text-on-primary disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-xs font-black uppercase tracking-widest text-on-primary disabled:cursor-not-allowed disabled:opacity-60 transition"
                 >
-                  <span className="material-symbols-outlined text-[18px]">draw</span>
-                  {isSigning ? "Signing" : "Sign Contract"}
+                  <PenTool className="h-4 w-4" />
+                  <span>{isSigning ? "Signing..." : "Sign Contract"}</span>
                 </button>
               </div>
             ) : isFullySigned ? (
@@ -863,10 +868,10 @@ export default function ContractDetails({ contract, userId }: Props) {
                 type="button"
                 onClick={handleDownloadPdf}
                 disabled={isDownloadingPdf}
-                className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-outline-variant px-4 text-xs font-black uppercase tracking-widest text-on-surface hover:border-primary/40"
+                className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-outline-variant px-4 text-xs font-black uppercase tracking-widest text-on-surface hover:border-primary/40 transition"
               >
-                <span className="material-symbols-outlined text-[18px]">download</span>
-                {isDownloadingPdf ? "Downloading" : "Download PDF"}
+                <Download className="h-4 w-4" />
+                <span>{isDownloadingPdf ? "Downloading..." : "Download PDF"}</span>
               </button>
             )}
           </div>
@@ -893,7 +898,7 @@ export default function ContractDetails({ contract, userId }: Props) {
           <div className="w-full max-w-md rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-2xl">
             <div className="flex items-start gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary">
-                <span className="material-symbols-outlined">lock</span>
+                <Lock className="h-6 w-6" />
               </div>
               <div>
                 <h2 className="text-xl font-black tracking-tight text-on-surface">Finalize Draft</h2>
@@ -911,7 +916,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                 type="button"
                 onClick={() => setShowFinalizeModal(false)}
                 disabled={isFinalizingDraft}
-                className="inline-flex h-12 flex-1 items-center justify-center rounded-lg border border-outline-variant bg-surface-container px-4 text-xs font-black uppercase tracking-widest text-on-surface-variant disabled:opacity-60"
+                className="inline-flex h-12 flex-1 items-center justify-center rounded-lg border border-outline-variant bg-surface-container px-4 text-xs font-black uppercase tracking-widest text-on-surface-variant disabled:opacity-60 transition hover:bg-surface-container-high"
               >
                 Cancel
               </button>
@@ -919,14 +924,14 @@ export default function ContractDetails({ contract, userId }: Props) {
                 type="button"
                 onClick={handleFinalizeDraft}
                 disabled={isFinalizingDraft}
-                className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-xs font-black uppercase tracking-widest text-on-primary disabled:opacity-60"
+                className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-xs font-black uppercase tracking-widest text-on-primary disabled:opacity-60 transition"
               >
                 {isFinalizingDraft ? (
                   <span className="h-4 w-4 rounded-full border-2 border-on-primary border-t-transparent animate-spin" />
                 ) : (
-                  <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                  <CheckCircle2 className="h-4 w-4" />
                 )}
-                {isFinalizingDraft ? "Finalizing" : "Finalize"}
+                <span>{isFinalizingDraft ? "Finalizing..." : "Finalize"}</span>
               </button>
             </div>
           </div>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { submitRating } from "@/lib/actions/ratings";
 import { useRouter } from "next/navigation";
+import { Lock, Loader2, Star } from "lucide-react";
 
 interface RatingPageContentProps {
   jobId: string;
@@ -133,7 +134,7 @@ export default function RatingPageContent({
         ) : !canRate ? (
           <section className="rounded-lg border border-surface-variant bg-surface-container-lowest p-6 text-center">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-surface-container-high text-on-surface-variant">
-              <span className="material-symbols-outlined">lock</span>
+              <Lock className="h-5 w-5" />
             </div>
             <h2 className="mt-4 text-lg font-bold text-on-surface">Review not available yet</h2>
             <p className="mx-auto mt-1 max-w-sm text-sm text-on-surface-variant">
@@ -141,7 +142,7 @@ export default function RatingPageContent({
             </p>
             <button
               onClick={() => router.push(dashboardHref)}
-              className="mt-5 inline-flex h-10 items-center justify-center rounded-lg border border-surface-variant px-4 text-sm font-bold text-on-surface hover:bg-surface-container-high"
+              className="mt-5 inline-flex h-10 items-center justify-center rounded-lg border border-surface-variant px-4 text-sm font-bold text-on-surface hover:bg-surface-container-high transition"
             >
               Back to Dashboard
             </button>
@@ -199,17 +200,17 @@ export default function RatingPageContent({
             <button
               type="submit"
               disabled={loading || !selectedStar}
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-on-primary disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-on-primary disabled:cursor-not-allowed disabled:opacity-60 transition"
             >
               {loading ? (
                 <>
-                  <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
-                  Submitting...
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Submitting...</span>
                 </>
               ) : (
                 <>
-                  <span className="material-symbols-outlined text-[18px]">star</span>
-                  Submit Review
+                  <Star className="h-4 w-4 fill-current" />
+                  <span>Submit Review</span>
                 </>
               )}
             </button>

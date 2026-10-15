@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { completeContractSetup } from "@/lib/actions/contract-setup";
+import { CheckCircle2, PenTool, Lock, FileText, ShieldCheck } from "lucide-react";
 
 interface Props {
   role: "client" | "worker";
@@ -68,7 +69,7 @@ export default function ContractSetupContent({ role, completed, completedAt }: P
       {success && (
         <section className="rounded-lg border border-primary/30 bg-primary/10 p-5">
           <div className="flex items-start gap-3">
-            <span className="material-symbols-outlined text-primary">check_circle</span>
+            <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
             <div>
               <h2 className="text-sm font-black uppercase tracking-widest text-primary">Contract Setup Complete</h2>
               <p className="mt-1 text-sm text-on-surface-variant">
@@ -86,36 +87,39 @@ export default function ContractSetupContent({ role, completed, completedAt }: P
           {
             title: "Electronic Signature",
             body: "Your Contract PIN is used as your electronic signature when you voluntarily sign a finalized DireSkill contract.",
-            icon: "draw",
+            icon: PenTool,
           },
           {
             title: "Privacy Notice",
             body: "DireSkill stores only your hashed PIN. The plain PIN is never saved and cannot be viewed by administrators.",
-            icon: "lock",
+            icon: Lock,
           },
           {
             title: "Digital Contract Policy",
             body: "A finalized contract becomes read only. Both parties must sign the same finalized version before work begins.",
-            icon: "policy",
+            icon: FileText,
           },
           {
             title: "User Responsibilities",
             body: "Review every contract carefully, keep your PIN private, and sign only when you understand and agree to all terms.",
-            icon: "verified_user",
+            icon: ShieldCheck,
           },
-        ].map((item) => (
-          <article key={item.title} className="rounded-lg border border-outline-variant bg-surface-container-lowest p-5">
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-container text-primary">
-                <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+        ].map((item) => {
+          const Icon = item.icon;
+          return (
+            <article key={item.title} className="rounded-lg border border-outline-variant bg-surface-container-lowest p-5">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-container text-primary">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-black uppercase tracking-widest text-on-surface">{item.title}</h2>
+                  <p className="mt-2 text-sm leading-6 text-on-surface-variant">{item.body}</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-sm font-black uppercase tracking-widest text-on-surface">{item.title}</h2>
-                <p className="mt-2 text-sm leading-6 text-on-surface-variant">{item.body}</p>
-              </div>
-            </div>
-          </article>
-        ))}
+            </article>
+          );
+        })}
       </section>
 
       <form onSubmit={handleSubmit} className="rounded-lg border border-outline-variant bg-surface-container-lowest p-6">
@@ -195,9 +199,9 @@ export default function ContractSetupContent({ role, completed, completedAt }: P
               {submitting ? (
                 <span className="h-4 w-4 rounded-full border-2 border-on-primary border-t-transparent animate-spin" />
               ) : (
-                <span className="material-symbols-outlined text-[18px]">shield_lock</span>
+                <ShieldCheck className="h-4 w-4" />
               )}
-              {submitting ? "Saving" : "Create Contract PIN"}
+              <span>{submitting ? "Saving..." : "Create Contract PIN"}</span>
             </button>
             <button
               type="button"
