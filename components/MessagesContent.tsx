@@ -3,7 +3,7 @@
 import { useLanguage } from "@/context/LanguageContext";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, MessageSquare, CheckCircle2, ChevronRight } from "lucide-react";
+import { Search, MessageSquare, CheckCircle2, ChevronRight, Check, CheckCheck } from "lucide-react";
 
 interface Conversation {
   id: string;
@@ -118,29 +118,34 @@ export default function MessagesContent({ conversations, loading, role }: Messag
               {/* Text Info */}
               <div className="flex-1 min-w-0 flex flex-col gap-0.5">
                  <div className="flex items-center justify-between">
-                    <h3 className={`text-xs truncate group-hover:text-primary transition-colors ${conv.unread > 0 ? "text-on-surface font-extrabold" : "text-on-surface-variant font-semibold"}`}>
+                    <h3 className={`text-xs truncate group-hover:text-primary transition-colors ${conv.unread > 0 ? "text-foreground font-black" : "text-muted-foreground font-semibold"}`}>
                       {conv.other_name}
                     </h3>
-                    <span className="text-[10px] text-on-surface-variant opacity-50 shrink-0 font-medium">
+                    <span className={`text-[10px] shrink-0 font-bold ${conv.unread > 0 ? "text-primary" : "text-muted-foreground/60"}`}>
                        {timeAgo(conv.last_at, t("messages.now"))}
                     </span>
                  </div>
                  <p className="text-[10px] text-primary uppercase tracking-wider font-bold">{conv.other_skill}</p>
-                 <p className={`text-xs truncate ${conv.unread > 0 ? "text-on-surface font-bold" : "text-on-surface-variant opacity-60"}`}>
-                   {conv.last_image ? t("messages.sharedImage") : (conv.last_body || t("messages.startConversation"))}
-                 </p>
+                 <div className="flex items-center gap-1.5 min-w-0">
+                   {conv.unread === 0 && (
+                     <CheckCheck className="h-3.5 w-3.5 text-primary shrink-0 opacity-80" />
+                   )}
+                   <p className={`text-xs truncate ${conv.unread > 0 ? "text-foreground font-extrabold" : "text-muted-foreground"}`}>
+                     {conv.last_image ? t("messages.sharedImage") : (conv.last_body || t("messages.startConversation"))}
+                   </p>
+                 </div>
               </div>
 
-              {/* Unread Badge */}
+              {/* Unread Badge (WhatsApp / Telegram Style Green Pill) */}
               {conv.unread > 0 && (
-                <div className="shrink-0 w-5 h-5 bg-primary text-on-primary rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm animate-pulse">
+                <div className="shrink-0 min-w-5 h-5 px-1.5 bg-[#a4fe47] text-[#0d1406] rounded-full flex items-center justify-center text-[10px] font-black shadow-sm animate-pulse">
                    {conv.unread}
                 </div>
               )}
               
               {/* Arrow Icon */}
               {conv.unread === 0 && (
-                 <ChevronRight className="h-4 w-4 text-on-surface-variant/30 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
+                 <ChevronRight className="h-4 w-4 text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
               )}
             </button>
           ))

@@ -285,7 +285,11 @@ export async function getUserSupportTickets(query = "", status = "all") {
       t.resolution_type,
       t.created_at,
       t.updated_at,
-      COUNT(a.id)::int AS attachment_count
+      COUNT(DISTINCT a.id)::int AS attachment_count,
+      (SELECT message FROM support_messages WHERE ticket_id = t.id ORDER BY created_at DESC LIMIT 1) AS last_message_body,
+      (SELECT actor_type FROM support_messages WHERE ticket_id = t.id ORDER BY created_at DESC LIMIT 1) AS last_message_actor_type,
+      (SELECT created_at FROM support_messages WHERE ticket_id = t.id ORDER BY created_at DESC LIMIT 1) AS last_message_at,
+      (SELECT COUNT(id)::int FROM support_messages WHERE ticket_id = t.id) AS message_count
     FROM support_tickets t
     LEFT JOIN support_attachments a ON a.ticket_id = t.id AND a.is_removed = false
     WHERE t.owner_id = ${session.user.id}
