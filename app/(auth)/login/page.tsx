@@ -10,6 +10,7 @@ import { getWorkerAccessRoute } from "@/lib/worker-routing";
 import { useLanguage } from "@/context/LanguageContext";
 
 function getLoginErrorMessage(error: unknown, t: (key: any) => string) {
+  console.error("[LOGIN_PAGE_ERROR]", error);
   const message = error instanceof Error ? error.message : String(error || "");
 
   if (message.includes("502") || message.toLowerCase().includes("bad gateway")) {
@@ -18,6 +19,10 @@ function getLoginErrorMessage(error: unknown, t: (key: any) => string) {
 
   if (message.toLowerCase().includes("fetch") || message.toLowerCase().includes("network")) {
     return t("auth.login.errNetwork");
+  }
+
+  if (message && message !== "undefined" && message !== "null" && message !== "[object Object]") {
+    return message;
   }
 
   return t("auth.login.errUnexpectedLater");
@@ -45,7 +50,7 @@ export default function LoginPage() {
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
   const waitForUsableSession = async () => {
-    const maxAttempts = 3;
+    const maxAttempts = 6;
 
     for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
       try {
@@ -72,8 +77,33 @@ export default function LoginPage() {
       }
 
       if (attempt < maxAttempts) {
-        await sleep(250 * attempt);
+        await sleep(150 + attempt * 100);
       }
+    }
+
+    try {
+      const { data: clientSession } = await authClient.getSession();
+      if (clientSession?.user) {
+        const retryRes = await fetch("/api/auth/me?optional=1", {
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (retryRes.ok) {
+          const data = await retryRes.json().catch(() => ({}));
+          if (data?.authenticated !== false && data?.role) {
+            return data as {
+              role?: string;
+              isSuspended?: boolean;
+              workerVerificationStatus?: string | null;
+              workerIsSuspended?: boolean | null;
+              workerIsVerified?: boolean | null;
+              workerIdentityComplete?: boolean | null;
+            };
+          }
+        }
+      }
+    } catch {
+      // Fallback best effort
     }
 
     return null;
@@ -193,20 +223,23 @@ export default function LoginPage() {
         }
 
         if (session.role === "client") {
-          router.replace("/client/search");
+          window.location.href = "/client/search";
           return;
         }
 
         if (session.role === "worker") {
-          router.replace(
-            getWorkerAccessRoute({
-              role: session.role,
-              verificationStatus: session.workerVerificationStatus,
-              isSuspended: session.workerIsSuspended,
-              isVerified: session.workerIsVerified,
-              identityComplete: session.workerIdentityComplete,
-            })
-          );
+          window.location.href = getWorkerAccessRoute({
+            role: session.role,
+            verificationStatus: session.workerVerificationStatus,
+            isSuspended: session.workerIsSuspended,
+            isVerified: session.workerIsVerified,
+            identityComplete: session.workerIdentityComplete,
+          });
+          return;
+        }
+
+        if (session.role && session.role !== "client" && session.role !== "worker") {
+          setError("Staff and administrator accounts must sign in using Employee ID at Staff Login (/admin/login).");
           return;
         }
 

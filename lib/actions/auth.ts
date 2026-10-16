@@ -6,13 +6,22 @@ const MAX_ATTEMPTS = 5;
 
 export async function checkLoginAttempts(email: string, ipAddress: string) {
   try {
-    const rows = await sql`
-      SELECT COUNT(*)::int as count 
-      FROM audit_logs 
-      WHERE action = 'login_failed' 
-        AND (details->>'email' = ${email} OR ip_address = ${ipAddress})
-        AND created_at > NOW() - INTERVAL '15 minutes'
-    `;
+    const isLoopback = !ipAddress || ipAddress === "127.0.0.1" || ipAddress === "::1" || ipAddress === "localhost";
+    const rows = isLoopback
+      ? await sql`
+          SELECT COUNT(*)::int as count 
+          FROM audit_logs 
+          WHERE action = 'login_failed' 
+            AND details->>'email' = ${email}
+            AND created_at > NOW() - INTERVAL '15 minutes'
+        `
+      : await sql`
+          SELECT COUNT(*)::int as count 
+          FROM audit_logs 
+          WHERE action = 'login_failed' 
+            AND (details->>'email' = ${email} OR ip_address = ${ipAddress})
+            AND created_at > NOW() - INTERVAL '15 minutes'
+        `;
     const count = rows[0]?.count || 0;
     return count >= MAX_ATTEMPTS;
   } catch (error) {

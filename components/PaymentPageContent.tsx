@@ -32,8 +32,9 @@ const PAYMENT_METHODS = [
 const POLL_INTERVAL_MS = 3000; // poll every 3 seconds
 const VERIFY_FALLBACK_AFTER_POLLS = 4;
 
-function formatMoney(value: number) {
-  return `${Math.round(value).toLocaleString()} ETB`;
+function formatMoney(value: number | string | undefined | null) {
+  const num = Number(value || 0);
+  return `${Math.round(Number.isFinite(num) ? num : 0).toLocaleString()} ETB`;
 }
 
 async function readPaymentResponse(res: Response) {

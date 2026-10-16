@@ -493,7 +493,21 @@ export async function revealVerificationFin(
       scope: "profile",
     });
   } catch {
-    return deny(500, "FIN could not be decrypted for this review.");
+    const fallbackUserId = (attempt as any)?.account_user_id || (attempt as any)?.accountUserId;
+    if (fallbackUserId && fallbackUserId !== accountUserId) {
+      try {
+        fin = decryptFin({
+          finEncrypted: snapshot.finEncrypted,
+          finEncryptionKeyId: snapshot.finEncryptionKeyId,
+          userId: fallbackUserId,
+          scope: "profile",
+        });
+      } catch {
+        return deny(500, "FIN could not be decrypted for this review.");
+      }
+    } else {
+      return deny(500, "FIN could not be decrypted for this review.");
+    }
   }
 
   await auditVerificationFinReveal({

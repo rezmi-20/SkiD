@@ -7,6 +7,14 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    if (!id || typeof id !== "string") {
+      return NextResponse.json({ error: "Invalid worker ID" }, { status: 400 });
+    }
+
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (!isUuid) {
+      return NextResponse.json({ error: "Worker not found" }, { status: 404 });
+    }
 
     const rows = await sql`
       SELECT
@@ -24,7 +32,7 @@ export async function GET(
       FROM users u
       JOIN worker_profiles wp ON u.id = wp.user_id
       LEFT JOIN ratings r ON u.id = r.rated_id
-      WHERE u.id = ${id}
+      WHERE (u.id = ${id} OR wp.id = ${id})
         AND u.role = 'worker'
         AND u.is_suspended = false
         AND wp.is_verified = true

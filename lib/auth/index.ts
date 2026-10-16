@@ -34,8 +34,9 @@ export const auth = async () => {
 
   try {
     // Fetch account state from our DB for compatibility
-    const rows = await sql`
+    let rows = await sql`
       SELECT
+        id,
         role,
         is_suspended AS "isSuspended",
         admin_role AS "adminRole",
@@ -44,6 +45,27 @@ export const auth = async () => {
       FROM users
       WHERE id = ${session.user.id}
     `;
+
+    if ((!rows || rows.length === 0) && session.user.email) {
+      const emailRows = await sql`
+        SELECT
+          id,
+          role,
+          is_suspended AS "isSuspended",
+          admin_role AS "adminRole",
+          admin_status AS "adminStatus",
+          admin_activation_required AS "adminActivationRequired"
+        FROM users
+        WHERE lower(email) = lower(${session.user.email})
+        LIMIT 1
+      `;
+      if (emailRows && emailRows[0]) {
+        rows = emailRows;
+        // Align session.user.id to the authoritative database ID to prevent foreign key or query mismatches
+        session.user.id = rows[0].id;
+      }
+    }
+
     if (rows && rows[0]) {
       (session.user as any).isSuspended = rows[0].isSuspended ?? false;
       (session.user as any).role = rows[0].isSuspended ? "suspended" : rows[0].role;

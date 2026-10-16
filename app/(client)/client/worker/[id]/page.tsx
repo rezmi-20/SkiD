@@ -44,13 +44,16 @@ interface Review {
   score: number;
   comment: string;
   created_at: string;
-  rater_email: string;
+  reviewer_name?: string;
+  reviewer_avatar?: string | null;
+  rater_email?: string;
 }
 
 export default function WorkerProfilePage() {
   const params = useParams();
   const router = useRouter();
-  const id = params.id as string;
+  const rawId = params?.id;
+  const id = Array.isArray(rawId) ? rawId[0] : (rawId as string);
 
   const [worker, setWorker] = useState<WorkerProfile | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -120,8 +123,15 @@ export default function WorkerProfilePage() {
     </div>
   );
 
-  const primarySkill = Array.isArray(worker.skills) && worker.skills.length > 0 ? worker.skills[0] : "Professional";
-  const rating = Number(worker.avg_rating);
+  const skillsList: string[] = Array.isArray(worker.skills)
+    ? worker.skills
+    : typeof worker.skills === "string" && (worker.skills as string).trim()
+    ? (worker.skills as string).replace(/^\{|\}$/g, "").split(",").map((s) => s.trim().replace(/^"|"$/g, "")).filter(Boolean)
+    : [];
+  const primarySkill = skillsList.length > 0 ? skillsList[0] : "Professional";
+  const firstName = worker.full_name?.trim() ? worker.full_name.trim().split(/\s+/)[0] : "Worker";
+  const rawRating = Number(worker.avg_rating);
+  const rating = Number.isFinite(rawRating) ? rawRating : 0;
   const initials = worker.full_name ? worker.full_name.slice(0, 2).toUpperCase() : "WP";
 
   const StarRow = ({ score, size = 14 }: { score: number; size?: number }) => (
@@ -207,7 +217,7 @@ export default function WorkerProfilePage() {
         {/* About Section */}
         <Card className="border-border bg-card rounded-2xl shadow-sm">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-bold tracking-tight">About {worker.full_name.split(" ")[0]}</CardTitle>
+            <CardTitle className="text-sm font-bold tracking-tight">About {firstName}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-xs text-muted-foreground leading-relaxed">
@@ -236,7 +246,7 @@ export default function WorkerProfilePage() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-1.5">
-              {(worker.skills?.length > 0 ? worker.skills : ["Pipe Installation", "Leak Repair", "Solar Installation", "House Wiring", "Generator Set Maintenance", "CCTV Installation", "General Repairs"]).map((s, i) => (
+              {(skillsList.length > 0 ? skillsList : ["Pipe Installation", "Leak Repair", "Solar Installation", "House Wiring", "Generator Set Maintenance", "CCTV Installation", "General Repairs"]).map((s, i) => (
                 <Badge key={i} variant="outline" className="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-border bg-muted/30">
                   {s}
                 </Badge>
@@ -270,32 +280,37 @@ export default function WorkerProfilePage() {
             </div>
 
             <div className="space-y-4">
-              {reviews.length > 0 ? reviews.map((rev, i) => (
-                <div key={i} className="space-y-2 pb-4 border-b border-border last:border-none last:pb-0">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-7 w-7 border border-border shadow-inner">
-                        <AvatarFallback className="text-[10px] font-bold bg-muted text-muted-foreground">
-                          {rev.rater_email?.substring(0, 2).toUpperCase() || "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-bold text-foreground">{rev.rater_email?.split("@")[0] || "User"}</span>
-                          <Badge variant="secondary" className="flex items-center gap-0.5 bg-primary/10 text-primary border-none py-0 px-1.5 rounded-full font-bold text-[9px]">
-                            <Star size={8} className="fill-primary stroke-none" />
-                            <span>{rev.score}</span>
-                          </Badge>
+              {reviews.length > 0 ? reviews.map((rev, i) => {
+                const reviewerName = rev.reviewer_name || (rev.rater_email ? rev.rater_email.split("@")[0] : "Verified Client");
+                const revInitials = reviewerName.slice(0, 2).toUpperCase() || "VC";
+                return (
+                  <div key={i} className="space-y-2 pb-4 border-b border-border last:border-none last:pb-0">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-7 w-7 border border-border shadow-inner">
+                          {rev.reviewer_avatar && <AvatarImage src={rev.reviewer_avatar} alt={reviewerName} />}
+                          <AvatarFallback className="text-[10px] font-bold bg-muted text-muted-foreground">
+                            {revInitials}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-bold text-foreground">{reviewerName}</span>
+                            <Badge variant="secondary" className="flex items-center gap-0.5 bg-primary/10 text-primary border-none py-0 px-1.5 rounded-full font-bold text-[9px]">
+                              <Star size={8} className="fill-primary stroke-none" />
+                              <span>{rev.score}</span>
+                            </Badge>
+                          </div>
                         </div>
                       </div>
+                      <span className="text-[9px] text-muted-foreground font-semibold">
+                        {rev.created_at ? new Date(rev.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short" }) : "Recent"}
+                      </span>
                     </div>
-                    <span className="text-[9px] text-muted-foreground font-semibold">
-                      {new Date(rev.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
-                    </span>
+                    <p className="text-xs text-muted-foreground leading-relaxed pl-9">{rev.comment}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed pl-9">{rev.comment}</p>
-                </div>
-              )) : (
+                );
+              }) : (
                 <p className="text-xs text-muted-foreground text-center py-4 italic">No reviews yet.</p>
               )}
             </div>
@@ -397,7 +412,7 @@ export default function WorkerProfilePage() {
             {/* About Card */}
             <Card className="border border-border bg-card shadow-sm rounded-2xl">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-bold tracking-tight">About {worker.full_name.split(" ")[0]}</CardTitle>
+                <CardTitle className="text-sm font-bold tracking-tight">About {firstName}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-xs text-muted-foreground leading-relaxed">
@@ -426,7 +441,7 @@ export default function WorkerProfilePage() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-1.5">
-                  {(worker.skills?.length > 0 ? worker.skills : ["Pipe Installation", "Leak Repair", "Solar Installation", "House Wiring", "Generator Set Maintenance", "Fault Finding", "CCTV Installation", "General Repairs"]).map((s, i) => (
+                  {(skillsList.length > 0 ? skillsList : ["Pipe Installation", "Leak Repair", "Solar Installation", "House Wiring", "Generator Set Maintenance", "Fault Finding", "CCTV Installation", "General Repairs"]).map((s, i) => (
                     <Badge key={i} variant="outline" className="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-border bg-muted/30">
                       {s}
                     </Badge>
@@ -461,32 +476,37 @@ export default function WorkerProfilePage() {
               </div>
 
               <div className="space-y-4">
-                {reviews.length > 0 ? reviews.map((rev, i) => (
-                  <div key={i} className="space-y-2 pb-4 border-b border-border last:border-none last:pb-0">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-7 w-7 border border-border shadow-inner">
-                          <AvatarFallback className="text-[10px] font-bold bg-muted text-muted-foreground">
-                            {rev.rater_email?.substring(0, 2).toUpperCase() || "U"}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="space-y-0.5">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-bold text-foreground">{rev.rater_email?.split("@")[0]}</span>
-                            <Badge variant="secondary" className="flex items-center gap-0.5 bg-primary/10 text-primary border-none py-0 px-1.5 rounded-full font-bold text-[9px]">
-                              <Star size={8} className="fill-primary stroke-none" />
-                              <span>{rev.score}</span>
-                            </Badge>
+                {reviews.length > 0 ? reviews.map((rev, i) => {
+                  const reviewerName = rev.reviewer_name || (rev.rater_email ? rev.rater_email.split("@")[0] : "Verified Client");
+                  const revInitials = reviewerName.slice(0, 2).toUpperCase() || "VC";
+                  return (
+                    <div key={i} className="space-y-2 pb-4 border-b border-border last:border-none last:pb-0">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-7 w-7 border border-border shadow-inner">
+                            {rev.reviewer_avatar && <AvatarImage src={rev.reviewer_avatar} alt={reviewerName} />}
+                            <AvatarFallback className="text-[10px] font-bold bg-muted text-muted-foreground">
+                              {revInitials}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="space-y-0.5">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs font-bold text-foreground">{reviewerName}</span>
+                              <Badge variant="secondary" className="flex items-center gap-0.5 bg-primary/10 text-primary border-none py-0 px-1.5 rounded-full font-bold text-[9px]">
+                                <Star size={8} className="fill-primary stroke-none" />
+                                <span>{rev.score}</span>
+                              </Badge>
+                            </div>
                           </div>
                         </div>
+                        <span className="text-[9px] text-muted-foreground font-semibold">
+                          {rev.created_at ? new Date(rev.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short" }) : "Recent"}
+                        </span>
                       </div>
-                      <span className="text-[9px] text-muted-foreground font-semibold">
-                        {new Date(rev.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
-                      </span>
+                      <p className="text-xs text-muted-foreground leading-relaxed pl-9">{rev.comment}</p>
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed pl-9">{rev.comment}</p>
-                  </div>
-                )) : (
+                  );
+                }) : (
                   <p className="text-xs text-muted-foreground text-center py-4 italic">No reviews yet.</p>
                 )}
               </div>

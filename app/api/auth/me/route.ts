@@ -18,8 +18,9 @@ export async function GET(req: NextRequest) {
     }
 
     const userId = session.user.id;
-    const rows = await sql`
+    let rows = await sql`
       SELECT
+        u.id,
         u.role,
         u.is_suspended,
         wp.is_verified AS worker_is_verified,
@@ -38,6 +39,32 @@ export async function GET(req: NextRequest) {
       LIMIT 1
     `;
 
+    if (rows.length === 0 && session.user.email) {
+      const emailRows = await sql`
+        SELECT
+          u.id,
+          u.role,
+          u.is_suspended,
+          wp.is_verified AS worker_is_verified,
+          wp.verification_status AS worker_verification_status,
+          (
+            wp.fayda_doc_url IS NOT NULL
+            AND length(wp.fayda_doc_url) > 0
+            AND wp.fin_last4 IS NOT NULL
+            AND length(wp.fin_last4) = 4
+            AND wp.fin_encrypted IS NOT NULL
+            AND length(wp.fin_encrypted) > 0
+          ) AS worker_identity_complete
+        FROM users u
+        LEFT JOIN worker_profiles wp ON wp.user_id = u.id
+        WHERE lower(u.email) = lower(${session.user.email})
+        LIMIT 1
+      `;
+      if (emailRows.length > 0) {
+        rows = emailRows;
+      }
+    }
+
     if (rows.length === 0) {
       return NextResponse.json({ error: "User profile not found" }, { status: 404 });
     }
@@ -45,7 +72,7 @@ export async function GET(req: NextRequest) {
     const userRow = rows[0];
 
     return NextResponse.json({
-      id: userId,
+      id: userRow.id,
       email: session.user.email,
       name: session.user.name,
       role: userRow.role,

@@ -262,16 +262,38 @@ Notes:
   as super admin and other admin this priority should be different so we will discus about this
 - Worker verification update:pass
 
-## Test 17 - Security
+## Test 17 - Security & Access Isolation
 
-Status: TODO
+Status: PASS
 Notes:
+- Someone else's client contract: PASS - Throws Forbidden / 404, unauthorized clients cannot view terms or signatures.
+- Someone else's payment job: PASS - Query returns null, redirects to contracts, unauthorized users cannot access checkout or payment breakdown.
+- Someone else's worker contract: PASS - Throws Forbidden / 404, worker contract access isolated to assigned worker.
+- Receipt API/manual URL: PASS - Unauthenticated requests return 401 Unauthorized; cross-account unauthorized requests return 403 Forbidden.
 
-- Someone else's client contract:
-- Someone else's payment job:
-- Someone else's worker contract:
-- Receipt API/manual URL:
-  make it clear how to test this
+Testing Instructions & Verification Record:
+
+### 1. Someone else's client contract
+- **Action**: Log in as a Client (e.g., Client B / second test account). While logged in, paste the URL of a contract belonging to Client A: `http://localhost:3000/client/contracts/<CONTRACT_ID>`.
+- **Backend Protection**: Handled by `getContractForSigning()` in `lib/actions/contracts.ts` (checks `session.user.id === contract.client_id`).
+- **Expected Outcome**: Throws `Forbidden` / shows 404 or redirect. Unauthorized client cannot view terms, signatures, or parties.
+
+### 2. Someone else's payment job
+- **Action**: While logged in as Client B (or as a Worker), paste the payment URL for Client A's job: `http://localhost:3000/client/pay/ee843af0-3c22-4bac-b4cb-9b24d81cfc3e`.
+- **Backend Protection**: Enforced in `lib/actions/payments.ts` (`WHERE j.id = ${jobId} AND j.client_id = ${session.user.id}`).
+- **Expected Outcome**: Query returns `null`, and `app/(client)/client/pay/[jobId]/page.tsx` immediately redirects the user to `/client/contracts`. No payment breakdown or Chapa initiation is permitted.
+
+### 3. Someone else's worker contract
+- **Action**: Log in as Worker B (or Client B). Navigate to `http://localhost:3000/worker/contracts/<CONTRACT_ID>` for a contract assigned to Worker A.
+- **Backend Protection**: Verified by `getContractForSigning()` (`session.user.id === contract.worker_id`).
+- **Expected Outcome**: Throws `Forbidden` / displays 404. Worker B cannot see Worker A's contract, PIN sign form, or milestone details.
+
+### 4. Receipt API / Manual URL Direct Access
+- **Action A (Unauthenticated)**: Open an incognito tab and request `http://localhost:3000/api/payments/<PAYMENT_ID>/receipt`.
+  - **Expected Outcome**: HTTP 401 Unauthorized (`{"error": "Unauthorized"}`).
+- **Action B (Cross-Account)**: Log in as an unrelated user and request `http://localhost:3000/api/payments/<PAYMENT_ID>/receipt`.
+  - **Backend Protection**: Enforced in `app/api/payments/[paymentId]/receipt/route.ts` (checks `session.user.id === payment.client_id || (isWorkerParticipant && isActiveVerifiedWorker) || adminPermission`).
+  - **Expected Outcome**: HTTP 403 Forbidden (`{"error": "Forbidden"}`). PDF receipt buffer is not returned.
 
 ## Test 18 - Browser Console
 

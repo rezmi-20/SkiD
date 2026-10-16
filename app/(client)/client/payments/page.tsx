@@ -21,8 +21,9 @@ export const metadata = {
   description: "Review completed job payments and payment status.",
 };
 
-function formatMoney(value: number) {
-  return `${Math.round(value).toLocaleString()} ETB`;
+function formatMoney(value: number | string | undefined | null) {
+  const num = Number(value || 0);
+  return `${Math.round(Number.isFinite(num) ? num : 0).toLocaleString()} ETB`;
 }
 
 function formatDate(value: string | Date | null) {

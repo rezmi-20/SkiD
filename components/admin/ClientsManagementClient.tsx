@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bell, ExternalLink, Search, ShieldAlert, ShieldCheck, UserCheck, UserRound, UserX } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
-import { toClientDisplayStatus } from "@/lib/client-verification";
+import { toClientDisplayStatus } from "@/lib/client-verification-shared";
 import { sendClientVerificationReminder } from "@/lib/client-verification-reminders";
 import { setSuspendedStatus } from "@/lib/actions/super-admin";
 
