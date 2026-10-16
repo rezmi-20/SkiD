@@ -84,15 +84,23 @@ export default function NotificationsContent({ initialNotifications }: { initial
 
   const handleMarkAllRead = () => {
     startTransition(async () => {
-      await markAllAsRead();
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+      try {
+        await markAllAsRead();
+        setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+      } catch (err) {
+        console.warn("Failed to mark all notifications as read:", err);
+      }
     });
   };
 
   const handleTap = async (n: Notification) => {
-    if (!n.is_read) {
-      await markAsRead(n.id);
-      setNotifications(prev => prev.map(item => item.id === n.id ? { ...item, is_read: true } : item));
+    try {
+      if (!n.is_read) {
+        await markAsRead(n.id);
+        setNotifications(prev => prev.map(item => item.id === n.id ? { ...item, is_read: true } : item));
+      }
+    } catch (err) {
+      console.warn("Failed to mark notification as read:", err);
     }
     if (n.link_href) router.push(n.link_href);
   };

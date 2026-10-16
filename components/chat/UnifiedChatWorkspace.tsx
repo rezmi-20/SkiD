@@ -26,7 +26,6 @@ import {
   Clock,
   ChevronRight,
 } from "lucide-react";
-import { getProfileData } from "@/lib/actions/profile";
 import { playNotificationSound } from "@/lib/sound";
 
 interface Conversation {
@@ -130,43 +129,20 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
 
   // Fetch current user details
   useEffect(() => {
-    getProfileData()
+    fetch("/api/auth/me?optional=1")
+      .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (data) {
+        if (data && data.authenticated !== false) {
           setMyProfile({
-            id: data.user_id || data.id,
+            id: data.id,
             email: data.email,
-            name: data.full_name || data.name || "User",
-            role: data.role
+            name: data.name || "User",
+            role: data.role,
           });
-        } else {
-          // Fallback to route handler
-          fetch("/api/auth/me")
-            .then((r) => r.ok ? r.json() : null)
-            .then((data) => {
-              if (data) setMyProfile({
-                id: data.id,
-                email: data.email,
-                name: data.name || "User",
-                role: data.role
-              });
-            })
-            .catch(console.error);
         }
       })
       .catch((err) => {
-        console.error("Failed to load profile via server action, falling back", err);
-        fetch("/api/auth/me")
-          .then((r) => r.ok ? r.json() : null)
-          .then((data) => {
-            if (data) setMyProfile({
-              id: data.id,
-              email: data.email,
-              name: data.name || "User",
-              role: data.role
-            });
-          })
-          .catch(console.error);
+        console.warn("Failed to load profile for chat", err);
       });
   }, []);
 

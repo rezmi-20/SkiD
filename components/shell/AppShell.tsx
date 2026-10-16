@@ -9,7 +9,8 @@ import Sidebar from "@/components/shell/Sidebar";
 import NotificationBell from "@/components/shell/NotificationBell";
 import DireSkillLogo from "@/components/shell/DireSkillLogo";
 import ContractSetupPrompt from "@/components/ContractSetupPrompt";
-import { Sun, Moon, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { Sun, Moon, ChevronRight, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -106,12 +107,12 @@ export default function AppShell({
 
             {/* Right: controls */}
             <div className="flex items-center gap-2">
-              {/* Language toggle */}
-              <div className="hidden sm:flex items-center bg-muted rounded-full p-0.5 gap-0.5 border border-border">
+              {/* Language toggle (visible on both mobile and desktop) */}
+              <div className="flex items-center bg-muted rounded-full p-0.5 gap-0.5 border border-border">
                 <button
                   onClick={() => setLanguage("en")}
                   className={cn(
-                    "px-3 py-1 rounded-full text-[11px] font-semibold transition-all",
+                    "px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold transition-all",
                     language === "en"
                       ? "bg-foreground text-background shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
@@ -122,7 +123,7 @@ export default function AppShell({
                 <button
                   onClick={() => setLanguage("am")}
                   className={cn(
-                    "px-3 py-1 rounded-full text-[11px] font-semibold transition-all",
+                    "px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold transition-all",
                     language === "am"
                       ? "bg-foreground text-background shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
@@ -133,7 +134,7 @@ export default function AppShell({
                 <button
                   onClick={() => setLanguage("om")}
                   className={cn(
-                    "px-3 py-1 rounded-full text-[11px] font-semibold transition-all",
+                    "px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold transition-all",
                     language === "om"
                       ? "bg-foreground text-background shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
@@ -151,11 +152,21 @@ export default function AppShell({
                 variant="ghost"
                 size="icon"
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="rounded-full text-muted-foreground hover:text-foreground"
+                className="rounded-full text-muted-foreground hover:text-foreground h-9 w-9"
                 title={t("common.toggleTheme")}
               >
                 {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
               </Button>
+
+              {/* Mobile profile link */}
+              <Link
+                href={role === "worker" ? "/worker/profile" : "/client/profile"}
+                className="lg:hidden flex items-center justify-center h-9 w-9 rounded-full bg-muted text-muted-foreground hover:text-foreground border border-border transition-colors shrink-0"
+                title="Profile"
+                aria-label="Profile"
+              >
+                <User size={16} />
+              </Link>
             </div>
           </div>
         </header>

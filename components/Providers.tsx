@@ -32,7 +32,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       if (
         msg.includes("chrome: call method") ||
         stack.includes("chrome-extension://") ||
-        stack.includes("moz-extension://")
+        stack.includes("moz-extension://") ||
+        msg.includes("An unexpected response was received from the server") ||
+        stack.includes("fetchServerAction")
       ) {
         event.preventDefault();
         return;

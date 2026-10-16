@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface ProfileContentProps {
   user: {
@@ -100,17 +101,23 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
         <div className="flex items-center gap-3.5 min-w-0">
           {/* Avatar with mint/green badge container */}
           <div className="relative shrink-0">
-            <div className="h-16 w-16 rounded-full bg-[#bbf7d0] dark:bg-[#143d22] p-0.5 flex items-center justify-center">
+            <div className={`h-16 w-16 rounded-full ${user.is_verified ? "bg-[#bbf7d0] dark:bg-[#143d22]" : "bg-muted"} p-0.5 flex items-center justify-center`}>
               <Avatar className="h-full w-full rounded-full">
                 {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
-                <AvatarFallback className="bg-[#bbf7d0] text-[#166534] font-black text-lg">
+                <AvatarFallback className={user.is_verified ? "bg-[#bbf7d0] text-[#166534] font-black text-lg" : "bg-muted text-muted-foreground font-black text-lg"}>
                   {user.initials}
                 </AvatarFallback>
               </Avatar>
             </div>
             {/* Status icon badge pinned to bottom right */}
-            <div className="absolute -bottom-0.5 -right-0.5 h-6 w-6 rounded-full bg-[#86efac] border-2 border-background flex items-center justify-center text-[#14532d] shadow-sm">
-              <UserCheck className="h-3.5 w-3.5 stroke-[2.5]" />
+            <div className={`absolute -bottom-0.5 -right-0.5 h-6 w-6 rounded-full border-2 border-background flex items-center justify-center shadow-sm ${
+              user.is_verified ? "bg-[#86efac] text-[#14532d]" : "bg-amber-400 text-amber-950"
+            }`}>
+              {user.is_verified ? (
+                <UserCheck className="h-3.5 w-3.5 stroke-[2.5]" />
+              ) : (
+                <ShieldAlert className="h-3.5 w-3.5 stroke-[2.5]" />
+              )}
             </div>
           </div>
 
@@ -136,23 +143,50 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
         </Link>
       </div>
 
-      {/* ── Desktop-Only Creative Account Details Card ──────────────── */}
-      <div className="hidden md:grid md:grid-cols-3 gap-3 mb-6 p-4 rounded-[1.75rem] bg-card border border-border/60 shadow-sm text-xs">
+      {/* ── Responsive Account Details Card (Mobile & Desktop) ──────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-6 p-4 rounded-[1.75rem] bg-card border border-border/60 shadow-sm text-xs">
         <div className="flex items-center gap-2 p-2 rounded-xl bg-muted/40">
-          <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-[#a4fe47]/15 text-[#3a6613] dark:text-[#a4fe47] border-[#a4fe47]/30">
-            {isWorker ? "Verified Skilled Pro" : "Verified Client"}
+          <Badge
+            variant="outline"
+            className={cn(
+              "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5",
+              user.is_verified
+                ? "bg-[#a4fe47]/15 text-[#3a6613] dark:text-[#a4fe47] border-[#a4fe47]/30"
+                : user.verificationStatus === "pending"
+                ? "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30"
+                : "bg-muted text-muted-foreground border-border"
+            )}
+          >
+            {user.is_verified
+              ? isWorker
+                ? "Verified Skilled Pro"
+                : "Verified Client"
+              : user.verificationStatus === "pending"
+              ? "Verification Pending"
+              : isWorker
+              ? "Unverified Worker"
+              : "Unverified Client"}
           </Badge>
-          <span className="text-muted-foreground font-medium truncate">{user.district ? `${user.district}, AA` : "Addis Ababa"}</span>
+          <span className="text-muted-foreground font-medium truncate">{user.district ? `${user.district}, Dire Dawa` : "Dire Dawa, ET"}</span>
         </div>
-        {user.phone && (
+        {user.phone ? (
           <div className="flex items-center justify-between p-2 rounded-xl bg-muted/40">
             <span className="flex items-center gap-1.5 text-muted-foreground font-medium"><Phone className="h-3.5 w-3.5 text-primary" /> Phone:</span>
             <span className="font-bold text-foreground">+251 {user.phone}</span>
           </div>
+        ) : (
+          <div className="flex items-center justify-between p-2 rounded-xl bg-muted/40">
+            <span className="flex items-center gap-1.5 text-muted-foreground font-medium"><Phone className="h-3.5 w-3.5 text-muted-foreground" /> Phone:</span>
+            <span className="text-muted-foreground italic text-[11px]">Not linked</span>
+          </div>
         )}
         <div className="flex items-center justify-between p-2 rounded-xl bg-muted/40">
           <span className="flex items-center gap-1.5 text-muted-foreground font-medium"><ShieldCheck className="h-3.5 w-3.5 text-indigo-400" /> Fayda FIN:</span>
-          <span className="font-mono font-bold text-foreground bg-primary/10 px-2 py-0.5 rounded text-[11px] text-primary">{user.maskedFin || "********9654"}</span>
+          {user.maskedFin ? (
+            <span className="font-mono font-bold text-foreground bg-primary/10 px-2 py-0.5 rounded text-[11px] text-primary">{user.maskedFin}</span>
+          ) : (
+            <span className="text-muted-foreground italic text-[11px]">No FIN Linked</span>
+          )}
         </div>
       </div>
 
