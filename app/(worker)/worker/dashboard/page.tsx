@@ -29,7 +29,8 @@ export default async function WorkerDashboardPage() {
         AND length(wp.fin_encrypted) > 0
       ) AS identity_complete,
       wp.district,
-      wp.skills
+      wp.skills,
+      wp.availability
     FROM users u
     LEFT JOIN worker_profiles wp ON wp.user_id = u.id
     WHERE u.id = ${session.user.id}
@@ -63,6 +64,7 @@ export default async function WorkerDashboardPage() {
     isVerified: Boolean(worker?.is_verified && worker?.identity_complete),
     district: worker?.district || "Dire Dawa",
     skills: worker?.skills || [],
+    availability: worker?.availability || "available",
   };
 
   const completedJobs = recentJobs.filter((job: any) => job.status === "completed");

@@ -1535,4 +1535,24 @@ this the terminal record when i was doing the manual testing
 
 ## Fixes Applied During Manual Testing
 
-- None yet.
+1. **Server Action & Session Polling Hardening (Tests 3, 17, 18)**:
+   - Converted `ClientProfilePage` and `WorkerProfilePage` into async React Server Components, eliminating client-side `fetchServerAction` abort race conditions during route changes.
+   - Extracted client interactive location sync to `WorkerProfileClient.tsx`.
+   - Replaced polling Server Action `getProfileData()` in `UnifiedChatWorkspace.tsx` with GET `/api/auth/me?optional=1`.
+   - Hardened `handleRejection` in `Providers.tsx` to safely ignore aborted Next.js internal server action cancellations.
+2. **Material Symbols Outlined Vector Icon Rendering (Tests 3, 4)**:
+   - Added preconnect links and Google Fonts stylesheet for `Material Symbols Outlined` in `app/layout.jsx` `<head>`.
+   - Defined proper font-family, ligatures, and rendering settings in `app/globals.css`, ensuring icons like `construction`, `verified`, `location_on`, and `check_circle` render as vector icons rather than raw text.
+3. **Notification Messages Link Route Normalization (Test 4)**:
+   - Added `resolveNotificationLink` in `components/NotificationsContent.tsx` to automatically route `/messages` to `/[role]/messages` (e.g. `/client/messages` or `/worker/messages`), eliminating 404 errors when tapping message notifications.
+4. **Rating Page Graceful Fallback Card (Test 14)**:
+   - Replaced abrupt 1-second auto-redirects on `/client/rate/[jobId]` and `/worker/rate/[jobId]` with an informative card explaining that ratings unlock once contract completion and payment release are confirmed, complete with navigation buttons back to contracts or dashboard.
+5. **Worker Financial Statement CSV Export (Test 4)**:
+   - Implemented `handleExportStatements` in `components/WorkerEarningsContent.tsx`, enabling workers to export a full financial statement of completed jobs, gross pay, platform commission fees, and net payouts as a CSV download.
+6. **Contract Signatures Client & Worker Verification Guard (Test 10)**:
+   - Enforced symmetrical identity verification checks in `app/(worker)/worker/contract-setup/page.tsx` and `app/(client)/client/contract-setup/page.tsx`, redirecting unverified users to verify before creating contract signature PINs.
+7. **Realtime Contract State & Focus Sync (Tests 9, 11)**:
+   - Added automated state sync and window focus listeners in `components/ContractDetails.tsx` so counterparts automatically see terms acceptance, rejection, or completion requests without requiring manual page refresh.
+8. **Mobile Navigation & Data Truthfulness (Test 19)**:
+   - Kept language selector (`EN | አማ | OM`) and user profile button visible on mobile header in `AppShell.tsx`.
+   - Replaced static "Verified" badges with truthful dynamic verification states and removed hardcoded fallback FIN numbers.

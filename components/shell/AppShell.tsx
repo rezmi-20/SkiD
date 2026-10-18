@@ -10,7 +10,7 @@ import NotificationBell from "@/components/shell/NotificationBell";
 import DireSkillLogo from "@/components/shell/DireSkillLogo";
 import ContractSetupPrompt from "@/components/ContractSetupPrompt";
 import Link from "next/link";
-import { Sun, Moon, ChevronRight, User } from "lucide-react";
+import { Sun, Moon, ChevronRight, User, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -158,14 +158,14 @@ export default function AppShell({
                 {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
               </Button>
 
-              {/* Mobile profile link */}
+              {/* Mobile settings link (replacing profile icon as requested) */}
               <Link
-                href={role === "worker" ? "/worker/profile" : "/client/profile"}
-                className="lg:hidden flex items-center justify-center h-9 w-9 rounded-full bg-muted text-muted-foreground hover:text-foreground border border-border transition-colors shrink-0"
-                title="Profile"
-                aria-label="Profile"
+                href={role === "worker" ? "/worker/profile/settings" : "/client/profile/settings"}
+                className="lg:hidden flex items-center justify-center h-9 w-9 rounded-full bg-[#181d24] dark:bg-[#1e2329] text-white hover:text-[#a3e635] shadow-sm border border-border/40 active:scale-90 transition-all shrink-0"
+                title="Settings"
+                aria-label="Settings"
               >
-                <User size={16} />
+                <Settings size={16} className="stroke-[2]" />
               </Link>
             </div>
           </div>

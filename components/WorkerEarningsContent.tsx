@@ -100,6 +100,45 @@ export default function WorkerEarningsContent({ earnings }: WorkerEarningsConten
   const chartData = getChartData();
   const hasChartData = chartData.length > 0;
 
+  const handleExportStatements = () => {
+    const headers = ["Transaction ID", "Job Title", "Client", "Gross Amount (ETB)", "Commission Fee (ETB)", "Net Earnings (ETB)", "Status", "Reference", "Date"];
+    const rows = earnings.transactions.map((tx) => [
+      `"${tx.id}"`,
+      `"${(tx.title || "Job").replace(/"/g, '""')}"`,
+      `"${(tx.client || "Client").replace(/"/g, '""')}"`,
+      (tx.amount || 0).toFixed(2),
+      (tx.commissionAmount || 0).toFixed(2),
+      (tx.netAmount || 0).toFixed(2),
+      `"${tx.status || "completed"}"`,
+      `"${tx.chapaReference || tx.chapaRef || "N/A"}"`,
+      `"${formatDate(tx.createdAt)}"`,
+    ]);
+
+    rows.push([]);
+    rows.push([
+      `"SUMMARY"`,
+      `"Total Released: ${(earnings.totalEarnings || 0).toFixed(2)} ETB"`,
+      `"Total Pending: ${(earnings.pendingEarnings || 0).toFixed(2)} ETB"`,
+      (earnings.totalEarnings || 0).toFixed(2),
+      (earnings.commissionFees || 0).toFixed(2),
+      (earnings.availableEarnings || 0).toFixed(2),
+      `"COMPLETED"`,
+      `"Jobs: ${earnings.completedJobs || 0}"`,
+      `"${new Date().toLocaleDateString()}"`,
+    ]);
+
+    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `DireSkill_Earnings_Statement_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <FadeContent blur duration={0.4} className="space-y-6 pb-24 max-w-full">
       {/* Page Header */}
@@ -114,8 +153,8 @@ export default function WorkerEarningsContent({ earnings }: WorkerEarningsConten
           </p>
         </div>
         <button
-          disabled
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-outline-variant/60 bg-surface-container px-4.5 text-xs font-black uppercase tracking-wider text-on-surface-variant opacity-50 select-none shrink-0"
+          onClick={handleExportStatements}
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-4.5 text-xs font-black uppercase tracking-wider text-primary hover:bg-primary hover:text-on-primary transition shadow-sm shrink-0 cursor-pointer"
         >
           <Download className="w-4 h-4" />
           Export Statements

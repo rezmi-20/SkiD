@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   acceptContractTerms,
   finalizeContractDraft,
@@ -262,9 +262,9 @@ function ContractWorkflowStepper({
   currentStep: number;
 }) {
   return (
-    <section className="rounded-2xl border border-outline-variant bg-surface-container-lowest px-4 py-5 md:px-6">
-      <div className="overflow-x-auto">
-        <ol className="flex min-w-[680px] items-center">
+    <section className="rounded-3xl border border-outline-variant/60 bg-[#0e141d] px-4 py-5 md:px-6 shadow-sm">
+      <div className="overflow-x-auto no-scrollbar">
+        <ol className="flex min-w-[640px] items-center">
           {WORKFLOW_STEPS.map((step, index) => {
             const isComplete = index < currentStep;
             const isActive = index === currentStep;
@@ -273,22 +273,22 @@ function ContractWorkflowStepper({
               <li key={step} className="flex flex-1 items-center">
                 <div className="flex min-w-0 flex-col items-center gap-2">
                   <div
-                    className={`flex h-5 w-5 items-center justify-center rounded-full border text-[10px] font-black transition-colors ${
+                    className={`flex h-6 w-6 items-center justify-center rounded-full border text-[10px] font-black transition-colors ${
                       isComplete || isActive
-                        ? "border-primary bg-primary text-on-primary"
-                        : "border-outline-variant bg-surface-container text-on-surface-variant"
+                        ? "border-[#a3e635] bg-[#a3e635] text-black shadow-[0_0_10px_rgba(163,230,53,0.3)]"
+                        : "border-outline-variant/60 bg-surface-container text-on-surface-variant"
                     }`}
                     aria-current={isActive ? "step" : undefined}
                   >
                     {isComplete ? (
-                      <Check className="h-3 w-3" />
+                      <Check className="h-3.5 w-3.5 stroke-[3]" />
                     ) : (
                       index + 1
                     )}
                   </div>
                   <span
-                    className={`whitespace-nowrap text-[11px] font-semibold ${
-                      isActive ? "text-primary" : "text-on-surface-variant"
+                    className={`whitespace-nowrap text-[11px] font-bold ${
+                      isActive ? "text-[#a3e635]" : isComplete ? "text-on-surface" : "text-on-surface-variant opacity-60"
                     }`}
                   >
                     {step}
@@ -297,8 +297,8 @@ function ContractWorkflowStepper({
 
                 {index < WORKFLOW_STEPS.length - 1 && (
                   <div
-                    className={`mx-3 h-px flex-1 ${
-                      index < currentStep ? "bg-primary" : "bg-outline-variant"
+                    className={`mx-3 h-0.5 flex-1 rounded-full ${
+                      index < currentStep ? "bg-[#a3e635]" : "bg-outline-variant/40"
                     }`}
                   />
                 )}
@@ -364,6 +364,34 @@ export default function ContractDetails({ contract, userId }: Props) {
     additionalNotes: contract.additional_notes || "",
   });
   const displayPayment = draftForm.paymentAmount || contract.budget;
+
+  useEffect(() => {
+    // If the contract is in an active transition state (terms review, pending signature, completion review),
+    // auto-sync server data on window focus and on an 8-second interval so counterparts see updates automatically
+    const isTransitioning =
+      contractStatus === "DRAFT" ||
+      contractStatus === "READY_FOR_SIGNATURE" ||
+      contractStatus === "CLIENT_SIGNED" ||
+      contractStatus === "WORKER_SIGNED" ||
+      contract.job_status === "completion_requested" ||
+      contract.job_status === "in_progress";
+
+    if (!isTransitioning) return;
+
+    const interval = setInterval(() => {
+      router.refresh();
+    }, 8000);
+
+    const onFocus = () => {
+      router.refresh();
+    };
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [contractStatus, contract.job_status, router]);
 
   const handleDownloadPdf = async () => {
     if (!contract.pdf_url || isDownloadingPdf) return;
@@ -566,20 +594,20 @@ export default function ContractDetails({ contract, userId }: Props) {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 pb-32">
-      <header className="flex flex-col gap-4 border-b border-outline-variant pb-6 md:flex-row md:items-end md:justify-between">
+      <header className="flex flex-col gap-4 border-b border-outline-variant/60 pb-6 md:flex-row md:items-end md:justify-between">
         <div>
           <Link
             href={backHref}
-            className="mb-4 inline-flex h-10 items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 text-xs font-black uppercase tracking-widest text-on-surface hover:border-primary/40 transition"
+            className="mb-4 inline-flex h-9 items-center gap-1.5 rounded-full border border-outline-variant/60 bg-surface-container-low px-3.5 text-xs font-bold text-on-surface hover:text-on-surface hover:border-[#a3e635]/40 transition active:scale-95"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-3.5 w-3.5" />
             <span>Back</span>
           </Link>
-          <p className="text-xs font-black uppercase tracking-widest text-on-surface-variant">Service Agreement</p>
-          <h1 className="mt-2 text-3xl font-black tracking-tight text-on-surface md:text-4xl">
+          <p className="text-[10px] font-black uppercase tracking-widest text-[#a3e635]">Service Agreement</p>
+          <h1 className="mt-1 text-2xl font-black tracking-tight text-on-surface sm:text-3xl md:text-4xl">
             {contract.job_title}
           </h1>
-          <p className="mt-2 text-sm text-on-surface-variant">
+          <p className="mt-1 font-mono text-xs text-on-surface-variant opacity-60">
             Contract #{String(contract.id).slice(0, 8).toUpperCase()}
           </p>
         </div>
@@ -588,18 +616,18 @@ export default function ContractDetails({ contract, userId }: Props) {
 
       <ContractWorkflowStepper currentStep={workflowStep} />
 
-      <section className="grid gap-4 lg:grid-cols-3">
-        <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
-          <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Payment</p>
-          <p className="mt-2 text-2xl font-black text-on-surface">{formatMoney(displayPayment)}</p>
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="rounded-3xl border border-outline-variant/60 bg-[#0e141d] p-5 sm:p-6 shadow-sm">
+          <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60">Payment</p>
+          <p className="mt-2 text-2xl sm:text-3xl font-black text-[#a3e635]">{formatMoney(displayPayment)}</p>
         </div>
-        <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
-          <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Job Status</p>
-          <p className="mt-2 text-2xl font-black capitalize text-on-surface">{String(contract.job_status || "pending").replaceAll("_", " ")}</p>
+        <div className="rounded-3xl border border-outline-variant/60 bg-[#0e141d] p-5 sm:p-6 shadow-sm">
+          <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60">Job Status</p>
+          <p className="mt-2 text-2xl sm:text-3xl font-black capitalize text-on-surface">{String(contract.job_status || "pending").replaceAll("_", " ")}</p>
         </div>
-        <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-5">
-          <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Contract Status</p>
-          <p className="mt-2 text-2xl font-black capitalize text-on-surface">{String(contractStatus).toLowerCase().replaceAll("_", " ")}</p>
+        <div className="rounded-3xl border border-outline-variant/60 bg-[#0e141d] p-5 sm:p-6 shadow-sm sm:col-span-2 lg:col-span-1">
+          <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60">Contract Status</p>
+          <p className="mt-2 text-2xl sm:text-3xl font-black capitalize text-on-surface">{String(contractStatus).toLowerCase().replaceAll("_", " ")}</p>
         </div>
       </section>
 
@@ -681,15 +709,15 @@ export default function ContractDetails({ contract, userId }: Props) {
               )}
 
               {canEditDraft && (
-                <div className="flex flex-col gap-3 sm:flex-row">
+                <div className="flex flex-col gap-3 sm:flex-row pt-2">
                   <button
                     type="button"
                     onClick={handleSaveDraft}
                     disabled={isSavingDraft || isFinalizingDraft}
-                    className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-xs font-black uppercase tracking-widest text-on-primary disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full border border-outline-variant/60 bg-surface-container hover:bg-surface-container-high px-5 text-xs font-bold uppercase tracking-wider text-on-surface disabled:cursor-not-allowed disabled:opacity-60 transition active:scale-[0.98]"
                   >
                     {isSavingDraft ? (
-                      <span className="h-4 w-4 rounded-full border-2 border-on-primary border-t-transparent animate-spin" />
+                      <span className="h-4 w-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
                     ) : (
                       <Save className="h-4 w-4" />
                     )}
@@ -700,7 +728,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                     onClick={() => setShowFinalizeModal(true)}
                     disabled={isSavingDraft || isFinalizingDraft || !canFinalizeDraft}
                     title={!canFinalizeDraft ? "Worker acceptance is required before finalization" : "Finalize accepted terms"}
-                    className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-lg bg-on-surface px-4 text-xs font-black uppercase tracking-widest text-surface-container-lowest disabled:cursor-not-allowed disabled:opacity-60 transition"
+                    className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-[#a3e635] px-5 text-xs font-black uppercase tracking-wider text-black disabled:cursor-not-allowed disabled:opacity-60 transition hover:opacity-90 shadow-[0_4px_16px_rgba(163,230,53,0.3)] active:scale-[0.98]"
                   >
                     <Lock className="h-4 w-4" />
                     <span>Finalize Draft</span>
@@ -709,21 +737,21 @@ export default function ContractDetails({ contract, userId }: Props) {
               )}
 
               {canWorkerReviewTerms && (
-                <div className="space-y-3 rounded-lg border border-outline-variant bg-surface-container p-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Worker Terms Review</p>
+                <div className="space-y-3 rounded-2xl border border-outline-variant/60 bg-surface-container/70 p-5">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#a3e635]">Worker Terms Review</p>
                   <textarea
                     value={termsRejectReason}
                     onChange={(event) => setTermsRejectReason(event.target.value)}
                     rows={3}
                     placeholder="Reason required only if rejecting terms"
-                    className="w-full resize-none rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-3 text-sm font-medium text-on-surface outline-none focus:border-primary"
+                    className="w-full resize-none rounded-2xl border border-outline-variant/60 bg-surface-container-lowest px-4 py-3 text-sm font-medium text-on-surface outline-none focus:border-[#a3e635]/60"
                   />
                   <div className="flex flex-col gap-3 sm:flex-row">
                     <button
                       type="button"
                       onClick={handleAcceptTerms}
                       disabled={isTermsActionLoading}
-                      className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-xs font-black uppercase tracking-widest text-on-primary disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-[#a3e635] px-5 text-xs font-black uppercase tracking-wider text-black hover:opacity-90 shadow-[0_4px_16px_rgba(163,230,53,0.3)] disabled:cursor-not-allowed disabled:opacity-60 transition active:scale-[0.98]"
                     >
                       Accept Terms
                     </button>
@@ -731,7 +759,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                       type="button"
                       onClick={handleRejectTerms}
                       disabled={isTermsActionLoading || !termsRejectReason.trim()}
-                      className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-lg border border-secondary bg-surface-container-lowest px-4 text-xs font-black uppercase tracking-widest text-secondary disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full border border-rose-500/40 bg-surface-container-low px-5 text-xs font-black uppercase tracking-wider text-rose-400 hover:bg-rose-500/10 disabled:cursor-not-allowed disabled:opacity-60 transition active:scale-[0.98]"
                     >
                       Reject Terms
                     </button>
@@ -785,7 +813,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                     type="button"
                     onClick={handleConfirmCompletion}
                     disabled={isCompletionActionLoading}
-                    className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-xs font-black uppercase tracking-widest text-on-primary disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-[#a3e635] px-5 text-xs font-black uppercase tracking-wider text-black hover:opacity-90 shadow-[0_4px_16px_rgba(163,230,53,0.3)] disabled:cursor-not-allowed disabled:opacity-60 transition active:scale-[0.98]"
                   >
                     Confirm Completion
                   </button>
@@ -793,7 +821,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                     type="button"
                     onClick={handleRejectCompletion}
                     disabled={isCompletionActionLoading || !completionRejectReason.trim()}
-                    className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-lg border border-secondary bg-surface-container-lowest px-4 text-xs font-black uppercase tracking-widest text-secondary disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-rose-500/40 bg-surface-container-low px-5 text-xs font-black uppercase tracking-wider text-rose-400 hover:bg-rose-500/10 disabled:cursor-not-allowed disabled:opacity-60 transition active:scale-[0.98]"
                   >
                     Reject Completion
                   </button>
@@ -802,19 +830,19 @@ export default function ContractDetails({ contract, userId }: Props) {
             )}
 
             {contractStatus === "ACTIVE" ? (
-              <div className="rounded-lg border border-primary/30 bg-primary/10 p-4 text-sm font-bold text-primary">
+              <div className="rounded-2xl border border-[#a3e635]/30 bg-[#a3e635]/10 p-4 text-sm font-bold text-[#a3e635]">
                 Contract activated. Work is now in progress and the final PDF evidence is available below.
               </div>
             ) : contractStatus === "DRAFT" ? (
-              <div className="rounded-lg border border-secondary/30 bg-secondary/10 p-4 text-sm font-bold text-secondary">
+              <div className="rounded-2xl border border-secondary/30 bg-secondary/10 p-4 text-sm font-bold text-secondary">
                 This is a contract draft. The client can edit and finalize it in the next workflow step before either party signs.
               </div>
             ) : !bothPartiesVerified && canSign && !userHasSigned ? (
-              <div className="rounded-lg border border-error/30 bg-error/10 p-4 text-sm font-bold text-error">
+              <div className="rounded-2xl border border-error/30 bg-error/10 p-4 text-sm font-bold text-error">
                 Both client and worker must complete identity verification before signing this contract.
               </div>
             ) : !canSign ? (
-              <div className="rounded-lg border border-outline-variant bg-surface-container p-4 text-sm font-bold text-on-surface-variant">
+              <div className="rounded-2xl border border-outline-variant/60 bg-surface-container p-4 text-sm font-bold text-on-surface-variant">
                 This contract is not ready for your signature yet.
               </div>
             ) : !userHasSigned ? (
@@ -826,7 +854,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                     ["voluntarilyAgrees", "I voluntarily agree to this contract."],
                     ["pinIsSignature", "I understand that my Contract PIN acts as my electronic signature."],
                   ].map(([key, label]) => (
-                    <label key={key} className="flex items-start gap-3 rounded-lg border border-outline-variant bg-surface-container p-3">
+                    <label key={key} className="flex items-start gap-3 rounded-2xl border border-outline-variant/60 bg-surface-container p-3.5">
                       <input
                         type="checkbox"
                         checked={signatureConsent[key as keyof typeof signatureConsent]}
@@ -836,9 +864,9 @@ export default function ContractDetails({ contract, userId }: Props) {
                             [key]: event.target.checked,
                           }))
                         }
-                        className="mt-1 h-4 w-4 accent-primary"
+                        className="mt-1 h-4 w-4 accent-[#a3e635]"
                       />
-                      <span className="text-sm font-bold leading-6 text-on-surface">{label}</span>
+                      <span className="text-xs sm:text-sm font-bold leading-5 text-on-surface">{label}</span>
                     </label>
                   ))}
                 </div>
@@ -847,18 +875,18 @@ export default function ContractDetails({ contract, userId }: Props) {
                   type="button"
                   onClick={() => setIsPinModalOpen(true)}
                   disabled={isSigning || !hasAllSignatureConsent || !bothPartiesVerified}
-                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-xs font-black uppercase tracking-widest text-on-primary disabled:cursor-not-allowed disabled:opacity-60 transition"
+                  className="inline-flex h-13 w-full items-center justify-center gap-2 rounded-full bg-[#a3e635] px-6 text-xs sm:text-sm font-black uppercase tracking-wider text-black hover:opacity-90 shadow-[0_4px_18px_rgba(163,230,53,0.35)] disabled:cursor-not-allowed disabled:opacity-60 transition active:scale-[0.98] cursor-pointer"
                 >
-                  <PenTool className="h-4 w-4" />
+                  <PenTool className="h-4 w-4 stroke-[2.5]" />
                   <span>{isSigning ? "Signing..." : "Sign Contract"}</span>
                 </button>
               </div>
             ) : isFullySigned ? (
-              <div className="rounded-lg border border-primary/30 bg-primary/10 p-4 text-sm font-bold text-primary">
+              <div className="rounded-2xl border border-[#a3e635]/30 bg-[#a3e635]/10 p-4 text-sm font-bold text-[#a3e635]">
                 Contract fully signed. Final activation will generate the PDF, hash, QR code, and job start state.
               </div>
             ) : (
-              <div className="rounded-lg border border-outline-variant bg-surface-container p-4 text-sm font-bold text-on-surface-variant">
+              <div className="rounded-2xl border border-outline-variant/60 bg-surface-container p-4 text-sm font-bold text-on-surface-variant">
                 Waiting for the other party to sign.
               </div>
             )}
@@ -868,7 +896,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                 type="button"
                 onClick={handleDownloadPdf}
                 disabled={isDownloadingPdf}
-                className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-outline-variant px-4 text-xs font-black uppercase tracking-widest text-on-surface hover:border-primary/40 transition"
+                className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-outline-variant/60 bg-surface-container hover:bg-surface-container-high px-5 text-xs font-bold uppercase tracking-wider text-on-surface hover:border-[#a3e635]/40 transition active:scale-[0.98]"
               >
                 <Download className="h-4 w-4" />
                 <span>{isDownloadingPdf ? "Downloading..." : "Download PDF"}</span>
@@ -894,18 +922,18 @@ export default function ContractDetails({ contract, userId }: Props) {
       />
 
       {showFinalizeModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-2xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 px-4 backdrop-blur-md">
+          <div className="w-full max-w-md rounded-3xl border border-outline-variant/60 bg-[#0e141d] p-6 sm:p-7 shadow-2xl">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary">
-                <Lock className="h-6 w-6" />
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#a3e635]/15 text-[#a3e635] border border-[#a3e635]/30">
+                <Lock className="h-6 w-6 stroke-[2.5]" />
               </div>
               <div>
                 <h2 className="text-xl font-black tracking-tight text-on-surface">Finalize Draft</h2>
-                <p className="mt-3 text-sm leading-6 text-on-surface-variant">
+                <p className="mt-2 text-xs sm:text-sm leading-relaxed text-on-surface-variant">
                   After finalizing, this contract becomes read only.
                 </p>
-                <p className="mt-2 text-sm leading-6 text-on-surface-variant">
+                <p className="mt-1 text-xs sm:text-sm leading-relaxed text-on-surface-variant">
                   Both parties must electronically sign before work begins.
                 </p>
               </div>
@@ -916,7 +944,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                 type="button"
                 onClick={() => setShowFinalizeModal(false)}
                 disabled={isFinalizingDraft}
-                className="inline-flex h-12 flex-1 items-center justify-center rounded-lg border border-outline-variant bg-surface-container px-4 text-xs font-black uppercase tracking-widest text-on-surface-variant disabled:opacity-60 transition hover:bg-surface-container-high"
+                className="inline-flex h-11 flex-1 items-center justify-center rounded-full border border-outline-variant/60 bg-surface-container px-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant disabled:opacity-60 transition hover:bg-surface-container-high"
               >
                 Cancel
               </button>
@@ -924,12 +952,12 @@ export default function ContractDetails({ contract, userId }: Props) {
                 type="button"
                 onClick={handleFinalizeDraft}
                 disabled={isFinalizingDraft}
-                className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-xs font-black uppercase tracking-widest text-on-primary disabled:opacity-60 transition"
+                className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-[#a3e635] px-4 text-xs font-black uppercase tracking-wider text-black disabled:opacity-60 transition hover:opacity-90 shadow-[0_4px_16px_rgba(163,230,53,0.3)]"
               >
                 {isFinalizingDraft ? (
-                  <span className="h-4 w-4 rounded-full border-2 border-on-primary border-t-transparent animate-spin" />
+                  <span className="h-4 w-4 rounded-full border-2 border-black border-t-transparent animate-spin" />
                 ) : (
-                  <CheckCircle2 className="h-4 w-4" />
+                  <CheckCircle2 className="h-4 w-4 stroke-[2.5]" />
                 )}
                 <span>{isFinalizingDraft ? "Finalizing..." : "Finalize"}</span>
               </button>

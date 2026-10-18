@@ -19,11 +19,21 @@ export async function GET() {
           WHEN c.client_id = ${userId} THEN c.worker_id
           ELSE c.client_id
         END as other_user_id,
+        u.role as other_role,
         COALESCE(wp.full_name, cp.full_name, u.email) as other_name,
         COALESCE(wp.avatar_url, cp.avatar_url) as other_avatar,
+        COALESCE(wp.is_verified, cp.is_verified, FALSE) as is_verified,
+        wp.skills as other_skills,
+        wp.bio as other_bio,
+        wp.hourly_rate as other_hourly_rate,
+        wp.district as other_district,
+        wp.experience_years as other_experience_years,
+        wp.availability as other_availability,
         (SELECT body FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_body,
         (SELECT image_url FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_image,
-        (SELECT created_at FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_at
+        (SELECT media_type FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_media_type,
+        (SELECT created_at FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_at,
+        (SELECT COUNT(*)::int FROM messages WHERE conversation_id = c.id AND sender_id != ${userId} AND is_read = false) as unread
       FROM conversations c
       JOIN users u ON u.id = (CASE WHEN c.client_id = ${userId} THEN c.worker_id ELSE c.client_id END)
       LEFT JOIN worker_profiles wp ON wp.user_id = u.id

@@ -22,6 +22,15 @@ export async function GET(
     `;
     if (conv.length === 0) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
+    // Mark incoming messages as read for this user
+    await sql`
+      UPDATE messages
+      SET is_read = TRUE, read_at = NOW()
+      WHERE conversation_id = ${id}
+        AND sender_id != ${userId}
+        AND is_read = FALSE
+    `;
+
     const messages = await sql`
       SELECT
         m.id,
@@ -29,6 +38,9 @@ export async function GET(
         m.body,
         m.image_url,
         m.created_at,
+        COALESCE(m.is_read, FALSE) AS is_read,
+        m.read_at,
+        COALESCE(m.media_type, 'image') AS media_type,
         COALESCE(wp.full_name, cp.full_name, u.email) AS sender_name,
         COALESCE(wp.avatar_url, cp.avatar_url) AS sender_avatar
       FROM messages m
@@ -65,7 +77,7 @@ export async function POST(
     `;
     if (conv.length === 0) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    const { body, imageUrl } = await req.json();
+    const { body, imageUrl, mediaType } = await req.json();
 
     if (!body && !imageUrl) {
       return NextResponse.json({ error: "Message cannot be empty" }, { status: 400 });
@@ -79,10 +91,19 @@ export async function POST(
       }
     }
 
+    // Determine media type
+    let finalMediaType = mediaType || "image";
+    if (imageUrl && !mediaType) {
+      const lower = imageUrl.toLowerCase();
+      if (lower.endsWith(".mp4") || lower.endsWith(".webm") || lower.endsWith(".mov") || lower.endsWith(".ogg") || lower.includes("/video/")) {
+        finalMediaType = "video";
+      }
+    }
+
     const rows = await sql`
-      INSERT INTO messages (conversation_id, sender_id, body, image_url)
-      VALUES (${id}, ${userId}, ${body || null}, ${imageUrl || null})
-      RETURNING id, sender_id, body, image_url, created_at
+      INSERT INTO messages (conversation_id, sender_id, body, image_url, media_type, is_read)
+      VALUES (${id}, ${userId}, ${body || null}, ${imageUrl || null}, ${imageUrl ? finalMediaType : null}, FALSE)
+      RETURNING id, sender_id, body, image_url, media_type, is_read, created_at
     `;
 
     return NextResponse.json({ message: rows[0] });

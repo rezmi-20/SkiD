@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { markAsRead, markAllAsRead } from "@/lib/actions/notifications";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import {
@@ -28,6 +28,23 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { playNotificationSound } from "@/lib/sound";
+
+function resolveNotificationLink(rawHref: string | null, role: "client" | "worker"): string | null {
+  if (!rawHref) return null;
+  if (rawHref.startsWith("http://") || rawHref.startsWith("https://")) return rawHref;
+  if (rawHref.startsWith("/client") || rawHref.startsWith("/worker") || rawHref.startsWith("/admin")) return rawHref;
+
+  if (rawHref === "/messages" || rawHref.startsWith("/messages/")) {
+    return `/${role}${rawHref}`;
+  }
+  if (rawHref === "/contracts") {
+    return `/${role}/contracts`;
+  }
+  if (rawHref === "/profile" || rawHref.startsWith("/profile/")) {
+    return `/${role}${rawHref}`;
+  }
+  return rawHref;
+}
 
 interface TypeConfigItem {
   icon: LucideIcon;
@@ -72,6 +89,8 @@ interface Notification {
 
 export default function NotificationsContent({ initialNotifications }: { initialNotifications: Notification[] }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const role: "client" | "worker" = pathname?.startsWith("/worker") ? "worker" : "client";
   const [notifications, setNotifications] = useState(initialNotifications);
   const [filter, setFilter] = useState<"all" | "unread">("all");
   const [isPending, startTransition] = useTransition();
@@ -102,7 +121,8 @@ export default function NotificationsContent({ initialNotifications }: { initial
     } catch (err) {
       console.warn("Failed to mark notification as read:", err);
     }
-    if (n.link_href) router.push(n.link_href);
+    const targetLink = resolveNotificationLink(n.link_href, role);
+    if (targetLink) router.push(targetLink);
   };
 
   return (

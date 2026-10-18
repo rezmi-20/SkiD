@@ -36,6 +36,7 @@ import {
   ArrowRight,
   ShieldAlert,
 } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface WorkerDashboardContentProps {
   worker: {
@@ -44,6 +45,7 @@ interface WorkerDashboardContentProps {
     isVerified: boolean;
     district: string;
     skills: string[];
+    availability?: string;
   };
   stats: {
     activeJobs: number;
@@ -74,8 +76,49 @@ export default function WorkerDashboardContent({
   greeting,
 }: WorkerDashboardContentProps) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [accepting, setAccepting] = useState<string | null>(null);
   const [rejecting, setRejecting] = useState<string | null>(null);
+  const [availability, setAvailability] = useState<string>(worker.availability || "available");
+  const [toggling, setToggling] = useState(false);
+
+  const handleToggleAvailability = async () => {
+    if (toggling) return;
+    setToggling(true);
+    const targetStatus = availability === "available" ? "offline" : "available";
+    setAvailability(targetStatus);
+
+    try {
+      let lat = null;
+      let lng = null;
+      if (typeof window !== "undefined" && navigator.geolocation) {
+        try {
+          const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 3000 });
+          });
+          lat = pos.coords.latitude;
+          lng = pos.coords.longitude;
+        } catch {}
+      }
+
+      await fetch("/api/worker/availability", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          availability: targetStatus,
+          latitude: lat,
+          longitude: lng,
+          reason: targetStatus === "offline" ? "Taking a break / Emergency" : "Back online",
+        }),
+      });
+      router.refresh();
+    } catch (e) {
+      console.error(e);
+      setAvailability(availability);
+    } finally {
+      setToggling(false);
+    }
+  };
 
   const initials = worker.fullName
     ? worker.fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
@@ -109,7 +152,57 @@ export default function WorkerDashboardContent({
   };
 
   return (
-    <FadeContent blur duration={0.3} className="space-y-4 max-w-full pb-8">
+    <FadeContent blur duration={0.2} className="space-y-4 max-w-full pb-8">
+      {/* ── 0. PROFILE-CONSISTENT LIVE ONLINE / OFFLINE TOGGLE SWITCH (Matches Profile Settings) ── */}
+      <div
+        onClick={handleToggleAvailability}
+        className="rounded-[1.75rem] bg-[#f1f3f6] dark:bg-[#151a21] border border-outline-variant/30 p-3.5 sm:p-4 flex items-center justify-between shadow-sm cursor-pointer active:scale-[0.99] transition-all touch-manipulation group"
+        title="Toggle online availability"
+      >
+        <div className={`h-11 w-11 rounded-full flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform ${
+          availability === "available" ? "bg-[#181d24] text-[#a4fe47]" : "bg-[#181d24] text-white"
+        }`}>
+          {toggling ? (
+            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+          ) : availability === "available" ? (
+            <Zap className="h-4 w-4 stroke-[2.2] fill-current" />
+          ) : (
+            <Clock className="h-4 w-4 stroke-[2]" />
+          )}
+        </div>
+        <div className="flex-1 min-w-0 ml-3.5">
+          <div className="flex items-center gap-2">
+            <p className="text-xs sm:text-sm font-bold text-foreground truncate">
+              {availability === "available" ? t("worker.dashboard.status.online") : t("worker.dashboard.status.offline")}
+            </p>
+            <span className={`text-[9px] font-black uppercase tracking-wider py-0.5 px-2 rounded-full border ${
+              availability === "available"
+                ? "border-[#22c55e]/40 text-[#22c55e] bg-[#22c55e]/10"
+                : "border-muted-foreground/30 text-muted-foreground bg-muted"
+            }`}>
+              {availability === "available" ? t("worker.dashboard.status.ready") : t("worker.dashboard.status.break")}
+            </span>
+          </div>
+          <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+            {availability === "available"
+              ? "Visible to clients in Dire Dawa with real-time GPS distance"
+              : "Paused from new client search invitations"}
+          </p>
+        </div>
+        {/* iOS-style toggle pill exactly matching profile */}
+        <div
+          className={`w-12 h-7 rounded-full p-0.5 transition-colors duration-200 flex items-center shrink-0 ml-3 ${
+            availability === "available" ? "bg-[#a4fe47]" : "bg-[#d1d5db] dark:bg-gray-700"
+          }`}
+        >
+          <div
+            className={`h-6 w-6 rounded-full bg-white shadow-md transition-transform duration-200 ${
+              availability === "available" ? "translate-x-5" : "translate-x-0"
+            }`}
+          />
+        </div>
+      </div>
+
       {/* ── 0. UNVERIFIED CALLOUT BANNER (Mobile Optimized) ─────────── */}
       {!isVerified && (
         <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
@@ -133,14 +226,92 @@ export default function WorkerDashboardContent({
       )}
 
       {/* ── 1. THUMB-FRIENDLY QUICK ACTION CAROUSEL ─────────────────── */}
-      <div className="overflow-x-auto no-scrollbar -mx-2 px-2 py-1">
+      {/* Mobile view (< 640px): 6 distinct circular icon buttons in a single touch-friendly scroll row */}
+      <div className="sm:hidden overflow-x-auto no-scrollbar -mx-4 px-4 py-2">
+        <div className="flex items-start gap-4 min-w-max">
+          <Link
+            href="/worker/jobs"
+            className="flex flex-col items-center group active:scale-90 transition-transform touch-manipulation w-14"
+          >
+            <div className="w-12 h-12 rounded-full bg-[#181d24] dark:bg-[#1e2329] text-indigo-400 border border-outline-variant/60 flex items-center justify-center shadow-sm group-hover:border-indigo-500/50">
+              <Briefcase className="h-5 w-5 stroke-[2]" />
+            </div>
+            <span className="text-[10px] font-bold text-foreground mt-1.5 text-center leading-tight truncate w-full">
+              {t("worker.dashboard.quick.browse")}
+            </span>
+          </Link>
+
+          <Link
+            href="/worker/contracts"
+            className="flex flex-col items-center group active:scale-90 transition-transform touch-manipulation w-14"
+          >
+            <div className="w-12 h-12 rounded-full bg-[#181d24] dark:bg-[#1e2329] text-emerald-400 border border-outline-variant/60 flex items-center justify-center shadow-sm group-hover:border-emerald-500/50">
+              <FileText className="h-5 w-5 stroke-[2]" />
+            </div>
+            <span className="text-[10px] font-bold text-foreground mt-1.5 text-center leading-tight truncate w-full">
+              {t("worker.dashboard.quick.contracts")}
+            </span>
+          </Link>
+
+          <Link
+            href="/worker/contract-setup"
+            className="flex flex-col items-center group active:scale-90 transition-transform touch-manipulation w-14"
+          >
+            <div className="w-12 h-12 rounded-full bg-[#181d24] dark:bg-[#1e2329] text-amber-400 border border-outline-variant/60 flex items-center justify-center shadow-sm group-hover:border-amber-500/50">
+              <KeyRound className="h-5 w-5 stroke-[2]" />
+            </div>
+            <span className="text-[10px] font-bold text-foreground mt-1.5 text-center leading-tight truncate w-full">
+              {t("worker.dashboard.quick.pin")}
+            </span>
+          </Link>
+
+          <Link
+            href="/worker/earnings"
+            className="flex flex-col items-center group active:scale-90 transition-transform touch-manipulation w-14"
+          >
+            <div className="w-12 h-12 rounded-full bg-[#181d24] dark:bg-[#1e2329] text-[#a3e635] border border-outline-variant/60 flex items-center justify-center shadow-sm group-hover:border-[#a3e635]/50">
+              <Wallet className="h-5 w-5 stroke-[2]" />
+            </div>
+            <span className="text-[10px] font-bold text-foreground mt-1.5 text-center leading-tight truncate w-full">
+              {t("worker.dashboard.quick.earnings")}
+            </span>
+          </Link>
+
+          <Link
+            href="/worker/messages"
+            className="flex flex-col items-center group active:scale-90 transition-transform touch-manipulation w-14"
+          >
+            <div className="w-12 h-12 rounded-full bg-[#181d24] dark:bg-[#1e2329] text-sky-400 border border-outline-variant/60 flex items-center justify-center shadow-sm group-hover:border-sky-500/50">
+              <MessageSquare className="h-5 w-5 stroke-[2]" />
+            </div>
+            <span className="text-[10px] font-bold text-foreground mt-1.5 text-center leading-tight truncate w-full">
+              {t("worker.dashboard.quick.messages")}
+            </span>
+          </Link>
+
+          <Link
+            href="/worker/support"
+            className="flex flex-col items-center group active:scale-90 transition-transform touch-manipulation w-14"
+          >
+            <div className="w-12 h-12 rounded-full bg-[#181d24] dark:bg-[#1e2329] text-violet-400 border border-outline-variant/60 flex items-center justify-center shadow-sm group-hover:border-violet-500/50">
+              <Headphones className="h-5 w-5 stroke-[2]" />
+            </div>
+            <span className="text-[10px] font-bold text-foreground mt-1.5 text-center leading-tight truncate w-full">
+              {t("worker.dashboard.quick.support")}
+            </span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Desktop view (>= 640px): Horizontal pill carousel */}
+      <div className="hidden sm:block overflow-x-auto no-scrollbar -mx-2 px-2 py-1">
         <div className="flex items-center gap-2.5 min-w-max">
           <Link
             href="/worker/jobs"
             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm shadow-indigo-500/20 active:scale-95 transition-transform touch-manipulation"
           >
             <Briefcase className="h-4 w-4" />
-            <span>Browse Jobs</span>
+            <span>{t("worker.dashboard.quick.browse")}</span>
           </Link>
 
           <Link
@@ -148,7 +319,7 @@ export default function WorkerDashboardContent({
             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-card border border-border text-foreground text-xs font-semibold hover:border-indigo-500/40 active:scale-95 transition-all touch-manipulation"
           >
             <FileText className="h-4 w-4 text-emerald-400" />
-            <span>My Contracts</span>
+            <span>{t("worker.dashboard.quick.contracts")}</span>
           </Link>
 
           <Link
@@ -156,7 +327,7 @@ export default function WorkerDashboardContent({
             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-card border border-border text-foreground text-xs font-semibold hover:border-indigo-500/40 active:scale-95 transition-all touch-manipulation"
           >
             <KeyRound className="h-4 w-4 text-amber-400" />
-            <span>Contract PIN</span>
+            <span>{t("worker.dashboard.quick.pin")}</span>
           </Link>
 
           <Link
@@ -164,7 +335,7 @@ export default function WorkerDashboardContent({
             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-card border border-border text-foreground text-xs font-semibold hover:border-indigo-500/40 active:scale-95 transition-all touch-manipulation"
           >
             <Wallet className="h-4 w-4 text-indigo-400" />
-            <span>Earnings</span>
+            <span>{t("worker.dashboard.quick.earnings")}</span>
           </Link>
 
           <Link
@@ -172,7 +343,7 @@ export default function WorkerDashboardContent({
             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-card border border-border text-foreground text-xs font-semibold hover:border-indigo-500/40 active:scale-95 transition-all touch-manipulation"
           >
             <MessageSquare className="h-4 w-4 text-sky-400" />
-            <span>Messages</span>
+            <span>{t("worker.dashboard.quick.messages")}</span>
           </Link>
 
           <Link
@@ -180,7 +351,7 @@ export default function WorkerDashboardContent({
             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-card border border-border text-foreground text-xs font-semibold hover:border-indigo-500/40 active:scale-95 transition-all touch-manipulation"
           >
             <Headphones className="h-4 w-4 text-violet-400" />
-            <span>Support</span>
+            <span>{t("worker.dashboard.quick.support")}</span>
           </Link>
         </div>
       </div>
@@ -199,7 +370,7 @@ export default function WorkerDashboardContent({
           <div className="flex items-center justify-between z-10 mb-2">
             <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-indigo-400/90">
               <Zap className="h-3 w-3 text-indigo-400" />
-              Professional Workbench
+              {t("worker.dashboard.workbench")}
             </span>
             <div className="flex items-center gap-2">
               <div className="text-right">
@@ -214,11 +385,11 @@ export default function WorkerDashboardContent({
 
           <div className="relative z-10 my-2">
             <h1 className="text-xl sm:text-2xl font-extrabold text-white leading-snug">
-              Welcome back, {worker.firstName}
+              {t("worker.dashboard.welcome")}, {worker.firstName}
             </h1>
             <p className="text-xs text-white/60 mt-1 max-w-md leading-relaxed flex items-center gap-1.5 flex-wrap">
               <MapPin className="h-3 w-3 text-indigo-400 shrink-0" />
-              <span>{worker.district || "Addis Ababa"}</span>
+              <span>{worker.district || "Dire Dawa"}</span>
               {worker.skills.length > 0 && <span className="text-white/30">·</span>}
               <span>{worker.skills.slice(0, 3).join(", ") || "Trades Pro"}</span>
             </p>
@@ -227,12 +398,12 @@ export default function WorkerDashboardContent({
           <div className="flex items-center gap-2.5 z-10 pt-2 flex-wrap">
             <Button asChild size="sm" className="rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 h-10 touch-manipulation">
               <Link href="/worker/jobs">
-                <Briefcase className="h-3.5 w-3.5 mr-1.5" /> Browse Open Jobs
+                <Briefcase className="h-3.5 w-3.5 mr-1.5" /> {t("worker.dashboard.browseJobs")}
               </Link>
             </Button>
             <Button asChild size="sm" variant="outline" className="rounded-xl border-white/20 text-white bg-white/5 hover:bg-white/10 font-semibold px-4 h-10 touch-manipulation">
               <Link href="/worker/contracts">
-                My Contracts
+                {t("worker.dashboard.myContracts")}
               </Link>
             </Button>
           </div>
@@ -242,7 +413,7 @@ export default function WorkerDashboardContent({
         <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
           <div className="col-span-2 lg:col-span-1 rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm">
             <div className="flex items-center justify-between mb-1">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Total Payouts</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t("worker.dashboard.totalPayouts")}</p>
               <Wallet className="h-4 w-4 text-indigo-400" />
             </div>
             <p className="text-2xl sm:text-3xl font-black tracking-tight mt-1">
@@ -251,7 +422,7 @@ export default function WorkerDashboardContent({
             </p>
             <div className="mt-2.5 flex items-center gap-1.5 text-xs text-indigo-400 font-medium">
               <TrendingUp className="h-3.5 w-3.5" />
-              <span>{stats.completedJobs} completed jobs · Direct Chapa Payout</span>
+              <span>{stats.completedJobs} completed · {t("worker.dashboard.directPayout")}</span>
             </div>
           </div>
 
@@ -260,7 +431,7 @@ export default function WorkerDashboardContent({
               <Bell className="h-4 w-4" />
             </div>
             <p className="text-xl font-black"><CountUp to={stats.pendingJobs} duration={1} /></p>
-            <p className="text-[11px] text-muted-foreground font-medium">Pending Requests</p>
+            <p className="text-[11px] text-muted-foreground font-medium">{t("worker.dashboard.pendingRequests")}</p>
           </div>
 
           <div className="rounded-2xl border border-border bg-card p-3.5 shadow-sm">
@@ -268,7 +439,7 @@ export default function WorkerDashboardContent({
               <Activity className="h-4 w-4" />
             </div>
             <p className="text-xl font-black"><CountUp to={stats.activeJobs} duration={1} /></p>
-            <p className="text-[11px] text-muted-foreground font-medium">Active Jobs</p>
+            <p className="text-[11px] text-muted-foreground font-medium">{t("worker.dashboard.activeJobs")}</p>
           </div>
         </div>
       </div>
@@ -387,7 +558,7 @@ export default function WorkerDashboardContent({
             </div>
 
             <p className="text-xs text-muted-foreground my-2.5 leading-relaxed">
-              Explore open positions for electrical repairs, plumbing, painting, or woodwork across all districts in Addis Ababa.
+              Explore open positions for electrical repairs, plumbing, painting, or woodwork across all districts in Dire Dawa.
             </p>
           </div>
 

@@ -14,15 +14,15 @@ export async function GET(req: NextRequest) {
     const hasCoords = !isNaN(userLat) && !isNaN(userLng);
     const params: (string | number)[] = [];
     
-    let distanceSql = "0";
+    let distanceSql = "NULL";
     if (hasCoords) {
       params.push(userLat, userLng);
-      // Using a slightly more robust formula to avoid ACOS domain errors
+      // Robust spherical distance calculation handling fallback Dire Dawa coordinates (9.5931, 41.8661)
       distanceSql = `(
         6371 * ACOS(
           GREATEST(-1.0, LEAST(1.0, 
-            COS(RADIANS($1)) * COS(RADIANS(wp.latitude)) * COS(RADIANS(wp.longitude) - RADIANS($2)) + 
-            SIN(RADIANS($1)) * SIN(RADIANS(wp.latitude))
+            COS(RADIANS($1)) * COS(RADIANS(COALESCE(wp.latitude, 9.5931))) * COS(RADIANS(COALESCE(wp.longitude, 41.8661)) - RADIANS($2)) + 
+            SIN(RADIANS($1)) * SIN(RADIANS(COALESCE(wp.latitude, 9.5931)))
           ))
         )
       )`;
@@ -42,11 +42,12 @@ export async function GET(req: NextRequest) {
         wp.full_name,
         wp.bio,
         wp.skills,
-        wp.latitude,
-        wp.longitude,
+        COALESCE(wp.latitude, 9.5931) as latitude,
+        COALESCE(wp.longitude, 41.8661) as longitude,
         wp.hourly_rate,
         wp.avatar_url,
         wp.is_verified,
+        COALESCE(wp.availability, 'available') as availability,
         COALESCE(wr.avg_rating, 0) as avg_rating,
         COALESCE(wr.total_ratings, 0) as total_ratings,
         ${distanceSql} as distance
@@ -86,10 +87,10 @@ export async function GET(req: NextRequest) {
       )`;
     }
 
-    // Distance filtering
-    if (hasCoords && maxDist < 100) {
+    // Distance filtering: only apply distance threshold if distance filter is explicitly < 50
+    if (hasCoords && maxDist < 50) {
       params.push(maxDist);
-      query += ` AND wp.latitude IS NOT NULL AND wp.longitude IS NOT NULL AND ${distanceSql} <= $${params.length}`;
+      query += ` AND ${distanceSql} <= $${params.length}`;
     }
 
     // Rating filter
@@ -105,11 +106,13 @@ export async function GET(req: NextRequest) {
       query += ` ORDER BY avg_rating DESC LIMIT 50`;
     }
 
-    const workers = await sql.query(query, params);
+    const workers = typeof sql.query === "function" 
+      ? await sql.query(query, params) 
+      : await sql(query, params);
 
     return NextResponse.json({ workers });
-  } catch (error) {
+  } catch (error: any) {
     console.error("[WORKERS_GET_CRITICAL_ERROR]", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: error?.message || String(error) }, { status: 500 });
   }
 }

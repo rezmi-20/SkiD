@@ -1,114 +1,145 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Worker } from "./types";
 import { useLanguage } from "@/context/LanguageContext";
 import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
-import { Star, ShieldCheck, ArrowRight, MapPin, BadgeDollarSign, Wrench } from "lucide-react";
+import { Star, Check, ArrowRight, MapPin, Wrench } from "lucide-react";
+import { setCachedWorker } from "@/lib/workerCache";
 
 interface WorkerCardProps {
   worker: Worker;
+  className?: string;
+  onClose?: () => void;
 }
 
-export default function WorkerCard({ worker }: WorkerCardProps) {
+const TRADE_FALLBACK_IMAGES: Record<string, string> = {
+  "Electrician": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&auto=format&fit=crop&q=80",
+  "Plumber": "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=500&auto=format&fit=crop&q=80",
+  "Painter": "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=500&auto=format&fit=crop&q=80",
+  "Carpentry": "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=500&auto=format&fit=crop&q=80",
+  "Satellite Dish Installer": "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=500&auto=format&fit=crop&q=80",
+  "Satellite Dish": "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=500&auto=format&fit=crop&q=80",
+  "House Finishing": "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=500&auto=format&fit=crop&q=80",
+};
+
+export default function WorkerCard({ worker, className = "", onClose }: WorkerCardProps) {
   const { t } = useLanguage();
-  const initials = worker.name ? worker.name.slice(0, 2).toUpperCase() : "WP";
+  const [imgError, setImgError] = useState(false);
+
+  // Helper to prime worker cache for instant 0ms transition
+  const primeCache = () => {
+    setCachedWorker(String(worker.id), {
+      worker: {
+        id: String(worker.id),
+        email: "",
+        full_name: worker.name,
+        bio: worker.bio,
+        skills: [worker.skill],
+        latitude: worker.lat,
+        longitude: worker.lng,
+        hourly_rate: String(worker.hourlyRate || "450"),
+        avatar_url: worker.photo || "",
+        is_verified: worker.isVerified,
+        avg_rating: worker.rating,
+        total_ratings: worker.reviews,
+        availability: "available",
+      },
+      reviews: [],
+    });
+  };
+
+  // Determine photo source: uploaded photo > category portrait > UI avatar
+  const fallbackImg = TRADE_FALLBACK_IMAGES[worker.skill] || 
+    TRADE_FALLBACK_IMAGES[worker.category || ""] || 
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(worker.name || "Worker")}&background=181d24&color=a3e635&size=300&bold=true`;
+  
+  const displayPhoto = imgError ? fallbackImg : (worker.photo || fallbackImg);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="w-full"
+      transition={{ duration: 0.25 }}
+      className={`group relative flex flex-col bg-card dark:bg-[#181d24]/90 border border-outline-variant/60 hover:border-[#a3e635]/60 rounded-[24px] p-2.5 sm:p-3 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 overflow-hidden ${className}`}
     >
-      <Card className="border border-border bg-card shadow-sm hover:shadow-md hover:border-primary/30 transition-all rounded-xl overflow-hidden group">
-        <CardContent className="p-5 flex flex-col justify-between">
-          <div className="flex flex-col gap-4">
-            
-            {/* Header info with Avatar */}
-            <div className="flex items-center gap-3">
-              <div className="relative shrink-0">
-                <Avatar className="w-12 h-12 border border-border shadow-sm group-hover:scale-105 duration-300 transition-transform">
-                  {worker.photo && <AvatarImage src={worker.photo} alt={worker.name} className="object-cover" />}
-                  <AvatarFallback className="bg-muted text-muted-foreground font-bold text-sm">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-                {worker.isVerified && (
-                  <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full border border-card p-0.5 shadow flex items-center justify-center" title={t("search.verifiedProfessional")}>
-                    <ShieldCheck size={12} className="stroke-[2.5]" />
-                  </div>
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <h3 className="text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">
-                  {worker.name}
-                </h3>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {t("search.verifiedContractor")}
-                </p>
-              </div>
-              
-              <Badge variant="outline" className="flex items-center gap-0.5 bg-primary/10 text-primary border-primary/20 hover:bg-primary/15 py-0.5 px-2 rounded-full font-bold">
-                <Star size={11} className="fill-primary stroke-none" />
-                <span className="text-[10px]">{worker.rating.toFixed(1)}</span>
-              </Badge>
-            </div>
+      {/* ── Clickable Top Photo & Info Area ── */}
+      <Link 
+        href={`/client/worker/${worker.id}`}
+        prefetch={true}
+        onMouseEnter={primeCache}
+        onTouchStart={primeCache}
+        onClick={primeCache}
+        className="block group-hover:opacity-95 transition-opacity"
+      >
+        {/* ── Top Photo Container ── */}
+        <div className="relative w-full aspect-[4/3.8] rounded-[18px] overflow-hidden bg-muted/60 dark:bg-black/40 shrink-0">
+          <img
+            src={displayPhoto}
+            alt={worker.name}
+            onError={() => setImgError(true)}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            loading="lazy"
+          />
 
-            <Separator className="bg-border/60" />
-
-            {/* Key-Value Details list vibe */}
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between items-center py-0.5">
-                <span className="text-muted-foreground font-medium flex items-center gap-1.5"><Wrench size={13} /> {t("search.specialization")}</span>
-                <span className="font-semibold text-foreground text-right">{worker.skill}</span>
-              </div>
-              <div className="flex justify-between items-center py-0.5">
-                <span className="text-muted-foreground font-medium flex items-center gap-1.5"><MapPin size={13} /> {t("search.distanceLabel")}</span>
-                <span className="font-semibold text-foreground text-right">
-                  {worker.distance === "N/A" ? t("search.locationUnavailable") : t("search.kmAway").replace("{distance}", String(worker.distance))}
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-0.5">
-                <span className="text-muted-foreground font-medium flex items-center gap-1.5"><BadgeDollarSign size={13} /> {t("search.hourlyRate")}</span>
-                <span className="font-bold text-foreground text-right">{t("search.standardDynamic")}</span>
-              </div>
-            </div>
-
-            <Separator className="bg-border/60" />
-
-            {/* Skills Badges */}
-            <div className="flex flex-wrap items-center gap-1">
-              {worker.skills?.slice(0, 4).map((skill) => (
-                <Badge 
-                  key={skill} 
-                  variant="outline" 
-                  className="px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground border-border bg-muted/40 rounded-md"
-                >
-                  {skill}
-                </Badge>
-              ))}
-            </div>
-
+          {/* Floating Trade Skill Pill on Photo */}
+          <div className="absolute top-2 left-2 flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-black/60 backdrop-blur-md text-white border border-white/10 shadow-sm">
+            <span>{worker.skill}</span>
           </div>
 
-          {/* Action Button Row */}
-          <div className="pt-4 flex justify-end">
-            <Button asChild size="sm" className="w-full sm:w-auto rounded-xl font-bold uppercase tracking-wider text-[10px] h-9 shadow-sm" variant="outline">
-              <Link href={`/client/worker/${worker.id}`} className="flex items-center justify-center gap-1.5">
-                <span>{t("worker.viewProfile")}</span>
-                <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
-              </Link>
-            </Button>
+          {/* Floating Distance Badge on Photo if available */}
+          {worker.distance !== "N/A" && (
+            <div className="absolute top-2 right-2 px-2.5 py-1 rounded-full text-[10px] font-black bg-[#a3e635] text-black shadow-sm">
+              {worker.distance} km
+            </div>
+          )}
+        </div>
+
+        {/* ── Middle Info: Name, Verified Badge & Description ── */}
+        <div className="pt-2.5 pb-1 px-1 flex flex-col gap-1 min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <h3 className="font-black text-sm text-foreground truncate group-hover:text-[#84cc16] dark:group-hover:text-[#a3e635] transition-colors">
+              {worker.name}
+            </h3>
+            {worker.isVerified && (
+              <span 
+                className="shrink-0 inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#22c55e] text-white shadow-sm"
+                title={t("search.verifiedProfessional") || "Verified Professional"}
+              >
+                <Check className="w-2.5 h-2.5 stroke-[3.5]" />
+              </span>
+            )}
           </div>
 
-        </CardContent>
-      </Card>
+          <p className="text-[11px] text-muted-foreground font-medium line-clamp-2 leading-snug">
+            {worker.bio || `${worker.skill} professional in Dire Dawa.`}
+          </p>
+        </div>
+      </Link>
+
+      {/* ── Bottom Row: Rating / Distance & Action Pill Button ── */}
+      <div className="pt-2.5 mt-auto border-t border-outline-variant/40 flex items-center justify-between gap-1.5 px-1">
+        {/* Rating and Reviews count */}
+        <div className="flex items-center gap-1 text-[11px] font-black text-amber-500 shrink-0">
+          <Star className="w-3.5 h-3.5 fill-amber-500 stroke-none" />
+          <span>{worker.rating > 0 ? worker.rating.toFixed(1) : "5.0"}</span>
+          <span className="text-[10px] text-muted-foreground font-semibold">({worker.reviews || 0})</span>
+        </div>
+
+        {/* Action Pill Button (Shopnest Style) */}
+        <Link
+          href={`/client/worker/${worker.id}`}
+          prefetch={true}
+          onMouseEnter={primeCache}
+          onTouchStart={primeCache}
+          onClick={primeCache}
+          className="rounded-full bg-[#a3e635] text-black font-black text-xs h-7 sm:h-8 px-3.5 inline-flex items-center justify-center gap-1 hover:opacity-90 active:scale-95 transition-all shadow-sm shrink-0 touch-manipulation"
+        >
+          <span>Hire</span>
+          <ArrowRight className="w-3 h-3 stroke-[2.5] group-hover:translate-x-0.5 transition-transform" />
+        </Link>
+      </div>
     </motion.div>
   );
 }

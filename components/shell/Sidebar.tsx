@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
@@ -112,6 +113,33 @@ interface SidebarProps {
 export default function Sidebar({ role, userEmail, collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const { t } = useLanguage();
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchUnread = async () => {
+      try {
+        const res = await fetch("/api/messages/unread-count");
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && typeof data.count === "number") {
+            setUnreadCount(data.count);
+          }
+        }
+      } catch {}
+    };
+
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 4000);
+    const handleUpdate = () => fetchUnread();
+    window.addEventListener("messages:refresh", handleUpdate);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+      window.removeEventListener("messages:refresh", handleUpdate);
+    };
+  }, []);
 
   const groups = role === "client" ? CLIENT_GROUPS : WORKER_GROUPS;
   const { data: session } = authClient.useSession();
@@ -152,6 +180,7 @@ export default function Sidebar({ role, userEmail, collapsed, onToggle }: Sideba
                 const isActive =
                   pathname === item.href ||
                   (item.href !== "/" && pathname?.startsWith(item.href));
+                const isMessagesItem = item.href.includes("messages");
 
                 const link = (
                   <Link
@@ -166,8 +195,24 @@ export default function Sidebar({ role, userEmail, collapsed, onToggle }: Sideba
                       collapsed && "justify-center px-2"
                     )}
                   >
-                    <span className="shrink-0">{item.icon}</span>
-                    {!collapsed && <span className="truncate">{t(item.key)}</span>}
+                    <span className="shrink-0 relative">
+                      {item.icon}
+                      {collapsed && isMessagesItem && unreadCount > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 min-w-[15px] h-[15px] px-0.5 rounded-full bg-rose-500 text-white text-[8px] font-black flex items-center justify-center shadow-sm">
+                          {unreadCount > 9 ? "9+" : unreadCount}
+                        </span>
+                      )}
+                    </span>
+                    {!collapsed && (
+                      <div className="flex-1 flex items-center justify-between min-w-0">
+                        <span className="truncate">{t(item.key)}</span>
+                        {isMessagesItem && unreadCount > 0 && (
+                          <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center shadow-sm">
+                            {unreadCount > 99 ? "99+" : unreadCount}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </Link>
                 );
 

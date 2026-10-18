@@ -25,6 +25,13 @@ import {
   Sparkles,
   Clock,
   ChevronRight,
+  Check,
+  CheckCheck,
+  Play,
+  Video,
+  FileVideo,
+  Image as ImageIcon,
+  X,
 } from "lucide-react";
 import { playNotificationSound } from "@/lib/sound";
 
@@ -33,10 +40,18 @@ interface Conversation {
   other_user_id: string;
   other_name: string;
   other_avatar: string | null;
+  other_role?: string;
   other_skill?: string;
+  other_skills?: string[];
+  other_bio?: string;
+  other_hourly_rate?: number | string;
+  other_district?: string;
+  other_experience_years?: number;
+  other_availability?: string;
   is_verified?: boolean;
   last_body: string | null;
   last_image: string | null;
+  last_media_type?: string | null;
   last_at: string | null;
   unread?: number;
 }
@@ -46,9 +61,13 @@ interface Message {
   sender_id: string;
   body: string | null;
   image_url: string | null;
+  media_type?: "image" | "video" | null;
+  is_read?: boolean;
+  read_at?: string | null;
   created_at: string;
   sender_name: string;
   sender_avatar: string | null;
+  isOptimistic?: boolean;
 }
 
 interface MyProfile {
@@ -112,16 +131,17 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [mediaType, setMediaType] = useState<"image" | "video">("image");
   const [uploading, setUploading] = useState(false);
 
   // Filters
   const [activeTab, setActiveTab] = useState<"all" | "dms" | "groups" | "low">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Right pane toggle
-  const [showRightPane, setShowRightPane] = useState(true);
+  // Right pane toggle (Desktop slide-over profile drawer)
+  const [showRightPane, setShowRightPane] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -188,11 +208,13 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
           playNotificationSound();
         }
 
-        if (newMessages.length >= prev.length || hasNewOtherMsg) {
-          return newMessages;
-        }
-        return prev;
+        return newMessages;
       });
+
+      // Notify MobileNav to clear/refresh unread message badge
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("messages:refresh"));
+      }
     } catch (e) {
       console.error(e);
     }
@@ -267,20 +289,23 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    const isVid = file.type.startsWith("video/");
+    setMediaType(isVid ? "video" : "image");
+    setMediaFile(file);
+    setMediaPreview(URL.createObjectURL(file));
   };
 
-  const clearImage = () => {
-    setImagePreview(null);
-    setImageFile(null);
+  const clearMedia = () => {
+    setMediaPreview(null);
+    setMediaFile(null);
+    setMediaType("image");
     if (fileRef.current) fileRef.current.value = "";
   };
 
   const sendMessage = async () => {
     if (sending || uploading) return;
     const pendingBody = text.trim();
-    if (!pendingBody && !imageFile) return;
+    if (!pendingBody && !mediaFile) return;
 
     setSending(true);
     setError(null);
@@ -291,10 +316,13 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
       id: optimisticId,
       sender_id: myProfile?.id || "me",
       body: pendingBody || null,
-      image_url: imagePreview,
+      image_url: mediaPreview,
+      media_type: mediaType,
       created_at: new Date().toISOString(),
       sender_name: myProfile?.name || "You",
       sender_avatar: null,
+      is_read: false,
+      isOptimistic: true,
     };
     setMessages((prev) => [...prev, optimisticMsg]);
     setText("");
@@ -304,22 +332,28 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
       setConversations((prev) =>
         prev.map((c) =>
           c.id === conversationId
-            ? { ...c, last_body: pendingBody || "Photo", last_at: new Date().toISOString() }
+            ? {
+                ...c,
+                last_body: pendingBody || (mediaType === "video" ? "🎥 Video" : "📷 Photo"),
+                last_media_type: mediaType,
+                last_at: new Date().toISOString(),
+              }
             : c
         )
       );
     }
 
     try {
-      let imageUrl: string | null = null;
+      let uploadedUrl: string | null = null;
+      const finalMediaType = mediaType;
 
-      if (imageFile) {
+      if (mediaFile) {
         setUploading(true);
         const fd = new FormData();
-        fd.append("file", imageFile);
+        fd.append("file", mediaFile);
         const uploadRes = await fetch("/api/upload", { method: "POST", body: fd });
         if (!uploadRes.ok) {
-          setError("Failed to upload image. Please try again.");
+          setError("Failed to upload media. Please try again.");
           setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
           setText(pendingBody);
           setSending(false);
@@ -327,14 +361,18 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
           return;
         }
         const uploadData = await uploadRes.json();
-        imageUrl = uploadData.url;
+        uploadedUrl = uploadData.url;
         setUploading(false);
       }
 
       const res = await fetch(`/api/conversations/${conversationId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: pendingBody || null, imageUrl }),
+        body: JSON.stringify({
+          body: pendingBody || null,
+          imageUrl: uploadedUrl,
+          mediaType: finalMediaType,
+        }),
       });
 
       if (!res.ok) {
@@ -345,9 +383,12 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
         return;
       }
 
-      clearImage();
+      clearMedia();
       await fetchMessages();
       fetchConversations();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("messages:refresh"));
+      }
     } catch {
       setError("Connection error. Please try again.");
       setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
@@ -502,7 +543,11 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
                     <p className={`text-[11px] truncate ${
                       hasUnread ? "text-foreground font-semibold" : "text-muted-foreground"
                     }`}>
-                      {conv.last_image ? "📷 Sent an image" : (conv.last_body || "Start messaging...")}
+                      {conv.last_media_type === "video" || (conv.last_image && conv.last_image.match(/\.(mp4|webm|mov|ogg)($|\?)/i))
+                        ? "🎥 Sent a video"
+                        : conv.last_image
+                        ? "📷 Sent an image"
+                        : (conv.last_body || "Start messaging...")}
                     </p>
                   </div>
 
@@ -530,18 +575,25 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
           <>
             {/* Header */}
             <div className="h-16 border-b border-outline-variant/20 bg-surface-container-lowest/80 backdrop-blur-md px-4 flex items-center justify-between shrink-0 z-10">
-              <div className="flex items-center gap-3 min-w-0">
+              <div 
+                onClick={() => setShowRightPane((prev) => !prev)}
+                className="flex items-center gap-3 min-w-0 cursor-pointer select-none group"
+                title="Participant profile"
+              >
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => router.push(`/${role}/messages`)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(`/${role}/messages`);
+                  }}
                   className="md:hidden shrink-0"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
  
                 <div className="relative shrink-0">
-                  <Avatar className="w-10 h-10 border border-outline-variant/20">
+                  <Avatar className="w-10 h-10 border border-outline-variant/20 group-hover:ring-2 ring-primary/40 transition-all">
                     {currentConv?.other_avatar && <AvatarImage src={currentConv.other_avatar} />}
                     <AvatarFallback className="text-xs font-black bg-surface-container text-foreground">
                       {currentConv?.other_name.slice(0, 2).toUpperCase() || "??"}
@@ -552,13 +604,15 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
 
                 <div className="min-w-0">
                   <div className="flex items-center gap-1">
-                    <span className="text-sm font-bold truncate text-foreground">{currentConv?.other_name || "Chat"}</span>
+                    <span className="text-sm font-bold truncate text-foreground group-hover:text-primary transition-colors">
+                      {currentConv?.other_name || "Chat"}
+                    </span>
                     {currentConv?.is_verified && (
                       <ShieldCheck className="w-3.5 h-3.5 text-primary shrink-0" />
                     )}
                   </div>
                   <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1.5">
-                    <span>{role === "client" ? "Professional" : "Client"}</span>
+                    <span>{currentConv?.other_role === "worker" || role === "client" ? (currentConv?.other_skill || "Professional") : "Client"}</span>
                     <span className="text-muted-foreground/30">•</span>
                     <span className="text-emerald-500 font-medium">Online</span>
                   </p>
@@ -570,13 +624,13 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`rounded-xl transition-all duration-200 ${
+                  className={`flex rounded-xl transition-all duration-200 ${
                     showRightPane 
                       ? "bg-primary/10 text-primary hover:bg-primary/20" 
                       : "text-muted-foreground hover:bg-surface-container hover:text-foreground"
                   }`}
                   onClick={() => setShowRightPane(!showRightPane)}
-                  title="Toggle profile panel"
+                  title="Toggle profile slide drawer"
                 >
                   <User className="w-4 h-4" />
                 </Button>
@@ -612,10 +666,14 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
                   const isSequential = i > 0 && messages[i - 1].sender_id === msg.sender_id && 
                     (new Date(msg.created_at).getTime() - new Date(messages[i - 1].created_at).getTime() < 300000);
 
+                  const isVideo = msg.media_type === "video" || 
+                    Boolean(msg.image_url?.match(/\.(mp4|webm|mov|ogg)($|\?)/i)) || 
+                    Boolean(msg.image_url?.includes("/video/"));
+
                   return (
-                    <div key={msg.id} className={`flex items-start gap-2.5 ${
+                    <div key={msg.id} className={`flex items-start gap-2 ${
                       isMe ? "justify-end" : "justify-start"
-                    } ${isSequential ? "mt-1" : "mt-4"}`}>
+                    } ${isSequential ? "mt-1" : "mt-3.5"}`}>
                       
                       {/* Left Avatar (received messages only) */}
                       {!isMe && (
@@ -631,44 +689,74 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
                         </div>
                       )}
 
-                      {/* Bubble */}
-                      <div className={`flex flex-col max-w-[70%] ${isMe ? "items-end" : "items-start"}`}>
+                      {/* Bubble Container */}
+                      <div className={`flex flex-col max-w-[85%] sm:max-w-[72%] ${isMe ? "items-end" : "items-start"}`}>
                         {!isMe && showAvatar && (
                           <span className="text-[10px] text-muted-foreground font-semibold mb-1 ml-1">
                             {msg.sender_name}
                           </span>
                         )}
 
-                        {/* Image Attachment */}
-                        {msg.image_url && (
-                          <a href={msg.image_url} target="_blank" rel="noopener noreferrer" className="mb-1.5 block">
-                            <img
-                              src={msg.image_url}
-                              alt="attachment"
-                              className={`max-w-[240px] md:max-w-[320px] rounded-2xl object-cover shadow-md border border-outline-variant/30 hover:border-outline-variant/50 transition-all duration-200 ${
-                                isMe ? "rounded-tr-sm" : "rounded-tl-sm"
-                              }`}
-                            />
-                          </a>
-                        )}
+                        {/* WhatsApp / Telegram Styled Bubble */}
+                        <div className={`relative px-3.5 py-2.5 rounded-2xl text-[13px] sm:text-xs leading-relaxed transition-all duration-200 shadow-sm ${
+                          isMe
+                            ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground rounded-tr-xs shadow-primary/10 ml-auto"
+                            : "bg-surface-container-high dark:bg-[#1a1f26] text-foreground rounded-tl-xs border border-outline-variant/30 shadow-sm mr-auto"
+                        }`}>
+                          {/* Media Attachment (Video or Image) */}
+                          {msg.image_url && (
+                            <div className="mb-2">
+                              {isVideo ? (
+                                <div className="relative overflow-hidden rounded-xl bg-black max-w-[280px] sm:max-w-[340px] shadow-sm">
+                                  <video
+                                    src={msg.image_url}
+                                    controls
+                                    playsInline
+                                    preload="metadata"
+                                    className="w-full max-h-72 object-contain rounded-xl"
+                                  />
+                                </div>
+                              ) : (
+                                <a href={msg.image_url} target="_blank" rel="noopener noreferrer" className="block relative overflow-hidden rounded-xl group">
+                                  <img
+                                    src={msg.image_url}
+                                    alt="attachment"
+                                    className="max-w-[240px] sm:max-w-[320px] rounded-xl object-cover shadow-sm transition-transform duration-200 group-hover:scale-[1.02]"
+                                  />
+                                </a>
+                              )}
+                            </div>
+                          )}
 
-                        {/* Text bubble */}
-                        {msg.body && (
-                          <div className={`px-4 py-2.5 rounded-2xl text-xs leading-relaxed transition-all duration-200 ${
-                            isMe
-                              ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground rounded-tr-none shadow-md shadow-primary/5 hover:shadow-lg hover:shadow-primary/15"
-                              : "bg-surface-container-high text-foreground rounded-tl-none border border-outline-variant/30 shadow-sm hover:shadow-md hover:border-outline-variant/50"
+                          {/* Message Body */}
+                          {msg.body && (
+                            <p className="whitespace-pre-wrap break-words leading-relaxed select-text pr-2">
+                              {msg.body}
+                            </p>
+                          )}
+
+                          {/* WhatsApp / Telegram Metadata Row: Time & Delivery / Seen Receipts */}
+                          <div className={`flex items-center gap-1.5 justify-end pt-1 -mb-0.5 select-none ${
+                            isMe ? "text-primary-foreground/75" : "text-muted-foreground/75"
                           }`}>
-                            {msg.body}
+                            <span className="text-[10px] tracking-tight font-medium">
+                              {formatTime(msg.created_at)}
+                            </span>
+                            {isMe && (
+                              <span className="inline-flex items-center ml-0.5" title={msg.is_read ? "Seen" : "Sent"}>
+                                {msg.isOptimistic ? (
+                                  <Clock className="w-3 h-3 text-primary-foreground/60" />
+                                ) : msg.is_read ? (
+                                  /* WhatsApp / Telegram Seen Receipt: Vibrant Sky Blue Double Check */
+                                  <CheckCheck className="w-3.5 h-3.5 text-sky-300 stroke-[2.8]" />
+                                ) : (
+                                  /* Sent Receipt: 1 Checkmark */
+                                  <Check className="w-3.5 h-3.5 text-primary-foreground/75 stroke-[2.4]" />
+                                )}
+                              </span>
+                            )}
                           </div>
-                        )}
-
-                        {/* Timestamp */}
-                        {(i === messages.length - 1 || messages[i + 1].sender_id !== msg.sender_id) && (
-                          <span className="text-[9px] text-muted-foreground/60 font-medium mt-1 px-1">
-                            {formatTime(msg.created_at)}
-                          </span>
-                        )}
+                        </div>
                       </div>
                     </div>
                   );
@@ -686,15 +774,25 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
                 </div>
               )}
 
-              {imagePreview && (
+              {/* Media Preview Box (Supports Video & Photo) */}
+              {mediaPreview && (
                 <div className="mb-3 inline-flex relative shrink-0">
-                  <img src={imagePreview} alt="preview" className="h-16 w-16 object-cover rounded-xl border border-outline-variant/30 shadow-md" />
+                  {mediaType === "video" ? (
+                    <div className="relative h-20 w-32 rounded-xl overflow-hidden border border-outline-variant/30 shadow-md bg-black flex items-center justify-center">
+                      <video src={mediaPreview} className="h-full w-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center pointer-events-none">
+                        <Play className="w-6 h-6 text-white drop-shadow" />
+                      </div>
+                    </div>
+                  ) : (
+                    <img src={mediaPreview} alt="preview" className="h-16 w-16 object-cover rounded-xl border border-outline-variant/30 shadow-md" />
+                  )}
                   {uploading && (
-                    <div className="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/60 rounded-xl flex items-center justify-center">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     </div>
                   )}
-                  <button onClick={clearImage} className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-600 hover:bg-rose-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-sm active:scale-90 transition-transform">
+                  <button onClick={clearMedia} className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-600 hover:bg-rose-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-sm active:scale-90 transition-transform">
                     ×
                   </button>
                 </div>
@@ -702,13 +800,20 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
 
               <div className="flex items-center gap-2 bg-surface-container border border-outline-variant/40 rounded-2xl p-2 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 transition-all duration-200 shadow-inner">
                 <button
+                  type="button"
                   onClick={() => fileRef.current?.click()}
                   className="p-2 hover:bg-surface-container-high text-muted-foreground hover:text-foreground rounded-xl transition-all duration-200 shrink-0"
-                  title="Attach file"
+                  title="Attach photo or video"
                 >
                   <Paperclip className="w-4 h-4" />
                 </button>
-                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*,video/mp4,video/webm,video/quicktime,video/ogg"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
 
                 <input
                   type="text"
@@ -725,7 +830,7 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
 
                 <Button
                   onClick={sendMessage}
-                  disabled={sending || uploading || (!text.trim() && !imageFile)}
+                  disabled={sending || uploading || (!text.trim() && !mediaFile)}
                   size="sm"
                   className="rounded-xl h-9 px-4 gap-1.5 text-xs font-bold shadow-md shadow-primary/10 active:scale-[0.98] transition-transform duration-200"
                 >
@@ -761,21 +866,40 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
 
       </div>
 
-      {/* ── PANE 3: Right Panel (Full Participant Profile Details) ── */}
-      {conversationId && showRightPane && (
-        <div className="hidden lg:flex w-[320px] lg:w-[340px] flex-col border-l border-outline-variant/20 bg-surface-container-lowest shrink-0 overflow-y-auto">
-          
-          <div className="p-4 border-b border-outline-variant/20 bg-surface-container-low/50 flex items-center justify-between shrink-0">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">Participant Profile</h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-[10px] font-bold text-muted-foreground h-7 hover:text-foreground hover:bg-surface-container rounded-lg"
+      {/* ── PANE 3: Participant Semi-Profile Slide Drawer (Mobile Slide-Over & Desktop Sidebar) ── */}
+      {conversationId && (
+        <>
+          {/* Mobile Overlay Backdrop */}
+          {showRightPane && (
+            <div
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 lg:hidden animate-in fade-in duration-200"
               onClick={() => setShowRightPane(false)}
-            >
-              Close
-            </Button>
-          </div>
+            />
+          )}
+
+          <div
+            className={`flex flex-col border-l border-outline-variant/20 bg-surface-container-lowest shrink-0 overflow-y-auto transition-all duration-300 ease-in-out
+              fixed inset-y-0 right-0 z-50 w-[85vw] max-w-[360px] h-full shadow-2xl
+              lg:static lg:h-auto lg:z-20
+              ${
+                showRightPane
+                  ? "translate-x-0 opacity-100 lg:w-[330px] lg:xl:w-[350px] pointer-events-auto"
+                  : "translate-x-full opacity-0 pointer-events-none lg:w-0 lg:border-none lg:overflow-hidden"
+              }
+            `}
+          >
+            <div className="p-4 border-b border-outline-variant/20 bg-surface-container-low/50 flex items-center justify-between shrink-0">
+              <h3 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">Participant Profile</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-[10px] font-bold text-muted-foreground h-7 hover:text-foreground hover:bg-surface-container rounded-lg gap-1 px-2"
+                onClick={() => setShowRightPane(false)}
+              >
+                <X className="w-3.5 h-3.5" />
+                Close
+              </Button>
+            </div>
 
           {loadingOtherProfile ? (
             <div className="flex-1 flex items-center justify-center p-8">
@@ -912,6 +1036,7 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
           )}
 
         </div>
+        </>
       )}
 
     </div>

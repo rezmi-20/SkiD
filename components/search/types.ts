@@ -13,6 +13,7 @@ export interface Worker {
   district: string;
   bio?: string;
   skills?: string[];
+  hourlyRate?: string | number;
 }
 
 export type ViewMode = "list" | "map";
@@ -23,4 +24,6 @@ export interface SearchFilters {
   minRating: number;
   maxDistance: number;
   sortBy: "Nearest" | "Highest Rated" | "Most Reviewed" | "";
+  verifiedOnly?: boolean;
 }
+
