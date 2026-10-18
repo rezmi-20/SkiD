@@ -8,10 +8,14 @@ import { useLanguage } from "@/context/LanguageContext";
 
 interface Job {
   id: string;
+  client_id?: string | null;
   title: string;
   description: string | null;
   budget: number | null;
+  location?: string | null;
+  requested_date?: string | null;
   status: string;
+  rejection_reason?: string | null;
   created_at: string;
   client_name: string | null;
   client_avatar: string | null;
@@ -50,11 +54,11 @@ export default function WorkerJobsPage() {
     }
   };
 
-  const handleReject = async (jobId: string) => {
-    const result = await rejectJob(jobId);
+  const handleReject = async (jobId: string, reason?: string) => {
+    const result = await rejectJob(jobId, reason);
     if (result.success) {
       setJobs((prev) =>
-        prev.map((j) => (j.id === jobId ? { ...j, status: "rejected" } : j))
+        prev.map((j) => (j.id === jobId ? { ...j, status: "rejected", rejection_reason: reason || null } : j))
       );
     }
   };
@@ -174,48 +178,13 @@ export default function WorkerJobsPage() {
           <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-on-surface-variant opacity-40 ml-1">
             {t("worker.jobs.previously")}
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {respondedJobs.map((job) => (
-              <div
+              <JobCard
                 key={job.id}
-                className="group bg-surface-container-low border border-outline-variant rounded-[1.75rem] p-5 md:p-6 flex items-center gap-4 transition-all duration-300 shadow-sm opacity-60"
-              >
-                <div className="w-12 h-12 bg-surface-container-high border border-outline-variant rounded-2xl flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-on-surface-variant opacity-40">
-                    {job.status === "accepted"
-                      ? "check_circle"
-                      : "do_not_disturb_on"}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-bold text-on-surface truncate">
-                    {job.title}
-                  </h3>
-                  <p className="text-xs text-on-surface-variant font-medium mt-0.5 opacity-60">
-                    {job.client_name || t("worker.jobs.anonymous")} •{" "}
-                    {new Date(job.created_at).toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                    })}
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  {job.budget && (
-                    <p className="text-sm font-black text-on-surface">
-                      {job.budget.toLocaleString()} ETB
-                    </p>
-                  )}
-                  <span
-                    className={`text-[9px] font-black uppercase tracking-widest ${
-                      job.status === "accepted"
-                        ? "text-primary"
-                        : "text-red-400"
-                    }`}
-                  >
-                    {job.status === "accepted" ? t("worker.jobs.stat_accepted") : t("worker.jobs.stat_declined")}
-                  </span>
-                </div>
-              </div>
+                job={job}
+                showActions={false}
+              />
             ))}
           </div>
         </div>

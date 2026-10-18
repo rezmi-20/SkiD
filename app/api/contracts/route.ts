@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { ensureContractSetupComplete } from "@/lib/actions/contract-setup";
+import { recordChatMilestone } from "@/lib/actions/chat-audit";
 
 const CONTRACT_CREATABLE_JOB_STATUSES = new Set(["accepted"]);
 
@@ -65,7 +66,20 @@ export async function POST(req: NextRequest) {
       RETURNING id
     `;
 
-    return NextResponse.json({ message: "Contract created", contractId: rows[0].id }, { status: 201 });
+    const contractId = rows[0].id;
+
+    await recordChatMilestone({
+      clientId: job.client_id,
+      workerId: job.worker_id,
+      actorId: session.user.id,
+      eventType: "contract_created",
+      title: "Contract Draft Initiated",
+      description: "A formal DireSkill service contract draft has been initiated for this job.",
+      actionUrl: `/contracts/${contractId}`,
+      metadata: { contractId, jobId },
+    });
+
+    return NextResponse.json({ message: "Contract created", contractId }, { status: 201 });
   } catch (error) {
     console.error("[CONTRACT_CREATE_ERROR]", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

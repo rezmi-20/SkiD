@@ -32,8 +32,11 @@ import {
   FileVideo,
   Image as ImageIcon,
   X,
+  ShieldAlert,
+  Scale,
 } from "lucide-react";
 import { playNotificationSound } from "@/lib/sound";
+import { filterContactInfo } from "@/lib/filterContactInfo";
 
 interface Conversation {
   id: string;
@@ -68,6 +71,10 @@ interface Message {
   sender_name: string;
   sender_avatar: string | null;
   isOptimistic?: boolean;
+  is_system?: boolean;
+  event_type?: string | null;
+  action_url?: string | null;
+  metadata?: any;
 }
 
 interface MyProfile {
@@ -142,6 +149,11 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
 
   // Right pane toggle (Desktop slide-over profile drawer)
   const [showRightPane, setShowRightPane] = useState(false);
+
+  // Proactive contact info filter check
+  const contentFilter = text.trim() ? filterContactInfo(text) : { blocked: false };
+  const isBlocked = contentFilter.blocked;
+  const blockedReason = contentFilter.reason;
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -306,6 +318,15 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
     if (sending || uploading) return;
     const pendingBody = text.trim();
     if (!pendingBody && !mediaFile) return;
+
+    // Instant client-side check for prohibited links, phone numbers & contact info
+    if (pendingBody) {
+      const check = filterContactInfo(pendingBody);
+      if (check.blocked) {
+        setError(check.reason || "Sharing external links or phone numbers is prohibited.");
+        return;
+      }
+    }
 
     setSending(true);
     setError(null);
@@ -657,6 +678,77 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
                 </div>
               ) : (
                 messages.map((msg, i) => {
+                  if (msg.is_system) {
+                    let meta: any = {};
+                    if (typeof msg.metadata === "object" && msg.metadata !== null) {
+                      meta = msg.metadata;
+                    } else if (typeof msg.metadata === "string") {
+                      try {
+                        meta = JSON.parse(msg.metadata);
+                      } catch {
+                        meta = {};
+                      }
+                    }
+                    const actionUrl = msg.action_url || meta.actionUrl;
+                    const eventTitle = meta.title || "Legal Audit Milestone";
+                    const eventDesc = meta.description || msg.body;
+
+                    return (
+                      <div key={msg.id} className="my-5 flex justify-center w-full px-2 sm:px-4">
+                        <div className="w-full max-w-sm sm:max-w-md rounded-2xl border border-primary/25 bg-surface-container-high/80 dark:bg-[#181d24]/90 p-4 sm:p-5 shadow-sm backdrop-blur-md text-center flex flex-col items-center">
+                          {/* Top Badge */}
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-bold tracking-wider uppercase mb-2.5">
+                            <Scale className="w-3.5 h-3.5 text-primary" />
+                            <span>
+                              {msg.event_type === "job_invited" || msg.event_type === "job_accepted" || msg.event_type === "job_rejected"
+                                ? "Job Hiring Milestone"
+                                : msg.event_type === "dispute_opened"
+                                ? "Governance Notice"
+                                : "Legal Audit Milestone"}
+                            </span>
+                          </div>
+
+                          {/* Event Title */}
+                          <h4 className="text-sm sm:text-base font-bold text-foreground mb-1 tracking-tight">
+                            {eventTitle}
+                          </h4>
+
+                          {/* Event Description */}
+                          <p className="text-xs text-muted-foreground leading-relaxed mb-3 max-w-xs sm:max-w-sm">
+                            {eventDesc}
+                          </p>
+
+                          {/* Action Link / Button */}
+                          {actionUrl && (
+                            <Link
+                              href={actionUrl}
+                              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-all shadow-sm active:scale-95 group mb-2.5"
+                            >
+                              <span>
+                                {msg.event_type === "job_invited"
+                                  ? (role === "worker" ? "Respond to Invitation" : "View Hiring Request")
+                                  : msg.event_type === "dispute_opened"
+                                  ? "View Dispute Case"
+                                  : "View Verifiable Contract"}
+                              </span>
+                              <ExternalLink className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                            </Link>
+                          )}
+
+                          {/* Tamper-evident & Timestamp footer */}
+                          <div className="flex items-center justify-center gap-2 text-[10px] text-muted-foreground/75 font-medium">
+                            <span className="inline-flex items-center gap-1">
+                              <Lock className="w-2.5 h-2.5 text-primary/70" />
+                              System Logged & Verifiable
+                            </span>
+                            <span>•</span>
+                            <span>{formatTime(msg.created_at)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
                   // VERY IMPORTANT: Check if msg is sent by current logged in user
                   const isMe = (myProfile && msg.sender_id) 
                     ? msg.sender_id.toLowerCase() === myProfile.id.toLowerCase() 
@@ -767,10 +859,28 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
 
             {/* Input Footer */}
             <div className="p-4 border-t border-outline-variant/20 bg-surface-container-lowest/80 backdrop-blur-md shrink-0 z-10">
+              {/* Prohibited Content Live Warning */}
+              {isBlocked && (
+                <div className="mb-2.5 p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-2.5 text-xs text-amber-500 animate-in fade-in slide-in-from-top-1 duration-200 shadow-xs">
+                  <div className="p-1 rounded-lg bg-amber-500/15 shrink-0 mt-0.5">
+                    <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+                  </div>
+                  <div className="flex-1 min-w-0 leading-tight">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-amber-400">Content Prohibited</span>
+                      <span className="text-[9px] text-amber-400/60">• Safety Policy</span>
+                    </div>
+                    <p className="text-[11px] font-medium text-amber-200/90 break-words leading-relaxed">
+                      {blockedReason}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {error && (
-                <div className="mb-2 px-3 py-2 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center justify-between gap-3 text-xs text-rose-400 animate-in fade-in slide-in-from-top-1 duration-200">
-                  <span>{error}</span>
-                  <button onClick={() => setError(null)} className="hover:text-rose-300 font-bold shrink-0">×</button>
+                <div className="mb-2.5 px-3 py-2 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center justify-between gap-3 text-xs text-rose-400 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <span className="break-words leading-tight text-[11px]">{error}</span>
+                  <button onClick={() => setError(null)} className="hover:text-rose-300 font-bold shrink-0 text-sm leading-none px-1">×</button>
                 </div>
               )}
 
@@ -830,9 +940,9 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
 
                 <Button
                   onClick={sendMessage}
-                  disabled={sending || uploading || (!text.trim() && !mediaFile)}
+                  disabled={sending || uploading || isBlocked || (!text.trim() && !mediaFile)}
                   size="sm"
-                  className="rounded-xl h-9 px-4 gap-1.5 text-xs font-bold shadow-md shadow-primary/10 active:scale-[0.98] transition-transform duration-200"
+                  className="rounded-xl h-9 px-4 gap-1.5 text-xs font-bold shadow-md shadow-primary/10 active:scale-[0.98] transition-transform duration-200 disabled:opacity-50"
                 >
                   <span>Send</span>
                   <Send className="w-3.5 h-3.5" />
@@ -841,7 +951,7 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
 
               <p className="text-center text-[9px] text-muted-foreground/60 font-semibold mt-2 flex items-center justify-center gap-1.5">
                 <Lock className="w-3 h-3 text-muted-foreground/45" />
-                Sharing contact details is strictly against security policies
+                Sharing phone numbers, emails & external links is prohibited to protect contracts
               </p>
             </div>
           </>

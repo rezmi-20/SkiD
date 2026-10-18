@@ -1,6 +1,7 @@
 import { sql } from "@/lib/db";
 import { createNotification } from "@/lib/actions/notifications";
 import { verifyChapaPayment, type ChapaApiError } from "@/lib/chapa";
+import { recordChatMilestone } from "@/lib/actions/chat-audit";
 
 type PaymentSource = "webhook" | "return_url" | "client_confirm" | "dispute_resolution";
 
@@ -361,6 +362,20 @@ export async function verifyAndReleasePayment({
       title: "Payment Received",
       body: `Payment for "${payment.job_title}" was confirmed. Your share has been sent through Chapa split payment.`,
       linkHref: "/worker/earnings",
+    });
+
+    const contractRes = await sql`SELECT id FROM contracts WHERE job_id = ${payment.job_id} LIMIT 1`;
+    const contractId = contractRes[0]?.id;
+
+    await recordChatMilestone({
+      clientId: payment.client_id,
+      workerId: payment.worker_id,
+      actorId: actorUserId,
+      eventType: "escrow_funded",
+      title: "Escrow Payment Confirmed & Released",
+      description: `Payment of ${payment.amount} ETB successfully processed via Chapa. (Ref: ${txRef})`,
+      actionUrl: contractId ? `/contracts/${contractId}` : `/client/payments`,
+      metadata: { jobId: payment.job_id, contractId, txRef, amount: payment.amount },
     });
   }
 

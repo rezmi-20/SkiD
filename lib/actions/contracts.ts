@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { sql } from "@/lib/db";
 import { auth } from "@/lib/auth";
@@ -7,6 +7,7 @@ import { ensureContractSetupComplete, verifyContractPin } from "@/lib/actions/co
 import { revalidatePath } from "next/cache";
 import { activateContractAfterFullSignature } from "@/lib/contract-documents";
 import { maskFinLast4 } from "@/lib/fin-protection";
+import { recordChatMilestone } from "@/lib/actions/chat-audit";
 
 type ContractActionResult =
   | { success: true; contract?: any }
@@ -43,7 +44,7 @@ function parsePaymentAmount(value: string | number | null) {
 
 function parseOptionalDate(value: string) {
   if (!value) return null;
-  const date = new Date(`${value}T00:00:00`);
+  const date = value.includes("T") ? new Date(value) : new Date(`${value}T00:00:00`);
   if (Number.isNaN(date.getTime())) return undefined;
   return date;
 }
@@ -78,14 +79,34 @@ export async function saveContractDraft(contractId: string, draft: ContractDraft
     };
   }
 
+  const jobTitle = optionalText(draft.jobTitle);
+  if (!jobTitle || jobTitle.length < 3) {
+    return { success: false, error: "Job title is required (minimum 3 characters).", code: "INVALID_STATE" };
+  }
+
+  const jobDescription = optionalText(draft.jobDescription);
+  if (!jobDescription || jobDescription.length < 5) {
+    return { success: false, error: "Detailed scope of work is required.", code: "INVALID_STATE" };
+  }
+
+  const workLocation = optionalText(draft.workLocation);
+  if (!workLocation) {
+    return { success: false, error: "Work location is required.", code: "INVALID_STATE" };
+  }
+
   const paymentAmount = parsePaymentAmount(draft.paymentAmount);
-  if (Number.isNaN(paymentAmount)) {
+  if (paymentAmount === null || Number.isNaN(paymentAmount) || paymentAmount <= 0) {
     return { success: false, error: "Payment amount must be a valid positive number.", code: "INVALID_STATE" };
   }
 
   const estimatedDate = parseOptionalDate(draft.estimatedCompletionDate);
-  if (estimatedDate === undefined) {
-    return { success: false, error: "Estimated completion date is invalid.", code: "INVALID_STATE" };
+  if (!estimatedDate || Number.isNaN(estimatedDate.getTime())) {
+    return { success: false, error: "Estimated completion date is required to submit contract terms.", code: "INVALID_STATE" };
+  }
+
+  const materialsResponsibility = optionalText(draft.materialsResponsibility);
+  if (!materialsResponsibility) {
+    return { success: false, error: "Materials & equipment responsibility is required.", code: "INVALID_STATE" };
   }
 
   try {
@@ -118,12 +139,12 @@ export async function saveContractDraft(contractId: string, draft: ContractDraft
     const updatedRows = await sql`
       UPDATE contracts
       SET
-        job_title = ${optionalText(draft.jobTitle)},
-        job_description = ${optionalText(draft.jobDescription)},
-        work_location = ${optionalText(draft.workLocation)},
+        job_title = ${jobTitle},
+        job_description = ${jobDescription},
+        work_location = ${workLocation},
         payment_amount = ${paymentAmount},
         estimated_completion_date = ${estimatedDate},
-        materials_responsibility = ${optionalText(draft.materialsResponsibility)},
+        materials_responsibility = ${materialsResponsibility},
         additional_notes = ${optionalText(draft.additionalNotes)},
         terms_status = 'submitted',
         terms_submitted_at = NOW(),
@@ -153,6 +174,17 @@ export async function saveContractDraft(contractId: string, draft: ContractDraft
         title: "Contract Terms Submitted",
         body: "The client submitted contract terms for your review.",
         linkHref: `/contracts/${contractId}`,
+      });
+
+      await recordChatMilestone({
+        clientId: contract.client_id,
+        workerId: contract.worker_id,
+        actorId: session.user.id,
+        eventType: "terms_submitted",
+        title: "Contract Terms Proposed",
+        description: `The client submitted contract terms (Budget: ${paymentAmount ? `${paymentAmount} ETB` : "Agreed"}). Ready for worker review.`,
+        actionUrl: `/contracts/${contractId}`,
+        metadata: { contractId, jobId: contract.job_id, paymentAmount },
       });
     }
 
@@ -241,6 +273,17 @@ export async function acceptContractTerms(contractId: string): Promise<ContractA
       linkHref: `/contracts/${contractId}`,
     });
 
+    await recordChatMilestone({
+      clientId: contract.client_id,
+      workerId: contract.worker_id,
+      actorId: session.user.id,
+      eventType: "terms_accepted",
+      title: "Contract Terms Accepted",
+      description: "The worker reviewed and formally accepted the proposed contract terms.",
+      actionUrl: `/contracts/${contractId}`,
+      metadata: { contractId, jobId: contract.job_id },
+    });
+
     revalidatePath(`/contracts/${contractId}`);
     revalidatePath("/client/contracts");
     revalidatePath("/worker/contracts");
@@ -252,7 +295,17 @@ export async function acceptContractTerms(contractId: string): Promise<ContractA
   }
 }
 
-export async function rejectContractTerms(contractId: string, reason?: string): Promise<ContractActionResult> {
+export interface CounterTermsInput {
+  reason: string;
+  counterBudget?: number | string | null;
+  counterDate?: string | null;
+  counterNotes?: string | null;
+}
+
+export async function rejectContractTerms(
+  contractId: string,
+  reasonOrPayload?: string | CounterTermsInput
+): Promise<ContractActionResult> {
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: "Please login to continue", code: "UNAUTHORIZED" };
@@ -271,9 +324,32 @@ export async function rejectContractTerms(contractId: string, reason?: string): 
     };
   }
 
-  const rejectionReason = typeof reason === "string" ? reason.trim().slice(0, 1000) : "";
-  if (!rejectionReason) {
-    return { success: false, error: "A rejection reason is required.", code: "INVALID_STATE" };
+  let rejectionReason = "";
+  let counterData: {
+    reason: string;
+    counterBudget: number | null;
+    counterDate: string | null;
+    counterNotes: string | null;
+  } | null = null;
+
+  if (typeof reasonOrPayload === "object" && reasonOrPayload !== null) {
+    const reasonText = (reasonOrPayload.reason || "").trim().slice(0, 1000);
+    if (!reasonText) {
+      return { success: false, error: "A rejection reason / explanation is required.", code: "INVALID_STATE" };
+    }
+    const b = Number(reasonOrPayload.counterBudget);
+    counterData = {
+      reason: reasonText,
+      counterBudget: Number.isFinite(b) && b > 0 ? Math.round(b) : null,
+      counterDate: reasonOrPayload.counterDate ? String(reasonOrPayload.counterDate).slice(0, 50) : null,
+      counterNotes: reasonOrPayload.counterNotes ? String(reasonOrPayload.counterNotes).trim().slice(0, 1000) : null,
+    };
+    rejectionReason = JSON.stringify(counterData);
+  } else {
+    rejectionReason = typeof reasonOrPayload === "string" ? reasonOrPayload.trim().slice(0, 1000) : "";
+    if (!rejectionReason) {
+      return { success: false, error: "A rejection reason is required.", code: "INVALID_STATE" };
+    }
   }
 
   try {
@@ -320,14 +396,38 @@ export async function rejectContractTerms(contractId: string, reason?: string): 
       contractId,
       jobId: contract.job_id,
       reason: rejectionReason,
+      counterData,
     });
+
+    const notifBody = counterData?.counterBudget
+      ? `Worker requested changes (Desired: ${counterData.counterBudget} ETB): "${counterData.reason}"`
+      : counterData?.reason || rejectionReason;
 
     await createNotification({
       userId: contract.client_id,
       type: "contract_terms_rejected",
-      title: "Contract Terms Rejected",
-      body: rejectionReason,
+      title: "Contract Terms Revision Requested",
+      body: notifBody,
       linkHref: `/contracts/${contractId}`,
+    });
+
+    let milestoneDesc = `Worker requested revision of terms. Reason: "${rejectionReason}"`;
+    if (counterData) {
+      const parts = [`"${counterData.reason}"`];
+      if (counterData.counterBudget) parts.push(`Desired: ${counterData.counterBudget} ETB`);
+      if (counterData.counterDate) parts.push(`Target: ${counterData.counterDate}`);
+      milestoneDesc = `Worker proposed counter-terms: ${parts.join(" • ")}`;
+    }
+
+    await recordChatMilestone({
+      clientId: contract.client_id,
+      workerId: contract.worker_id,
+      actorId: session.user.id,
+      eventType: "terms_rejected",
+      title: "Contract Terms Revision Requested",
+      description: milestoneDesc,
+      actionUrl: `/contracts/${contractId}`,
+      metadata: { contractId, jobId: contract.job_id, reason: rejectionReason, counterData },
     });
 
     revalidatePath(`/contracts/${contractId}`);
@@ -569,6 +669,11 @@ export async function getContractForSigning(contractId: string) {
         cp.avatar_url as client_avatar,
         cp.is_verified as client_verified,
         cp.fin_last4 as client_fin_last4,
+        COALESCE(c.work_location, j.location) as work_location,
+        cp.latitude as client_latitude,
+        cp.longitude as client_longitude,
+        wp.latitude as worker_latitude,
+        wp.longitude as worker_longitude,
         u_client.phone as client_phone
       FROM contracts c
       JOIN jobs j ON c.job_id = j.id
@@ -791,6 +896,17 @@ async function signContractForRole(
       { contractId, jobId: contract.job_id }
     );
 
+    await recordChatMilestone({
+      clientId: contract.client_id,
+      workerId: contract.worker_id,
+      actorId: session.user.id,
+      eventType: "contract_signed",
+      title: isClient ? "Client Signed Contract" : "Worker Signed Contract",
+      description: `${isClient ? "Client" : "Worker"} executed digital signature with secure PIN authorization.`,
+      actionUrl: `/contracts/${contractId}`,
+      metadata: { contractId, jobId: contract.job_id, role },
+    });
+
     if (bothSigned) {
       const signedRows = await sql`
         UPDATE contracts
@@ -804,6 +920,16 @@ async function signContractForRole(
 
       updatedContract = await activateContractAfterFullSignature(contractId);
 
+      await recordChatMilestone({
+        clientId: contract.client_id,
+        workerId: contract.worker_id,
+        actorId: null,
+        eventType: "contract_activated",
+        title: "Contract Fully Executed & Legally Binding",
+        description: "Both parties have authenticated signatures. SHA-256 integrity hash generated and legal dossier locked.",
+        actionUrl: `/contracts/${contractId}`,
+        metadata: { contractId, jobId: contract.job_id },
+      });
     } else {
       const notifyId = isClient ? contract.worker_id : contract.client_id;
       const signerLabel = isClient ? "Client" : "Worker";

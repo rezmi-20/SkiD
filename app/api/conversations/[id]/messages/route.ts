@@ -27,7 +27,7 @@ export async function GET(
       UPDATE messages
       SET is_read = TRUE, read_at = NOW()
       WHERE conversation_id = ${id}
-        AND sender_id != ${userId}
+        AND (sender_id IS NULL OR sender_id != ${userId})
         AND is_read = FALSE
     `;
 
@@ -41,10 +41,14 @@ export async function GET(
         COALESCE(m.is_read, FALSE) AS is_read,
         m.read_at,
         COALESCE(m.media_type, 'image') AS media_type,
-        COALESCE(wp.full_name, cp.full_name, u.email) AS sender_name,
+        COALESCE(m.is_system, FALSE) AS is_system,
+        m.event_type,
+        m.action_url,
+        m.metadata,
+        COALESCE(wp.full_name, cp.full_name, u.email, 'DireSkill System') AS sender_name,
         COALESCE(wp.avatar_url, cp.avatar_url) AS sender_avatar
       FROM messages m
-      JOIN users u ON u.id = m.sender_id
+      LEFT JOIN users u ON u.id = m.sender_id
       LEFT JOIN worker_profiles wp ON wp.user_id = u.id
       LEFT JOIN client_profiles cp ON cp.user_id = u.id
       WHERE m.conversation_id = ${id}

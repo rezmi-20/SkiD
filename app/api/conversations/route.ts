@@ -33,7 +33,7 @@ export async function GET() {
         (SELECT image_url FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_image,
         (SELECT media_type FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_media_type,
         (SELECT created_at FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_at,
-        (SELECT COUNT(*)::int FROM messages WHERE conversation_id = c.id AND sender_id != ${userId} AND is_read = false) as unread
+        (SELECT COUNT(*)::int FROM messages WHERE conversation_id = c.id AND (sender_id IS NULL OR sender_id != ${userId}) AND is_read = false) as unread
       FROM conversations c
       JOIN users u ON u.id = (CASE WHEN c.client_id = ${userId} THEN c.worker_id ELSE c.client_id END)
       LEFT JOIN worker_profiles wp ON wp.user_id = u.id

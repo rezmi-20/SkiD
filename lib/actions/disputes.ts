@@ -16,6 +16,7 @@ import {
   DISPUTE_TERMINAL_STATUSES,
 } from "@/lib/dispute-constants";
 import { assertAllowedJobTransition, isJobStatus, type JobStatus } from "@/lib/job-workflow";
+import { recordChatMilestone } from "@/lib/actions/chat-audit";
 
 const ALLOWED_EVIDENCE_MIME_TYPES = new Set([
   "image/png",
@@ -396,6 +397,17 @@ export async function createDispute(data: {
       notifyUser(job.client_id, "Dispute opened", "A dispute has been opened for your job.", `/client/disputes/${dispute.id}`),
       notifyUser(job.worker_id, "Dispute opened", "A dispute has been opened for your job.", `/worker/disputes/${dispute.id}`),
     ]);
+
+    await recordChatMilestone({
+      clientId: job.client_id,
+      workerId: job.worker_id,
+      actorId,
+      eventType: "dispute_opened",
+      title: "Dispute Escalated to Platform Governance",
+      description: `A formal dispute ("${title}") was opened. Job workflow is temporarily frozen pending administrative resolution.`,
+      actionUrl: `/client/disputes/${dispute.id}`,
+      metadata: { disputeId: dispute.id, jobId: job.job_id, category, requestedResolution },
+    });
     revalidatePath("/admin/disputes");
     revalidatePath("/client/disputes");
     revalidatePath("/worker/disputes");

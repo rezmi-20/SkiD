@@ -7,6 +7,7 @@ import { createNotification } from "./notifications";
 import { ensureContractSetupComplete } from "./contract-setup";
 import { assertAllowedJobTransition, isJobStatus, type JobActorRole } from "@/lib/job-workflow";
 import { assertActiveVerifiedWorker } from "@/lib/identity-lifecycle";
+import { recordChatMilestone } from "@/lib/actions/chat-audit";
 
 export interface CreateJobInput {
   title: string;
@@ -141,6 +142,17 @@ export async function createJob(data: CreateJobInput) {
         title: "Hiring Invitation",
         body: `${clientName} wants to hire you for "${job.title}". Accepting creates a contract draft for review.`,
         linkHref: `/worker/jobs`
+      });
+
+      await recordChatMilestone({
+        clientId: session.user.id,
+        workerId: job.worker_id,
+        actorId: session.user.id,
+        eventType: "job_invited",
+        title: "Hiring Invitation Extended",
+        description: `${clientName} extended a formal hiring invitation for "${job.title}"${data.budget ? ` with a proposed budget of ${data.budget} ETB` : ""}. Awaiting worker acceptance.`,
+        actionUrl: `/worker/jobs`,
+        metadata: { jobId: job.id, budget: data.budget },
       });
     }
 
@@ -337,6 +349,17 @@ export async function acceptJob(jobId: string): Promise<JobActionResult> {
       linkHref: `/contracts/${contract.id}`,
     });
 
+    await recordChatMilestone({
+      clientId: job.client_id,
+      workerId: job.worker_id,
+      actorId: session.user.id,
+      eventType: "job_accepted",
+      title: "Hiring Invitation Accepted",
+      description: `Worker accepted the hiring invitation for "${job.title}". Service contract draft initialized.`,
+      actionUrl: `/contracts/${contract.id}`,
+      metadata: { jobId, contractId: contract.id },
+    });
+
     revalidatePath("/worker/dashboard");
     revalidatePath("/worker/jobs");
     revalidatePath("/worker/gigs");
@@ -390,6 +413,17 @@ export async function rejectJob(jobId: string, reason?: string) {
         title: "Job Declined",
         body: rejectionReason || `The worker declined your job request: "${job.title}".`,
         linkHref: "/client/dashboard"
+      });
+
+      await recordChatMilestone({
+        clientId: job.client_id,
+        workerId: session.user.id,
+        actorId: session.user.id,
+        eventType: "job_rejected",
+        title: "Hiring Invitation Declined",
+        description: rejectionReason ? `Worker declined: "${rejectionReason}"` : `Worker declined the hiring invitation for "${job.title}".`,
+        actionUrl: "/client/dashboard",
+        metadata: { jobId, reason: rejectionReason },
       });
     }
 
@@ -462,6 +496,20 @@ export async function startJob(jobId: string): Promise<JobActionResult> {
       title: "Job Started",
       body: `The worker has started "${job.title}".`,
       linkHref: "/client/dashboard",
+    });
+
+    const contractRes = await sql`SELECT id FROM contracts WHERE job_id = ${jobId} LIMIT 1`;
+    const contractId = contractRes[0]?.id;
+
+    await recordChatMilestone({
+      clientId: job.client_id,
+      workerId: job.worker_id,
+      actorId: session.user.id,
+      eventType: "job_started",
+      title: "Work Commenced",
+      description: `Worker has officially started work on "${job.title}".`,
+      actionUrl: contractId ? `/contracts/${contractId}` : `/client/dashboard`,
+      metadata: { jobId, contractId },
     });
 
     revalidatePath("/worker/gigs");
@@ -538,6 +586,20 @@ export async function completeJob(jobId: string): Promise<JobActionResult> {
       linkHref: "/client/contracts",
     });
 
+    const contractRes = await sql`SELECT id FROM contracts WHERE job_id = ${jobId} LIMIT 1`;
+    const contractId = contractRes[0]?.id;
+
+    await recordChatMilestone({
+      clientId: job.client_id,
+      workerId: job.worker_id,
+      actorId: session.user.id,
+      eventType: "completion_requested",
+      title: "Job Completion Review Requested",
+      description: `Worker has completed work on "${job.title}" and requested client sign-off.`,
+      actionUrl: contractId ? `/contracts/${contractId}` : `/client/contracts`,
+      metadata: { jobId, contractId },
+    });
+
     revalidatePath("/worker/gigs");
     revalidatePath("/worker/dashboard");
     revalidatePath("/worker/contracts");
@@ -608,6 +670,20 @@ export async function confirmJobCompletion(jobId: string): Promise<JobActionResu
         title: "Completion Confirmed",
         body: `The client confirmed completion for "${job.title}". Payment can now begin.`,
         linkHref: "/worker/earnings",
+      });
+
+      const contractRes = await sql`SELECT id FROM contracts WHERE job_id = ${jobId} LIMIT 1`;
+      const contractId = contractRes[0]?.id;
+
+      await recordChatMilestone({
+        clientId: job.client_id,
+        workerId: job.worker_id,
+        actorId: session.user.id,
+        eventType: "job_completed",
+        title: "Job Completion Confirmed",
+        description: `Client approved work on "${job.title}". Ready for escrow release.`,
+        actionUrl: contractId ? `/contracts/${contractId}` : `/client/contracts`,
+        metadata: { jobId, contractId },
       });
     }
 
