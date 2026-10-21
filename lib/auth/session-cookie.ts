@@ -83,17 +83,34 @@ export async function verifyNeonSessionDataCookie(
   }
 }
 
+const SESSION_DATA_COOKIE_CANDIDATES = [
+  "__Secure-neon-auth.session_data",
+  "neon-auth.session_data",
+  "neon-auth.local.session_data",
+];
+
 export async function getNeonSessionFromCookies(cookieStore: {
   get(name: string): { value: string } | undefined;
   getAll(): Array<{ name: string; value: string }>;
 }): Promise<NeonCachedSession | null> {
-  const cachedSession = await verifyNeonSessionDataCookie(
-    cookieStore.get(SESSION_DATA_COOKIE_NAME)?.value
-  );
+  // Check known candidate cookie names (HTTPS production __Secure- and local)
+  for (const name of SESSION_DATA_COOKIE_CANDIDATES) {
+    const val = cookieStore.get(name)?.value;
+    if (val) {
+      const cached = await verifyNeonSessionDataCookie(val);
+      if (cached?.user) return cached;
+    }
+  }
 
-  if (cachedSession?.user) return cachedSession;
+  // Fallback to searching all cookies for any session_data cookie
+  const all = cookieStore.getAll();
+  const sessionDataCookie = all.find((c) => c.name.includes("session_data"));
+  if (sessionDataCookie?.value) {
+    const cached = await verifyNeonSessionDataCookie(sessionDataCookie.value);
+    if (cached?.user) return cached;
+  }
 
-  return getNeonSessionFromTokenCookie(cookieStore.getAll());
+  return getNeonSessionFromTokenCookie(all);
 }
 
 async function getNeonSessionFromTokenCookie(
@@ -120,6 +137,7 @@ async function getNeonSessionFromTokenCookie(
         const response = await fetch(`${process.env.NEON_AUTH_BASE_URL}/get-session`, {
           headers: {
             Cookie: `${sessionTokenCookie.name}=${sessionTokenCookie.value}`,
+            Origin: "http://localhost:3000",
           },
           signal: AbortSignal.timeout(timeoutMs),
         });

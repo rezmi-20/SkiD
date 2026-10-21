@@ -71,9 +71,12 @@ export default function LoginPage() {
               workerIdentityComplete?: boolean | null;
             };
           }
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          console.warn(`[AUTH_ME_POLL] attempt ${attempt} returned status ${res.status}:`, errData);
         }
-      } catch {
-        // Keep retrying through transient auth/session mint failures.
+      } catch (pollErr) {
+        console.warn(`[AUTH_ME_POLL_ERROR] attempt ${attempt}:`, pollErr);
       }
 
       if (attempt < maxAttempts) {
