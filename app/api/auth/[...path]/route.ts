@@ -10,13 +10,18 @@ function createOriginSafeRequest(req: NextRequest): NextRequest {
   const origin = req.headers.get("origin") || "";
   const referer = req.headers.get("referer") || "";
 
-  // If already localhost or 127.0.0.1, keep as-is
-  if (origin.includes("localhost") || origin.includes("127.0.0.1")) {
+  // If already localhost, vercel domain, or cloudflare tunnel, keep as-is
+  if (
+    origin.includes("localhost") ||
+    origin.includes("127.0.0.1") ||
+    origin.includes("dire-skill.vercel.app") ||
+    origin.includes("trycloudflare.com")
+  ) {
     return req;
   }
 
   // Neon Auth upstream requires a trusted origin (localhost is pre-approved by default).
-  // When running on external deployments (such as dire-skill.vercel.app), rewrite the upstream
+  // When running on unknown external preview deployments, rewrite the upstream
   // Origin/Referer to localhost so Better Auth does not reject with 403 INVALID_ORIGIN.
   const proxyHeaders = new Headers(req.headers);
   proxyHeaders.set("origin", "http://localhost:3000");

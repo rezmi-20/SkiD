@@ -44,8 +44,9 @@ export async function GET() {
 
     return NextResponse.json({ conversations });
   } catch (err) {
-    console.error("[CONVERSATIONS_GET]", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[CONVERSATIONS_GET]", message, err);
+    return NextResponse.json({ error: "Internal server error", message }, { status: 500 });
   }
 }
 

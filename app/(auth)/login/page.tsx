@@ -199,8 +199,12 @@ export default function LoginPage() {
       });
 
       if (signInError) {
-        // Handle Email Not Verified (Neon Auth returns a specific message or 403)
-        if (signInError.status === 403 || signInError.message?.toLowerCase().includes("verify")) {
+        console.error("[LOGIN_SIGNIN_ERROR]", signInError);
+        // Handle Email Not Verified
+        if (
+          signInError.message?.toLowerCase().includes("verify") ||
+          signInError.code?.toLowerCase().includes("verify")
+        ) {
           router.push(`/otp-verification?email=${encodeURIComponent(emailToUse)}`);
           return;
         }
@@ -208,7 +212,11 @@ export default function LoginPage() {
           setError(t("auth.login.errServiceUnavailable"));
           return;
         }
-        setError(t("auth.login.errInvalidCredentials"));
+        if (signInError.message?.toLowerCase().includes("origin")) {
+          setError("Domain configuration error: unauthorized origin. Please contact support.");
+          return;
+        }
+        setError(signInError.message || t("auth.login.errInvalidCredentials"));
       } else {
         const session = await waitForUsableSession();
 
