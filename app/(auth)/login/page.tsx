@@ -51,6 +51,14 @@ export default function LoginPage() {
 
   const waitForUsableSession = async () => {
     const maxAttempts = 6;
+    type UsableSession = {
+      role?: string;
+      isSuspended?: boolean;
+      workerVerificationStatus?: string | null;
+      workerIsSuspended?: boolean | null;
+      workerIsVerified?: boolean | null;
+      workerIdentityComplete?: boolean | null;
+    };
 
     for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
       try {
@@ -62,18 +70,14 @@ export default function LoginPage() {
         if (res.ok) {
           const data = await res.json().catch(() => ({}));
           if (data?.authenticated !== false && data?.role) {
-            return data as {
-              role?: string;
-              isSuspended?: boolean;
-              workerVerificationStatus?: string | null;
-              workerIsSuspended?: boolean | null;
-              workerIsVerified?: boolean | null;
-              workerIdentityComplete?: boolean | null;
-            };
+            return { session: data as UsableSession, serviceUnavailable: false };
           }
         } else {
           const errData = await res.json().catch(() => ({}));
           console.warn(`[AUTH_ME_POLL] attempt ${attempt} returned status ${res.status}:`, errData);
+          if (res.status >= 500) {
+            return { session: null, serviceUnavailable: true };
+          }
         }
       } catch (pollErr) {
         console.warn(`[AUTH_ME_POLL_ERROR] attempt ${attempt}:`, pollErr);
@@ -94,22 +98,22 @@ export default function LoginPage() {
         if (retryRes.ok) {
           const data = await retryRes.json().catch(() => ({}));
           if (data?.authenticated !== false && data?.role) {
-            return data as {
-              role?: string;
-              isSuspended?: boolean;
-              workerVerificationStatus?: string | null;
-              workerIsSuspended?: boolean | null;
-              workerIsVerified?: boolean | null;
-              workerIdentityComplete?: boolean | null;
-            };
+            return { session: data as UsableSession, serviceUnavailable: false };
           }
+        } else if (retryRes.status >= 500) {
+          const errData = await retryRes.json().catch(() => ({}));
+          console.warn(`[AUTH_ME_RETRY] returned status ${retryRes.status}:`, errData);
+          return { session: null, serviceUnavailable: true };
+        } else {
+          const errData = await retryRes.json().catch(() => ({}));
+          console.warn(`[AUTH_ME_RETRY] returned status ${retryRes.status}:`, errData);
         }
       }
-    } catch {
-      // Fallback best effort
+    } catch (fallbackErr) {
+      console.warn("[AUTH_ME_RETRY_ERROR]", fallbackErr);
     }
 
-    return null;
+    return { session: null, serviceUnavailable: false };
   };
 
   useEffect(() => {
@@ -221,7 +225,14 @@ export default function LoginPage() {
         }
         setError(signInError.message || t("auth.login.errInvalidCredentials"));
       } else {
-        const session = await waitForUsableSession();
+        const sessionResult = await waitForUsableSession();
+
+        if (sessionResult.serviceUnavailable) {
+          setError(t("auth.login.errServiceUnavailable"));
+          return;
+        }
+
+        const session = sessionResult.session;
 
         if (!session?.role) {
           setError(t("auth.login.errSessionInit"));
