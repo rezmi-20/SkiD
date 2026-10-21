@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import { TranslationKey } from "@/lib/translations";
 import { authClient } from "@/lib/auth/client";
+import { handleAppSignOut } from "@/lib/auth/sign-out-client";
 import DireSkillLogo from "@/components/shell/DireSkillLogo";
 import { cn } from "@/lib/utils";
 import {
@@ -270,11 +271,8 @@ export default function Sidebar({ role, userEmail, collapsed, onToggle }: Sideba
                   variant="ghost"
                   size="icon"
                   className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
-                  onClick={() =>
-                    authClient.signOut({
-                      fetchOptions: { onSuccess: () => { window.location.href = "/login"; } },
-                    })
-                  }
+                  onClick={() => handleAppSignOut()}
+                  title={t("common.signout")}
                 >
                   <LogOut size={16} />
                 </Button>
@@ -286,14 +284,10 @@ export default function Sidebar({ role, userEmail, collapsed, onToggle }: Sideba
               variant="ghost"
               size="sm"
               className="w-full justify-start gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onClick={() =>
-                authClient.signOut({
-                  fetchOptions: { onSuccess: () => { window.location.href = "/login"; } },
-                })
-              }
+              onClick={() => handleAppSignOut()}
             >
               <LogOut size={16} />
-              Sign Out
+              {t("common.signout") || "Sign Out"}
             </Button>
           )}
 

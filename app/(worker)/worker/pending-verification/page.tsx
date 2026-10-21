@@ -7,6 +7,7 @@ import AppShell from "@/components/shell/AppShell";
 import VerificationResubmitForm from "@/components/worker/VerificationResubmitForm";
 import { getProfileData } from "@/lib/actions/profile";
 import { useLanguage } from "@/context/LanguageContext";
+import { handleAppSignOut } from "@/lib/auth/sign-out-client";
 
 export default function PendingVerificationPage() {
   const router = useRouter();
@@ -150,6 +151,10 @@ export default function PendingVerificationPage() {
           <div className="flex flex-col gap-3">
             <Link 
               href="/api/auth/sign-out" 
+              onClick={(e) => {
+                e.preventDefault();
+                handleAppSignOut();
+              }}
               className="w-full h-12 bg-zinc-900 border border-zinc-850 hover:bg-zinc-800 text-zinc-300 rounded-full font-bold text-xs flex items-center justify-center transition-all active:scale-[0.98]"
             >
               {t("common.signout")}

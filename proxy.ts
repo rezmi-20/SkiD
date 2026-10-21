@@ -169,8 +169,50 @@ export default async function proxy(req: NextRequest) {
     const isSharedProtectedArea = pathname.startsWith("/contracts/");
     const isProtectedPage = isClientArea || isWorkerArea || isAdminArea || isSharedProtectedArea;
 
+    const isLogout = isAuthPage && (req.nextUrl.searchParams.get("logout") === "1" || req.nextUrl.searchParams.has("logout"));
+    if (isLogout) {
+      const res = NextResponse.next();
+      const authCookieNames = [
+        "__Secure-neon-auth.session_token",
+        "neon-auth.session_token",
+        "neon-auth.local.session_data",
+        "__Secure-neon-auth.session_data",
+        "neon-auth.session_data",
+        "neon-auth.session_challenge",
+        "__Secure-neon-auth.session_challenge",
+        "better-auth.session_token",
+        "__Secure-better-auth.session_token",
+        "better-auth.session_data",
+        "__Secure-better-auth.session_data",
+        "better-auth.dont_remember",
+      ];
+      for (const cookie of req.cookies.getAll()) {
+        const n = cookie.name;
+        if ((n.includes("neon-auth") || n.includes("better-auth") || n.includes("session")) && !n.includes("admin")) {
+          authCookieNames.push(n);
+        }
+      }
+      for (const name of Array.from(new Set(authCookieNames))) {
+        res.cookies.set(name, "", {
+          maxAge: 0,
+          expires: new Date(0),
+          path: "/",
+          secure: true,
+        });
+        res.headers.append(
+          "Set-Cookie",
+          `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; SameSite=Lax`
+        );
+      }
+      return res;
+    }
+
     if (isAdminArea) {
       const adminState = await getAdminEmployeeState(req);
+      const isAdminLogout = isAdminLoginPage && (req.nextUrl.searchParams.get("logout") === "1" || req.nextUrl.searchParams.has("logout"));
+      if (isAdminLogout) {
+        return NextResponse.next();
+      }
       if (isAdminLoginPage && isActiveAdminAccount(adminState)) {
         return NextResponse.redirect(new URL("/admin/dashboard", req.url));
       }
@@ -203,7 +245,7 @@ export default async function proxy(req: NextRequest) {
       }
     }
 
-    if (isLoggedIn && isAuthPage) {
+    if (isLoggedIn && isAuthPage && !isLogout) {
       const dbRole = accountState?.role;
       if (accountState?.is_suspended) return NextResponse.next();
       if (dbRole === "client") return NextResponse.redirect(new URL("/client/search", req.url));
