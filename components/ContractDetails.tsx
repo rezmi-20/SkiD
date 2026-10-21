@@ -771,8 +771,8 @@ export default function ContractDetails({ contract, userId }: Props) {
         setDraftError(result.error);
         return;
       }
-      setDraftMessage("Completion confirmed. Payment can now be started.");
-      router.refresh();
+      setDraftMessage("Completion confirmed. Redirecting to payment...");
+      router.push(`/client/pay/${contract.job_id}`);
     } catch {
       setDraftError("An error occurred while confirming completion.");
     } finally {
@@ -814,7 +814,11 @@ export default function ContractDetails({ contract, userId }: Props) {
         alert(result.error);
         return;
       }
-      router.refresh();
+      if (!isClient) {
+        router.push("/worker/gigs");
+      } else {
+        router.push("/client/contracts");
+      }
     } catch {
       alert("An error occurred during signing.");
     } finally {

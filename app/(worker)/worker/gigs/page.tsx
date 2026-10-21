@@ -15,6 +15,7 @@ interface Gig {
   client_name: string | null;
   client_avatar: string | null;
   contract_id: string | null;
+  completion_rejection_reason?: string | null;
 }
 
 export default function GigsPage() {
@@ -186,22 +187,66 @@ export default function GigsPage() {
               </div>
             </div>
 
-            <div className="flex gap-3">
+            {/* Rejection notice if client requested rework */}
+            {gig.completion_rejection_reason && (
+              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 space-y-2.5">
+                <div className="flex items-start gap-2.5">
+                  <span className="material-symbols-outlined text-amber-500 text-[20px] shrink-0 mt-0.5">
+                    feedback
+                  </span>
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold uppercase tracking-wider text-amber-500">
+                      Client Requested Revisions
+                    </p>
+                    <p className="text-xs text-on-surface leading-relaxed">
+                      &ldquo;{gig.completion_rejection_reason}&rdquo;
+                    </p>
+                  </div>
+                </div>
+                <p className="text-[11px] text-on-surface-variant opacity-80 pl-7">
+                  You can revise the work and resubmit, or raise a dispute if you believe the work is already complete.
+                </p>
+              </div>
+            )}
+
+            <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => handleCompleteJob(gig.id)}
                 disabled={actionLoading === gig.id}
-                className="flex-1 h-11 bg-primary text-on-primary rounded-xl font-black text-sm tracking-tight transition-all active:scale-95 shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 min-w-[160px] h-11 bg-primary text-on-primary rounded-xl font-black text-sm tracking-tight transition-all active:scale-95 shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {actionLoading === gig.id ? (
                   <div className="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                  <span className="material-symbols-outlined text-[18px]">
+                    {gig.completion_rejection_reason ? "restart_alt" : "check_circle"}
+                  </span>
                 )}
-                {t("worker.gigs.btn_complete")}
+                {gig.completion_rejection_reason ? "Revise & Resubmit" : t("worker.gigs.btn_complete")}
               </button>
-              <button className="px-5 h-11 bg-surface-container-high border border-outline-variant text-on-surface-variant hover:text-on-surface rounded-xl font-black text-sm transition-all active:scale-95">
-                {t("worker.gigs.btn_details")}
-              </button>
+
+              {gig.completion_rejection_reason && (
+                <Link
+                  href={`/worker/disputes/new?jobId=${gig.id}`}
+                  className="px-4 h-11 border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-xl font-bold text-xs tracking-tight transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  <span className="material-symbols-outlined text-[16px]">gavel</span>
+                  Raise Dispute
+                </Link>
+              )}
+
+              {gig.contract_id ? (
+                <Link
+                  href={`/worker/contracts/${gig.contract_id}`}
+                  className="px-5 h-11 bg-surface-container-high border border-outline-variant text-on-surface-variant hover:text-on-surface rounded-xl font-black text-sm transition-all active:scale-95 flex items-center justify-center"
+                >
+                  {t("worker.gigs.btn_details")}
+                </Link>
+              ) : (
+                <button className="px-5 h-11 bg-surface-container-high border border-outline-variant text-on-surface-variant hover:text-on-surface rounded-xl font-black text-sm transition-all active:scale-95">
+                  {t("worker.gigs.btn_details")}
+                </button>
+              )}
             </div>
           </div>
         </div>

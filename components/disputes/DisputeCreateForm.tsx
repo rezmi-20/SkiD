@@ -5,7 +5,15 @@ import { useRouter } from "next/navigation";
 import { createDispute } from "@/lib/actions/disputes";
 import { DISPUTE_CATEGORIES, DISPUTE_REQUESTED_RESOLUTIONS } from "@/lib/dispute-constants";
 
-export default function DisputeCreateForm({ jobs, role }: { jobs: any[]; role: "client" | "worker" }) {
+export default function DisputeCreateForm({
+  jobs,
+  role,
+  initialJobId,
+}: {
+  jobs: any[];
+  role: "client" | "worker";
+  initialJobId?: string;
+}) {
   const router = useRouter();
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -42,7 +50,12 @@ export default function DisputeCreateForm({ jobs, role }: { jobs: any[]; role: "
       {message && <div className="rounded-lg border border-error/20 bg-error/10 p-3 text-sm font-bold text-error">{message}</div>}
       <label className="block">
         <span className="mb-2 block text-[10px] font-black uppercase tracking-widest">Related job</span>
-        <select name="jobId" required className="w-full rounded-lg border border-outline-variant bg-surface-container p-3 text-sm">
+        <select
+          name="jobId"
+          required
+          defaultValue={initialJobId || ""}
+          className="w-full rounded-lg border border-outline-variant bg-surface-container p-3 text-sm"
+        >
           <option value="">Select eligible job</option>
           {jobs.map((job) => (
             <option key={job.id} value={job.id} disabled={job.has_active_dispute}>

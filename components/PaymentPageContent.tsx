@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, RefreshCw, CheckCircle2, Receipt, Printer, CreditCard, ShieldCheck } from "lucide-react";
+import { getChapaReceiptUrl } from "@/lib/config";
 
 type Step = "ready" | "processing" | "awaiting" | "confirmed" | "paid";
 
@@ -355,17 +356,32 @@ export default function PaymentPageContent({
                 <p className="text-base font-black text-[#a3e635]">Payment Confirmed!</p>
                 <p className="text-xs text-on-surface-variant">The payment has been verified and released to the worker.</p>
               </div>
-              {confirmedData.paymentId && (
-                <a
-                  href={`/api/payments/${confirmedData.paymentId}/receipt`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-full border border-outline-variant/60 bg-surface-container text-xs sm:text-sm font-bold uppercase tracking-wider text-on-surface hover:bg-surface-container-high transition active:scale-[0.98]"
-                >
-                  <Receipt className="h-4 w-4" />
-                  <span>Download PDF Receipt</span>
-                </a>
-              )}
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                {(confirmedData.chapaReference || txRef) && (
+                  <a
+                    href={getChapaReceiptUrl(confirmedData.chapaReference || txRef)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full border border-[#a3e635]/60 bg-[#a3e635]/10 text-xs sm:text-sm font-bold uppercase tracking-wider text-[#a3e635] hover:bg-[#a3e635]/20 transition active:scale-[0.98]"
+                  >
+                    <Receipt className="h-4 w-4" />
+                    <span>Official Chapa Receipt</span>
+                  </a>
+                )}
+                {confirmedData.paymentId && (
+                  <a
+                    href={`/api/payments/${confirmedData.paymentId}/receipt`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full border border-outline-variant/60 bg-surface-container text-xs sm:text-sm font-bold uppercase tracking-wider text-on-surface hover:bg-surface-container-high transition active:scale-[0.98]"
+                  >
+                    <Receipt className="h-4 w-4" />
+                    <span>PDF Receipt</span>
+                  </a>
+                )}
+              </div>
+
               <button
                 onClick={() => router.push("/client/contracts")}
                 className="flex h-12 w-full items-center justify-center rounded-full bg-[#a3e635] px-5 text-xs sm:text-sm font-black uppercase tracking-wider text-black hover:opacity-90 shadow-[0_4px_16px_rgba(163,230,53,0.3)] transition active:scale-[0.98] cursor-pointer"
@@ -378,6 +394,17 @@ export default function PaymentPageContent({
           {/* Already-paid screen */}
           {step === "paid" && (
             <div className="flex flex-col gap-3 border-t border-outline-variant/40 pt-5 sm:flex-row">
+              {(existingTxRef || txRef) && (
+                <a
+                  href={getChapaReceiptUrl(existingTxRef || txRef)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full border border-[#a3e635]/60 bg-[#a3e635]/10 text-xs font-bold uppercase tracking-wider text-[#a3e635] hover:bg-[#a3e635]/20 transition active:scale-[0.98]"
+                >
+                  <Receipt className="h-4 w-4" />
+                  <span>Official Receipt</span>
+                </a>
+              )}
               <button
                 onClick={() => window.print()}
                 className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full border border-outline-variant/60 bg-surface-container text-xs font-bold uppercase tracking-wider text-on-surface hover:bg-surface-container-high transition active:scale-[0.98] cursor-pointer"

@@ -721,7 +721,11 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
                           {/* Action Link / Button */}
                           {actionUrl && (
                             <Link
-                              href={actionUrl}
+                              href={
+                                role === "worker" && (msg.event_type === "contract_activated" || msg.event_type === "contract_signed")
+                                  ? "/worker/gigs"
+                                  : actionUrl
+                              }
                               className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-all shadow-sm active:scale-95 group mb-2.5"
                             >
                               <span>
@@ -729,6 +733,8 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
                                   ? (role === "worker" ? "Respond to Invitation" : "View Hiring Request")
                                   : msg.event_type === "dispute_opened"
                                   ? "View Dispute Case"
+                                  : role === "worker" && (msg.event_type === "contract_activated" || msg.event_type === "contract_signed")
+                                  ? "Go to My Gigs"
                                   : "View Verifiable Contract"}
                               </span>
                               <ExternalLink className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
