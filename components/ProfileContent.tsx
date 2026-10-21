@@ -3,6 +3,7 @@
 import { useLanguage } from "@/context/LanguageContext";
 import { useTheme } from "next-themes";
 import { authClient } from "@/lib/auth/client";
+import { handleAppSignOut } from "@/lib/auth/sign-out-client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import {
@@ -77,13 +78,7 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
   const disputesHref = isWorker ? "/worker/disputes" : "/client/disputes";
 
   const handleSignOut = () => {
-    authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          window.location.href = "/login";
-        },
-      },
-    });
+    handleAppSignOut();
   };
 
   return (
