@@ -18,11 +18,17 @@ export default function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+  const linkError = searchParams.get("error");
+  const initialError = token
+    ? ""
+    : linkError?.toUpperCase() === "INVALID_TOKEN"
+      ? "This password reset link is invalid or expired. Request a new reset email."
+      : "Password reset token is missing. Open the reset link from your latest email.";
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState(token ? "" : "Password reset token is missing or expired.");
+  const [error, setError] = useState(initialError);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
