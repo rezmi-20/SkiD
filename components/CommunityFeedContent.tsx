@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { createCommunityComment, getCommunityComments, getCommunityPosts, toggleLikePost, votePostUseful, flagPost } from "@/lib/actions/community";
+import { createCommunityComment, getCommunityComments, toggleLikePost, votePostUseful, flagPost } from "@/lib/actions/community";
 import CreatePostModal from "./CreatePostModal";
 import { formatDistanceToNow } from "date-fns";
 import { 
@@ -47,8 +47,12 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      const data = await getCommunityPosts();
-      setPosts(data);
+      const response = await fetch("/api/community/posts", { cache: "no-store" });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.error || `Community request failed (${response.status}).`);
+      }
+      setPosts(Array.isArray(payload.posts) ? payload.posts : []);
     } catch (error) {
       console.error("[COMMUNITY_FEED_LOAD_ERROR]", error);
       setFeedback("The community feed could not be loaded. Please try again.");
