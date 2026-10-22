@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   MessageSquare,
@@ -11,6 +13,7 @@ import {
   ShieldAlert,
   Sparkles,
 } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 function timeAgo(value: unknown): string {
   if (!value) return "";
@@ -35,14 +38,14 @@ function formatDate(value: unknown) {
   });
 }
 
-const statusBadges: Record<string, { label: string; style: string }> = {
-  open: { label: "Ticket Open", style: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20" },
-  assigned: { label: "Agent Assigned", style: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20" },
-  in_progress: { label: "Staff Investigating", style: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20" },
-  awaiting_user: { label: "Action Required", style: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" },
-  escalated: { label: "Escalated", style: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20" },
-  resolved: { label: "Resolved", style: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" },
-  closed: { label: "Closed", style: "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border-zinc-500/20" },
+const statusBadgeStyles: Record<string, string> = {
+  open: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+  assigned: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+  in_progress: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+  awaiting_user: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
+  escalated: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+  resolved: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+  closed: "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border-zinc-500/20",
 };
 
 export default function UserSupportList({
@@ -52,15 +55,30 @@ export default function UserSupportList({
   tickets: any[];
   role: "client" | "worker";
 }) {
+  const { t } = useLanguage();
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "open": return t("support.status.ticketOpen");
+      case "assigned": return t("support.status.agentAssigned");
+      case "in_progress": return t("support.status.investigating");
+      case "awaiting_user": return t("support.status.actionRequired");
+      case "escalated": return t("support.status.escalated");
+      case "resolved": return t("support.status.resolved");
+      case "closed": return t("support.status.closed");
+      default: return String(status).replaceAll("_", " ");
+    }
+  };
+
   if (tickets.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center space-y-3">
         <div className="w-12 h-12 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto text-muted-foreground">
           <MessageSquare className="h-6 w-6 opacity-60" />
         </div>
-        <h3 className="text-sm font-bold text-foreground">No support tickets match this view</h3>
+        <h3 className="text-sm font-bold text-foreground">{t("support.noTicketsTitle")}</h3>
         <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-          Need assistance with contracts, payments, or identity verification? Submit a new ticket anytime.
+          {t("support.noTicketsDesc")}
         </p>
       </div>
     );
@@ -72,9 +90,9 @@ export default function UserSupportList({
         const isAwaitingUser = ticket.status === "awaiting_user";
         const hasStaffReplied = ticket.last_message_actor_type === "support_admin";
         const isUnreadStaffReply = hasStaffReplied || isAwaitingUser;
-        const statusCfg = statusBadges[ticket.status] || {
-          label: String(ticket.status).replaceAll("_", " "),
-          style: "bg-zinc-500/10 text-zinc-500 border-zinc-500/20",
+        const statusCfg = {
+          label: getStatusLabel(ticket.status),
+          style: statusBadgeStyles[ticket.status] || "bg-zinc-500/10 text-zinc-500 border-zinc-500/20",
         };
 
         return (

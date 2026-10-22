@@ -151,15 +151,15 @@ export default function ClientDashboardContent({
               <ShieldAlert className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-sm font-bold text-foreground">Complete Your Identity Verification</p>
+              <p className="text-sm font-bold text-foreground">{t("clientDashboard.identityCalloutTitle")}</p>
               <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                Fayda or Kebele ID verification protects you and allows seamless electronic contract signing.
+                {t("clientDashboard.identityCalloutDesc")}
               </p>
             </div>
           </div>
           <Button asChild size="default" className="rounded-full font-black bg-[#a3e635] text-black hover:opacity-90 shadow-[0_4px_14px_rgba(163,230,53,0.3)] shrink-0 h-11 w-full sm:w-auto touch-manipulation">
             <Link href="/client/profile/settings?verify=1&returnTo=/client/dashboard">
-              Verify ID Now
+              {t("worker.dashboard.submitId")}
             </Link>
           </Button>
         </div>
@@ -167,6 +167,7 @@ export default function ClientDashboardContent({
 
       {/* ── 1. QUICK ACTIONS: CIRCULAR ON MOBILE (Image 1 style) / PILLS ON DESKTOP ── */}
       {/* Mobile view (< 640px): Circular icon buttons like the setting icon with labels */}
+      {/* Mobile view (< 640px): Circular icon carousel */}
       <div className="sm:hidden overflow-x-auto no-scrollbar -mx-2 px-3 py-2">
         <div className="flex items-start gap-4 min-w-max">
           <Link
@@ -177,7 +178,7 @@ export default function ClientDashboardContent({
               <Plus className="h-5 w-5 stroke-[2.5]" />
             </div>
             <span className="text-[10px] font-bold text-foreground mt-1.5 text-center leading-tight truncate w-full">
-              Hire Pro
+              {t("clientDashboard.findHirePro")}
             </span>
           </Link>
 
@@ -189,7 +190,7 @@ export default function ClientDashboardContent({
               <MapPin className="h-5 w-5 stroke-[2]" />
             </div>
             <span className="text-[10px] font-bold text-foreground mt-1.5 text-center leading-tight truncate w-full">
-              Map Search
+              {t("clientDashboard.mapSearch")}
             </span>
           </Link>
 
@@ -201,7 +202,7 @@ export default function ClientDashboardContent({
               <KeyRound className="h-5 w-5 stroke-[2]" />
             </div>
             <span className="text-[10px] font-bold text-foreground mt-1.5 text-center leading-tight truncate w-full">
-              Contract PIN
+              {t("clientDashboard.contractPin")}
             </span>
           </Link>
 
@@ -213,7 +214,7 @@ export default function ClientDashboardContent({
               <CreditCard className="h-5 w-5 stroke-[2]" />
             </div>
             <span className="text-[10px] font-bold text-foreground mt-1.5 text-center leading-tight truncate w-full">
-              Payments
+              {t("nav.payments")}
             </span>
           </Link>
 
@@ -225,7 +226,7 @@ export default function ClientDashboardContent({
               <MessageSquare className="h-5 w-5 stroke-[2]" />
             </div>
             <span className="text-[10px] font-bold text-foreground mt-1.5 text-center leading-tight truncate w-full">
-              Messages
+              {t("nav.chat")}
             </span>
           </Link>
 
@@ -237,7 +238,7 @@ export default function ClientDashboardContent({
               <Headphones className="h-5 w-5 stroke-[2]" />
             </div>
             <span className="text-[10px] font-bold text-foreground mt-1.5 text-center leading-tight truncate w-full">
-              Live Support
+              {t("clientDashboard.liveSupport")}
             </span>
           </Link>
         </div>
@@ -251,7 +252,7 @@ export default function ClientDashboardContent({
             className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#a3e635] text-black text-xs font-black shadow-[0_4px_16px_rgba(163,230,53,0.3)] hover:opacity-95 active:scale-95 transition-all touch-manipulation"
           >
             <Plus className="h-4 w-4 stroke-[2.5]" />
-            <span>Find & Hire Pro</span>
+            <span>{t("clientDashboard.findHirePro")}</span>
           </Link>
 
           <Link
@@ -259,7 +260,7 @@ export default function ClientDashboardContent({
             className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-card border border-border/70 text-foreground text-xs font-bold hover:bg-muted active:scale-95 transition-all touch-manipulation shadow-xs"
           >
             <MapPin className="h-4 w-4 text-emerald-500" />
-            <span>Map Search</span>
+            <span>{t("clientDashboard.mapSearch")}</span>
           </Link>
 
           <Link
@@ -267,7 +268,7 @@ export default function ClientDashboardContent({
             className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-card border border-border/70 text-foreground text-xs font-bold hover:bg-muted active:scale-95 transition-all touch-manipulation shadow-xs"
           >
             <KeyRound className="h-4 w-4 text-amber-500" />
-            <span>Contract PIN</span>
+            <span>{t("clientDashboard.contractPin")}</span>
           </Link>
 
           <Link
@@ -275,7 +276,7 @@ export default function ClientDashboardContent({
             className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-card border border-border/70 text-foreground text-xs font-bold hover:bg-muted active:scale-95 transition-all touch-manipulation shadow-xs"
           >
             <CreditCard className="h-4 w-4 text-indigo-500" />
-            <span>Direct Payments</span>
+            <span>{t("clientDashboard.directPayments")}</span>
           </Link>
 
           <Link
@@ -283,7 +284,7 @@ export default function ClientDashboardContent({
             className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-card border border-border/70 text-foreground text-xs font-bold hover:bg-muted active:scale-95 transition-all touch-manipulation shadow-xs"
           >
             <MessageSquare className="h-4 w-4 text-sky-500" />
-            <span>Messages</span>
+            <span>{t("nav.chat")}</span>
           </Link>
 
           <Link
@@ -291,7 +292,7 @@ export default function ClientDashboardContent({
             className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-card border border-border/70 text-foreground text-xs font-bold hover:bg-muted active:scale-95 transition-all touch-manipulation shadow-xs"
           >
             <Headphones className="h-4 w-4 text-violet-500" />
-            <span>Live Support</span>
+            <span>{t("clientDashboard.liveSupport")}</span>
           </Link>
         </div>
       </div>
@@ -320,7 +321,7 @@ export default function ClientDashboardContent({
           <div className="flex items-center justify-between z-10 mb-2">
             <span className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider text-[#a3e635]">
               <Zap className="h-3 w-3 text-[#a3e635]" />
-              Client Command Hub
+              {t("clientDashboard.commandHub")}
             </span>
             <div className="flex items-center gap-2">
               <div className="text-right">
@@ -336,10 +337,10 @@ export default function ClientDashboardContent({
 
           <div className="relative z-10 my-2">
             <h1 className="text-xl sm:text-2xl font-black text-white leading-snug">
-              Hire Verified Skilled Professionals
+              {t("clientDashboard.heroTitle")}
             </h1>
             <p className="text-xs text-white/60 mt-1 max-w-md leading-relaxed">
-              Find electricians, plumbers, and painters across Dire Dawa with 2-party digital contracts and instant Chapa payments.
+              {t("clientDashboard.heroSubtitle")}
             </p>
           </div>
 
@@ -348,13 +349,13 @@ export default function ClientDashboardContent({
               href="/client/search"
               className="rounded-full bg-[#a3e635] hover:opacity-95 text-black font-black text-xs px-5 h-11 flex items-center shadow-[0_4px_16px_rgba(163,230,53,0.3)] active:scale-[0.98] transition-all touch-manipulation"
             >
-              <Search className="h-3.5 w-3.5 mr-1.5 stroke-[2.5]" /> Find Pro Near You
+              <Search className="h-3.5 w-3.5 mr-1.5 stroke-[2.5]" /> {t("clientDashboard.findProNear")}
             </Link>
             <Link
               href="/client/contracts"
               className="rounded-full border border-white/20 text-white bg-white/5 hover:bg-white/10 font-bold text-xs px-5 h-11 flex items-center active:scale-[0.98] transition-all touch-manipulation"
             >
-              My Contracts
+              {t("profile.menu.myContracts")}
             </Link>
           </div>
         </div>

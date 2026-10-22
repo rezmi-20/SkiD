@@ -185,8 +185,8 @@ export default function WorkerDashboardContent({
           </div>
           <p className="text-[10px] text-muted-foreground truncate mt-0.5">
             {availability === "available"
-              ? "Visible to clients in Dire Dawa with real-time GPS distance"
-              : "Paused from new client search invitations"}
+              ? t("worker.dashboard.status.visible")
+              : t("worker.dashboard.status.paused")}
           </p>
         </div>
         {/* iOS-style toggle pill exactly matching profile */}
@@ -211,15 +211,15 @@ export default function WorkerDashboardContent({
               <ShieldAlert className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-sm font-bold text-foreground">Worker Verification Required</p>
+              <p className="text-sm font-bold text-foreground">{t("worker.dashboard.verifyRequiredTitle")}</p>
               <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                Submit your Fayda ID or Kebele card to receive job requests and receive direct Chapa payouts.
+                {t("worker.dashboard.verifyRequiredDesc")}
               </p>
             </div>
           </div>
           <Button asChild size="default" className="rounded-xl font-semibold shrink-0 h-11 w-full sm:w-auto touch-manipulation bg-amber-600 hover:bg-amber-500 text-white">
             <Link href="/worker/profile/settings?verify=1">
-              Submit ID for Verification
+              {t("worker.dashboard.submitId")}
             </Link>
           </Button>
         </div>

@@ -15,16 +15,36 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<Language>('en');
 
   useEffect(() => {
-    console.debug("[DIREDAWA-DIAG] LanguageProvider mounting");
-    const savedLanguage = localStorage.getItem('direskill-lang') as Language;
-    if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'am' || savedLanguage === 'om')) {
-      setLanguageState(savedLanguage);
+    try {
+      const saved = localStorage.getItem('direskill-lang');
+      const legacyLanding = localStorage.getItem('direskill_language');
+      let resolved: Language = 'en';
+
+      if (saved === 'en' || saved === 'am' || saved === 'om') {
+        resolved = saved;
+      } else if (legacyLanding === 'አማ') {
+        resolved = 'am';
+      } else if (legacyLanding === 'ORO') {
+        resolved = 'om';
+      }
+
+      setLanguageState(resolved);
+      document.documentElement.lang = resolved;
+    } catch {
+      // Ignore local storage errors
     }
   }, []);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
-    localStorage.setItem('direskill-lang', lang);
+    try {
+      localStorage.setItem('direskill-lang', lang);
+      const landingCode = lang === 'am' ? 'አማ' : lang === 'om' ? 'ORO' : 'EN';
+      localStorage.setItem('direskill_language', landingCode);
+      document.documentElement.lang = lang;
+    } catch {
+      // Ignore local storage errors
+    }
   };
 
   const t = (key: TranslationKey): string => {

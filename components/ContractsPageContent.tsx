@@ -92,10 +92,10 @@ export default function ContractsPageContent({ contracts = [], role }: Props) {
           <p className="text-xs font-semibold uppercase tracking-widest text-primary">
             {t("contracts.repository")}
           </p>
-          <h1 className="text-3xl font-extrabold tracking-tight mt-0.5">
+          <h1 className="hidden sm:block text-2xl sm:text-3xl font-extrabold tracking-tight mt-0.5">
             {t("contracts.title")}
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
             {t("contracts.desc")}
           </p>
         </div>

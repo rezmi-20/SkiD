@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useLanguage } from "@/context/LanguageContext";
 import { Home, Search, Users, MessageSquare, User, Briefcase } from "lucide-react";
 
 interface MobileNavProps {
@@ -11,6 +12,7 @@ interface MobileNavProps {
 
 export default function MobileNav({ role }: MobileNavProps) {
   const pathname = usePathname();
+  const { t } = useLanguage();
   const [unreadCount, setUnreadCount] = useState<number>(0);
 
   useEffect(() => {
@@ -45,14 +47,14 @@ export default function MobileNav({ role }: MobileNavProps) {
     role === "worker"
       ? {
           id: "gigs",
-          label: "My Gigs",
+          label: t("nav.mygigs"),
           href: "/worker/gigs",
           icon: <Briefcase className="h-5 w-5 stroke-[2]" />,
           activeIcon: <Briefcase className="h-4 w-4 stroke-[2.5]" />,
         }
       : {
           id: "search",
-          label: "Search",
+          label: t("nav.search"),
           href: "/client/search",
           icon: <Search className="h-5 w-5 stroke-[2]" />,
           activeIcon: <Search className="h-4 w-4 stroke-[2.5]" />,
@@ -61,7 +63,7 @@ export default function MobileNav({ role }: MobileNavProps) {
   const navItems = [
     {
       id: "home",
-      label: "Home",
+      label: t("nav.home"),
       href: `/${role}/dashboard`,
       icon: <Home className="h-5 w-5 stroke-[2]" />,
       activeIcon: <Home className="h-4 w-4 stroke-[2.5]" />,
@@ -69,21 +71,21 @@ export default function MobileNav({ role }: MobileNavProps) {
     actionItem,
     {
       id: "community",
-      label: "Community",
+      label: t("nav.community"),
       href: `/${role}/community`,
       icon: <Users className="h-5 w-5 stroke-[2]" />,
       activeIcon: <Users className="h-4 w-4 stroke-[2.5]" />,
     },
     {
       id: "chat",
-      label: "Chat",
+      label: t("nav.chat"),
       href: `/${role}/messages`,
       icon: <MessageSquare className="h-5 w-5 stroke-[2]" />,
       activeIcon: <MessageSquare className="h-4 w-4 stroke-[2.5]" />,
     },
     {
       id: "profile",
-      label: "Profile",
+      label: t("nav.profile"),
       href: `/${role}/profile`,
       icon: <User className="h-5 w-5 stroke-[2]" />,
       activeIcon: <User className="h-4 w-4 stroke-[2.5]" />,

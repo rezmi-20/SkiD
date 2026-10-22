@@ -84,15 +84,8 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
   return (
     <div className="w-full max-w-md md:max-w-4xl mx-auto px-3 sm:px-6 pb-32 animate-in fade-in duration-300">
       
-      {/* ── 1. TITLE (Centered "Profile" - 100% Reference Match) ─────── */}
-      <div className="pt-2 pb-5 text-center">
-        <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
-          Profile
-        </h1>
-      </div>
-
-      {/* ── 2. USER PROFILE HEADER (Pixel-Perfect from Inspiration) ──── */}
-      <div className="flex items-center justify-between gap-3 mb-6 px-1">
+      {/* ── USER PROFILE HEADER (Pixel-Perfect from Inspiration) ──── */}
+      <div className="flex items-center justify-between gap-3 mb-6 px-1 pt-2 sm:pt-4">
         <div className="flex items-center gap-3.5 min-w-0">
           {/* Avatar with mint/green badge container */}
           <div className="relative shrink-0">
@@ -154,33 +147,33 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
           >
             {user.is_verified
               ? isWorker
-                ? "Verified Skilled Pro"
-                : "Verified Client"
+                ? t("profile.status.verifiedPro")
+                : t("profile.status.verifiedClient")
               : user.verificationStatus === "pending"
-              ? "Verification Pending"
+              ? t("settings.pendingVerification")
               : isWorker
-              ? "Unverified Worker"
-              : "Unverified Client"}
+              ? t("profile.status.unverifiedWorker")
+              : t("profile.status.unverifiedClient")}
           </Badge>
           <span className="text-muted-foreground font-medium truncate">{user.district ? `${user.district}, Dire Dawa` : "Dire Dawa, ET"}</span>
         </div>
         {user.phone ? (
           <div className="flex items-center justify-between p-2 rounded-xl bg-muted/40">
-            <span className="flex items-center gap-1.5 text-muted-foreground font-medium"><Phone className="h-3.5 w-3.5 text-primary" /> Phone:</span>
+            <span className="flex items-center gap-1.5 text-muted-foreground font-medium"><Phone className="h-3.5 w-3.5 text-primary" /> {t("profile.phone")}</span>
             <span className="font-bold text-foreground">+251 {user.phone}</span>
           </div>
         ) : (
           <div className="flex items-center justify-between p-2 rounded-xl bg-muted/40">
-            <span className="flex items-center gap-1.5 text-muted-foreground font-medium"><Phone className="h-3.5 w-3.5 text-muted-foreground" /> Phone:</span>
-            <span className="text-muted-foreground italic text-[11px]">Not linked</span>
+            <span className="flex items-center gap-1.5 text-muted-foreground font-medium"><Phone className="h-3.5 w-3.5 text-muted-foreground" /> {t("profile.phone")}</span>
+            <span className="text-muted-foreground italic text-[11px]">{t("profile.notLinked")}</span>
           </div>
         )}
         <div className="flex items-center justify-between p-2 rounded-xl bg-muted/40">
-          <span className="flex items-center gap-1.5 text-muted-foreground font-medium"><ShieldCheck className="h-3.5 w-3.5 text-indigo-400" /> Fayda FIN:</span>
+          <span className="flex items-center gap-1.5 text-muted-foreground font-medium"><ShieldCheck className="h-3.5 w-3.5 text-indigo-400" /> {t("settings.faydaFin")}:</span>
           {user.maskedFin ? (
             <span className="font-mono font-bold text-foreground bg-primary/10 px-2 py-0.5 rounded text-[11px] text-primary">{user.maskedFin}</span>
           ) : (
-            <span className="text-muted-foreground italic text-[11px]">No FIN Linked</span>
+            <span className="text-muted-foreground italic text-[11px]">{t("profile.noFinLinked")}</span>
           )}
         </div>
       </div>
@@ -190,7 +183,7 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
           {/* 1. "Work & Contracts" Domain Capsule */}
           <div>
             <h3 className="text-sm font-black text-foreground tracking-tight mb-2.5">
-              Work & Contracts Hub
+              {t("profile.hub.workContracts")}
             </h3>
 
             {/* Sleek Dark Capsule Card matching screenshot */}
@@ -207,9 +200,9 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
                   </span>
                 </div>
                 <span className="text-xs font-bold text-white/90 mt-2 text-center">
-                  Active Contracts
+                  {t("profile.hub.activeContracts")}
                 </span>
-                <span className="text-[10px] text-white/50">Signed & Live</span>
+                <span className="text-[10px] text-white/50">{t("profile.hub.signedLive")}</span>
               </Link>
 
               {/* Item 2: Ongoing Milestones / In Progress */}
@@ -224,9 +217,9 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
                   </span>
                 </div>
                 <span className="text-xs font-bold text-white/90 mt-2 text-center">
-                  In Progress
+                  {t("profile.hub.inProgress")}
                 </span>
-                <span className="text-[10px] text-white/50">On-Site Work</span>
+                <span className="text-[10px] text-white/50">{t("profile.hub.onSiteWork")}</span>
               </Link>
 
               {/* Item 3: Ratings & Reviews */}
@@ -236,9 +229,9 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
               >
                 <Star className="h-6 w-6 text-[#a4fe47] stroke-[1.75] fill-[#a4fe47]/20" />
                 <span className="text-xs font-bold text-white/90 mt-2 text-center">
-                  Job Ratings
+                  {t("profile.hub.jobRatings")}
                 </span>
-                <span className="text-[10px] text-white/50">5.0 ★ Score</span>
+                <span className="text-[10px] text-white/50">{t("profile.hub.score")}</span>
               </Link>
             </div>
           </div>
@@ -246,7 +239,7 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
           {/* 2. "General" Section (Clean interactive pill rows) */}
           <div>
             <h3 className="text-sm font-black text-foreground tracking-tight mb-2.5">
-              General Management
+              {t("profile.section.general")}
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -260,8 +253,8 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
                   <FileText className="h-4 w-4 stroke-[2]" />
                 </div>
                 <div className="flex-1 min-w-0 ml-3.5">
-                  <p className="text-xs sm:text-sm font-bold text-foreground truncate">My Contracts</p>
-                  <p className="text-[10px] text-muted-foreground truncate">2-party digital agreements & QR codes</p>
+                  <p className="text-xs sm:text-sm font-bold text-foreground truncate">{t("profile.menu.myContracts")}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{t("profile.menu.myContractsDesc")}</p>
                 </div>
                 <ArrowRight className="h-4 w-4 text-foreground/70 shrink-0" />
               </Link>
@@ -275,8 +268,8 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
                   <CreditCard className="h-4 w-4 stroke-[2]" />
                 </div>
                 <div className="flex-1 min-w-0 ml-3.5">
-                  <p className="text-xs sm:text-sm font-bold text-foreground truncate">Payments & Billing</p>
-                  <p className="text-[10px] text-muted-foreground truncate">Chapa Telebirr & CBE Birr receipts</p>
+                  <p className="text-xs sm:text-sm font-bold text-foreground truncate">{t("profile.menu.billing")}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{t("profile.menu.billingDesc")}</p>
                 </div>
                 <ArrowRight className="h-4 w-4 text-foreground/70 shrink-0" />
               </Link>
@@ -290,8 +283,8 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
                   <ShieldCheck className="h-4 w-4 stroke-[2]" />
                 </div>
                 <div className="flex-1 min-w-0 ml-3.5">
-                  <p className="text-xs sm:text-sm font-bold text-foreground truncate">Security & Contract PIN</p>
-                  <p className="text-[10px] text-muted-foreground truncate">6-digit electronic signature PIN</p>
+                  <p className="text-xs sm:text-sm font-bold text-foreground truncate">{t("profile.menu.securityPin")}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{t("profile.menu.securityPinDesc")}</p>
                 </div>
                 <ArrowRight className="h-4 w-4 text-foreground/70 shrink-0" />
               </Link>
@@ -305,8 +298,8 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
                   <Moon className="h-4 w-4 stroke-[2]" />
                 </div>
                 <div className="flex-1 min-w-0 ml-3.5">
-                  <p className="text-xs sm:text-sm font-bold text-foreground truncate">Dark Theme</p>
-                  <p className="text-[10px] text-muted-foreground truncate">{isDarkMode ? "Obsidian mode active" : "Crisp light mode active"}</p>
+                  <p className="text-xs sm:text-sm font-bold text-foreground truncate">{t("profile.menu.darkTheme")}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{isDarkMode ? t("profile.menu.darkThemeActive") : t("profile.menu.lightThemeActive")}</p>
                 </div>
                 {/* iOS-style toggle pill */}
                 <div
@@ -331,8 +324,8 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
                   <Headphones className="h-4 w-4 stroke-[2]" />
                 </div>
                 <div className="flex-1 min-w-0 ml-3.5">
-                  <p className="text-xs sm:text-sm font-bold text-foreground truncate">Contact Us & Support</p>
-                  <p className="text-[10px] text-muted-foreground truncate">Real-time tickets with chime alerts</p>
+                  <p className="text-xs sm:text-sm font-bold text-foreground truncate">{t("profile.menu.support")}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{t("profile.menu.supportDesc")}</p>
                 </div>
                 <ArrowRight className="h-4 w-4 text-foreground/70 shrink-0" />
               </Link>
@@ -346,8 +339,8 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
                   <Scale className="h-4 w-4 stroke-[2]" />
                 </div>
                 <div className="flex-1 min-w-0 ml-3.5">
-                  <p className="text-xs sm:text-sm font-bold text-foreground truncate">Disputes & Governance</p>
-                  <p className="text-[10px] text-muted-foreground truncate">File claims, upload evidence & appeals</p>
+                  <p className="text-xs sm:text-sm font-bold text-foreground truncate">{t("profile.menu.disputes")}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{t("profile.menu.disputesDesc")}</p>
                 </div>
                 <ArrowRight className="h-4 w-4 text-foreground/70 shrink-0" />
               </Link>
@@ -362,8 +355,8 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
                   <LogOut className="h-4 w-4 stroke-[2]" />
                 </div>
                 <div className="flex-1 min-w-0 ml-3.5">
-                  <p className="text-xs sm:text-sm font-bold text-[#731b1e] dark:text-[#ff8589]">Sign Out</p>
-                  <p className="text-[10px] text-muted-foreground">Safely end your active session</p>
+                  <p className="text-xs sm:text-sm font-bold text-[#731b1e] dark:text-[#ff8589]">{t("profile.signOut")}</p>
+                  <p className="text-[10px] text-muted-foreground">{t("profile.menu.logoutDesc")}</p>
                 </div>
                 <ArrowRight className="h-4 w-4 text-[#731b1e] dark:text-[#ff8589] shrink-0" />
               </button>

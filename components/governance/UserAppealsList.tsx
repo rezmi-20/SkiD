@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { Scale, ChevronRight, Clock, CheckCircle2, AlertCircle, Plus } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface AppealItem {
   id: string;
@@ -14,27 +17,27 @@ interface AppealItem {
   updated_at?: string | Date;
 }
 
-function getStatusBadge(status: string, outcome?: string | null) {
+function getStatusBadge(status: string, outcome: string | null | undefined, t: (k: any) => string) {
   if (outcome) {
     switch (outcome) {
       case "upheld":
         return {
-          label: "Ruling: Upheld",
+          label: t("appeals.ruling.upheld"),
           classes: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
         };
       case "overturned":
         return {
-          label: "Ruling: Overturned",
+          label: t("appeals.ruling.overturned"),
           classes: "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400",
         };
       case "returned_for_re_review":
         return {
-          label: "Returned for Review",
+          label: t("appeals.ruling.returned"),
           classes: "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
         };
       case "dismissed":
         return {
-          label: "Dismissed",
+          label: t("appeals.ruling.dismissed"),
           classes: "border-muted-foreground/30 bg-muted/40 text-muted-foreground",
         };
     }
@@ -43,22 +46,22 @@ function getStatusBadge(status: string, outcome?: string | null) {
   switch (status) {
     case "appeal_requested":
       return {
-        label: "Under Review",
+        label: t("appeals.status.underReview"),
         classes: "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400",
       };
     case "appeal_under_review":
       return {
-        label: "Super Admin Review",
+        label: t("appeals.status.superAdmin"),
         classes: "border-purple-500/30 bg-purple-500/10 text-purple-600 dark:text-purple-400",
       };
     case "appeal_resolved":
       return {
-        label: "Adjudicated",
+        label: t("appeals.status.adjudicated"),
         classes: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
       };
     case "appeal_dismissed":
       return {
-        label: "Dismissed",
+        label: t("appeals.ruling.dismissed"),
         classes: "border-muted-foreground/30 bg-muted/40 text-muted-foreground",
       };
     default:
@@ -76,6 +79,8 @@ export default function UserAppealsList({
   appeals: AppealItem[];
   role: "client" | "worker";
 }) {
+  const { t } = useLanguage();
+
   if (appeals.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-border/80 bg-card p-12 text-center space-y-4 shadow-xs">
@@ -83,9 +88,9 @@ export default function UserAppealsList({
           <Scale className="h-6 w-6" />
         </div>
         <div className="space-y-1 max-w-sm mx-auto">
-          <h3 className="text-sm font-bold text-foreground">No Governance Appeals Filed</h3>
+          <h3 className="text-sm font-bold text-foreground">{t("appeals.noAppealsTitle")}</h3>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            If you disagree with a dispute outcome or account determination, you can request an independent Super Admin review within 7 days.
+            {t("appeals.noAppealsDesc")}
           </p>
         </div>
         <div>
@@ -94,7 +99,7 @@ export default function UserAppealsList({
             className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-sm hover:opacity-90 active:scale-95 transition"
           >
             <Plus className="h-3.5 w-3.5" />
-            Request New Appeal
+            {t("appeals.requestNew")}
           </Link>
         </div>
       </div>
@@ -104,7 +109,7 @@ export default function UserAppealsList({
   return (
     <div className="rounded-2xl border border-border/70 bg-card overflow-hidden shadow-xs divide-y divide-border/60">
       {appeals.map((appeal) => {
-        const badge = getStatusBadge(appeal.status, appeal.outcome);
+        const badge = getStatusBadge(appeal.status, appeal.outcome, t);
         return (
           <Link
             key={appeal.id}

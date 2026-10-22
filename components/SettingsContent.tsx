@@ -311,7 +311,7 @@ export default function SettingsContent({ initialData, role }: Props) {
               )}
            </button>
         </div>
-        <h1 className="text-3xl font-black text-on-surface tracking-tight uppercase">{t("settings.titleProfile")} <span className="text-primary italic">{t("settings.titleSettings")}</span></h1>
+        <h1 className="hidden sm:block text-2xl sm:text-3xl font-black text-on-surface tracking-tight uppercase">{t("settings.titleProfile")} <span className="text-primary italic">{t("settings.titleSettings")}</span></h1>
         {verificationReason && (
           <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-5 py-4 text-sm font-semibold text-on-surface">
             {verificationReason}

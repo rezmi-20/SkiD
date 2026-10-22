@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/context/LanguageContext";
 
 type CommunityComment = {
   id: string;
@@ -60,6 +61,7 @@ function CommunityAttachment({ src, title }: { src: string; title: string }) {
 }
 
 export default function CommunityFeedContent({ initialPosts }: { initialPosts: any[] }) {
+  const { t } = useLanguage();
   const [posts, setPosts] = useState(initialPosts);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -172,7 +174,7 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
       if (navigator.share) await navigator.share({ title: "DireSkill community post", url });
       else {
         await navigator.clipboard.writeText(url);
-        setFeedback("Post link copied.");
+        setFeedback(t("community.linkCopied"));
       }
     } catch (error) {
       if (error instanceof Error && error.name !== "AbortError") setFeedback("Could not share this post.");
@@ -180,9 +182,9 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
   };
 
   const handleFlag = async (postId: string) => {
-    if (confirm("Report this post to the moderators?")) {
+    if (confirm(t("community.reportPrompt"))) {
       const res = await flagPost(postId, "Inappropriate content");
-      setFeedback(res.success ? "Report sent. A moderator will review this post." : "Could not send the report. Please try again.");
+      setFeedback(res.success ? t("community.reportSent") : t("community.reportFailed"));
     }
   };
 
@@ -199,9 +201,9 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
       {/* ── Page Header ── */}
       <header className="flex items-start justify-between gap-4 py-2">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary">DireSkill Community</p>
-          <h1 className="text-3xl font-extrabold tracking-tight mt-0.5">Community</h1>
-          <p className="text-sm text-muted-foreground mt-1">Local knowledge, trade tips, and lessons from the work.</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-primary">{t("community.kicker")}</p>
+          <h1 className="hidden sm:block text-2xl sm:text-3xl font-extrabold tracking-tight mt-0.5">{t("community.title")}</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">{t("community.subtitle")}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <button
@@ -210,9 +212,9 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
               if (open) setSearchQuery("");
               return !open;
             })}
-            aria-label={isSearchOpen ? "Close community search" : "Search community"}
+            aria-label={isSearchOpen ? t("community.closeSearch") : t("community.searchAria")}
             aria-expanded={isSearchOpen}
-            title={isSearchOpen ? "Close search" : "Search"}
+            title={isSearchOpen ? t("community.closeSearch") : t("community.searchAria")}
             className={`inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-sm transition-all duration-200 hover:bg-muted active:scale-95 ${isSearchOpen ? "ring-2 ring-primary/25" : ""}`}
           >
             {isSearchOpen ? <X size={18} /> : <Search size={18} />}
@@ -220,8 +222,8 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            aria-label="Create a community post"
-            title="New post"
+            aria-label={t("community.createPost")}
+            title={t("community.newPost")}
             className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-all duration-200 hover:brightness-95 active:scale-95"
           >
             <Plus size={19} />
@@ -230,7 +232,7 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
       </header>
 
       {/* ── Search expands from the compact header action ── */}
-      {feedback && <div role="status" className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground">{feedback}<button className="ml-3 font-semibold underline" onClick={() => setFeedback("")}>Dismiss</button></div>}
+      {feedback && <div role="status" className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground">{feedback}<button className="ml-3 font-semibold underline" onClick={() => setFeedback("")}>{t("community.dismiss")}</button></div>}
 
       <AnimatePresence initial={false}>
         {isSearchOpen && (
@@ -248,7 +250,7 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
               <Input
                 ref={searchInputRef}
                 type="search"
-                placeholder="Search posts, people, or trades..."
+                placeholder={t("community.searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(event) => {
@@ -257,7 +259,7 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
                     setIsSearchOpen(false);
                   }
                 }}
-                aria-label="Search community posts"
+                aria-label={t("community.searchAria")}
                 className="h-10 border-0 bg-transparent px-3 text-sm shadow-none focus-visible:ring-0"
               />
               {searchQuery && (
@@ -275,7 +277,7 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-3 bg-card border border-border rounded-xl shadow-sm">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Loading community feed...</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t("community.loading")}</p>
           </div>
         ) : filteredPosts.length > 0 ? (
           filteredPosts.map((post, idx) => {
@@ -299,7 +301,7 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
                       </Avatar>
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="truncate text-sm font-bold text-foreground">{post.author_name || "Community member"}</span>
+                          <span className="truncate text-sm font-bold text-foreground">{post.author_name || t("community.member")}</span>
                           {post.is_verified && (
                             <Badge aria-label="Verified" className="bg-blue-500 text-white rounded-full p-0.5 scale-90">
                               <CheckCircle2 size={10} className="fill-white text-blue-500" />
@@ -308,15 +310,15 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
                           <span className="text-xs text-muted-foreground">· {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}</span>
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {post.role === "admin" ? "DireSkill" : post.role === "worker" ? "Skilled worker" : "Client"} · {post.category}
+                          {post.role === "admin" ? "DireSkill" : post.role === "worker" ? t("community.roleWorker") : t("community.roleClient")} · {post.category}
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={() => handleFlag(post.id)}
                       className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-destructive transition-colors"
-                      title="Report post"
-                      aria-label="Report post"
+                      title={t("community.reportPost")}
+                      aria-label={t("community.reportPost")}
                     >
                       <Flag size={16} />
                     </button>
@@ -337,8 +339,8 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
 
                 {/* Counters row */}
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-3 text-xs text-muted-foreground">
-                  <span>{post.likes_count} likes · {post.comments_count || 0} comments</span>
-                  <span>{post.useful_count || 0} found this useful</span>
+                  <span>{post.likes_count} {t("community.likes")} · {post.comments_count || 0} {t("community.comments")}</span>
+                  <span>{post.useful_count || 0} {t("community.foundUseful")}</span>
                 </div>
 
                 {/* Bottom Actions */}
@@ -351,7 +353,7 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
                     }`}
                   >
                     <ThumbsUp size={14} className={post.is_liked ? "fill-primary" : ""} />
-                    {post.is_liked ? "Liked" : "Like"}
+                    {post.is_liked ? t("community.liked") : t("community.like")}
                   </button>
 
                   <button
@@ -362,7 +364,7 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
                       post.current_user_vote === "useful" ? "text-emerald-600 bg-emerald-500/10" : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    <Sparkles size={14} /> Useful · {post.useful_count || 0}
+                    <Sparkles size={14} /> {t("community.useful")} · {post.useful_count || 0}
                   </button>
 
                   <button
@@ -373,7 +375,7 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
                       post.current_user_vote === "not_useful" ? "text-rose-600 bg-rose-500/10" : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    <ThumbsDown size={14} /> Not useful · {post.not_useful_count || 0}
+                    <ThumbsDown size={14} /> {t("community.notUseful")} · {post.not_useful_count || 0}
                   </button>
 
                   <button
@@ -381,14 +383,14 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
                     className="flex min-h-10 items-center justify-center gap-2 rounded-lg text-xs font-bold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     aria-expanded={Boolean(expandedComments[post.id])}
                   >
-                    <MessageSquare size={14} /> Comment
+                    <MessageSquare size={14} /> {t("community.comments")}
                   </button>
 
                   <button
                     onClick={() => void handleShare(post.id)}
                     className="col-span-2 flex min-h-10 items-center justify-center gap-2 rounded-lg text-xs font-bold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:col-span-4"
                   >
-                    <Share2 size={14} /> Share post
+                    <Share2 size={14} /> {t("community.share")}
                   </button>
                 </div>
 
@@ -410,18 +412,18 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
                           </div>
                         </div>
                       ))}
-                      {commentsByPost[post.id]?.length === 0 && <p className="pl-10 text-xs text-muted-foreground">No comments yet. Start the conversation.</p>}
+                      {commentsByPost[post.id]?.length === 0 && <p className="pl-10 text-xs text-muted-foreground">{t("community.noCommentsYet")}</p>}
                     </div>
                     <form onSubmit={(event) => handleComment(event, post.id)} className="flex items-center gap-2">
                       <Input
                         value={commentDrafts[post.id] || ""}
                         onChange={(event) => setCommentDrafts((current) => ({ ...current, [post.id]: event.target.value }))}
-                        placeholder="Write a comment…"
+                        placeholder={t("community.writeComment")}
                         maxLength={1000}
-                        aria-label="Write a comment"
+                        aria-label={t("community.writeComment")}
                         className="h-11 min-w-0 rounded-full bg-muted/40"
                       />
-                      <Button type="submit" disabled={!commentDrafts[post.id]?.trim() || pendingAction === `comment:${post.id}`} className="h-11 w-11 shrink-0 rounded-full p-0" aria-label="Send comment">
+                      <Button type="submit" disabled={!commentDrafts[post.id]?.trim() || pendingAction === `comment:${post.id}`} className="h-11 w-11 shrink-0 rounded-full p-0" aria-label={t("community.sendComment")}>
                         <Send size={16} />
                       </Button>
                     </form>
@@ -438,9 +440,9 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
                 <MessageSquare size={22} />
               </div>
               <div className="max-w-xs mx-auto space-y-1">
-                <p className="font-semibold text-sm">No discussions found</p>
+                <p className="font-semibold text-sm">{t("community.noDiscussions")}</p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Try searching for something else or be the first to create a post!
+                  {t("community.noDiscussionsDesc")}
                 </p>
               </div>
             </CardContent>

@@ -71,10 +71,10 @@ export default function WorkerJobsPage() {
       {/* ── Header ── */}
       <div className="flex items-start justify-between px-1">
         <div className="space-y-1">
-          <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-on-surface">
+          <h1 className="hidden sm:block text-3xl md:text-5xl font-black tracking-tighter text-on-surface">
             {t("worker.jobs.title")}
           </h1>
-          <p className="text-on-surface-variant text-sm font-medium opacity-60">
+          <p className="text-on-surface-variant text-xs sm:text-sm font-medium opacity-60">
             {t("worker.jobs.subtitle")}
           </p>
         </div>

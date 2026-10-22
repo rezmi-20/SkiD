@@ -22,10 +22,14 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
 }) => {
   const [language, setLanguageState] = useState<Language>(() => {
     try {
-      const saved = localStorage.getItem('direskill_language') as Language;
-      if (saved && (saved === 'EN' || saved === 'አማ' || saved === 'ORO')) {
-        return saved;
+      const savedLanding = localStorage.getItem('direskill_language') as Language;
+      if (savedLanding && (savedLanding === 'EN' || savedLanding === 'አማ' || savedLanding === 'ORO')) {
+        return savedLanding;
       }
+      const savedGlobal = localStorage.getItem('direskill-lang');
+      if (savedGlobal === 'am') return 'አማ';
+      if (savedGlobal === 'om') return 'ORO';
+      if (savedGlobal === 'en') return 'EN';
     } catch {
       // ignore
     }
@@ -36,6 +40,8 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
     setLanguageState(lang);
     try {
       localStorage.setItem('direskill_language', lang);
+      const globalCode = lang === 'አማ' ? 'am' : lang === 'ORO' ? 'om' : 'en';
+      localStorage.setItem('direskill-lang', globalCode);
     } catch {
       // ignore
     }
