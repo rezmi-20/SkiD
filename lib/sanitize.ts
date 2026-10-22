@@ -2,20 +2,22 @@ export function sanitizeText(input: string): string {
   if (!input) return "";
 
   // Plain text is rendered by React, which escapes markup. Keep this helper
-  // free of isomorphic-dompurify: importing it on a serverless route eagerly
-  // loads jsdom and can fail during Vercel's CommonJS/ESM module loading.
+  // independent of DOM-based sanitizers so serverless route initialization
+  // does not load jsdom.
   return input.replace(/<[^>]*>/g, "").trim();
 }
 
-export async function sanitizeHTML(input: string): Promise<string> {
+export function sanitizeHTML(input: string): string {
   if (!input) return "";
 
-  // Load the DOM based sanitizer only for the few places that sanitize HTML.
-  // This prevents routes that only need plain text sanitization from loading
-  // jsdom during serverless function initialization.
-  const { default: DOMPurify } = await import('isomorphic-dompurify');
-  return DOMPurify.sanitize(input, {
-    ALLOWED_TAGS: ['b', 'i', 'u', 'strong', 'em', 'br', 'p', 'ul', 'ol', 'li'],
-    ALLOWED_ATTR: [],
-  }).trim();
+  // Return safe text rather than parsing HTML. There are no internal callers
+  // that require formatted HTML, and avoiding a DOM implementation prevents
+  // jsdom from being pulled into Vercel serverless bundles.
+  return input
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+    .trim();
 }
