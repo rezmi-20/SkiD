@@ -49,6 +49,9 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
     try {
       const data = await getCommunityPosts();
       setPosts(data);
+    } catch (error) {
+      console.error("[COMMUNITY_FEED_LOAD_ERROR]", error);
+      setFeedback("The community feed could not be loaded. Please try again.");
     } finally {
       setLoading(false);
     }

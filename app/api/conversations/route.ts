@@ -29,7 +29,17 @@ export async function GET() {
                 AND accepted_job.client_id = c.client_id
                 AND accepted_job.status IN ('accepted', 'active', 'in_progress', 'completion_requested', 'completed', 'payment_pending', 'paid', 'closed')
             ) THEN wp.avatar_url ELSE NULL END
-          ELSE cp.avatar_url
+          ELSE CASE
+            WHEN COALESCE(cp.is_verified, FALSE) = TRUE
+              AND cp.verification_status = 'approved'
+              AND EXISTS (
+                SELECT 1 FROM jobs accepted_job
+                WHERE accepted_job.worker_id = ${userId}
+                  AND accepted_job.client_id = c.client_id
+                  AND accepted_job.status IN ('accepted', 'active', 'in_progress', 'completion_requested', 'completed', 'payment_pending', 'paid', 'closed')
+              ) THEN cp.avatar_url
+            ELSE NULL
+          END
         END as other_avatar,
         COALESCE(wp.is_verified, cp.is_verified, FALSE) as is_verified,
         wp.skills as other_skills,

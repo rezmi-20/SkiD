@@ -198,7 +198,10 @@ export async function getPendingJobs() {
         j.location,
         j.requested_date,
         cp.full_name as client_name,
-        cp.avatar_url as client_avatar,
+        CASE WHEN COALESCE(cp.is_verified, FALSE) = TRUE
+          AND cp.verification_status = 'approved'
+          AND j.status IN ('accepted', 'active', 'in_progress', 'completion_requested', 'completed', 'payment_pending', 'paid', 'closed')
+          THEN cp.avatar_url ELSE NULL END as client_avatar,
         COALESCE(j.location, 'Dire Dawa') as client_location,
         c.id as contract_id
       FROM jobs j
@@ -232,7 +235,10 @@ export async function getWorkerJobs() {
       SELECT 
         j.*,
         cp.full_name as client_name,
-        cp.avatar_url as client_avatar,
+        CASE WHEN COALESCE(cp.is_verified, FALSE) = TRUE
+          AND cp.verification_status = 'approved'
+          AND j.status IN ('accepted', 'active', 'in_progress', 'completion_requested', 'completed', 'payment_pending', 'paid', 'closed')
+          THEN cp.avatar_url ELSE NULL END as client_avatar,
         c.id as contract_id
       FROM jobs j
       LEFT JOIN client_profiles cp ON j.client_id = cp.user_id

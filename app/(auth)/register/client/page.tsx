@@ -19,6 +19,8 @@ export default function ClientRegisterPage() {
     faydaDocName: "",
   });
   const [wantsVerification, setWantsVerification] = useState(false);
+  const [avatarDataUrl, setAvatarDataUrl] = useState("");
+  const [avatarFileName, setAvatarFileName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [neonUserId, setNeonUserId] = useState("");
@@ -57,6 +59,49 @@ export default function ClientRegisterPage() {
     reader.readAsDataURL(file);
   };
 
+  const handleAvatarFile = async (file: File | null) => {
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setError("Choose a JPG, PNG, or WEBP profile photo.");
+      return;
+    }
+    if (file.size === 0 || file.size > 10 * 1024 * 1024) {
+      setError("Choose a profile photo smaller than 10 MB.");
+      return;
+    }
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const image = new Image();
+      await new Promise<void>((resolve, reject) => {
+        image.onload = () => resolve();
+        image.onerror = () => reject(new Error("Could not read the profile photo. Please try another image."));
+        image.src = objectUrl;
+      });
+      const scale = Math.min(1, 800 / Math.max(image.width, image.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(image.width * scale));
+      canvas.height = Math.max(1, Math.round(image.height * scale));
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Could not prepare the profile photo.");
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.74));
+      if (!blob || blob.size > 250 * 1024) throw new Error("Choose a smaller or clearer photo (maximum 250 KB after compression).");
+      const reader = new FileReader();
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = () => reject(new Error("Could not read the profile photo. Please try another image."));
+        reader.readAsDataURL(blob);
+      });
+      setAvatarDataUrl(dataUrl);
+      setAvatarFileName(file.name);
+      setError("");
+    } catch (photoError) {
+      setError(photoError instanceof Error ? photoError.message : "Could not prepare the profile photo.");
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -66,6 +111,11 @@ export default function ClientRegisterPage() {
     const normalizedPhone = phoneDigits.length === 10 && phoneDigits.startsWith("0") ? phoneDigits.slice(1) : phoneDigits;
     if (formData.fullName.trim().length < 2) {
       setError("Enter your full name.");
+      setIsLoading(false);
+      return;
+    }
+    if (!avatarDataUrl) {
+      setError("Upload a clear profile photo so workers can recognize you after accepting your job.");
       setIsLoading(false);
       return;
     }
@@ -127,6 +177,17 @@ export default function ClientRegisterPage() {
         setAuthEmailVerified(resolvedEmailVerified);
       }
 
+      if (!resolvedEmailVerified) {
+        const { authClient } = await import("@/lib/auth/client");
+        const { error: otpError } = await authClient.emailOtp.sendVerificationOtp({
+          email: formData.email.trim(),
+          type: "email-verification",
+        });
+        if (otpError) {
+          console.error("[CLIENT_REGISTRATION_OTP_SEND_ERROR]", otpError);
+        }
+      }
+
       // Create profile in our database
       const res = await fetch("/api/auth/profile", {
         method: "POST",
@@ -137,6 +198,7 @@ export default function ClientRegisterPage() {
           phone: normalizedPhone,
           faydaFinNumber: wantsVerification ? formData.faydaFinNumber : "",
           faydaDocDataUrl: wantsVerification ? formData.faydaDocDataUrl : "",
+          avatarDataUrl,
           role: "client",
           neonUserId: resolvedUserId,
         }),
@@ -262,6 +324,21 @@ export default function ClientRegisterPage() {
           </AnimatePresence>
 
           <form onSubmit={handleSubmit} className="space-y-4 w-full">
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-medium text-zinc-300 ml-1">Profile photo</label>
+              <label className="flex min-h-14 cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-zinc-700 bg-zinc-900 px-4 py-3 text-sm text-zinc-300 hover:border-green-400/60">
+                {avatarDataUrl ? <img src={avatarDataUrl} alt="Profile photo preview" className="h-10 w-10 rounded-full object-cover" /> : <span className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800 text-lg">+</span>}
+                <span className="min-w-0 flex-1 truncate">{avatarFileName || "Add a clear photo of yourself (max 250 KB)"}</span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="sr-only"
+                  onChange={(event) => handleAvatarFile(event.target.files?.[0] ?? null)}
+                />
+              </label>
+              <p className="ml-1 text-xs leading-5 text-zinc-500">Only workers who are verified and have accepted your job can see your photo.</p>
+            </div>
+
             {/* Display Name Input */}
             <div className="space-y-1.5">
               <label className="text-[13px] font-medium text-zinc-300 ml-1">{t("auth.register.client.displayName")}</label>

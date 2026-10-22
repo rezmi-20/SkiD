@@ -615,7 +615,10 @@ export async function getUserContracts() {
           j.status as job_status,
           COALESCE(c.payment_amount, j.budget) as budget,
           cp.full_name as partner_name,
-          cp.avatar_url as partner_avatar,
+          CASE WHEN COALESCE(cp.is_verified, FALSE) = TRUE
+            AND cp.verification_status = 'approved'
+            AND j.status IN ('accepted', 'active', 'in_progress', 'completion_requested', 'completed', 'payment_pending', 'paid', 'closed')
+            THEN cp.avatar_url ELSE NULL END as partner_avatar,
           cp.is_verified as partner_verified,
           EXISTS (
             SELECT 1 FROM ratings r
@@ -666,7 +669,10 @@ export async function getContractForSigning(contractId: string) {
         wp.is_verified as worker_verified,
         wp.fin_last4 as worker_fin_last4,
         cp.full_name as client_name,
-        cp.avatar_url as client_avatar,
+        CASE WHEN COALESCE(cp.is_verified, FALSE) = TRUE
+          AND cp.verification_status = 'approved'
+          AND j.status IN ('accepted', 'active', 'in_progress', 'completion_requested', 'completed', 'payment_pending', 'paid', 'closed')
+          THEN cp.avatar_url ELSE NULL END as client_avatar,
         cp.is_verified as client_verified,
         cp.fin_last4 as client_fin_last4,
         COALESCE(c.work_location, j.location) as work_location,

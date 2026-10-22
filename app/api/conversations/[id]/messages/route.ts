@@ -55,7 +55,24 @@ export async function GET(
               WHERE c.id = m.conversation_id
                 AND accepted_job.status IN ('accepted', 'active', 'in_progress', 'completion_requested', 'completed', 'payment_pending', 'paid', 'closed')
             ) THEN wp.avatar_url ELSE NULL END
-          ELSE cp.avatar_url
+          ELSE CASE
+            WHEN EXISTS (
+              SELECT 1 FROM conversations own_conversation
+              WHERE own_conversation.id = m.conversation_id
+                AND own_conversation.client_id = ${userId}
+            ) THEN cp.avatar_url
+            WHEN COALESCE(cp.is_verified, FALSE) = TRUE
+              AND cp.verification_status = 'approved'
+              AND EXISTS (
+                SELECT 1
+                FROM conversations c
+                JOIN jobs accepted_job ON accepted_job.worker_id = c.worker_id AND accepted_job.client_id = c.client_id
+                WHERE c.id = m.conversation_id
+                  AND c.worker_id = ${userId}
+                  AND accepted_job.status IN ('accepted', 'active', 'in_progress', 'completion_requested', 'completed', 'payment_pending', 'paid', 'closed')
+              ) THEN cp.avatar_url
+            ELSE NULL
+          END
         END AS sender_avatar
       FROM messages m
       LEFT JOIN users u ON u.id = m.sender_id

@@ -1,7 +1,4 @@
-import { getCommunityPosts } from "@/lib/actions/community";
 import CommunityFeedContent from "@/components/CommunityFeedContent";
-
-export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: "Community Feed | DireSkill",
@@ -9,7 +6,5 @@ export const metadata = {
 };
 
 export default async function CommunityFeedPage() {
-  const initialPosts = await getCommunityPosts();
-  
-  return <CommunityFeedContent initialPosts={initialPosts} />;
+  return <CommunityFeedContent initialPosts={[]} />;
 }

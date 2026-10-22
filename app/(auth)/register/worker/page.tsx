@@ -249,6 +249,17 @@ export default function WorkerRegisterPage() {
         setAuthEmailVerified(resolvedEmailVerified);
       }
 
+      if (!resolvedEmailVerified) {
+        const { authClient } = await import("@/lib/auth/client");
+        const { error: otpError } = await authClient.emailOtp.sendVerificationOtp({
+          email: formData.email.trim(),
+          type: "email-verification",
+        });
+        if (otpError) {
+          console.error("[WORKER_REGISTRATION_OTP_SEND_ERROR]", otpError);
+        }
+      }
+
       const profilePayload = {
         ...formData,
         phone: formData.phone.replace(/\D/g, "").replace(/^0(?=\d{9}$)/, ""),

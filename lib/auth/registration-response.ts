@@ -13,7 +13,9 @@ export async function readRegistrationResponse(response: Response): Promise<{ er
   }
 
   if (/^\s*</.test(rawBody)) {
-    return { error: `The registration server returned an HTML error page (HTTP ${response.status}), not its normal JSON response. Check the Vercel function logs for this request.` };
+    const requestId = response.headers.get("x-vercel-id");
+    const requestReference = requestId ? ` Vercel request ID: ${requestId}.` : "";
+    return { error: `The registration server returned an HTML error page (HTTP ${response.status}), not its normal JSON response.${requestReference} Check the Vercel function logs for this request.` };
   }
 
   return { error: `The registration server returned HTTP ${response.status} without a readable JSON response.` };

@@ -46,9 +46,7 @@ export default function WorkerJobsPage() {
   const handleAccept = async (jobId: string) => {
     const result = await acceptJob(jobId);
     if (result.success) {
-      setJobs((prev) =>
-        prev.map((j) => (j.id === jobId ? { ...j, status: "accepted" } : j))
-      );
+      await fetchJobs();
     } else if (result.code === "CONTRACT_SETUP_REQUIRED") {
       router.push("/worker/contract-setup");
     }

@@ -29,6 +29,7 @@ const registerSchema = z.object({
   skills: z.array(z.string()).optional(),
   faydaDocUrl: z.string().optional(),
   faydaDocDataUrl: z.string().optional(),
+  avatarDataUrl: z.string().optional(),
   faydaFinNumber: z.string().optional(),
   bio: z.string().optional(),
   neonUserId: z.string().uuid().optional(),
@@ -125,6 +126,11 @@ export async function POST(req: NextRequest) {
     const clientColumns = role === "client" ? await getClientIdentityColumns() : null;
 
     if (role === "client") {
+      const avatarDataUrl = parsed.data.avatarDataUrl || "";
+      const avatarMatch = avatarDataUrl.match(/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/]+=*)$/);
+      if (!avatarMatch || avatarMatch[2].length > 341_336) {
+        return NextResponse.json({ error: "A JPG, PNG, or WEBP profile photo under 250 KB is required." }, { status: 400 });
+      }
       const { faydaFinNumber, faydaDocDataUrl } = parsed.data;
       const hasFin = typeof faydaFinNumber === "string" && faydaFinNumber.trim().length > 0;
       const hasDoc = typeof faydaDocDataUrl === "string" && faydaDocDataUrl.trim().length > 0;
@@ -233,6 +239,11 @@ export async function POST(req: NextRequest) {
             console.error("[REGISTER_VERIFICATION_SUBMISSION_ERROR]", error);
           });
         }
+        await sql`
+          UPDATE client_profiles
+          SET avatar_url = COALESCE(avatar_url, ${parsed.data.avatarDataUrl})
+          WHERE user_id = ${userId}
+        `;
         return NextResponse.json({ message: "Registration successful", userId }, { status: 200 });
       }
       if (protectedClientFin) {
@@ -241,6 +252,7 @@ export async function POST(req: NextRequest) {
             INSERT INTO client_profiles (
               user_id,
               full_name,
+              avatar_url,
               fayda_doc_url,
               fin_encrypted,
               fin_encryption_key_id,
@@ -252,6 +264,7 @@ export async function POST(req: NextRequest) {
             VALUES (
               ${userId},
               ${sanitizedFullName},
+              ${parsed.data.avatarDataUrl},
               ${submittedClientDocument},
               ${protectedClientFin.finEncrypted},
               ${protectedClientFin.finEncryptionKeyId},
@@ -266,6 +279,7 @@ export async function POST(req: NextRequest) {
             INSERT INTO client_profiles (
               user_id,
               full_name,
+              avatar_url,
               fayda_doc_url,
               fin_encrypted,
               fin_encryption_key_id,
@@ -276,6 +290,7 @@ export async function POST(req: NextRequest) {
             VALUES (
               ${userId},
               ${sanitizedFullName},
+              ${parsed.data.avatarDataUrl},
               ${submittedClientDocument},
               ${protectedClientFin.finEncrypted},
               ${protectedClientFin.finEncryptionKeyId},
@@ -287,8 +302,8 @@ export async function POST(req: NextRequest) {
         }
       } else {
         await sql`
-          INSERT INTO client_profiles (user_id, full_name, verification_status, is_verified)
-          VALUES (${userId}, ${sanitizedFullName}, 'not_started', false)
+          INSERT INTO client_profiles (user_id, full_name, avatar_url, verification_status, is_verified)
+          VALUES (${userId}, ${sanitizedFullName}, ${parsed.data.avatarDataUrl}, 'not_started', false)
         `;
       }
 

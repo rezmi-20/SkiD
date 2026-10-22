@@ -18,7 +18,19 @@ export async function getCommunityPosts(category?: string) {
         cp.*,
         u.role,
         CASE WHEN u.role = 'worker' THEN wp.full_name ELSE clp.full_name END as author_name,
-        CASE WHEN u.role = 'worker' THEN NULL ELSE clp.avatar_url END as author_avatar,
+        CASE WHEN u.role = 'client' AND (
+          cp.user_id = ${currentUserId}
+          OR (
+            COALESCE(clp.is_verified, FALSE) = TRUE
+            AND clp.verification_status = 'approved'
+            AND EXISTS (
+              SELECT 1 FROM jobs accepted_job
+              WHERE accepted_job.client_id = cp.user_id
+                AND accepted_job.worker_id = ${currentUserId}
+                AND accepted_job.status IN ('accepted', 'active', 'in_progress', 'completion_requested', 'completed', 'payment_pending', 'paid', 'closed')
+            )
+          )
+        ) THEN clp.avatar_url ELSE NULL END as author_avatar,
         CASE WHEN u.role = 'worker' THEN COALESCE(wp.is_verified, false) ELSE COALESCE(clp.is_verified, false) END as is_verified,
         (SELECT COUNT(*) FROM community_likes WHERE post_id = cp.id AND user_id = ${currentUserId}) > 0 as is_liked,
         (SELECT COUNT(*)::int FROM community_comments WHERE post_id = cp.id) as comments_count,
@@ -36,7 +48,47 @@ export async function getCommunityPosts(category?: string) {
     return rows;
   } catch (error) {
     console.error("[GET_COMMUNITY_POSTS_ERROR]", error);
-    return [];
+    // Keep the feed readable if the optional voting migration has not yet
+    // reached production. Voting controls can still report their own errors.
+    try {
+      const session = await auth();
+      const currentUserId = session?.user?.id;
+      return await sql`
+        SELECT
+          cp.*,
+          u.role,
+          CASE WHEN u.role = 'worker' THEN wp.full_name ELSE clp.full_name END AS author_name,
+          CASE WHEN u.role = 'client' AND (
+            cp.user_id = ${currentUserId}
+            OR (
+              COALESCE(clp.is_verified, FALSE) = TRUE
+              AND clp.verification_status = 'approved'
+              AND EXISTS (
+                SELECT 1 FROM jobs accepted_job
+                WHERE accepted_job.client_id = cp.user_id
+                  AND accepted_job.worker_id = ${currentUserId}
+                  AND accepted_job.status IN ('accepted', 'active', 'in_progress', 'completion_requested', 'completed', 'payment_pending', 'paid', 'closed')
+              )
+            )
+          ) THEN clp.avatar_url ELSE NULL END AS author_avatar,
+          CASE WHEN u.role = 'worker' THEN COALESCE(wp.is_verified, false) ELSE COALESCE(clp.is_verified, false) END AS is_verified,
+          (SELECT COUNT(*) FROM community_likes WHERE post_id = cp.id AND user_id = ${currentUserId}) > 0 AS is_liked,
+          (SELECT COUNT(*)::int FROM community_comments WHERE post_id = cp.id) AS comments_count,
+          0::int AS useful_count,
+          0::int AS not_useful_count,
+          NULL::text AS current_user_vote
+        FROM community_posts cp
+        JOIN users u ON cp.user_id = u.id
+        LEFT JOIN worker_profiles wp ON cp.user_id = wp.user_id AND u.role = 'worker'
+        LEFT JOIN client_profiles clp ON cp.user_id = clp.user_id AND u.role = 'client'
+        WHERE cp.is_removed = false
+        ${category && category !== 'All' ? sql`AND cp.category = ${category}` : sql``}
+        ORDER BY cp.created_at DESC
+      `;
+    } catch (fallbackError) {
+      console.error("[GET_COMMUNITY_POSTS_FALLBACK_ERROR]", fallbackError);
+      return [];
+    }
   }
 }
 
@@ -53,7 +105,19 @@ export async function getCommunityComments(postId: string) {
         cc.created_at,
         u.role,
         COALESCE(wp.full_name, cp.full_name, u.email, 'Community member') AS author_name,
-        CASE WHEN u.role = 'worker' THEN NULL ELSE cp.avatar_url END AS author_avatar
+        CASE WHEN u.role = 'client' AND (
+          cc.user_id = ${session.user.id}
+          OR (
+            COALESCE(cp.is_verified, FALSE) = TRUE
+            AND cp.verification_status = 'approved'
+            AND EXISTS (
+              SELECT 1 FROM jobs accepted_job
+              WHERE accepted_job.client_id = cc.user_id
+                AND accepted_job.worker_id = ${session.user.id}
+                AND accepted_job.status IN ('accepted', 'active', 'in_progress', 'completion_requested', 'completed', 'payment_pending', 'paid', 'closed')
+            )
+          )
+        ) THEN cp.avatar_url ELSE NULL END AS author_avatar
       FROM community_comments cc
       JOIN users u ON u.id = cc.user_id
       LEFT JOIN worker_profiles wp ON wp.user_id = u.id AND u.role = 'worker'

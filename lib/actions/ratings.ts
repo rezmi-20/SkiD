@@ -59,7 +59,11 @@ export async function getRatingPageData(jobId: string) {
         j.client_id,
         j.worker_id,
         cp.full_name as client_name,
-        cp.avatar_url as client_avatar,
+        CASE WHEN j.worker_id = ${userId}
+          AND COALESCE(cp.is_verified, FALSE) = TRUE
+          AND cp.verification_status = 'approved'
+          AND j.status IN ('accepted', 'active', 'in_progress', 'completion_requested', 'completed', 'payment_pending', 'paid', 'closed')
+          THEN cp.avatar_url ELSE NULL END as client_avatar,
         cp.is_verified as client_verified,
         wp.full_name as worker_name,
         wp.avatar_url as worker_avatar,
@@ -295,7 +299,7 @@ export async function getWorkerRatings(workerId: string) {
       SELECT
         r.*,
         cp.full_name as reviewer_name,
-        cp.avatar_url as reviewer_avatar,
+        NULL::text as reviewer_avatar,
         cp.is_verified as reviewer_verified,
         j.title as job_title
       FROM ratings r
