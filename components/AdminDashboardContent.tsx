@@ -29,7 +29,6 @@ export default function AdminDashboardContent({
   const { t } = useLanguage();
   const [workers, setWorkers] = useState(initialWorkers);
   const [isPending, startTransition] = useTransition();
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [currentDate, setCurrentDate] = useState("");
 
   useEffect(() => {
@@ -187,21 +186,12 @@ export default function AdminDashboardContent({
                                 </div>
                               </td>
                               <td className="p-6">
-                                <button 
-                                  onClick={() => setPreviewImage(w.fayda_doc_url)}
-                                  className="w-20 h-12 bg-black rounded-xl border border-white/5 overflow-hidden relative group/id active:scale-95 transition-transform"
-                                >
-                                  {w.fayda_doc_url ? (
-                                    <>
-                                      <img src={w.fayda_doc_url} alt="ID" className="w-full h-full object-cover opacity-50 group-hover/id:opacity-80 transition-opacity grayscale group-hover/id:grayscale-0" />
-                                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/id:opacity-100 transition-opacity">
-                                        <span className="material-symbols-outlined text-white text-[18px]">zoom_in</span>
-                                      </div>
-                                    </>
-                                  ) : (
-                                    <span className="material-symbols-outlined text-on-surface-variant opacity-20">no_photography</span>
-                                  )}
-                                </button>
+                                {w.has_document ? (
+                                  <Link href={`/admin/verify/${w.user_id}`} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-white/10 px-3 text-xs font-bold text-on-surface-variant hover:bg-surface-container-high">
+                                    <span className="material-symbols-outlined text-[16px]">lock</span>
+                                    Protected
+                                  </Link>
+                                ) : <span className="text-xs text-on-surface-variant">No document</span>}
                               </td>
                               <td className="p-6 text-right">
                                 <div className="flex items-center justify-end gap-2">
@@ -309,46 +299,6 @@ export default function AdminDashboardContent({
             </section>
          </aside>
       </div>
-
-      {/* ── Image Preview Modal ── */}
-      <AnimatePresence>
-        {previewImage && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-6 md:p-20 bg-black/90 backdrop-blur-xl"
-            onClick={() => setPreviewImage(null)}
-          >
-            <motion.div 
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="relative max-w-5xl w-full h-full flex flex-col"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center mb-6">
-                 <div className="flex items-center gap-4">
-                    <span className="material-symbols-outlined text-primary">fingerprint</span>
-                    <h3 className="text-xl font-black text-white uppercase tracking-[0.2em]">{t("admin.dashboard.credentialAudit" as any)}</h3>
-                 </div>
-                 <button 
-                  onClick={() => setPreviewImage(null)}
-                  className="w-12 h-12 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition-all"
-                 >
-                    <span className="material-symbols-outlined">close</span>
-                 </button>
-              </div>
-              <div className="flex-grow bg-white/5 rounded-[3rem] overflow-hidden border border-white/10 relative shadow-2xl group">
-                 <img src={previewImage} alt="Identity Document" className="w-full h-full object-contain" />
-                 <div className="absolute inset-x-0 bottom-0 p-10 bg-gradient-to-t from-black/80 to-transparent flex justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                    <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.3em]">{t("admin.dashboard.confidentialData" as any)}</p>
-                 </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
     </div>
   );

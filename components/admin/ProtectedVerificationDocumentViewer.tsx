@@ -1,15 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface ProtectedVerificationDocumentViewerProps {
   documentUrl: string;
   title: string;
+  attemptId?: string | null;
+  canReveal?: boolean;
+  revealUsed?: boolean;
   className?: string;
 }
 
 type ViewerState =
-  | { status: "loading"; message: string }
+  | { status: "hidden" }
+  | { status: "loading" }
   | { status: "error"; message: string }
   | { status: "ready"; objectUrl: string; contentType: string };
 
@@ -23,56 +27,65 @@ function messageForStatus(status: number) {
 export default function ProtectedVerificationDocumentViewer({
   documentUrl,
   title,
+  attemptId = null,
+  canReveal = true,
+  revealUsed = false,
   className = "",
 }: ProtectedVerificationDocumentViewerProps) {
-  const [state, setState] = useState<ViewerState>({ status: "loading", message: "Loading document" });
+  const [state, setState] = useState<ViewerState>({ status: "hidden" });
+  const objectUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const controller = new AbortController();
-    let objectUrl: string | null = null;
-
-    async function loadDocument() {
-      setState({ status: "loading", message: "Loading document" });
-      try {
-        const response = await fetch(documentUrl, {
-          credentials: "same-origin",
-          cache: "no-store",
-          signal: controller.signal,
-        });
-        if (!response.ok) {
-          setState({ status: "error", message: messageForStatus(response.status) });
-          return;
-        }
-
-        const contentType = (response.headers.get("content-type") || "").toLowerCase();
-        if (!contentType.startsWith("image/") && !contentType.includes("pdf")) {
-          setState({ status: "error", message: "Unsupported document type" });
-          return;
-        }
-
-        const blob = await response.blob();
-        objectUrl = URL.createObjectURL(blob);
-        setState({ status: "ready", objectUrl, contentType });
-      } catch {
-        if (!controller.signal.aborted) {
-          setState({ status: "error", message: "Verification document could not be loaded" });
-        }
-      }
-    }
-
-    loadDocument();
-
     return () => {
-      controller.abort();
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
     };
   }, [documentUrl]);
+
+  const revealDocument = async () => {
+    if (!canReveal || !attemptId || state.status !== "hidden") return;
+    setState({ status: "loading" });
+    try {
+      const response = await fetch(documentUrl, {
+        method: attemptId ? "POST" : "GET",
+        credentials: "same-origin",
+        cache: "no-store",
+        ...(attemptId ? {
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ expectedAttemptId: attemptId }),
+        } : {}),
+      });
+      if (!response.ok) {
+        setState({ status: "error", message: messageForStatus(response.status) });
+        return;
+      }
+
+      const contentType = (response.headers.get("content-type") || "").toLowerCase();
+      if (!contentType.startsWith("image/") && !contentType.includes("pdf")) {
+        setState({ status: "error", message: "Unsupported document type" });
+        return;
+      }
+      const objectUrl = URL.createObjectURL(await response.blob());
+      objectUrlRef.current = objectUrl;
+      setState({ status: "ready", objectUrl, contentType });
+    } catch {
+      setState({ status: "error", message: "Verification document could not be loaded" });
+    }
+  };
 
   if (state.status !== "ready") {
     return (
       <div className={`flex min-h-[420px] flex-col items-center justify-center gap-4 text-center ${className}`}>
         <span className="material-symbols-outlined text-[64px] opacity-30">description</span>
-        <p className="text-sm font-black uppercase tracking-widest text-on-surface-variant">{state.message}</p>
+        <p className="text-sm font-black uppercase tracking-widest text-on-surface-variant">
+          {state.status === "hidden" ? (revealUsed ? "Fayda document already revealed for this review" : attemptId ? "Fayda document protected" : "Document protected") : state.status === "loading" ? (attemptId ? "Authorizing one-time reveal" : "Loading document") : state.message}
+        </p>
+        {state.status === "hidden" && !revealUsed && canReveal && (
+          <button type="button" onClick={() => void revealDocument()} className="rounded-lg border border-secondary/30 bg-secondary/10 px-4 py-3 text-xs font-black uppercase tracking-widest text-secondary">
+            {attemptId ? "Reveal Fayda document once" : "Open document"}
+          </button>
+        )}
+        {state.status === "error" && <p className="max-w-md text-xs text-on-surface-variant">{state.message}</p>}
       </div>
     );
   }

@@ -69,6 +69,16 @@ export default async function WorkerVerificationPage({ params }: { params: Promi
   const displayStatus = toWorkerDisplayStatus(worker.verification_status, worker.is_verified, worker.is_suspended, identityComplete);
   const attempt = await ensureCurrentVerificationAttempt("worker", worker.user_id);
   const history = await getVerificationHistory("worker", worker.user_id);
+  const canRevealDocument = Boolean(
+    capabilities.canReview &&
+      admin.role === "content_verification_admin" &&
+      attempt?.id &&
+      attempt.status === "pending" &&
+      displayStatus === "pending" &&
+      !worker.is_suspended &&
+      !worker.is_verified &&
+      !(history || []).some((event: any) => event.action === "viewed_document" && event.reason === "one-time Fayda document reveal"),
+  );
 
   const handleApprove = async () => {
     "use server";
@@ -102,6 +112,11 @@ export default async function WorkerVerificationPage({ params }: { params: Promi
     <WorkerVerificationContent 
       worker={{
         ...worker,
+        fayda_doc_url: "",
+        fin_encrypted: undefined,
+        fin_encryption_key_id: undefined,
+        fin_fingerprint: undefined,
+        fin_last4: undefined,
         masked_fin: maskedFin,
         training_certificates: certificates.map((certificate: any) => ({
           id: String(certificate.id),
@@ -132,6 +147,12 @@ export default async function WorkerVerificationPage({ params }: { params: Promi
         createdAt: String(event.created_at),
       }))}
       capabilities={capabilities}
+      verificationDocument={{
+        attemptId: attempt?.id ? String(attempt.id) : null,
+        canReveal: canRevealDocument,
+        available: Boolean(worker.fayda_doc_url),
+        revealUsed: Boolean((history || []).some((event: any) => event.action === "viewed_document" && event.reason === "one-time Fayda document reveal")),
+      }}
       onApprove={handleApprove}
       onReject={handleReject}
       onRevoke={handleRevoke}

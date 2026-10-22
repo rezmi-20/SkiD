@@ -64,6 +64,7 @@ interface WorkerVerificationContentProps {
     canRequestResubmission: boolean;
     canRevoke: boolean;
   };
+  verificationDocument: { attemptId: string | null; canReveal: boolean; available: boolean; revealUsed: boolean };
   onApprove?: () => void;
   onReject?: (reason: string) => void;
   onRevoke?: (reason: string) => void;
@@ -75,6 +76,7 @@ export default function WorkerVerificationContent({
   attempt,
   history,
   capabilities,
+  verificationDocument,
   onApprove,
   onReject,
   onRevoke,
@@ -249,10 +251,13 @@ export default function WorkerVerificationContent({
              </div>
              <div className="p-10 bg-black/50 flex items-center justify-center min-h-[500px] relative group">
                 <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none z-10" />
-                {worker.fayda_doc_url ? (
+                {verificationDocument.available ? (
                   <ProtectedVerificationDocumentViewer
                     documentUrl={`/api/workers/${worker.user_id}/verification-document`}
                     title="Protected Fayda ID document"
+                    attemptId={verificationDocument.attemptId}
+                    canReveal={verificationDocument.canReveal}
+                    revealUsed={verificationDocument.revealUsed}
                     className="relative z-0 w-full"
                   />
                 ) : (

@@ -12,6 +12,8 @@ type FinKey = {
   key: Buffer;
 };
 
+const FAYDA_DOCUMENT_PREFIX = "fayda-document:enc:v1:";
+
 const FIN_DIGITS = /^\d{12}$/;
 const FIN_MASK_PREFIX = "********";
 
@@ -65,6 +67,58 @@ function getEncryptionKeyById(keyId: string) {
     throw new Error("FIN encryption key version is not configured.");
   }
   return key;
+}
+
+function getFaydaDocumentKey(key: FinKey, scope: "worker" | "client", userId: string) {
+  return Buffer.from(crypto.hkdfSync(
+    "sha256",
+    key.key,
+    Buffer.from("dire-skill/fayda-document/v1", "utf8"),
+    Buffer.from(`fayda-document:${scope}:${userId}`, "utf8"),
+    32,
+  ));
+}
+
+export function protectFaydaDocument(value: string, userId: string, scope: "worker" | "client") {
+  if (typeof value !== "string" || !value.trim()) {
+    throw new Error("Fayda document is required.");
+  }
+  if (value.startsWith(FAYDA_DOCUMENT_PREFIX)) return value;
+
+  const activeKey = getActiveEncryptionKey();
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv("aes-256-gcm", getFaydaDocumentKey(activeKey, scope, userId), iv);
+  const aad = Buffer.from(`fayda-document:${scope}:${userId}`, "utf8");
+  cipher.setAAD(aad);
+  const ciphertext = Buffer.concat([cipher.update(value, "utf8"), cipher.final()]);
+  return `${FAYDA_DOCUMENT_PREFIX}${Buffer.from(JSON.stringify({
+    alg: "A256GCM",
+    keyId: activeKey.id,
+    iv: iv.toString("base64url"),
+    tag: cipher.getAuthTag().toString("base64url"),
+    ciphertext: ciphertext.toString("base64url"),
+  }), "utf8").toString("base64url")}`;
+}
+
+export function revealFaydaDocument(value: string, userId: string, scope: "worker" | "client") {
+  if (!value.startsWith(FAYDA_DOCUMENT_PREFIX)) return value; // legacy values are upgraded by the migration script.
+  const payload = JSON.parse(Buffer.from(value.slice(FAYDA_DOCUMENT_PREFIX.length), "base64url").toString("utf8"));
+  if (payload?.alg !== "A256GCM" || typeof payload.keyId !== "string") {
+    throw new Error("Unsupported Fayda document ciphertext format.");
+  }
+
+  const key = getEncryptionKeyById(payload.keyId);
+  const decipher = crypto.createDecipheriv(
+    "aes-256-gcm",
+    getFaydaDocumentKey(key, scope, userId),
+    Buffer.from(payload.iv, "base64url"),
+  );
+  decipher.setAAD(Buffer.from(`fayda-document:${scope}:${userId}`, "utf8"));
+  decipher.setAuthTag(Buffer.from(payload.tag, "base64url"));
+  return Buffer.concat([
+    decipher.update(Buffer.from(payload.ciphertext, "base64url")),
+    decipher.final(),
+  ]).toString("utf8");
 }
 
 function getHmacKey() {

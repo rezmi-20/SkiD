@@ -4,7 +4,7 @@ import { sql } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { isTrustedUploadReference } from "@/lib/security";
-import { maskFinLast4, protectFin, validateFin } from "@/lib/fin-protection";
+import { maskFinLast4, protectFaydaDocument, protectFin, validateFin } from "@/lib/fin-protection";
 import { getClientIdentityColumns, getClientIdentityStatus, toClientDisplayStatus, validateClientIdentityDocument } from "@/lib/client-verification";
 import { recordVerificationSubmission } from "@/lib/verification-operations";
 import { hasCompleteWorkerIdentity, toWorkerDisplayStatus } from "@/lib/worker-verification";
@@ -155,6 +155,9 @@ export async function updateProfile(data: any) {
     }
 
     const protectedFin = normalizedFin ? protectFin(normalizedFin, targetUserId, "profile") : null;
+    const protectedClientDocument = targetRole === "client" && hasSubmittedClientDoc
+      ? protectFaydaDocument(submittedClientDoc, targetUserId, "client")
+      : null;
 
     // 2. Update Users table (email/phone always editable for now, or follow system rules)
     if (data.email || data.phone) {
@@ -199,7 +202,7 @@ export async function updateProfile(data: any) {
             fin_encryption_key_id = COALESCE(${protectedFin?.finEncryptionKeyId ?? null}, fin_encryption_key_id),
             fin_fingerprint = COALESCE(${protectedFin?.finFingerprint ?? null}, fin_fingerprint),
             fin_last4 = COALESCE(${protectedFin?.finLast4 ?? null}, fin_last4),
-            fayda_doc_url = COALESCE(${hasSubmittedClientDoc ? submittedClientDoc : null}, fayda_doc_url),
+            fayda_doc_url = COALESCE(${protectedClientDocument}, fayda_doc_url),
             verification_status = CASE WHEN ${Boolean(protectedFin)} THEN 'pending' ELSE verification_status END,
             is_verified = CASE WHEN ${Boolean(protectedFin)} THEN false ELSE is_verified END
           WHERE user_id = ${targetUserId}
@@ -214,14 +217,14 @@ export async function updateProfile(data: any) {
             fin_encryption_key_id = COALESCE(${protectedFin?.finEncryptionKeyId ?? null}, fin_encryption_key_id),
             fin_fingerprint = COALESCE(${protectedFin?.finFingerprint ?? null}, fin_fingerprint),
             fin_last4 = COALESCE(${protectedFin?.finLast4 ?? null}, fin_last4),
-            fayda_doc_url = COALESCE(${hasSubmittedClientDoc ? submittedClientDoc : null}, fayda_doc_url),
+            fayda_doc_url = COALESCE(${protectedClientDocument}, fayda_doc_url),
             is_verified = CASE WHEN ${Boolean(protectedFin)} THEN false ELSE is_verified END
           WHERE user_id = ${targetUserId}
         `;
       }
 
       if (protectedFin) {
-        await recordVerificationSubmission("client", targetUserId, hasSubmittedClientDoc ? submittedClientDoc : null, protectedFin.finLast4);
+        await recordVerificationSubmission("client", targetUserId, protectedClientDocument, protectedFin.finLast4);
         await sql`
           INSERT INTO audit_logs (user_id, action, details)
           VALUES (
@@ -323,10 +326,11 @@ export async function resubmitVerification(faydaDocUrl: string, faydaFinNumber?:
     }
 
     const protectedFin = protectFin(normalizedFin, session.user.id, "profile");
+    const protectedDocument = protectFaydaDocument(faydaDocUrl, session.user.id, "worker");
     const updated = await sql`
       UPDATE worker_profiles 
       SET 
-        fayda_doc_url = ${faydaDocUrl}, 
+        fayda_doc_url = ${protectedDocument}, 
         fin_encrypted = ${protectedFin.finEncrypted},
         fin_encryption_key_id = ${protectedFin.finEncryptionKeyId},
         fin_fingerprint = ${protectedFin.finFingerprint},
@@ -361,7 +365,7 @@ export async function resubmitVerification(faydaDocUrl: string, faydaFinNumber?:
     if (updated.length === 0) {
       return { success: false, error: "This verification case changed. Reload and try again." };
     }
-    const submission = await recordVerificationSubmission("worker", session.user.id, faydaDocUrl, protectedFin.finLast4);
+    const submission = await recordVerificationSubmission("worker", session.user.id, protectedDocument, protectedFin.finLast4);
     if (!submission) {
       return { success: false, error: "A verification request is already pending." };
     }

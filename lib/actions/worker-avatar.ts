@@ -51,7 +51,6 @@ export async function getWorkerAvatarChangeRequests() {
       r.created_at,
       wp.full_name,
       wp.avatar_url AS current_avatar_url,
-      wp.fayda_doc_url,
       u.email,
       u.phone
     FROM worker_avatar_change_requests r

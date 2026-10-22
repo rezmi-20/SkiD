@@ -5,7 +5,7 @@ import { sql } from "@/lib/db";
 import { sanitizeText } from "@/lib/sanitize";
 import { isTrustedUploadReference } from "@/lib/security";
 import { createNotification } from "@/lib/actions/notifications";
-import { protectFin, validateFin } from "@/lib/fin-protection";
+import { protectFaydaDocument, protectFin, revealFaydaDocument, validateFin } from "@/lib/fin-protection";
 import { getClientIdentityColumns, validateClientIdentityDocument } from "@/lib/client-verification";
 import { recordVerificationSubmission } from "@/lib/verification-operations";
 
@@ -181,6 +181,7 @@ export async function POST(req: NextRequest) {
     const sanitizedFullName = sanitizeText(fullName);
     let protectedClientFin: ReturnType<typeof protectFin> | null = null;
     let protectedWorkerFin: ReturnType<typeof protectFin> | null = null;
+    let protectedWorkerDocument: string | null = null;
     let submittedClientDocument: string | null = null;
     stage = "prepare_client_verification";
     const clientColumns = role === "client" ? await getClientIdentityColumns() : null;
@@ -214,7 +215,7 @@ export async function POST(req: NextRequest) {
         }
 
         protectedClientFin = protectFin(normalizedFin, neonUserId, "profile");
-        submittedClientDocument = faydaDocDataUrl;
+        submittedClientDocument = protectFaydaDocument(faydaDocDataUrl, neonUserId, "client");
       }
     }
 
@@ -225,6 +226,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Worker registration requires a 12-digit Fayda FIN." }, { status: 400 });
       }
       protectedWorkerFin = protectFin(normalizedFin, neonUserId, "profile");
+      protectedWorkerDocument = protectFaydaDocument(parsed.data.faydaDocUrl || "", neonUserId, "worker");
     }
 
     // Neon Auth creates the identity first. Reuse its matching local row so a
@@ -272,15 +274,23 @@ export async function POST(req: NextRequest) {
         LIMIT 1
       `;
       const existingIdentity = existingProfile[0];
+      let existingDocumentMatches = false;
+      if (existingIdentity?.fayda_doc_url) {
+        try {
+          existingDocumentMatches = revealFaydaDocument(existingIdentity.fayda_doc_url, userId, "worker") === faydaDocUrl;
+        } catch {
+          existingDocumentMatches = false;
+        }
+      }
       const sameSubmittedIdentity = Boolean(
         existingIdentity &&
         existingIdentity.fin_fingerprint === protectedWorkerFin?.finFingerprint &&
-        existingIdentity.fayda_doc_url === faydaDocUrl
+        existingDocumentMatches
       );
       const finCanBeAddedToExistingPendingDocument = Boolean(
         existingIdentity &&
         !existingIdentity.fin_fingerprint &&
-        existingIdentity.fayda_doc_url === faydaDocUrl
+        existingDocumentMatches
       );
       if (
         existingIdentity &&
@@ -318,7 +328,7 @@ export async function POST(req: NextRequest) {
           UPDATE worker_profiles
           SET full_name = ${sanitizedFullName}, date_of_birth = ${dateOfBirth ? new Date(dateOfBirth) : null},
               gender = ${gender ?? null}, district = ${sanitizedDistrict}, skills = ${skills ?? null},
-              fayda_doc_url = ${faydaDocUrl ?? null}, bio = ${sanitizedBio},
+              fayda_doc_url = ${protectedWorkerDocument}, bio = ${sanitizedBio},
               fin_encrypted = ${protectedWorkerFin?.finEncrypted ?? null},
               fin_encryption_key_id = ${protectedWorkerFin?.finEncryptionKeyId ?? null},
               fin_fingerprint = ${protectedWorkerFin?.finFingerprint ?? null},
@@ -334,7 +344,7 @@ export async function POST(req: NextRequest) {
             avatar_url, bio, is_verified, verification_status)
           VALUES (
             ${userId}, ${sanitizedFullName}, ${dateOfBirth ? new Date(dateOfBirth) : null},
-            ${gender ?? null}, ${sanitizedDistrict}, ${skills ?? null}, ${faydaDocUrl ?? null},
+            ${gender ?? null}, ${sanitizedDistrict}, ${skills ?? null}, ${protectedWorkerDocument},
             ${protectedWorkerFin?.finEncrypted ?? null}, ${protectedWorkerFin?.finEncryptionKeyId ?? null},
             ${protectedWorkerFin?.finFingerprint ?? null}, ${protectedWorkerFin?.finLast4 ?? null},
             ${profilePhotoDataUrl}, ${sanitizedBio}, false, 'pending'
@@ -351,7 +361,7 @@ export async function POST(req: NextRequest) {
       }
       if (faydaDocUrl) {
         stage = "record_worker_verification_submission";
-        await recordVerificationSubmission("worker", userId, faydaDocUrl, protectedWorkerFin?.finLast4 ?? null);
+        await recordVerificationSubmission("worker", userId, protectedWorkerDocument, protectedWorkerFin?.finLast4 ?? null);
       }
     } else {
       stage = "find_existing_client_profile";

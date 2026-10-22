@@ -709,30 +709,48 @@ export async function decideVerificationCase(
 
 export async function recordVerificationDocumentView(accountType: VerificationAccountType, accountUserId: string, admin: AdminPrincipal) {
   const attempt = await ensureCurrentVerificationAttempt(accountType, accountUserId);
-  await sql`
-    INSERT INTO verification_events (
-      attempt_id,
-      account_user_id,
-      account_type,
-      old_status,
-      new_status,
-      action,
-      admin_employee_id,
-      admin_role,
-      attempt_number,
-      document_fingerprint
-    )
-    VALUES (
-      ${attempt?.id ?? null},
-      ${accountUserId},
-      ${accountType},
-      ${attempt?.status ?? null},
-      ${attempt?.status ?? "pending"},
-      'viewed_document',
-      ${admin.id},
-      ${admin.role},
-      ${attempt ? Number(attempt.attempt_number || attempt.attemptNumber || 1) : null},
-      ${attempt?.document_fingerprint ?? attempt?.documentFingerprint ?? null}
-    )
-  `;
+  if (
+    !attempt ||
+    admin.role !== "content_verification_admin" ||
+    !hasAdminPermission(admin, "verification.review") ||
+    admin.id === accountUserId ||
+    attempt.status !== "pending" ||
+    attempt.is_current !== true
+  ) return false;
+
+  const [, insertedRows] = await sql.transaction([
+    sql`SELECT pg_advisory_xact_lock(hashtext(${`fayda-document-reveal:${attempt.id}`}))`,
+    sql`
+      INSERT INTO verification_events (
+        attempt_id, account_user_id, account_type, old_status, new_status, action,
+        admin_employee_id, admin_role, reason, attempt_number, document_fingerprint
+      )
+      SELECT
+        current_attempt.id,
+        current_attempt.account_user_id,
+        current_attempt.account_type,
+        current_attempt.status,
+        current_attempt.status,
+        'viewed_document',
+        ${admin.id},
+        ${admin.role},
+        'one-time Fayda document reveal',
+        current_attempt.attempt_number,
+        current_attempt.document_fingerprint
+      FROM verification_attempts current_attempt
+      WHERE current_attempt.id = ${attempt.id}
+        AND current_attempt.account_user_id = ${accountUserId}
+        AND current_attempt.account_type = ${accountType}
+        AND current_attempt.status = 'pending'
+        AND current_attempt.is_current = true
+        AND NOT EXISTS (
+          SELECT 1 FROM verification_events existing
+          WHERE existing.attempt_id = current_attempt.id
+            AND existing.action = 'viewed_document'
+            AND existing.reason = 'one-time Fayda document reveal'
+        )
+      RETURNING id
+    `,
+  ]);
+  return Boolean(insertedRows?.length);
 }

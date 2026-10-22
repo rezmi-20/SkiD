@@ -30,6 +30,7 @@
     "db:migrate:admin-employees": "node scripts/migrate-admin-employee-auth.mjs",
     "db:migrate:admin-identity-reference": "node scripts/migrate-admin-identity-reference.mjs",
     "db:migrate:verification-operations": "node scripts/migrate-verification-operations.mjs",
+    "db:migrate:fayda-documents": "node scripts/migrate-fayda-document-protection.mjs",
     "db:migrate:worker-certificates": "node scripts/migrate-worker-certificates.mjs",
     "db:migrate:content-and-court-evidence": "node scripts/migrate-content-and-court-evidence.mjs",
     "db:migrate:community-post-votes": "node scripts/migrate-community-post-votes.mjs",

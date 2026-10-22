@@ -56,12 +56,7 @@ export default async function AdminDashboardPage() {
       wp.user_id,
       wp.full_name,
       wp.skills,
-      CASE
-        WHEN wp.fayda_doc_url IS NOT NULL
-         AND length(wp.fayda_doc_url) > 0
-        THEN true
-        ELSE false
-      END AS has_document,
+      (wp.fayda_doc_url IS NOT NULL AND length(wp.fayda_doc_url) > 0) AS has_document,
       wp.fin_last4,
       wp.fin_encrypted,
       wp.avatar_url,
@@ -93,7 +88,12 @@ export default async function AdminDashboardPage() {
       finEncrypted: worker.fin_encrypted,
     });
     return {
-      ...worker,
+      user_id: worker.user_id,
+      full_name: worker.full_name || "Unknown worker",
+      skills: worker.skills,
+      has_document: Boolean(worker.has_document),
+      avatar_url: worker.avatar_url,
+      phone: worker.phone,
       verification_status: toWorkerDisplayStatus(
         worker.verification_status,
         worker.is_verified,
@@ -101,7 +101,7 @@ export default async function AdminDashboardPage() {
         identityComplete,
       ),
       is_verified: Boolean(worker.is_verified && identityComplete),
-      identity_complete: identityComplete,
+      is_suspended: Boolean(worker.is_suspended),
     };
   });
 

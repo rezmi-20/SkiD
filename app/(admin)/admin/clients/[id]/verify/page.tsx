@@ -101,6 +101,17 @@ export default async function ClientVerificationReviewPage({
       activeReviewStatus &&
       ["pending", "rejected", "resubmission_requested"].includes(String(client.verification_status || "pending")),
   );
+  const canRevealDocument = Boolean(
+    capabilities.canReview &&
+      admin.role === "content_verification_admin" &&
+      attempt?.id &&
+      attempt.status === "pending" &&
+      activeReviewStatus &&
+      displayStatus === "pending" &&
+      !client.is_suspended &&
+      !client.is_verified &&
+      !(history || []).some((event: any) => event.action === "viewed_document" && event.reason === "one-time Fayda document reveal"),
+  );
 
   async function approveClient() {
     "use server";
@@ -296,6 +307,9 @@ export default async function ClientVerificationReviewPage({
           <ProtectedVerificationDocumentViewer
             documentUrl={`/api/clients/${client.user_id}/verification-document`}
             title="Protected client Fayda document"
+            attemptId={attempt?.id ? String(attempt.id) : null}
+            canReveal={canRevealDocument}
+            revealUsed={Boolean((history || []).some((event: any) => event.action === "viewed_document" && event.reason === "one-time Fayda document reveal"))}
             className="bg-black/50 p-4"
           />
         </section>
