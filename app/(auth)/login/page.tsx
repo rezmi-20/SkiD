@@ -261,7 +261,19 @@ export default function LoginPage() {
         }
 
         if (session.role && session.role !== "client" && session.role !== "worker") {
-          setError("Staff and administrator accounts must sign in using Employee ID at Staff Login (/admin/login).");
+          // A public login must not disclose whether an authenticated identity is
+          // a staff account. Clear the Neon session so it cannot linger in this
+          // browser after the public login flow rejects the account role.
+          await Promise.race([
+            authClient.signOut().catch(() => undefined),
+            new Promise((resolve) => setTimeout(resolve, 800)),
+          ]);
+          await fetch("/api/auth/sign-out", {
+            method: "POST",
+            credentials: "include",
+            cache: "no-store",
+          }).catch(() => undefined);
+          setError(t("auth.login.errInvalidCredentials"));
           return;
         }
 

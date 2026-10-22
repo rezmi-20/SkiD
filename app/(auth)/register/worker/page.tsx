@@ -287,6 +287,8 @@ export default function WorkerRegisterPage() {
         });
         if (otpError) {
           console.error("[WORKER_REGISTRATION_OTP_SEND_ERROR]", otpError);
+          setError("We couldn't send the email verification code. Please retry registration with the same email address.");
+          return;
         }
       }
 

@@ -11,6 +11,7 @@ export default function OTPVerificationPage() {
   const [digits, setDigits] = useState(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [resent, setResent] = useState(false);
   const [mounted, setMounted] = useState(false);
   const refs = Array.from({ length: 6 }, () => useRef<HTMLInputElement>(null));
@@ -92,22 +93,32 @@ export default function OTPVerificationPage() {
   };
 
   const handleResend = async () => {
-    if (!email) return;
-    setResent(true);
+    if (!email || isResending) return;
+    setIsResending(true);
+    setResent(false);
+    setError("");
     setDigits(["", "", "", "", "", ""]);
     refs[0].current?.focus();
     
     try {
        const { authClient } = await import("@/lib/auth/client");
-       await authClient.emailOtp.sendVerificationOtp({
+       const { error: sendError } = await authClient.emailOtp.sendVerificationOtp({
          email,
          type: "email-verification"
        });
+       if (sendError) {
+         console.error("Failed to resend verification code", sendError);
+         setError("We couldn't send a new verification code. Please wait a moment and try again.");
+         return;
+       }
+       setResent(true);
+       setTimeout(() => setResent(false), 4000);
     } catch (err) {
        console.error("Failed to resend code", err);
+       setError("We couldn't send a new verification code. Please check your connection and try again.");
+    } finally {
+       setIsResending(false);
     }
-    
-    setTimeout(() => setResent(false), 4000);
   };
 
 
@@ -238,10 +249,17 @@ export default function OTPVerificationPage() {
           <div className="mt-8 flex flex-col items-center gap-3">
             <button
               onClick={handleResend}
-              className="text-[13px] font-bold text-zinc-500 hover:text-green-400 transition-colors"
+              disabled={isResending}
+              className="text-[13px] font-bold text-zinc-500 hover:text-green-400 transition-colors disabled:opacity-60"
             >
-              {t("auth.otp.resendPrompt")}{" "}
-              <span className="text-green-400 font-bold">{t("auth.otp.resend")}</span>
+              {isResending ? (
+                "Sending..."
+              ) : (
+                <>
+                  {t("auth.otp.resendPrompt")}{" "}
+                  <span className="text-green-400 font-bold">{t("auth.otp.resend")}</span>
+                </>
+              )}
             </button>
             <Link href="/login" className="text-[13px] font-medium text-zinc-600 hover:text-zinc-400 transition-colors">
               ← {t("auth.otp.back")}
