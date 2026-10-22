@@ -12,16 +12,10 @@ export const metadata = {
 export default async function CourtEvidencePage() {
   const admin = await requireAdminRole("super_admin");
 
-  const [employee] = await sql`
-    SELECT id, employee_id, full_name, work_email
-    FROM admin_employees
-    WHERE id = ${admin.id}
-  `;
-
   return (
     <CourtEvidenceClient
-      adminEmployeeId={employee?.employee_id || admin.id}
-      adminFullName={employee?.full_name || admin.email || "Super Administrator"}
+      adminEmployeeId={admin.employeeId || admin.id}
+      adminFullName={admin.fullName || admin.email || "Super Administrator"}
     />
   );
 }

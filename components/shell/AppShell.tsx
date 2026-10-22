@@ -98,7 +98,7 @@ export default function AppShell({
       <div className={cn("flex flex-col min-h-screen transition-all duration-300", sidebarW)}>
 
         {/* ── Sticky Top Header ── */}
-        <header className={cn("sticky top-0 z-20 w-full bg-background/90 backdrop-blur-xl border-b border-border/80", isMessagesPage && "hidden md:block")}>
+        <header className="sticky top-0 z-20 w-full bg-background/90 backdrop-blur-xl border-b border-border/80">
           {/* Mobile Top Navigation (< lg): Left: Logo | Center: Title | Right: NotificationBell */}
           <div className="lg:hidden flex items-center justify-between h-14 px-3 sm:px-4">
             <div className="w-10 flex items-center justify-start shrink-0">
@@ -213,7 +213,7 @@ export default function AppShell({
         </main>
 
         {/* ── Mobile Bottom Nav ── */}
-        {!isMessagesPage && <MobileNav role={role} />}
+        <MobileNav role={role} />
       </div>
     </div>
   );

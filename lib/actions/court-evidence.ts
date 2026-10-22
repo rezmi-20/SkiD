@@ -73,7 +73,7 @@ export async function generateCourtEvidenceDossier(input: EvidenceRequestInput) 
 
   // 2. Cryptographic Zero-Trust Password Re-Verification against admin_employees
   const [employee] = await sql`
-    SELECT id, password_hash, employee_id, full_name, work_email
+    SELECT id, password_hash, admin_employee_id, full_name, work_email
     FROM admin_employees
     WHERE id = ${admin.id}
   `;
@@ -259,7 +259,7 @@ export async function generateCourtEvidenceDossier(input: EvidenceRequestInput) 
       purpose,
       authorizedBy: {
         adminId: employee.id,
-        employeeCode: employee.employee_id,
+        employeeCode: employee.admin_employee_id,
         name: employee.full_name,
         email: employee.work_email,
       },

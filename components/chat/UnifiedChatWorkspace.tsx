@@ -504,7 +504,7 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
         </div>
 
         {/* Conversations List */}
-        <div className="flex-1 overflow-y-auto divide-y divide-outline-variant/10 bg-surface-container-lowest/20">
+        <div className="flex-1 overflow-y-auto divide-y divide-outline-variant/10 bg-surface-container-lowest/20 pb-24 lg:pb-0">
           {loadingList ? (
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="p-4 flex items-center gap-3 animate-pulse">
@@ -873,7 +873,7 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
             </div>
 
             {/* Input Footer */}
-            <div className="p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-outline-variant/20 bg-surface-container-lowest/90 backdrop-blur-md shrink-0 z-10 transition-all">
+            <div className="p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] mb-[74px] lg:mb-0 border-t border-outline-variant/20 bg-surface-container-lowest/90 backdrop-blur-md shrink-0 z-10 transition-all">
               {/* Prohibited Content Live Warning */}
               {isBlocked && (
                 <div className="mb-2.5 p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-2.5 text-xs text-amber-500 animate-in fade-in slide-in-from-top-1 duration-200 shadow-xs">
