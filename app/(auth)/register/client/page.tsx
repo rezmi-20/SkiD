@@ -7,8 +7,10 @@ import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import { explainRegistrationException, readRegistrationResponse } from "@/lib/auth/registration-response";
 
+const MAX_REGISTRATION_REQUEST_BYTES = 4_000_000;
+
 export default function ClientRegisterPage() {
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -155,6 +157,22 @@ export default function ClientRegisterPage() {
       }
     }
 
+    const preflightPayload = {
+      ...formData,
+      email: formData.email.trim(),
+      phone: normalizedPhone,
+      faydaFinNumber: wantsVerification ? formData.faydaFinNumber : "",
+      faydaDocDataUrl: wantsVerification ? formData.faydaDocDataUrl : "",
+      avatarDataUrl,
+      role: "client",
+      neonUserId: neonUserId || "00000000-0000-4000-8000-000000000000",
+    };
+    if (new TextEncoder().encode(JSON.stringify(preflightPayload)).byteLength > MAX_REGISTRATION_REQUEST_BYTES) {
+      setError("Your Fayda document and profile photo are too large together. Choose a smaller document and try again.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       let resolvedUserId = neonUserId;
       let resolvedEmailVerified = authEmailVerified;
@@ -297,13 +315,22 @@ export default function ClientRegisterPage() {
               <span className="text-[28px] font-bold tracking-tight text-white">Dire<span className="text-green-400">Skill</span></span>
             </div>
             
-            <div className="text-center space-y-1.5">
-              <h1 className="text-[28px] font-bold tracking-tight text-white flex items-center justify-center gap-2">
+            <div className="text-center space-y-2">
+              <h1 className="text-2xl sm:text-[28px] font-bold tracking-tight text-white flex items-center justify-center gap-2">
                 {t("auth.register.client.title")} <span>✨</span>
               </h1>
-              <p className="text-zinc-500 text-[15px] font-medium">
+              <p className="text-zinc-400 text-sm font-medium">
                 {t("auth.register.client.subtitle")}
               </p>
+              <div className="flex items-center justify-center pt-1">
+                <button
+                  type="button"
+                  onClick={() => setLanguage(language === "en" ? "am" : language === "am" ? "om" : "en")}
+                  className="px-3 py-1 rounded-full border border-zinc-800 text-[11px] font-bold text-zinc-400 hover:text-white hover:border-zinc-700 transition-colors"
+                >
+                  {language === "en" ? "አማርኛ" : language === "am" ? "Afaan Oromoo" : "English"}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -324,11 +351,38 @@ export default function ClientRegisterPage() {
           </AnimatePresence>
 
           <form onSubmit={handleSubmit} className="space-y-4 w-full">
+            {/* Profile Photo */}
             <div className="space-y-1.5">
-              <label className="text-[13px] font-medium text-zinc-300 ml-1">Profile photo</label>
-              <label className="flex min-h-14 cursor-pointer items-center gap-3 rounded-2xl border border-dashed border-zinc-700 bg-zinc-900 px-4 py-3 text-sm text-zinc-300 hover:border-green-400/60">
-                {avatarDataUrl ? <img src={avatarDataUrl} alt="Profile photo preview" className="h-10 w-10 rounded-full object-cover" /> : <span className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800 text-lg">+</span>}
-                <span className="min-w-0 flex-1 truncate">{avatarFileName || "Add a clear photo of yourself (max 250 KB)"}</span>
+              <div className="flex items-center justify-between ml-1">
+                <label className="text-[13px] font-medium text-zinc-300">Profile photo <span className="text-red-400">*</span></label>
+                {avatarDataUrl && (
+                  <button
+                    type="button"
+                    onClick={() => { setAvatarDataUrl(""); setAvatarFileName(""); }}
+                    className="text-[11px] text-zinc-400 hover:text-red-400 transition-colors"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+              <label className={`flex min-h-14 cursor-pointer items-center gap-3.5 rounded-xl border border-dashed px-4 py-3 text-sm transition-all ${
+                avatarDataUrl
+                  ? "border-green-400/60 bg-green-400/5 text-zinc-200"
+                  : "border-zinc-800 bg-zinc-900/80 text-zinc-400 hover:border-zinc-700"
+              }`}>
+                {avatarDataUrl ? (
+                  <img src={avatarDataUrl} alt="Profile photo preview" className="h-11 w-11 rounded-full object-cover border border-green-400/40 shrink-0" />
+                ) : (
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-zinc-800 text-zinc-400 font-bold text-lg shrink-0">+</span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <span className="block truncate font-medium text-xs text-white">
+                    {avatarFileName || "Add a clear photo of yourself (max 250 KB)"}
+                  </span>
+                  <span className="block text-[11px] text-zinc-500">
+                    {avatarDataUrl ? "Click to change photo" : "JPG, PNG, or WebP"}
+                  </span>
+                </div>
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
@@ -336,7 +390,7 @@ export default function ClientRegisterPage() {
                   onChange={(event) => handleAvatarFile(event.target.files?.[0] ?? null)}
                 />
               </label>
-              <p className="ml-1 text-xs leading-5 text-zinc-500">Only workers who are verified and have accepted your job can see your photo.</p>
+              <p className="ml-1 text-[11px] leading-4 text-zinc-500">Only workers who are verified and have accepted your job can see your photo.</p>
             </div>
 
             {/* Display Name Input */}
@@ -348,7 +402,7 @@ export default function ClientRegisterPage() {
                   required
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  className="w-full h-[52px] px-4 bg-zinc-900 border border-zinc-700 rounded-2xl focus:border-green-400/80 focus:ring-1 focus:ring-green-400/80 outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white shadow-sm"
+                  className="w-full h-12 px-4 bg-zinc-900/80 border border-zinc-800 rounded-xl focus:border-green-400 focus:ring-1 focus:ring-green-400 outline-none transition-all placeholder:text-zinc-500 font-medium text-sm text-white shadow-inner"
                   placeholder={t("auth.register.client.displayNamePlaceholder")}
                 />
               </div>
@@ -363,17 +417,17 @@ export default function ClientRegisterPage() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full h-[52px] px-4 bg-zinc-900 border border-zinc-700 rounded-2xl focus:border-green-400/80 focus:ring-1 focus:ring-green-400/80 outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white shadow-sm"
+                  className="w-full h-12 px-4 bg-zinc-900/80 border border-zinc-800 rounded-xl focus:border-green-400 focus:ring-1 focus:ring-green-400 outline-none transition-all placeholder:text-zinc-500 font-medium text-sm text-white shadow-inner"
                   placeholder="name@email.com"
                 />
               </div>
             </div>
 
-            {/* Phone Input */}
+            {/* Phone Input with Unified Group Styling */}
             <div className="space-y-1.5">
               <label className="text-[13px] font-medium text-zinc-300 ml-1">{t("auth.register.client.phone")}</label>
-              <div className="relative flex">
-                <div className="h-[52px] px-4 bg-zinc-800 border border-zinc-700 border-r-0 rounded-l-2xl flex items-center justify-center text-zinc-400 font-medium text-[14px]">
+              <div className="relative flex rounded-xl border border-zinc-800 bg-zinc-900/80 overflow-hidden focus-within:border-green-400 focus-within:ring-1 focus-within:ring-green-400 transition-all shadow-inner">
+                <div className="h-12 px-3.5 bg-zinc-800/80 border-r border-zinc-800 flex items-center justify-center text-zinc-400 font-semibold text-sm select-none">
                   +251
                 </div>
                 <input
@@ -392,7 +446,7 @@ export default function ClientRegisterPage() {
                       setFormData({ ...formData, phone: val });
                     }
                   }}
-                  className="w-full h-[52px] px-4 bg-zinc-900 border border-zinc-700 rounded-r-2xl focus:border-green-400/80 focus:ring-1 focus:ring-green-400/80 outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white shadow-sm"
+                  className="w-full h-12 px-4 bg-transparent outline-none placeholder:text-zinc-500 font-medium text-sm text-white"
                   placeholder="9XX XXX XXX"
                 />
               </div>
@@ -407,22 +461,22 @@ export default function ClientRegisterPage() {
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full h-[52px] pl-4 pr-12 bg-zinc-900 border border-zinc-700 rounded-2xl focus:border-green-400/80 focus:ring-1 focus:ring-green-400/80 outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white shadow-sm"
+                  className="w-full h-12 pl-4 pr-12 bg-zinc-900/80 border border-zinc-800 rounded-xl focus:border-green-400 focus:ring-1 focus:ring-green-400 outline-none transition-all placeholder:text-zinc-500 font-medium text-sm text-white shadow-inner"
                   placeholder={t("auth.register.client.passwordPlaceholder")}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center transition-colors"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center transition-colors text-zinc-500 hover:text-white"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 hover:text-white">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
                       <line x1="1" y1="1" x2="23" y2="23" />
                     </svg>
                   ) : (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 hover:text-white">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                       <circle cx="12" cy="12" r="3" />
                     </svg>
@@ -431,11 +485,12 @@ export default function ClientRegisterPage() {
               </div>
             </div>
 
-            <div className="space-y-3 rounded-2xl border border-zinc-700 bg-zinc-900/70 p-4">
+            {/* Optional Fayda Section */}
+            <div className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-4 transition-all">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-[13px] font-bold text-zinc-100">{t("auth.register.client.optionalFayda")}</p>
-                  <p className="mt-1 text-[12px] leading-5 text-zinc-500">
+                  <p className="mt-1 text-[12px] leading-relaxed text-zinc-400">
                     {t("auth.register.client.optionalFaydaDesc")}
                   </p>
                 </div>
@@ -445,8 +500,8 @@ export default function ClientRegisterPage() {
                     setWantsVerification((value) => !value);
                     setError("");
                   }}
-                  className={`rounded-full px-3 py-1 text-[11px] font-bold ${
-                    wantsVerification ? "bg-green-400 text-black" : "bg-zinc-800 text-zinc-300"
+                  className={`rounded-full px-3 py-1 text-[11px] font-bold active:scale-95 transition-all ${
+                    wantsVerification ? "bg-green-400 text-black shadow-sm" : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
                   }`}
                 >
                   {wantsVerification ? t("auth.register.client.enabled") : t("auth.register.client.verify")}
@@ -454,17 +509,17 @@ export default function ClientRegisterPage() {
               </div>
 
               {wantsVerification && (
-                <div className="space-y-3">
+                <div className="space-y-3 pt-2">
                   <input
                     type="text"
                     inputMode="numeric"
                     maxLength={12}
                     value={formData.faydaFinNumber}
                     onChange={(e) => setFormData({ ...formData, faydaFinNumber: e.target.value.replace(/\D/g, "").slice(0, 12) })}
-                    className="w-full h-[48px] px-4 bg-zinc-950 border border-zinc-700 rounded-2xl focus:border-green-400/80 focus:ring-1 focus:ring-green-400/80 outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white"
+                    className="w-full h-11 px-4 bg-zinc-950/80 border border-zinc-800 rounded-xl focus:border-green-400 focus:ring-1 focus:ring-green-400 outline-none transition-all placeholder:text-zinc-500 font-medium text-sm text-white"
                     placeholder={t("auth.register.client.finPlaceholder")}
                   />
-                  <label className="flex h-[48px] cursor-pointer items-center justify-center rounded-2xl border border-dashed border-zinc-700 bg-zinc-950 px-4 text-[12px] font-bold text-zinc-300 hover:border-green-400/60">
+                  <label className="flex h-11 cursor-pointer items-center justify-center rounded-xl border border-dashed border-zinc-800 bg-zinc-950/80 px-4 text-xs font-semibold text-zinc-300 hover:border-green-400/60 transition-colors">
                     <input
                       type="file"
                       className="hidden"
@@ -473,26 +528,28 @@ export default function ClientRegisterPage() {
                     />
                     {formData.faydaDocName || t("auth.register.client.uploadFayda")}
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setWantsVerification(false);
-                      setFormData({ ...formData, faydaFinNumber: "", faydaDocDataUrl: "", faydaDocName: "" });
-                    }}
-                    className="text-[12px] font-bold text-zinc-500 hover:text-zinc-300"
-                  >
-                    {t("auth.register.client.skip")}
-                  </button>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setWantsVerification(false);
+                        setFormData({ ...formData, faydaFinNumber: "", faydaDocDataUrl: "", faydaDocName: "" });
+                      }}
+                      className="text-[11px] font-semibold text-zinc-500 hover:text-zinc-300 transition-colors"
+                    >
+                      {t("auth.register.client.skip")}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
 
             {/* Submit Button */}
-            <div className="pt-4">
+            <div className="pt-2">
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-[52px] bg-green-400 hover:bg-green-500 text-black rounded-full font-bold text-[15px] active:scale-[0.98] transition-all disabled:opacity-70 shadow-[0_0_20px_-5px_rgba(74,222,128,0.4)] flex items-center justify-center gap-2"
+                className="w-full h-12 bg-green-400 hover:bg-green-500 text-black rounded-full font-bold text-sm active:scale-[0.98] transition-all disabled:opacity-60 shadow-[0_0_20px_-5px_rgba(74,222,128,0.4)] flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />

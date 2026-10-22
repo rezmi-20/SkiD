@@ -37,6 +37,13 @@ function hasValue(name) {
   return valueOf(name).length > 0;
 }
 
+function is32ByteKey(value) {
+  const trimmed = String(value || "").trim();
+  if (/^[a-f0-9]{64}$/i.test(trimmed)) return true;
+  const decoded = Buffer.from(trimmed, "base64");
+  return decoded.length === 32 && decoded.toString("base64").replace(/=+$/, "") === trimmed.replace(/=+$/, "");
+}
+
 function isPlaceholder(value) {
   const lowered = value.toLowerCase();
   return (
@@ -100,6 +107,28 @@ for (const name of required) {
     continue;
   }
   pass(name);
+}
+
+if (!hasValue("FIN_HMAC_KEY")) {
+  fail("FIN_HMAC_KEY: not configured");
+} else if (!is32ByteKey(valueOf("FIN_HMAC_KEY"))) {
+  fail("FIN_HMAC_KEY: must be a 32-byte base64 or hex key");
+} else {
+  pass("FIN_HMAC_KEY");
+}
+
+const encryptionKeyRing = valueOf("FIN_ENCRYPTION_KEYS");
+const encryptionRingIsValid = encryptionKeyRing
+  ? encryptionKeyRing.split(",").every((entry) => {
+      const separator = entry.indexOf(":");
+      return separator > 0 && is32ByteKey(entry.slice(separator + 1));
+    })
+  : false;
+const legacyEncryptionKeyIsValid = is32ByteKey(valueOf("FIN_ENCRYPTION_KEY"));
+if (encryptionKeyRing ? !encryptionRingIsValid : !legacyEncryptionKeyIsValid) {
+  fail("FIN_ENCRYPTION_KEYS or FIN_ENCRYPTION_KEY: configure a valid 32-byte base64 or hex key");
+} else {
+  pass("FIN_ENCRYPTION_KEYS or FIN_ENCRYPTION_KEY");
 }
 
 console.log("Optional variables:");

@@ -15,6 +15,8 @@ import StepIdCompliance from "./components/StepIdCompliance";
 import StepServiceParameters from "./components/StepServiceParameters";
 import StepReview from "./components/StepReview";
 
+const MAX_REGISTRATION_REQUEST_BYTES = 4_000_000;
+
 export default function WorkerRegisterPage() {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -35,7 +37,7 @@ export default function WorkerRegisterPage() {
 
   const [formData, setFormData] = useState({
     fullName: "", phone: "", email: "", dateOfBirth: "", gender: "",
-    skills: [] as string[], experience: "", location: "", password: "", faydaDocUrl: "",
+    skills: [] as string[], experience: "", location: "", password: "", faydaDocUrl: "", faydaFinNumber: "",
   });
 
   useEffect(() => setMounted(true), []);
@@ -72,6 +74,10 @@ export default function WorkerRegisterPage() {
     }
     if (step === 2 && !formData.faydaDocUrl) {
       setError(t("register.errors.fayda_required"));
+      return false;
+    }
+    if (step === 2 && !/^\d{12}$/.test(formData.faydaFinNumber)) {
+      setError("Enter your 12-digit Fayda FIN. It will be stored securely and only revealed to authorized reviewers during verification.");
       return false;
     }
     if (step === 2 && !profilePhoto) {
@@ -217,6 +223,10 @@ export default function WorkerRegisterPage() {
     setError("");
   };
 
+  const handleRemoveCertificate = (index: number) => {
+    setTrainingCertificates((current) => current.filter((_, i) => i !== index));
+  };
+
   const toggleSkill = (skill: string) => {
     setFormData(prev => ({
       ...prev,
@@ -227,6 +237,26 @@ export default function WorkerRegisterPage() {
   const handleSubmit = async () => {
     setIsLoading(true);
     setError("");
+    const preflightPayload = {
+      ...formData,
+      phone: formData.phone.replace(/\D/g, "").replace(/^0(?=\d{9}$)/, ""),
+      email: formData.email.trim(),
+      district: formData.location,
+      role: "worker",
+      bio: formData.experience,
+      neonUserId: neonUserId || "00000000-0000-4000-8000-000000000000",
+    };
+    const estimatedMultipartBytes =
+      new TextEncoder().encode(JSON.stringify(preflightPayload)).byteLength +
+      (profilePhoto?.size || 0) +
+      trainingCertificates.reduce((total, file) => total + file.size, 0) +
+      4096;
+    if (estimatedMultipartBytes > MAX_REGISTRATION_REQUEST_BYTES) {
+      setError("Your registration files are too large together. Reduce their size and try again.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       let resolvedUserId = neonUserId;
       let resolvedEmailVerified = authEmailVerified;
@@ -332,22 +362,23 @@ export default function WorkerRegisterPage() {
                     {t("register.steps.phase")} {step} {t("register.steps.of")} 4
                   </div>
                   <button 
-                    onClick={() => setLanguage(language === "en" ? "am" : "en")}
-                    className="px-3 py-1 rounded-full border border-zinc-800 text-[10px] font-bold text-zinc-400 hover:text-white transition-colors"
+                    type="button"
+                    onClick={() => setLanguage(language === "en" ? "am" : language === "am" ? "om" : "en")}
+                    className="px-3 py-1 rounded-full border border-zinc-800 text-[11px] font-bold text-zinc-400 hover:text-white hover:border-zinc-700 transition-colors"
                   >
-                    {language === "en" ? "አማርኛ" : "English"}
+                    {language === "en" ? "አማርኛ" : language === "am" ? "Afaan Oromoo" : "English"}
                   </button>
               </div>
             </div>
           </div>
 
-          <div className="w-full h-1 bg-zinc-900 rounded-full mb-10 overflow-hidden">
+          <div className="w-full h-1 bg-zinc-900 rounded-full mb-8 overflow-hidden">
             <motion.div animate={{ width: `${(step / 4) * 100}%` }} className="h-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)]" />
           </div>
 
           <AnimatePresence mode="wait">
             {error && (
-              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl text-sm font-semibold flex items-center gap-3 mb-6 w-full">
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-sm font-semibold flex items-center gap-3 mb-6 w-full shadow-[0_0_20px_rgba(239,68,68,0.1)]">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                   <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
                 </svg>
@@ -363,6 +394,7 @@ export default function WorkerRegisterPage() {
                 {step === 2 && (
                   <StepIdCompliance
                     formData={formData}
+                    setFormData={setFormData}
                     fileInputRef={fileInputRef}
                     handleFileUpload={handleFileUpload}
                     handleFileDrop={prepareFaydaDocument}
@@ -372,18 +404,19 @@ export default function WorkerRegisterPage() {
                     onProfilePhoto={handleProfilePhoto}
                     trainingCertificates={trainingCertificates}
                     onTrainingCertificates={handleTrainingCertificates}
+                    onRemoveCertificate={handleRemoveCertificate}
                   />
                 )}
                 {step === 3 && <StepServiceParameters formData={formData} setFormData={setFormData} toggleSkill={toggleSkill} categories={categories} locations={locations} />}
                 {step === 4 && <StepReview formData={formData} profilePhotoPreview={profilePhotoPreview} trainingCertificates={trainingCertificates} />}
 
-                <div className="flex gap-4 pt-4">
+                <div className="flex gap-3 pt-4">
                   {step > 1 && (
-                    <button type="button" onClick={prevStep} className="w-24 h-[52px] rounded-full font-bold text-[13px] text-zinc-400 hover:text-white border border-zinc-800 hover:bg-zinc-900 transition-all">
+                    <button type="button" onClick={prevStep} className="w-24 h-12 rounded-full font-bold text-xs text-zinc-400 hover:text-white border border-zinc-800 hover:bg-zinc-900 active:scale-[0.98] transition-all">
                       {t("common.back")}
                     </button>
                   )}
-                  <button type="button" onClick={step === 4 ? handleSubmit : nextStep} disabled={isLoading} className={`h-[52px] rounded-full font-bold text-[14px] active:scale-[0.98] transition-all flex items-center justify-center gap-2 ${step === 4 ? "flex-1 bg-green-400 text-black shadow-lg shadow-green-400/20" : "flex-1 bg-zinc-100 text-black"} disabled:opacity-50`}>
+                  <button type="button" onClick={step === 4 ? handleSubmit : nextStep} disabled={isLoading} className={`h-12 rounded-full font-bold text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 ${step === 4 ? "flex-1 bg-green-400 text-black shadow-lg shadow-green-400/20" : "flex-1 bg-zinc-100 text-black hover:bg-white"} disabled:opacity-50`}>
                     {isLoading ? <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" /> : (
                       <>{step === 4 ? t("register.step4.title") : t("common.next")}
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
