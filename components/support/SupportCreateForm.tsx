@@ -118,9 +118,9 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 shadow-sm">
+    <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-border/70 bg-card p-6 sm:p-8 shadow-xs">
       {/* Privacy Warning */}
-      <div className="flex items-start gap-3 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3.5 text-xs text-amber-700 dark:text-amber-300">
+      <div className="flex items-start gap-3 rounded-xl border border-amber-500/25 bg-amber-500/10 p-3.5 text-xs text-amber-700 dark:text-amber-300">
         <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
         <p className="font-medium leading-relaxed">
           <strong className="font-bold">Privacy notice:</strong> Do not include passwords, verification codes, full national ID (FIN), or payment card/bank credentials.
@@ -129,7 +129,7 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
 
       {/* Error alert */}
       {error && (
-        <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm font-semibold text-red-600 dark:text-red-400">
+        <div className="flex items-center gap-2 rounded-xl border border-red-500/25 bg-red-500/10 p-3 text-sm font-semibold text-red-600 dark:text-red-400">
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>{error}</span>
         </div>
@@ -138,7 +138,7 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
       {/* Category & Priority Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="category" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-on-surface">
+          <label htmlFor="category" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-foreground">
             Category <span className="text-red-500">*</span>
           </label>
           <select
@@ -146,7 +146,7 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             required
-            className="w-full rounded-lg border border-outline-variant bg-surface-container p-3 text-sm font-medium text-on-surface outline-none transition focus:border-primary focus:ring-1 focus:ring-primary"
+            className="w-full rounded-xl border border-border/70 bg-background/60 p-3 text-sm font-medium text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
           >
             {SUPPORT_CATEGORIES.map((cat) => (
               <option key={cat} value={cat}>
@@ -157,7 +157,7 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
         </div>
 
         <div>
-          <label htmlFor="priority" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-on-surface">
+          <label htmlFor="priority" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-foreground">
             Priority / Urgency <span className="text-red-500">*</span>
           </label>
           <select
@@ -165,7 +165,7 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
             required
-            className="w-full rounded-lg border border-outline-variant bg-surface-container p-3 text-sm font-medium text-on-surface outline-none transition focus:border-primary focus:ring-1 focus:ring-primary"
+            className="w-full rounded-xl border border-border/70 bg-background/60 p-3 text-sm font-medium text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
           >
             <option value="low">Low (General inquiry, no time pressure)</option>
             <option value="normal">Normal (Standard assistance)</option>
@@ -178,10 +178,10 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
       {/* Subject */}
       <div>
         <div className="mb-1.5 flex items-center justify-between">
-          <label htmlFor="subject" className="text-xs font-bold uppercase tracking-wider text-on-surface">
+          <label htmlFor="subject" className="text-xs font-bold uppercase tracking-wider text-foreground">
             Subject <span className="text-red-500">*</span>
           </label>
-          <span className="text-[11px] font-medium text-on-surface-variant">{subject.length}/180</span>
+          <span className="text-[11px] font-medium text-muted-foreground">{subject.length}/180</span>
         </div>
         <input
           id="subject"
@@ -191,29 +191,29 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
           maxLength={180}
           required
           placeholder="Brief summary of your question or issue"
-          className="w-full rounded-lg border border-outline-variant bg-surface-container p-3 text-sm font-medium text-on-surface outline-none transition focus:border-primary focus:ring-1 focus:ring-primary"
+          className="w-full rounded-xl border border-border/70 bg-background/60 p-3 text-sm font-medium text-foreground placeholder:text-muted-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
         />
       </div>
 
       {/* Description */}
       <div>
-        <label htmlFor="description" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-on-surface">
+        <label htmlFor="description" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-foreground">
           Detailed Description <span className="text-red-500">*</span>
         </label>
         <textarea
           id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          rows={6}
+          rows={5}
           required
           placeholder="Please describe your issue in detail. If related to a specific action, describe what happened and when."
-          className="w-full rounded-lg border border-outline-variant bg-surface-container p-3 text-sm font-medium text-on-surface outline-none transition focus:border-primary focus:ring-1 focus:ring-primary"
+          className="w-full rounded-xl border border-border/70 bg-background/60 p-3 text-sm font-medium text-foreground placeholder:text-muted-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
         />
       </div>
 
       {/* Related Record Picker */}
-      <div className="space-y-3 rounded-xl border border-outline-variant/60 bg-surface-container/50 p-4">
-        <span className="block text-xs font-bold uppercase tracking-wider text-on-surface">
+      <div className="space-y-3 rounded-xl border border-border/60 bg-muted/30 p-4">
+        <span className="block text-xs font-bold uppercase tracking-wider text-foreground">
           Link to Related Record (Optional)
         </span>
         <div className="flex flex-wrap gap-4 text-xs font-semibold">
@@ -223,7 +223,7 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
               name="relatedType"
               checked={relatedType === "none"}
               onChange={() => setRelatedType("none")}
-              className="text-primary"
+              className="accent-primary"
             />
             General Inquiry (None)
           </label>
@@ -234,7 +234,7 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
                 name="relatedType"
                 checked={relatedType === "job"}
                 onChange={() => setRelatedType("job")}
-                className="text-primary"
+                className="accent-primary"
               />
               Related Job ({jobs.length})
             </label>
@@ -246,7 +246,7 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
                 name="relatedType"
                 checked={relatedType === "contract"}
                 onChange={() => setRelatedType("contract")}
-                className="text-primary"
+                className="accent-primary"
               />
               Related Contract ({contracts.length})
             </label>
@@ -257,7 +257,7 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
           <select
             value={selectedJobId}
             onChange={(e) => setSelectedJobId(e.target.value)}
-            className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest p-2.5 text-xs font-medium text-on-surface"
+            className="w-full rounded-xl border border-border/70 bg-background p-2.5 text-xs font-medium text-foreground outline-none"
           >
             <option value="">Select a job</option>
             {jobs.map((job) => (
@@ -272,7 +272,7 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
           <select
             value={selectedContractId}
             onChange={(e) => setSelectedContractId(e.target.value)}
-            className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest p-2.5 text-xs font-medium text-on-surface"
+            className="w-full rounded-xl border border-border/70 bg-background p-2.5 text-xs font-medium text-foreground outline-none"
           >
             <option value="">Select a contract</option>
             {contracts.map((c) => (
@@ -286,16 +286,16 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
 
       {/* File Attachment */}
       <div>
-        <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-on-surface">
+        <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-foreground">
           Attachment (Optional)
         </label>
         {attachment ? (
-          <div className="flex items-center justify-between rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3">
+          <div className="flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3">
             <div className="flex items-center gap-2.5 min-w-0">
               <FileText className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
               <div className="truncate">
-                <p className="truncate text-xs font-bold text-on-surface">{attachment.fileName}</p>
-                <p className="text-[11px] text-on-surface-variant font-medium">
+                <p className="truncate text-xs font-bold text-foreground">{attachment.fileName}</p>
+                <p className="text-[11px] text-muted-foreground font-medium">
                   {(attachment.fileSize / 1024).toFixed(1)} KB · {attachment.mimeType}
                 </p>
               </div>
@@ -303,7 +303,7 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
             <button
               type="button"
               onClick={() => setAttachment(null)}
-              className="p-1 rounded-md text-on-surface-variant hover:text-red-500 transition"
+              className="p-1 rounded-md text-muted-foreground hover:text-red-500 transition"
               title="Remove attachment"
             >
               <X className="h-4 w-4" />
@@ -311,7 +311,7 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
           </div>
         ) : (
           <div className="relative">
-            <label className="flex flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-outline-variant p-4 text-center cursor-pointer hover:border-primary transition bg-surface-container/30">
+            <label className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-border/80 p-5 text-center cursor-pointer hover:border-primary transition bg-muted/20 hover:bg-muted/40">
               {uploading ? (
                 <div className="w-full space-y-2 py-3 animate-pulse text-center">
                   <div className="h-2.5 w-48 mx-auto bg-primary/40 rounded-full" />
@@ -319,11 +319,11 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
                 </div>
               ) : (
                 <>
-                  <Upload className="h-6 w-6 text-on-surface-variant" />
-                  <span className="text-xs font-semibold text-on-surface">
+                  <Upload className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-xs font-semibold text-foreground">
                     Click or drag file to attach (Screenshots, PDF, Documents)
                   </span>
-                  <span className="text-[11px] text-on-surface-variant">PNG, JPEG, WebP, or PDF up to 10MB</span>
+                  <span className="text-[11px] text-muted-foreground">PNG, JPEG, WebP, or PDF up to 10MB</span>
                 </>
               )}
               <input
@@ -343,18 +343,18 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
         <button
           type="button"
           onClick={() => router.back()}
-          className="rounded-lg border border-outline-variant px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-on-surface hover:bg-surface-container transition"
+          className="rounded-xl border border-border/80 px-4 py-2.5 text-xs font-bold text-foreground hover:bg-muted active:scale-95 transition"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isPending || uploading}
-          className="flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-xs font-bold uppercase tracking-widest text-on-primary shadow transition hover:opacity-95 disabled:opacity-50"
+          className="flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-sm hover:opacity-90 active:scale-95 transition disabled:opacity-50"
         >
           {isPending ? (
             <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-on-primary animate-ping" />
+              <span className="h-2 w-2 rounded-full bg-primary-foreground animate-ping" />
               <span>Submitting Ticket...</span>
             </div>
           ) : (

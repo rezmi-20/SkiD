@@ -360,9 +360,16 @@ export default function WorkerDashboardContent({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
         {/* Hero Card */}
         <div
-          className="lg:col-span-2 relative overflow-hidden rounded-2xl border border-border min-h-[190px] flex flex-col justify-between p-5 sm:p-7"
+          className="lg:col-span-2 relative overflow-hidden rounded-2xl border border-border/70 min-h-[190px] flex flex-col justify-between p-5 sm:p-7 shadow-xl"
           style={{ background: "linear-gradient(135deg, #0f0c29 0%, #1a1044 45%, #0c0a22 100%)" }}
         >
+          {/* Dire Dawa Contextual Backdrop */}
+          <div
+            className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-20 mix-blend-luminosity"
+            style={{ backgroundImage: "url('/images/diredawa_street.jpg')" }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0f0c29]/95 via-[#1a1044]/80 to-transparent pointer-events-none" />
+
           <div className="absolute top-0 right-0 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-20 w-48 h-48 bg-violet-500/8 rounded-full blur-2xl pointer-events-none" />
 

@@ -331,14 +331,13 @@ export async function POST(req: NextRequest) {
           INSERT INTO worker_profiles (
             user_id, full_name, date_of_birth, gender, district, skills,
             fayda_doc_url, fin_encrypted, fin_encryption_key_id, fin_fingerprint, fin_last4,
-            avatar_url, bio, verification_status, is_verified
-          )
+            avatar_url, bio, is_verified, verification_status)
           VALUES (
             ${userId}, ${sanitizedFullName}, ${dateOfBirth ? new Date(dateOfBirth) : null},
             ${gender ?? null}, ${sanitizedDistrict}, ${skills ?? null}, ${faydaDocUrl ?? null},
             ${protectedWorkerFin?.finEncrypted ?? null}, ${protectedWorkerFin?.finEncryptionKeyId ?? null},
             ${protectedWorkerFin?.finFingerprint ?? null}, ${protectedWorkerFin?.finLast4 ?? null},
-            ${profilePhotoDataUrl}, ${sanitizedBio}, 'pending', false
+            ${profilePhotoDataUrl}, ${sanitizedBio}, false, 'pending'
           )
         `;
       }

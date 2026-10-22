@@ -78,8 +78,8 @@ export default function UserAppealsList({
 }) {
   if (appeals.length === 0) {
     return (
-      <div className="rounded-xl border border-border/80 bg-card p-10 text-center space-y-4 shadow-2xs">
-        <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+      <div className="rounded-2xl border border-dashed border-border/80 bg-card p-12 text-center space-y-4 shadow-xs">
+        <div className="mx-auto w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
           <Scale className="h-6 w-6" />
         </div>
         <div className="space-y-1 max-w-sm mx-auto">
@@ -91,7 +91,7 @@ export default function UserAppealsList({
         <div>
           <Link
             href={`/${role}/appeals/new`}
-            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wider text-primary-foreground hover:opacity-90 transition-opacity shadow-xs"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-sm hover:opacity-90 active:scale-95 transition"
           >
             <Plus className="h-3.5 w-3.5" />
             Request New Appeal
@@ -102,7 +102,7 @@ export default function UserAppealsList({
   }
 
   return (
-    <div className="rounded-xl border border-border/80 bg-card overflow-hidden shadow-2xs divide-y divide-border/60">
+    <div className="rounded-2xl border border-border/70 bg-card overflow-hidden shadow-xs divide-y divide-border/60">
       {appeals.map((appeal) => {
         const badge = getStatusBadge(appeal.status, appeal.outcome);
         return (

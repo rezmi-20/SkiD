@@ -91,7 +91,7 @@ export default function MobileNav({ role }: MobileNavProps) {
   ];
 
   return (
-    <nav className="lg:hidden fixed bottom-3 inset-x-2 sm:inset-x-4 z-50 pointer-events-none flex justify-center pb-safe">
+    <nav className="lg:hidden fixed bottom-[max(0.75rem,calc(env(safe-area-inset-bottom)+0.5rem))] inset-x-2 sm:inset-x-4 z-50 pointer-events-none flex justify-center">
       <div className="pointer-events-auto w-full max-w-md h-[66px] rounded-full bg-[#181d24]/95 dark:bg-[#13171d]/95 backdrop-blur-xl border border-white/10 px-2 sm:px-3 flex items-center justify-between shadow-[0_12px_40px_rgba(0,0,0,0.5)]">
         {navItems.map((item) => {
           const isActive =
@@ -103,7 +103,9 @@ export default function MobileNav({ role }: MobileNavProps) {
             <Link
               key={item.id}
               href={item.href}
-              className="relative flex items-center justify-center transition-all duration-200 touch-manipulation"
+              title={item.label}
+              aria-label={item.label}
+              className="relative flex items-center justify-center transition-all duration-200 touch-manipulation focus:outline-none"
             >
               {isActive ? (
                 /* Active Tab: Vibrant Lime Pill Button using palette rgba(164, 254, 71) */

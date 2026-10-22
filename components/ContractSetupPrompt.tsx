@@ -27,25 +27,27 @@ export default function ContractSetupPrompt({ completed, setupHref }: Props) {
   if (!showPrompt) return null;
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-lg border border-outline-variant bg-surface-container-lowest p-6 shadow-2xl">
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="w-full max-w-md rounded-2xl border border-border/70 bg-card p-6 sm:p-7 shadow-2xl animate-in zoom-in-95 duration-200">
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
             <FileSignature className="h-6 w-6" />
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-widest text-primary">DireSkill Contracts</p>
-            <h2 className="mt-1 text-xl font-black tracking-tight text-on-surface">Complete Your Contract Setup</h2>
-            <p className="mt-3 text-sm leading-6 text-on-surface-variant">
-              To securely sign digital contracts, you must complete your contract setup.
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold text-primary tracking-wide uppercase mb-1">
+              DireSkill Contracts
+            </div>
+            <h2 className="text-xl font-black tracking-tight text-foreground">Complete Your Contract Setup</h2>
+            <p className="mt-2 text-xs sm:text-sm leading-relaxed text-muted-foreground">
+              To securely sign and verify digital 2-party contracts, complete your contract PIN setup.
             </p>
           </div>
         </div>
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        <div className="mt-6 flex flex-col gap-2.5 sm:flex-row">
           <Link
             href={setupHref}
-            className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-xs font-black uppercase tracking-widest text-on-primary hover:opacity-95 transition"
+            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-xs font-bold text-primary-foreground shadow-sm hover:opacity-90 active:scale-95 transition"
           >
             <ShieldCheck className="h-4 w-4" />
             <span>Set Up Now</span>
@@ -56,7 +58,7 @@ export default function ContractSetupPrompt({ completed, setupHref }: Props) {
               window.sessionStorage.setItem("direskill_contract_setup_reminded", "true");
               setShowPrompt(false);
             }}
-            className="inline-flex h-12 flex-1 items-center justify-center rounded-lg border border-outline-variant bg-surface-container px-4 text-xs font-black uppercase tracking-widest text-on-surface-variant"
+            className="inline-flex h-11 flex-1 items-center justify-center rounded-xl border border-border/70 bg-background hover:bg-muted px-4 text-xs font-bold text-muted-foreground hover:text-foreground active:scale-95 transition"
           >
             Remind Me Later
           </button>

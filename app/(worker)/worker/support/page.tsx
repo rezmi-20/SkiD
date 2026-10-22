@@ -1,33 +1,76 @@
 import Link from "next/link";
 import { getUserSupportTickets } from "@/lib/actions/support";
 import UserSupportList from "@/components/support/UserSupportList";
+import { LifeBuoy, Plus, Search, Filter } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
-export default async function WorkerSupportPage({ searchParams }: { searchParams: Promise<{ q?: string; status?: string }> }) {
+export default async function WorkerSupportPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; status?: string }>;
+}) {
   const params = await searchParams;
   const tickets = await getUserSupportTickets(params.q || "", params.status || "all");
+
   return (
-    <div className="space-y-6 pb-20">
-      <header className="flex flex-wrap items-center justify-between gap-4">
+    <div className="space-y-6 pb-20 animate-in fade-in duration-300">
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <p className="text-xs font-black uppercase tracking-widest text-primary">Support</p>
-          <h1 className="text-3xl font-black text-on-surface">Your Support Tickets</h1>
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold text-primary tracking-wide uppercase mb-1.5">
+            <LifeBuoy className="h-3.5 w-3.5" />
+            Worker Support & Assistance
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+            Your Support Tickets
+          </h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Need help with earnings payouts, contract milestones, verification, or client issues?
+          </p>
         </div>
-        <Link href="/worker/support/new" className="rounded-lg bg-primary px-4 py-3 text-xs font-black uppercase tracking-widest text-on-primary">
-          New Ticket
+        <Link
+          href="/worker/support/new"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground shadow-sm hover:opacity-90 active:scale-95 transition self-start sm:self-auto"
+        >
+          <Plus className="h-4 w-4" />
+          <span>New Ticket</span>
         </Link>
       </header>
-      <form className="grid gap-3 rounded-xl border border-outline-variant bg-surface-container-lowest p-4 md:grid-cols-[1fr_180px_auto]">
-        <input name="q" defaultValue={params.q || ""} placeholder="Search reference or subject" className="rounded-lg border border-outline-variant bg-surface-container p-3 text-sm" />
-        <select name="status" defaultValue={params.status || "all"} className="rounded-lg border border-outline-variant bg-surface-container p-3 text-sm">
-          {["all", "open", "assigned", "awaiting_user", "in_progress", "escalated", "resolved", "closed"].map((status) => (
-            <option key={status} value={status}>{status.replaceAll("_", " ")}</option>
-          ))}
-        </select>
-        <button className="rounded-lg bg-surface-container px-4 text-xs font-black uppercase tracking-widest">Filter</button>
+
+      <form className="flex flex-col sm:flex-row items-stretch gap-3 rounded-2xl border border-border/70 bg-card p-3 shadow-xs">
+        <div className="relative flex-1">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            name="q"
+            defaultValue={params.q || ""}
+            placeholder="Search reference or subject"
+            className="w-full rounded-xl border border-border/60 bg-muted/30 pl-10 pr-3 py-2 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary transition"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <select
+            name="status"
+            defaultValue={params.status || "all"}
+            className="rounded-xl border border-border/60 bg-muted/30 px-3 py-2 text-xs font-medium text-foreground outline-none focus:border-primary transition"
+          >
+            {["all", "open", "assigned", "awaiting_user", "in_progress", "escalated", "resolved", "closed"].map((status) => (
+              <option key={status} value={status}>
+                {status === "all" ? "All Statuses" : status.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+              </option>
+            ))}
+          </select>
+          <button
+            type="submit"
+            className="flex items-center justify-center gap-1.5 rounded-xl bg-secondary px-4 py-2 text-xs font-bold text-secondary-foreground hover:bg-secondary/80 active:scale-95 transition"
+          >
+            <Filter className="h-3.5 w-3.5" />
+            <span>Filter</span>
+          </button>
+        </div>
       </form>
+
       <UserSupportList tickets={tickets as any[]} role="worker" />
     </div>
   );
 }
+

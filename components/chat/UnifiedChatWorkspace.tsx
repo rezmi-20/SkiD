@@ -438,10 +438,16 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
     return true;
   });
 
+  const handleInputFocus = () => {
+    setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 280);
+  };
+
   const myInitials = myProfile?.name ? myProfile.name.slice(0, 2).toUpperCase() : "ME";
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] w-full bg-background overflow-hidden text-foreground">
+    <div className="flex h-[calc(100dvh-3.5rem)] sm:h-[calc(100dvh-4rem)] w-full bg-background overflow-hidden text-foreground">
       
       {/* ── PANE 1: Left Panel (My Profile, Search & Conversations) ── */}
       <div className={`w-full md:w-[320px] lg:w-[340px] flex flex-col border-r border-outline-variant/20 bg-surface-container-lowest shrink-0 transition-all ${
@@ -524,8 +530,9 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
               return (
                 <button
                   key={conv.id}
+                  type="button"
                   onClick={() => router.push(`/${role}/messages/${conv.id}`)}
-                  className={`w-full p-4 flex items-center gap-3 text-left transition-all duration-200 relative ${
+                  className={`w-full p-3.5 sm:p-4 flex items-center gap-3 text-left transition-all duration-200 relative touch-manipulation active:bg-surface-container-low/60 ${
                     isActive 
                       ? "bg-primary/8 dark:bg-primary/5 text-foreground" 
                       : "hover:bg-surface-container-low/40 text-muted-foreground hover:text-foreground"
@@ -595,20 +602,22 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
         {conversationId ? (
           <>
             {/* Header */}
-            <div className="h-16 border-b border-outline-variant/20 bg-surface-container-lowest/80 backdrop-blur-md px-4 flex items-center justify-between shrink-0 z-10">
+            <div className="h-14 sm:h-16 border-b border-outline-variant/20 bg-surface-container-lowest/85 backdrop-blur-md px-3 sm:px-4 flex items-center justify-between shrink-0 z-10">
               <div 
                 onClick={() => setShowRightPane((prev) => !prev)}
-                className="flex items-center gap-3 min-w-0 cursor-pointer select-none group"
+                className="flex items-center gap-2.5 sm:gap-3 min-w-0 cursor-pointer select-none group flex-1"
                 title="Participant profile"
               >
                 <Button
                   variant="ghost"
                   size="icon"
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     router.push(`/${role}/messages`);
                   }}
-                  className="md:hidden shrink-0"
+                  className="md:hidden shrink-0 h-9 w-9 -ml-1 text-foreground hover:bg-surface-container rounded-xl active:scale-95 touch-manipulation"
+                  aria-label="Back to conversations"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
@@ -864,7 +873,7 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
             </div>
 
             {/* Input Footer */}
-            <div className="p-4 border-t border-outline-variant/20 bg-surface-container-lowest/80 backdrop-blur-md shrink-0 z-10">
+            <div className="p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-outline-variant/20 bg-surface-container-lowest/90 backdrop-blur-md shrink-0 z-10 transition-all">
               {/* Prohibited Content Live Warning */}
               {isBlocked && (
                 <div className="mb-2.5 p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-start gap-2.5 text-xs text-amber-500 animate-in fade-in slide-in-from-top-1 duration-200 shadow-xs">
@@ -914,14 +923,15 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
                 </div>
               )}
 
-              <div className="flex items-center gap-2 bg-surface-container border border-outline-variant/40 rounded-2xl p-2 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 transition-all duration-200 shadow-inner">
+              <div className="flex items-center gap-1.5 sm:gap-2 bg-surface-container border border-outline-variant/40 rounded-2xl p-1.5 sm:p-2 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 transition-all duration-200 shadow-inner">
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
-                  className="p-2 hover:bg-surface-container-high text-muted-foreground hover:text-foreground rounded-xl transition-all duration-200 shrink-0"
+                  className="p-2 sm:p-2.5 hover:bg-surface-container-high text-muted-foreground hover:text-foreground rounded-xl transition-all duration-200 shrink-0 touch-manipulation active:scale-95"
                   title="Attach photo or video"
+                  aria-label="Attach photo or video"
                 >
-                  <Paperclip className="w-4 h-4" />
+                  <Paperclip className="w-5 h-5 sm:w-4 sm:h-4" />
                 </button>
                 <input
                   ref={fileRef}
@@ -936,22 +946,29 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   onKeyDown={handleKeyDown}
+                  onFocus={handleInputFocus}
                   placeholder="Type a message..."
-                  className="flex-1 bg-transparent text-sm focus:outline-none min-w-0 py-1 px-1.5 placeholder:text-muted-foreground/45 text-foreground"
+                  className="flex-1 bg-transparent text-sm focus:outline-none min-w-0 py-1.5 px-2 placeholder:text-muted-foreground/45 text-foreground"
                 />
 
-                <button className="p-2 hover:bg-surface-container-high text-muted-foreground hover:text-foreground rounded-xl transition-all duration-200 shrink-0">
+                <button
+                  type="button"
+                  className="p-2 hover:bg-surface-container-high text-muted-foreground hover:text-foreground rounded-xl transition-all duration-200 shrink-0 touch-manipulation active:scale-95"
+                  aria-label="Insert emoji"
+                >
                   <Smile className="w-4 h-4" />
                 </button>
 
                 <Button
+                  type="button"
                   onClick={sendMessage}
                   disabled={sending || uploading || isBlocked || (!text.trim() && !mediaFile)}
                   size="sm"
-                  className="rounded-xl h-9 px-4 gap-1.5 text-xs font-bold shadow-md shadow-primary/10 active:scale-[0.98] transition-transform duration-200 disabled:opacity-50"
+                  className="rounded-xl h-10 sm:h-9 px-3 sm:px-4 gap-1.5 text-xs font-bold shadow-md shadow-primary/10 active:scale-[0.96] transition-transform duration-200 disabled:opacity-50 shrink-0 touch-manipulation"
+                  aria-label="Send message"
                 >
-                  <span>Send</span>
-                  <Send className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Send</span>
+                  <Send className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                 </Button>
               </div>
 
@@ -995,7 +1012,7 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
 
           <div
             className={`flex flex-col border-l border-outline-variant/20 bg-surface-container-lowest shrink-0 overflow-y-auto transition-all duration-300 ease-in-out
-              fixed inset-y-0 right-0 z-50 w-[85vw] max-w-[360px] h-full shadow-2xl
+              fixed inset-y-0 right-0 z-50 w-[85vw] max-w-[360px] h-full pb-[env(safe-area-inset-bottom)] shadow-2xl
               lg:static lg:h-auto lg:z-20
               ${
                 showRightPane

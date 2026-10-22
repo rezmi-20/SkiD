@@ -49,12 +49,17 @@ export function TopBar({ adminName, adminRole }: TopBarProps) {
     if (pathname.includes("/admin/jobs"))      return t("admin.jobs" as any);
     if (pathname.includes("/admin/contracts")) return t("admin.contracts" as any);
     if (pathname.includes("/admin/payments"))  return t("admin.payments" as any);
-    if (pathname.includes("/admin/disputes"))  return t("admin.disputes" as any);
-    if (pathname.includes("/admin/community")) return t("admin.community" as any);
-    if (pathname.includes("/admin/reports"))   return t("admin.reports" as any);
+    if (pathname.includes("/admin/disputes"))  return "Disputes & Adjudication";
+    if (pathname.includes("/admin/community") || pathname.includes("/admin/content")) return "Content & Community Administration";
+    if (pathname.includes("/admin/support"))   return "Support Queue & Help Desk";
+    if (pathname.includes("/admin/appeals"))   return "Governance Oversight Appeals";
+    if (pathname.includes("/admin/audit"))     return "Audit Logs & Security Trail";
+    if (pathname.includes("/admin/misconduct")) return "Admin Conduct & Inquiries";
+    if (pathname.includes("/admin/reports"))   return "Platform Analytics & Reports";
     if (pathname.includes("/admin/court-evidence")) return "Court Evidence Disclosure";
-    if (pathname.includes("/admin/settings"))  return t("admin.settings" as any);
-    return t("admin.portal" as any);
+    if (pathname.includes("/admin/settings"))  return "Platform System Settings";
+    if (pathname.includes("/admin/users"))     return "Employee & Access Management";
+    return "DireSkill Admin Portal";
   };
 
   const handleLogout = async () => {

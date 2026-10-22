@@ -11,8 +11,8 @@ export default async function ClientAppealsPage() {
     <div className="space-y-6 pb-20">
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-2.5 py-0.5 text-[11px] font-bold text-primary tracking-wide uppercase mb-1">
-            <Scale className="h-3 w-3" />
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold text-primary tracking-wide uppercase mb-1.5">
+            <Scale className="h-3.5 w-3.5" />
             Governance Oversight
           </div>
           <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
@@ -25,10 +25,10 @@ export default async function ClientAppealsPage() {
         <div>
           <Link
             href="/client/appeals/new"
-            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-primary px-4 text-xs font-bold uppercase tracking-wider text-primary-foreground hover:opacity-90 transition-opacity shadow-xs"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-sm hover:opacity-90 active:scale-95 transition"
           >
-            <Plus className="h-3.5 w-3.5" />
-            Request Appeal
+            <Plus className="h-4 w-4" />
+            <span>Request Appeal</span>
           </Link>
         </div>
       </header>

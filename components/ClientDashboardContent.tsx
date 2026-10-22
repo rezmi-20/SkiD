@@ -256,7 +256,7 @@ export default function ClientDashboardContent({
 
           <Link
             href="/client/search?view=map"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface-container border border-outline-variant/60 text-on-surface text-xs font-bold hover:bg-surface-container-high active:scale-95 transition-all touch-manipulation"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-card border border-border/70 text-foreground text-xs font-bold hover:bg-muted active:scale-95 transition-all touch-manipulation shadow-xs"
           >
             <MapPin className="h-4 w-4 text-emerald-500" />
             <span>Map Search</span>
@@ -264,7 +264,7 @@ export default function ClientDashboardContent({
 
           <Link
             href="/client/contract-setup"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface-container border border-outline-variant/60 text-on-surface text-xs font-bold hover:bg-surface-container-high active:scale-95 transition-all touch-manipulation"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-card border border-border/70 text-foreground text-xs font-bold hover:bg-muted active:scale-95 transition-all touch-manipulation shadow-xs"
           >
             <KeyRound className="h-4 w-4 text-amber-500" />
             <span>Contract PIN</span>
@@ -272,7 +272,7 @@ export default function ClientDashboardContent({
 
           <Link
             href="/client/payments"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface-container border border-outline-variant/60 text-on-surface text-xs font-bold hover:bg-surface-container-high active:scale-95 transition-all touch-manipulation"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-card border border-border/70 text-foreground text-xs font-bold hover:bg-muted active:scale-95 transition-all touch-manipulation shadow-xs"
           >
             <CreditCard className="h-4 w-4 text-indigo-500" />
             <span>Direct Payments</span>
@@ -280,7 +280,7 @@ export default function ClientDashboardContent({
 
           <Link
             href="/client/messages"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface-container border border-outline-variant/60 text-on-surface text-xs font-bold hover:bg-surface-container-high active:scale-95 transition-all touch-manipulation"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-card border border-border/70 text-foreground text-xs font-bold hover:bg-muted active:scale-95 transition-all touch-manipulation shadow-xs"
           >
             <MessageSquare className="h-4 w-4 text-sky-500" />
             <span>Messages</span>
@@ -288,7 +288,7 @@ export default function ClientDashboardContent({
 
           <Link
             href="/client/support"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-surface-container border border-outline-variant/60 text-on-surface text-xs font-bold hover:bg-surface-container-high active:scale-95 transition-all touch-manipulation"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-card border border-border/70 text-foreground text-xs font-bold hover:bg-muted active:scale-95 transition-all touch-manipulation shadow-xs"
           >
             <Headphones className="h-4 w-4 text-violet-500" />
             <span>Live Support</span>
@@ -300,11 +300,18 @@ export default function ClientDashboardContent({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
         {/* Hero Card */}
         <div
-          className="lg:col-span-2 relative overflow-hidden rounded-3xl border border-outline-variant/60 min-h-[210px] flex flex-col justify-between p-6 sm:p-7 shadow-xl"
+          className="lg:col-span-2 relative overflow-hidden rounded-3xl border border-border/70 min-h-[210px] flex flex-col justify-between p-6 sm:p-7 shadow-xl"
           style={{
             background: "radial-gradient(ellipse at top left, #121c17 0%, #0a1410 50%, #060b09 100%)",
           }}
         >
+          {/* Dire Dawa Contextual Backdrop with Dark Editorial Overlay */}
+          <div
+            className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-20 dark:opacity-15 mix-blend-luminosity"
+            style={{ backgroundImage: "url('/images/diredawa_banner.jpg')" }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#060b09]/95 via-[#060b09]/80 to-[#060b09]/60 pointer-events-none" />
+
           {/* Ambient Glows */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-[#a3e635]/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-20 w-40 h-40 bg-emerald-400/5 rounded-full blur-2xl pointer-events-none" />
@@ -355,7 +362,7 @@ export default function ClientDashboardContent({
         {/* Stats Summary Panel */}
         <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
           {/* Total Budget Card - Theme Aware */}
-          <div className="col-span-2 lg:col-span-1 rounded-3xl border border-outline-variant/60 bg-card text-card-foreground dark:bg-[#0e141d] p-5 shadow-sm">
+          <div className="col-span-2 lg:col-span-1 rounded-3xl border border-border/70 bg-card text-card-foreground dark:bg-[#0e141d] p-5 shadow-sm">
             <div className="flex items-center justify-between mb-1">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Active Budget</p>
               <BarChart2 className="h-4 w-4 text-[#84cc16] dark:text-[#a3e635]" />
@@ -371,7 +378,7 @@ export default function ClientDashboardContent({
           </div>
 
           {/* Quick Counter Cards (2 cols on all devices) */}
-          <div className="rounded-3xl border border-outline-variant/60 bg-card text-card-foreground dark:bg-[#0e141d] p-4 shadow-sm">
+          <div className="rounded-3xl border border-border/70 bg-card text-card-foreground dark:bg-[#0e141d] p-4 shadow-sm">
             <div className="w-8 h-8 rounded-full bg-[#a3e635]/15 text-emerald-600 dark:text-[#a3e635] flex items-center justify-center mb-2">
               <Briefcase className="h-4 w-4" />
             </div>
@@ -379,7 +386,7 @@ export default function ClientDashboardContent({
             <p className="text-[11px] text-muted-foreground font-medium">Active Contracts</p>
           </div>
 
-          <div className="rounded-3xl border border-outline-variant/60 bg-card text-card-foreground dark:bg-[#0e141d] p-4 shadow-sm">
+          <div className="rounded-3xl border border-border/70 bg-card text-card-foreground dark:bg-[#0e141d] p-4 shadow-sm">
             <div className="w-8 h-8 rounded-full bg-indigo-500/15 text-indigo-500 dark:text-indigo-400 flex items-center justify-center mb-2">
               <Users className="h-4 w-4" />
             </div>
