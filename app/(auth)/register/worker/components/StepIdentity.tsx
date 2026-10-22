@@ -41,7 +41,15 @@ export default function StepIdentity({ formData, setFormData }: StepIdentityProp
             type="tel"
             required
             value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, "") })}
+            maxLength={10}
+            inputMode="numeric"
+            onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+            onBlur={(e) => {
+              const value = e.target.value;
+              if (value.startsWith("0") && value.length === 10) {
+                setFormData({ ...formData, phone: value.slice(1) });
+              }
+            }}
             className="w-full h-[52px] px-4 bg-zinc-900 border border-zinc-700 rounded-2xl focus:border-green-400/80 focus:ring-1 focus:ring-green-400/80 outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white shadow-sm"
             placeholder={t("register.fields.phone.placeholder")}
           />

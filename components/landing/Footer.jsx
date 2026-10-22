@@ -1,130 +1,206 @@
 "use client";
-import DireSkillLogo from "@/components/shell/DireSkillLogo";
+import React from 'react';
+import { Share2, Globe } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { useLanguage } from './context/LanguageContext';
 
-export default function Footer({ language, setLanguage, t }) {
-  const navLinks = [
-    { label: t("nav.find_workers"), href: "#services" },
-    { label: t("nav.how_it_works"), href: "#howit" },
-    { label: t("nav.features"),     href: "#features" },
-    { label: t("nav.reviews"),      href: "#reviews" },
-    { label: t("nav.faq"),          href: "#faq" },
-  ];
+export default function Footer({
+  language = 'EN',
+  onSelectLanguage = () => {},
+  onFindWorker = () => {},
+  onJoinPro = () => {}
+}) {
+  const { t } = useLanguage();
 
-  const legalLinks = [
-    { label: "Privacy Policy", href: "#" },
-    { label: "Terms of Service", href: "#" },
-    { label: "Proclamation 1156/2019", href: "#" },
-    { label: "Staff Login", href: "/admin/login" },
-  ];
+  const scrollTo = (id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
-    <footer className="bg-[#09090b] border-t border-white/5 text-left" role="contentinfo">
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-10 sm:py-14">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-10 md:gap-12">
-
-          {/* Brand column */}
-          <div className="space-y-3 sm:space-y-4 col-span-2 md:col-span-2">
-            <DireSkillLogo variant="light" iconSize={34} />
-            <p className="text-zinc-500 text-xs font-medium leading-relaxed max-w-xs">
-              {t("footer.about")}
+    <footer className="bg-black text-white pt-24 md:pt-[128px] pb-12 md:pb-[64px] px-6 md:px-12 rounded-t-[48px] md:rounded-t-[64px] relative z-20">
+      <motion.div
+        initial={{ opacity: 0, y: 22 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.1, margin: "-40px" }}
+        transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
+        className="max-w-[1728px] mx-auto will-change-transform"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-16 mb-16 md:mb-24">
+          {/* Brand Column */}
+          <div className="flex flex-col gap-6 md:gap-8">
+            <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center shrink-0">
+              <span className="text-white font-bold text-lg leading-none font-sans">D</span>
+            </div>
+            <p className="text-[15px] text-white/50 max-w-xs leading-relaxed font-normal">
+              {t?.footer?.tagline || "Dire Dawa's verified skilled labor marketplace connecting homeowners and businesses with accredited artisans."}
             </p>
-            <div className="flex items-center gap-2 pt-1 flex-wrap">
-              {/* Fayda badge */}
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-green-400/20 bg-green-400/5 text-[8px] font-black text-green-400 uppercase tracking-widest">
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11 11 13 15 9"/></svg>
-                Fayda Verified
-              </span>
-              {/* Chapa badge */}
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-blue-500/20 bg-blue-500/5 text-[8px] font-black text-blue-400 uppercase tracking-widest">
-                Chapa
-              </span>
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <div className="space-y-3 sm:space-y-4 col-span-1">
-            <h4 className="text-[10px] font-black text-white uppercase tracking-[0.25em]">{t("footer.resources")}</h4>
-            <nav className="flex flex-col gap-2 sm:gap-2.5" aria-label="Footer navigation">
-              {navLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className="text-xs font-medium text-zinc-500 hover:text-white transition-colors uppercase tracking-wider"
-                >
-                  {link.label}
-                </a>
-              ))}
-            </nav>
-          </div>
-
-          {/* Language + Connect */}
-          <div className="space-y-5 sm:space-y-8 col-span-1">
-            <div className="space-y-2.5 sm:space-y-4">
-              <h4 className="text-[10px] font-black text-white uppercase tracking-[0.25em]">{t("footer.language")}</h4>
-              <div className="flex flex-col gap-1.5 sm:gap-2">
-                {[
-                  { code: "en", label: "English" },
-                  { code: "am", label: "አማርኛ" },
-                  { code: "om", label: "Afaan Oromoo" },
-                ].map(({ code, label }) => (
-                  <button
-                    key={code}
-                    onClick={() => setLanguage(code)}
-                    className={`text-xs font-medium text-left uppercase tracking-wider transition-all ${
-                      language === code ? "text-green-400 font-bold" : "text-zinc-500 hover:text-white"
-                    }`}
-                    aria-label={`Switch language to ${label}`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+            <div className="text-xs text-white/40">
+              A Dire Dawa University Project<br />
+              <strong className="text-white/70">ICT Department Innovation Lab</strong>
             </div>
 
-            <div className="space-y-2 sm:space-y-4">
-              <h4 className="text-[10px] font-black text-white uppercase tracking-[0.25em]">{t("footer.connect")}</h4>
-              <div className="flex gap-2">
-                {[
-                  { href: "#", label: "Telegram", icon: <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/> },
-                  { href: "#", label: "Facebook", icon: <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/> },
-                ].map(({ href, label, icon }) => (
-                  <a
-                    key={label}
-                    href={href}
-                    aria-label={label}
-                    className="w-8 h-8 sm:w-9 sm:h-9 bg-white/5 border border-white/8 rounded-lg sm:rounded-xl flex items-center justify-center text-zinc-500 hover:text-green-400 hover:border-green-400/20 transition-all"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      {icon}
-                    </svg>
-                  </a>
-                ))}
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      {/* Bottom bar */}
-      <div className="border-t border-white/5">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-[9px] font-medium text-zinc-600 uppercase tracking-widest text-center sm:text-left">
-            {t("footer.copyright")}
-          </p>
-          <div className="flex items-center gap-4 flex-wrap justify-center">
-            {legalLinks.map((link) => (
+            <div className="flex gap-4">
               <a
-                key={link.label}
-                href={link.href}
-                className="text-[9px] font-medium text-zinc-600 hover:text-zinc-400 uppercase tracking-widest transition-colors"
+                className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors text-white/70 hover:text-white"
+                href="#share"
+                onClick={e => { 
+                  e.preventDefault(); 
+                  if (navigator.clipboard) {
+                    navigator.clipboard.writeText(window.location.href);
+                  }
+                }}
+                title="Share"
+                aria-label="Share"
               >
-                {link.label}
+                <Share2 size={18} />
               </a>
-            ))}
+              <a
+                className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors text-white/70 hover:text-white"
+                href="#network"
+                onClick={e => e.preventDefault()}
+                title="Ethiopian Labor Modernization"
+                aria-label="Ethiopian Labor Modernization"
+              >
+                <Globe size={18} />
+              </a>
+            </div>
+          </div>
+
+          {/* Navigation Column 1: Resources */}
+          <div>
+            <h4 className="font-sans text-white mb-6 uppercase tracking-widest text-[10px] font-bold">
+              {t?.footer?.forClients || "For Employers"}
+            </h4>
+            <ul className="flex flex-col gap-4">
+              <li>
+                <button onClick={onFindWorker} className="text-[15px] text-white/60 hover:text-white transition-colors text-left cursor-pointer">
+                  {t?.nav?.findWorkers || "Find Workers"}
+                </button>
+              </li>
+              <li>
+                <button onClick={() => scrollTo('how-it-works')} className="text-[15px] text-white/60 hover:text-white transition-colors text-left cursor-pointer">
+                  {t?.nav?.howItWorks || "How It Works"}
+                </button>
+              </li>
+              <li>
+                <button onClick={() => scrollTo('features')} className="text-[15px] text-white/60 hover:text-white transition-colors text-left cursor-pointer">
+                  {t?.nav?.features || "Features"}
+                </button>
+              </li>
+              <li>
+                <button onClick={() => scrollTo('reviews')} className="text-[15px] text-white/60 hover:text-white transition-colors text-left cursor-pointer">
+                  {t?.nav?.reviews || "Reviews"}
+                </button>
+              </li>
+              <li>
+                <a href="/register/client" className="text-[15px] text-white/60 hover:text-white transition-colors text-left">
+                  Client Sign Up
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Navigation Column 2: Legal & Institutional */}
+          <div>
+            <h4 className="font-sans text-white mb-6 uppercase tracking-widest text-[10px] font-bold">
+              {t?.footer?.forArtisans || "For Artisans"}
+            </h4>
+            <ul className="flex flex-col gap-4">
+              <li>
+                <button onClick={onJoinPro} className="text-[15px] text-white/60 hover:text-white transition-colors text-left cursor-pointer">
+                  {t?.footer?.registerTrade || "Register Trade"}
+                </button>
+              </li>
+              <li>
+                <a href="/register/worker" className="text-[15px] text-white/60 hover:text-white transition-colors text-left">
+                  Worker Registration
+                </a>
+              </li>
+              <li>
+                <span className="text-[15px] text-white/60 cursor-default">
+                  Fayda National ID Integration
+                </span>
+              </li>
+              <li>
+                <span className="text-[15px] text-white/60 cursor-default">
+                  Chapa Payment Gateway
+                </span>
+              </li>
+              <li>
+                <span className="text-[15px] text-white/60 cursor-default">
+                  Proclamation 1156/2019
+                </span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Language Selection Column */}
+          <div>
+            <h4 className="font-sans text-white mb-6 uppercase tracking-widest text-[10px] font-bold">
+              Language
+            </h4>
+            <ul className="flex flex-col gap-4 text-[15px]">
+              <li>
+                <button
+                  onClick={() => onSelectLanguage('EN')}
+                  className={`hover:text-white transition-colors flex items-center gap-2 ${
+                    language === 'EN' ? 'text-white font-bold' : 'text-white/60'
+                  }`}
+                >
+                  <span>English</span>
+                  {language === 'EN' && <span className="w-1.5 h-1.5 rounded-full bg-[#FF416C]"></span>}
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onSelectLanguage('አማ')}
+                  className={`hover:text-white transition-colors flex items-center gap-2 ${
+                    language === 'አማ' ? 'text-white font-bold' : 'text-white/60'
+                  }`}
+                >
+                  <span>አማርኛ</span>
+                  {language === 'አማ' && <span className="w-1.5 h-1.5 rounded-full bg-[#FF416C]"></span>}
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onSelectLanguage('ORO')}
+                  className={`hover:text-white transition-colors flex items-center gap-2 ${
+                    language === 'ORO' ? 'text-white font-bold' : 'text-white/60'
+                  }`}
+                >
+                  <span>Afaan Oromoo</span>
+                  {language === 'ORO' && <span className="w-1.5 h-1.5 rounded-full bg-[#FF416C]"></span>}
+                </button>
+              </li>
+            </ul>
           </div>
         </div>
-      </div>
+
+        {/* Bottom Bar matching exact layout */}
+        <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="font-sans text-[11px] text-white/40 text-center md:text-left">
+            © 2026 DireSkill. A Dire Dawa University Project. Compliant with Ethiopian Labour Proclamation 1156/2019.
+          </p>
+          <div className="flex gap-8">
+            <span className="font-sans text-[11px] text-white/40 hover:text-white cursor-pointer transition-colors">
+              Privacy Policy
+            </span>
+            <span className="font-sans text-[11px] text-white/40 hover:text-white cursor-pointer transition-colors">
+              Terms of Service
+            </span>
+            <a
+              href="/admin/login"
+              className="font-sans text-[11px] text-white/40 hover:text-white cursor-pointer transition-colors"
+            >
+              Staff Login
+            </a>
+          </div>
+        </div>
+      </motion.div>
     </footer>
   );
 }

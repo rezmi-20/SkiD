@@ -494,3 +494,60 @@ img { max-width: 100%; height: auto; }
   --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.30), 0 8px 10px -1px hsl(0 0% 0% / 0.30);
   --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.40);
 }
+
+/* Lenis smooth momentum scrolling rules */
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(-50% - 25px)); }
+}
+
+@keyframes marquee-right {
+  0% { transform: translateX(calc(-50% - 16px)); }
+  100% { transform: translateX(0); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 28s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+.animate-marquee-right {
+  display: flex;
+  width: max-content;
+  animation: marquee-right 32s linear infinite;
+}
+
+.animate-marquee-right:hover {
+  animation-play-state: paused;
+}
+
+.marquee-container {
+  overflow: hidden;
+  width: 100%;
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}

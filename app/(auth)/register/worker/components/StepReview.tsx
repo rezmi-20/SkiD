@@ -4,9 +4,11 @@ import { useLanguage } from "@/context/LanguageContext";
 
 interface StepReviewProps {
   formData: any;
+  profilePhotoPreview: string;
+  trainingCertificates: File[];
 }
 
-export default function StepReview({ formData }: StepReviewProps) {
+export default function StepReview({ formData, profilePhotoPreview, trainingCertificates }: StepReviewProps) {
   const { t } = useLanguage();
 
   return (
@@ -26,6 +28,17 @@ export default function StepReview({ formData }: StepReviewProps) {
                <span key={s} className="text-[11px] font-medium text-zinc-500">• {s}</span>
             ))}
          </div>
+      </div>
+      <div className="flex items-center gap-4 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-4">
+        {profilePhotoPreview && <img src={profilePhotoPreview} alt="Your profile photo" className="h-16 w-16 rounded-full object-cover" />}
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-white">Profile photo</p>
+          <p className="text-xs text-zinc-400">Admins will compare your face visually with the Fayda ID.</p>
+        </div>
+      </div>
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-4">
+        <p className="mb-2 text-sm font-bold text-white">Learning certificates ({trainingCertificates.length})</p>
+        <ul className="space-y-1 text-xs text-zinc-400">{trainingCertificates.map((file, index) => <li key={`${file.name}-${index}`}>{file.name}</li>)}</ul>
       </div>
       <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black border border-zinc-800 flex items-center justify-center">
          {formData.faydaDocUrl ? (

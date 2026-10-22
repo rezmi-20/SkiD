@@ -10,6 +10,10 @@ interface StepIdComplianceProps {
   handleFileDrop: (file: File) => void | Promise<void>;
   isProcessing?: boolean;
   fileName?: string;
+  profilePhotoPreview: string;
+  onProfilePhoto: (file?: File) => void;
+  trainingCertificates: File[];
+  onTrainingCertificates: (files: FileList | null) => void;
 }
 
 export default function StepIdCompliance({
@@ -19,11 +23,42 @@ export default function StepIdCompliance({
   handleFileDrop,
   isProcessing,
   fileName,
+  profilePhotoPreview,
+  onProfilePhoto,
+  trainingCertificates,
+  onTrainingCertificates,
 }: StepIdComplianceProps) {
   const { t } = useLanguage();
 
   return (
     <div className="space-y-6">
+      <section className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5">
+        <div>
+          <h2 className="text-sm font-bold text-white">Your profile photo <span className="text-red-400">*</span></h2>
+          <p className="mt-1 text-xs leading-5 text-zinc-400">Upload a recent, clear photo of your own face with good lighting. Our admins will visually compare it with your Fayda ID photo. This is a manual review, not automated face recognition.</p>
+        </div>
+        <div className="flex items-center gap-4">
+          {profilePhotoPreview ? <img src={profilePhotoPreview} alt="Profile photo preview" className="h-20 w-20 rounded-full border border-green-400/50 object-cover" /> : <div className="flex h-20 w-20 items-center justify-center rounded-full bg-zinc-800 text-xs text-zinc-500">Photo</div>}
+          <label className="cursor-pointer rounded-xl bg-green-400 px-4 py-3 text-xs font-bold text-black">
+            {profilePhotoPreview ? "Replace photo" : "Choose photo"}
+            <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(event) => { onProfilePhoto(event.target.files?.[0]); event.target.value = ""; }} />
+          </label>
+          <span className="text-[11px] text-zinc-500">JPG, PNG, WEBP · compressed to 250 KB</span>
+        </div>
+      </section>
+
+      <section className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5">
+        <div>
+          <h2 className="text-sm font-bold text-white">Learning certificates <span className="text-red-400">*</span></h2>
+          <p className="mt-1 text-xs leading-5 text-zinc-400">Upload certificates for your training or trade qualifications. Add up to 5 files; each file can be up to 1 MB.</p>
+        </div>
+        <label className="inline-flex cursor-pointer rounded-xl border border-dashed border-zinc-700 px-4 py-3 text-xs font-bold text-zinc-200 hover:border-green-400/60">
+          Add certificates
+          <input type="file" multiple accept="application/pdf,image/png,image/jpeg,image/webp" className="sr-only" onChange={(event) => { onTrainingCertificates(event.target.files); event.target.value = ""; }} />
+        </label>
+        {trainingCertificates.length > 0 && <ul className="space-y-1 text-xs text-green-300">{trainingCertificates.map((file, index) => <li key={`${file.name}-${index}`}>✓ {file.name}</li>)}</ul>}
+      </section>
+
       <div
         onDragOver={(event) => event.preventDefault()}
         onDrop={(event) => {

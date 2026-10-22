@@ -121,6 +121,16 @@ export const workerProfiles = pgTable("worker_profiles", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const workerTrainingCertificates = pgTable("worker_training_certificates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  workerUserId: uuid("worker_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  fileName: varchar("file_name", { length: 180 }).notNull(),
+  mimeType: varchar("mime_type", { length: 100 }).notNull(),
+  fileSize: integer("file_size").notNull(),
+  documentDataUrl: text("document_data_url").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [index("worker_training_certificates_worker_idx").on(table.workerUserId)]);
+
 export const adminEmployees = pgTable("admin_employees", {
   id: uuid("id").primaryKey().defaultRandom(),
   adminEmployeeId: varchar("admin_employee_id", { length: 32 }).notNull(),

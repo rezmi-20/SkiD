@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
+import { explainRegistrationException, readRegistrationResponse } from "@/lib/auth/registration-response";
 
 export default function ClientRegisterPage() {
   const { t } = useLanguage();
@@ -20,6 +21,8 @@ export default function ClientRegisterPage() {
   const [wantsVerification, setWantsVerification] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [neonUserId, setNeonUserId] = useState("");
+  const [authEmailVerified, setAuthEmailVerified] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
@@ -35,7 +38,9 @@ export default function ClientRegisterPage() {
       setError(t("auth.register.client.errDocType"));
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
+    // Base64 Fayda data is sent with the registration request; keep the raw
+    // upload small enough for serverless request-body limits.
+    if (file.size > 3 * 1024 * 1024) {
       setError(t("auth.register.client.errDocSize"));
       return;
     }
@@ -56,6 +61,19 @@ export default function ClientRegisterPage() {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+
+    const phoneDigits = formData.phone.replace(/\D/g, "");
+    const normalizedPhone = phoneDigits.length === 10 && phoneDigits.startsWith("0") ? phoneDigits.slice(1) : phoneDigits;
+    if (formData.fullName.trim().length < 2) {
+      setError("Enter your full name.");
+      setIsLoading(false);
+      return;
+    }
+    if (!/^\d{9}$/.test(normalizedPhone)) {
+      setError("Enter your phone number as 9 digits, without the +251 country code.");
+      setIsLoading(false);
+      return;
+    }
 
     const password = formData.password;
     const hasUppercase = /[A-Z]/.test(password);
@@ -88,18 +106,25 @@ export default function ClientRegisterPage() {
     }
 
     try {
-      const { authClient } = await import("@/lib/auth/client");
+      let resolvedUserId = neonUserId;
+      let resolvedEmailVerified = authEmailVerified;
+      if (!resolvedUserId) {
+        const { authClient } = await import("@/lib/auth/client");
+        const { data, error: signUpError } = await authClient.signUp.email({
+          email: formData.email.trim(),
+          password: formData.password,
+          name: formData.fullName.trim(),
+        });
 
-      const { data, error: signUpError } = await authClient.signUp.email({
-        email: formData.email,
-        password: formData.password,
-        name: formData.fullName,
-      });
-
-      if (signUpError) {
-        setError(signUpError.message || "Registration failed.");
-        setIsLoading(false);
-        return;
+        if (signUpError || !data?.user?.id) {
+          setError(signUpError?.message || "Could not create your login account.");
+          setIsLoading(false);
+          return;
+        }
+        resolvedUserId = data.user.id;
+        resolvedEmailVerified = Boolean(data.user.emailVerified);
+        setNeonUserId(resolvedUserId);
+        setAuthEmailVerified(resolvedEmailVerified);
       }
 
       // Create profile in our database
@@ -108,21 +133,22 @@ export default function ClientRegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
+          email: formData.email.trim(),
+          phone: normalizedPhone,
           faydaFinNumber: wantsVerification ? formData.faydaFinNumber : "",
           faydaDocDataUrl: wantsVerification ? formData.faydaDocDataUrl : "",
-          email: formData.email,
           role: "client",
-          neonUserId: data?.user?.id,
+          neonUserId: resolvedUserId,
         }),
       });
 
-      const profileData = await res.json();
+      const profileData = await readRegistrationResponse(res);
 
       if (!res.ok) {
         setError(profileData.error || "Profile creation failed.");
       } else {
         // If email verification is enabled, data.user.emailVerified will be false
-        if (data?.user && !data.user.emailVerified) {
+        if (!resolvedEmailVerified) {
           router.push(`/otp-verification?email=${encodeURIComponent(formData.email)}`);
         } else {
           router.push("/login?registered=true");
@@ -130,7 +156,7 @@ export default function ClientRegisterPage() {
       }
     } catch (err: any) {
       console.error("Registration Error:", err);
-      setError(err.message || "An unexpected error occurred. Please try again.");
+      setError(explainRegistrationException(err));
     } finally {
       setIsLoading(false);
     }

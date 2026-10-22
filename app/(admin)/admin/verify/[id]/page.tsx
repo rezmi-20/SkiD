@@ -24,6 +24,7 @@ export default async function WorkerVerificationPage({ params }: { params: Promi
       wp.full_name,
       wp.district,
       wp.skills,
+      wp.avatar_url,
       wp.fayda_doc_url,
       wp.fin_last4,
       wp.fin_encrypted,
@@ -51,6 +52,13 @@ export default async function WorkerVerificationPage({ params }: { params: Promi
   if (!worker) {
     notFound();
   }
+
+  const certificates = await sql`
+    SELECT id, file_name, mime_type, file_size
+    FROM worker_training_certificates
+    WHERE worker_user_id = ${id}
+    ORDER BY created_at ASC
+  `;
 
   const maskedFin = worker.fin_last4 ? `********${worker.fin_last4}` : null;
   const identityComplete = hasCompleteWorkerIdentity({
@@ -95,6 +103,12 @@ export default async function WorkerVerificationPage({ params }: { params: Promi
       worker={{
         ...worker,
         masked_fin: maskedFin,
+        training_certificates: certificates.map((certificate: any) => ({
+          id: String(certificate.id),
+          file_name: String(certificate.file_name),
+          mime_type: String(certificate.mime_type),
+          file_size: Number(certificate.file_size),
+        })),
         identity_complete: identityComplete,
         verification_status: displayStatus,
         is_verified: Boolean(worker.is_verified && identityComplete),

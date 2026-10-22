@@ -1,203 +1,311 @@
 "use client";
+import React, { useState } from 'react';
+import { Menu, X } from 'lucide-react';
+import { motion, useScroll, useSpring } from 'framer-motion';
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import DireSkillLogo from "@/components/shell/DireSkillLogo";
+export default function Navbar({
+  language = 'EN',
+  onSelectLanguage = () => {},
+  onFindWorker = () => {},
+  onLogin,
+  onGetStarted,
+  userRole
+}) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-export default function Navbar({ userRole, language, setLanguage, t, isMenuOpen, setIsMenuOpen }) {
-  const [scrolled, setScrolled] = useState(false);
+  // Authenticated user navigation logic (Staff authentication gated separately at /admin/login)
+  const userRoleTarget = userRole === "admin" ? "/admin/login" : userRole === "worker" ? "/worker/dashboard" : "/client/search";
+  const isLoggedIn = Boolean(userRole);
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 16);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const scrollTo = (id) => {
+    setMobileMenuOpen(false);
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
-  const NAV_LINKS = [
-    { name: t("nav.home"),          href: "#home" },
-    { name: t("nav.find_workers"),  href: "#services" },
-    { name: t("nav.how_it_works"), href: "#howit" },
-    { name: t("nav.features"),      href: "#features" },
-    { name: t("nav.reviews"),       href: "#reviews" },
-    { name: t("nav.faq"),           href: "#faq" },
-  ];
+  const navLabels = {
+    EN: {
+      home: 'Home',
+      findWorkers: 'Find Workers',
+      howItWorks: 'How It Works',
+      features: 'Features',
+      reviews: 'Reviews',
+      faq: 'FAQ',
+      login: isLoggedIn ? 'Dashboard' : 'Login',
+      getStarted: isLoggedIn ? 'Dashboard' : 'Get Started'
+    },
+    'አማ': {
+      home: 'መነሻ',
+      findWorkers: 'ባለሙያዎች',
+      howItWorks: 'እንዴት ይሰራል',
+      features: 'ባህሪያት',
+      reviews: 'አስተያየቶች',
+      faq: 'ጥያቄዎች',
+      login: isLoggedIn ? 'ዳሽቦርድ' : 'ይግቡ',
+      getStarted: isLoggedIn ? 'ዳሽቦርድ' : 'ይጀምሩ'
+    },
+    ORO: {
+      home: 'Mana',
+      findWorkers: 'Ogeessota',
+      howItWorks: 'Akkaataa Hojii',
+      features: 'Amaloota',
+      reviews: 'Yaada',
+      faq: 'Gaaffiilee',
+      login: isLoggedIn ? 'Daashboordii' : 'Seeni',
+      getStarted: isLoggedIn ? 'Daashboordii' : 'Jalqabi'
+    }
+  }[language] || {
+    home: 'Home',
+    findWorkers: 'Find Workers',
+    howItWorks: 'How It Works',
+    features: 'Features',
+    reviews: 'Reviews',
+    faq: 'FAQ',
+    login: isLoggedIn ? 'Dashboard' : 'Login',
+    getStarted: isLoggedIn ? 'Dashboard' : 'Get Started'
+  };
+
+  const handleLoginClick = () => {
+    setMobileMenuOpen(false);
+    if (isLoggedIn) {
+      window.location.href = userRoleTarget;
+      return;
+    }
+    if (onLogin) onLogin();
+    else window.location.href = "/login";
+  };
+
+  const handleGetStartedClick = () => {
+    setMobileMenuOpen(false);
+    if (isLoggedIn) {
+      window.location.href = userRoleTarget;
+      return;
+    }
+    if (onGetStarted) onGetStarted();
+    else onFindWorker();
+  };
+
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 120,
+    damping: 30,
+    restDelta: 0.001
+  });
 
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${
-        scrolled
-          ? "bg-[#09090b]/95 backdrop-blur-2xl border-b border-white/[0.06] shadow-[0_1px_0_rgba(255,255,255,0.04)]"
-          : "bg-transparent"
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 md:px-8 h-[68px] flex items-center justify-between gap-6">
+    <>
+      {/* Scroll Progress Bar at very top of screen */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-[#FF416C] via-[#00E575] to-[#FF416C] origin-left z-[100] pointer-events-none"
+        style={{ scaleX }}
+      />
 
-        {/* Brand Logo */}
-        <DireSkillLogo variant="light" iconSize={36} />
-
-        {/* Desktop Nav Links */}
-        <div className="hidden lg:flex items-center gap-1">
-          {NAV_LINKS.map((link) => (
-            <a
-              key={link.name}
-              href={link.href}
-              className="px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500 hover:text-white transition-colors duration-200 whitespace-nowrap rounded-lg hover:bg-white/5"
+      {/* 1. Floating Nav */}
+      <header className="fixed top-[20px] md:top-[24px] left-0 right-0 z-50 flex items-center justify-center px-4 w-full pointer-events-none">
+        <div className="pointer-events-auto w-full max-w-[1060px] flex items-center justify-between bg-[#000000] backdrop-blur-xl rounded-full px-4 py-1.5 shadow-2xl border border-white/10 h-[58px] transition-all">
+          <div className="flex items-center gap-6 lg:gap-8 pl-1">
+            {/* Monogram Brand Mark */}
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="w-[34px] h-[34px] rounded-full border border-[#FAF9F5]/80 flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 transition-transform"
+              title="DireSkill - Dire Dawa"
+              aria-label="DireSkill Home"
             >
-              {link.name}
-            </a>
-          ))}
-        </div>
+              <span className="text-[#FAF9F5] font-bold text-sm leading-none font-sans">D</span>
+            </button>
 
-        {/* Right Actions */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-
-          {/* Language Picker */}
-          <div className="hidden md:flex items-center gap-0.5 bg-white/5 border border-white/8 rounded-xl p-0.5">
-            {[
-              { code: "en", label: "EN" },
-              { code: "am", label: "አማ" },
-              { code: "om", label: "ORO" },
-            ].map(({ code, label }) => (
+            {/* Nav links */}
+            <nav className="hidden md:flex items-center gap-4 lg:gap-6">
               <button
-                key={code}
-                onClick={() => setLanguage(code)}
-                aria-label={`Switch to ${code}`}
-                className={`text-[9px] font-black px-2.5 py-1.5 rounded-[10px] transition-all ${
-                  language === code
-                    ? "bg-green-400 text-black shadow-sm"
-                    : "text-zinc-500 hover:text-white"
+                onClick={() => scrollTo('hero')}
+                className="text-[11px] lg:text-xs font-semibold text-[#FAF9F5]/80 hover:text-[#FAF9F5] transition-colors tracking-wide uppercase font-sans whitespace-nowrap cursor-pointer"
+              >
+                {navLabels.home}
+              </button>
+              <button
+                onClick={onFindWorker}
+                className="text-[11px] lg:text-xs font-semibold text-[#FAF9F5]/80 hover:text-[#FAF9F5] transition-colors tracking-wide uppercase font-sans whitespace-nowrap cursor-pointer"
+              >
+                {navLabels.findWorkers}
+              </button>
+              <button
+                onClick={() => scrollTo('how-it-works')}
+                className="text-[11px] lg:text-xs font-semibold text-[#FAF9F5]/80 hover:text-[#FAF9F5] transition-colors tracking-wide uppercase font-sans whitespace-nowrap cursor-pointer"
+              >
+                {navLabels.howItWorks}
+              </button>
+              <button
+                onClick={() => scrollTo('features')}
+                className="text-[11px] lg:text-xs font-semibold text-[#FAF9F5]/80 hover:text-[#FAF9F5] transition-colors tracking-wide uppercase font-sans whitespace-nowrap cursor-pointer"
+              >
+                {navLabels.features}
+              </button>
+              <button
+                onClick={() => scrollTo('reviews')}
+                className="text-[11px] lg:text-xs font-semibold text-[#FAF9F5]/80 hover:text-[#FAF9F5] transition-colors tracking-wide uppercase font-sans whitespace-nowrap cursor-pointer"
+              >
+                {navLabels.reviews}
+              </button>
+              <button
+                onClick={() => scrollTo('faq')}
+                className="text-[11px] lg:text-xs font-semibold text-[#FAF9F5]/80 hover:text-[#FAF9F5] transition-colors tracking-wide uppercase font-sans whitespace-nowrap cursor-pointer"
+              >
+                {navLabels.faq}
+              </button>
+            </nav>
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            {/* Language Pill Switcher */}
+            <div className="flex items-center bg-white/10 rounded-full p-0.5 border border-white/10 text-[10px] font-semibold">
+              <button
+                onClick={() => onSelectLanguage('EN')}
+                className={`px-2 py-0.5 rounded-full transition-all cursor-pointer ${
+                  language === 'EN' ? 'bg-white text-black font-bold' : 'text-white/70 hover:text-white'
                 }`}
               >
-                {label}
+                EN
               </button>
-            ))}
-          </div>
-
-          {/* Auth Buttons */}
-          {!userRole ? (
-            <div className="hidden md:flex items-center gap-2">
-              <a
-                href="/login"
-                className="h-9 px-4 flex items-center text-zinc-400 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors"
+              <button
+                onClick={() => onSelectLanguage('አማ')}
+                className={`px-2 py-0.5 rounded-full transition-all cursor-pointer ${
+                  language === 'አማ' ? 'bg-white text-black font-bold' : 'text-white/70 hover:text-white'
+                }`}
               >
-                {t("common.login")}
-              </a>
-              <a
-                href="/register/worker"
-                className="h-9 px-5 flex items-center justify-center rounded-xl bg-green-400 text-black text-[10px] font-black uppercase tracking-widest hover:bg-green-300 transition-all shadow-[0_4px_16px_rgba(74,222,128,0.25)] active:scale-95"
+                አማ
+              </button>
+              <button
+                onClick={() => onSelectLanguage('ORO')}
+                className={`px-2 py-0.5 rounded-full transition-all cursor-pointer ${
+                  language === 'ORO' ? 'bg-white text-black font-bold' : 'text-white/70 hover:text-white'
+                }`}
               >
-                {t("nav.get_started")}
-              </a>
+                ORO
+              </button>
             </div>
-          ) : (
-            <a
-              href={
-                userRole === "admin"
-                  ? "/admin/login"
-                  : userRole === "worker"
-                  ? "/worker/dashboard"
-                  : "/client/search"
-              }
-              className="hidden md:flex h-9 px-5 items-center justify-center rounded-xl bg-white/10 border border-white/10 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/20 transition-all whitespace-nowrap"
+
+            {/* Login Link */}
+            <button
+              onClick={handleLoginClick}
+              className="hidden sm:inline-flex text-xs font-semibold text-white/80 hover:text-white px-2 py-1 transition-colors cursor-pointer"
             >
-              {t("nav.dashboard")}
-            </a>
-          )}
+              {navLabels.login}
+            </button>
 
-          {/* Mobile hamburger */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="lg:hidden w-10 h-10 flex flex-col items-center justify-center gap-[5px] rounded-xl bg-white/5 border border-white/8"
-            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-            aria-expanded={isMenuOpen}
-          >
-            <span className={`w-4.5 h-0.5 bg-white rounded-full transition-all duration-300 ${isMenuOpen ? "rotate-45 translate-y-[7px]" : ""}`} style={{ width: "18px" }} />
-            <span className={`h-0.5 bg-white rounded-full transition-all duration-300 ${isMenuOpen ? "opacity-0 scale-x-0" : ""}`} style={{ width: "18px" }} />
-            <span className={`w-4.5 h-0.5 bg-white rounded-full transition-all duration-300 ${isMenuOpen ? "-rotate-45 -translate-y-[7px]" : ""}`} style={{ width: "18px" }} />
-          </button>
+            {/* Primary Action Button: Get Started */}
+            <button
+              onClick={handleGetStartedClick}
+              className="border border-[#FAF9F5]/30 text-[#FAF9F5] font-sans rounded-full hover:bg-[#FAF9F5] hover:text-black transition-all duration-300 shrink-0 flex items-center px-4 text-[10px] sm:text-xs h-[32px] font-semibold uppercase tracking-wider cursor-pointer"
+            >
+              {navLabels.getStarted}
+            </button>
+
+            {/* Mobile toggle */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden text-white/80 hover:text-white p-1 rounded-full ml-1"
+              aria-label="Toggle navigation"
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
         </div>
-      </div>
+      </header>
 
-      {/* Mobile Drawer */}
-      {isMenuOpen && (
-        <div className="fixed inset-x-0 top-[68px] bg-[#09090b]/97 backdrop-blur-2xl border-b border-white/5 z-[90] flex flex-col gap-0 lg:hidden shadow-2xl">
-          {/* Nav links */}
-          <div className="px-4 pt-4 pb-2 flex flex-col gap-1">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                onClick={() => setIsMenuOpen(false)}
-                className="px-4 py-3 text-sm font-black uppercase tracking-[0.16em] text-zinc-400 hover:text-white hover:bg-white/5 rounded-xl transition-all"
-              >
-                {link.name}
-              </a>
-            ))}
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-40 bg-black/95 backdrop-blur-2xl md:hidden flex flex-col justify-center items-center p-6 text-center animate-fade-in">
+          <div className="w-12 h-12 rounded-full border border-white/40 flex items-center justify-center text-white font-bold text-xl mb-6">
+            D
           </div>
 
-          <div className="mx-4 h-px bg-white/5" />
-
-          {/* Language switcher */}
-          <div className="px-4 py-4">
-            <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-2">Language</p>
-            <div className="flex items-center gap-1 bg-white/5 border border-white/8 rounded-xl p-1 w-fit">
-              {[
-                { code: "en", label: "English" },
-                { code: "am", label: "አማርኛ" },
-                { code: "om", label: "ORO" },
-              ].map(({ code, label }) => (
-                <button
-                  key={code}
-                  onClick={() => { setLanguage(code); setIsMenuOpen(false); }}
-                  className={`text-[9px] font-black px-3 py-1.5 rounded-[10px] transition-all ${
-                    language === code ? "bg-green-400 text-black" : "text-zinc-500 hover:text-white"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+          <div className="flex flex-col space-y-5 mb-8">
+            <button
+              onClick={() => scrollTo('hero')}
+              className="text-lg font-bold text-white uppercase tracking-wider"
+            >
+              {navLabels.home}
+            </button>
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onFindWorker();
+              }}
+              className="text-lg font-bold text-white uppercase tracking-wider"
+            >
+              {navLabels.findWorkers}
+            </button>
+            <button
+              onClick={() => scrollTo('how-it-works')}
+              className="text-lg font-bold text-white uppercase tracking-wider"
+            >
+              {navLabels.howItWorks}
+            </button>
+            <button
+              onClick={() => scrollTo('features')}
+              className="text-lg font-bold text-white uppercase tracking-wider"
+            >
+              {navLabels.features}
+            </button>
+            <button
+              onClick={() => scrollTo('reviews')}
+              className="text-lg font-bold text-white uppercase tracking-wider"
+            >
+              {navLabels.reviews}
+            </button>
+            <button
+              onClick={() => scrollTo('faq')}
+              className="text-lg font-bold text-white uppercase tracking-wider"
+            >
+              {navLabels.faq}
+            </button>
           </div>
 
-          <div className="mx-4 h-px bg-white/5" />
+          <div className="flex items-center gap-3 mb-6">
+            <button
+              onClick={() => onSelectLanguage('EN')}
+              className={`px-3 py-1 rounded-full text-xs font-bold ${
+                language === 'EN' ? 'bg-white text-black' : 'text-white/60'
+              }`}
+            >
+              EN
+            </button>
+            <button
+              onClick={() => onSelectLanguage('አማ')}
+              className={`px-3 py-1 rounded-full text-xs font-bold ${
+                language === 'አማ' ? 'bg-white text-black' : 'text-white/60'
+              }`}
+            >
+              አማ
+            </button>
+            <button
+              onClick={() => onSelectLanguage('ORO')}
+              className={`px-3 py-1 rounded-full text-xs font-bold ${
+                language === 'ORO' ? 'bg-white text-black' : 'text-white/60'
+              }`}
+            >
+              ORO
+            </button>
+          </div>
 
-          {/* Auth */}
-          <div className="p-4 flex flex-col gap-2">
-            {!userRole ? (
-              <>
-                <a
-                  href="/login"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="h-12 flex items-center justify-center border border-white/10 rounded-xl text-xs font-black uppercase tracking-widest text-zinc-400 hover:text-white hover:border-white/20 transition-all"
-                >
-                  {t("common.login")}
-                </a>
-                <a
-                  href="/register/worker"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="h-12 flex items-center justify-center bg-green-400 text-black rounded-xl text-xs font-black uppercase tracking-widest hover:bg-green-300 transition-all"
-                >
-                  {t("nav.get_started")}
-                </a>
-              </>
-            ) : (
-              <a
-                href={
-                  userRole === "admin"
-                    ? "/admin/login"
-                    : userRole === "worker"
-                    ? "/worker/dashboard"
-                    : "/client/search"
-                }
-                onClick={() => setIsMenuOpen(false)}
-                className="h-12 flex items-center justify-center bg-white/10 border border-white/10 text-white rounded-xl text-xs font-black uppercase tracking-widest"
-              >
-                {t("nav.dashboard")}
-              </a>
-            )}
+          <div className="flex flex-col gap-3 w-full max-w-xs">
+            <button
+              onClick={handleGetStartedClick}
+              className="w-full py-3 rounded-full bg-white text-black font-bold uppercase tracking-wider text-xs shadow-lg"
+            >
+              {navLabels.getStarted}
+            </button>
+            <button
+              onClick={handleLoginClick}
+              className="w-full py-2.5 rounded-full border border-white/20 text-white font-medium text-xs"
+            >
+              {navLabels.login}
+            </button>
           </div>
         </div>
       )}
-    </nav>
+    </>
   );
 }

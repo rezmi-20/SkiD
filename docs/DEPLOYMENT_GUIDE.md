@@ -43,19 +43,21 @@ Sandbox-only:
 2. Configure all required environment variables in Vercel.
 3. Run `npm run check:env:production` with production variables available.
 4. Run `npm run db:migrate`.
-5. If this database predates Phase 3, run `npm run db:migrate:core`.
-6. Run `npm run db:verify:core`.
-7. Run `npm run db:check:schema`.
-8. Deploy the app.
-9. Run `npm run build` locally and in CI before promoting.
+5. Run `npm run db:migrate:worker-certificates` to create private storage for worker training certificates.
+6. If this database predates Phase 3, run `npm run db:migrate:core`.
+7. Run `npm run db:verify:core`.
+8. Run `npm run db:check:schema`.
+9. Deploy the app.
+10. Run `npm run build` locally and in CI before promoting.
 
 ## Redeployment
 
 1. Review migration files.
 2. Apply migrations with `npm run db:migrate`.
-3. Run database verification commands.
-4. Deploy the new version.
-5. Smoke test login, dashboards, contract view, payment page, rating page, and admin verification.
+3. Apply the worker certificate migration with `npm run db:migrate:worker-certificates`.
+4. Run database verification commands.
+5. Deploy the new version.
+6. Smoke test login, dashboards, contract view, payment page, rating page, and admin verification.
 
 ## Rollback
 

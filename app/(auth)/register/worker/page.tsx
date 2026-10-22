@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
+import { explainRegistrationException, readRegistrationResponse } from "@/lib/auth/registration-response";
 
 // Modular Components
 import RegistrationSidebar from "./components/RegistrationSidebar";
@@ -19,6 +20,11 @@ export default function WorkerRegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessingId, setIsProcessingId] = useState(false);
   const [faydaFileName, setFaydaFileName] = useState("");
+  const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+  const [profilePhotoPreview, setProfilePhotoPreview] = useState("");
+  const [trainingCertificates, setTrainingCertificates] = useState<File[]>([]);
+  const [neonUserId, setNeonUserId] = useState("");
+  const [authEmailVerified, setAuthEmailVerified] = useState(false);
   const [error, setError] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -44,6 +50,15 @@ export default function WorkerRegisterPage() {
       return false;
     }
     if (step === 1) {
+      if (formData.fullName.trim().length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+        setError("Enter your full name and a valid email address.");
+        return false;
+      }
+      const normalizedPhone = formData.phone.replace(/\D/g, "").replace(/^0(?=\d{9}$)/, "");
+      if (!/^\d{9}$/.test(normalizedPhone)) {
+        setError("Enter your phone number as 9 digits, without the +251 country code.");
+        return false;
+      }
       const password = formData.password;
       const hasUppercase = /[A-Z]/.test(password);
       const hasLowercase = /[a-z]/.test(password);
@@ -57,6 +72,14 @@ export default function WorkerRegisterPage() {
     }
     if (step === 2 && !formData.faydaDocUrl) {
       setError(t("register.errors.fayda_required"));
+      return false;
+    }
+    if (step === 2 && !profilePhoto) {
+      setError("Upload a clear profile photo showing your own face. Admins compare it with your Fayda ID.");
+      return false;
+    }
+    if (step === 2 && trainingCertificates.length === 0) {
+      setError("Upload at least one learning or training certificate.");
       return false;
     }
     if (step === 3 && (formData.skills.length === 0 || !formData.location)) {
@@ -121,7 +144,7 @@ export default function WorkerRegisterPage() {
 
       context.drawImage(image, 0, 0, width, height);
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.78));
-      if (!blob) {
+      if (!blob || blob.size > 1024 * 1024) {
         throw new Error(t("register.errors.image_compress"));
       }
 
@@ -140,6 +163,60 @@ export default function WorkerRegisterPage() {
     e.target.value = "";
   };
 
+  const handleProfilePhoto = async (file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("Choose an image for your profile photo.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Choose a profile photo smaller than 10 MB.");
+      return;
+    }
+    try {
+      const image = await readImage(file);
+      const scale = Math.min(1, 800 / Math.max(image.width, image.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(image.width * scale));
+      canvas.height = Math.max(1, Math.round(image.height * scale));
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Could not prepare profile photo.");
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.74));
+      if (!blob || blob.size > 250 * 1024) throw new Error("Choose a smaller or clearer profile photo (maximum 250 KB after compression).");
+      const compressed = new File([blob], "profile-photo.jpg", { type: "image/jpeg" });
+      setProfilePhoto(compressed);
+      setProfilePhotoPreview(URL.createObjectURL(compressed));
+      setError("");
+    } catch (photoError) {
+      setError(photoError instanceof Error ? photoError.message : "Could not prepare profile photo.");
+    }
+  };
+
+  const handleTrainingCertificates = (files: FileList | null) => {
+    if (!files) return;
+    const selected = Array.from(files);
+    const allowedTypes = new Set(["application/pdf", "image/jpeg", "image/png", "image/webp"]);
+    if (selected.some((file) => !allowedTypes.has(file.type))) {
+      setError("Certificates must be PDF, JPG, PNG, or WEBP files.");
+      return;
+    }
+    if (selected.some((file) => file.size > 1024 * 1024)) {
+      setError("Each certificate must be 1 MB or smaller.");
+      return;
+    }
+    if (selected.length + trainingCertificates.length > 5) {
+      setError("Upload up to 5 certificates.");
+      return;
+    }
+    if (selected.reduce((total, file) => total + file.size, 0) + trainingCertificates.reduce((total, file) => total + file.size, 0) > 2 * 1024 * 1024) {
+      setError("All certificates together must be 2 MB or smaller.");
+      return;
+    }
+    setTrainingCertificates((current) => [...current, ...selected]);
+    setError("");
+  };
+
   const toggleSkill = (skill: string) => {
     setFormData(prev => ({
       ...prev,
@@ -151,38 +228,51 @@ export default function WorkerRegisterPage() {
     setIsLoading(true);
     setError("");
     try {
-      const { authClient } = await import("@/lib/auth/client");
+      let resolvedUserId = neonUserId;
+      let resolvedEmailVerified = authEmailVerified;
+      if (!resolvedUserId) {
+        const { authClient } = await import("@/lib/auth/client");
+        const { data, error: signUpError } = await authClient.signUp.email({
+          email: formData.email.trim(),
+          password: formData.password,
+          name: formData.fullName.trim(),
+        });
 
-      const { data, error: signUpError } = await authClient.signUp.email({
-        email: formData.email,
-        password: formData.password,
-        name: formData.fullName,
-      });
-
-      if (signUpError) {
-        setError(signUpError.message || t("register.errors.registration_failed"));
-        setIsLoading(false);
-        return;
+        if (signUpError || !data?.user?.id) {
+          setError(signUpError?.message || "Could not create your login account.");
+          setIsLoading(false);
+          return;
+        }
+        resolvedUserId = data.user.id;
+        resolvedEmailVerified = Boolean(data.user.emailVerified);
+        setNeonUserId(resolvedUserId);
+        setAuthEmailVerified(resolvedEmailVerified);
       }
+
+      const profilePayload = {
+        ...formData,
+        phone: formData.phone.replace(/\D/g, "").replace(/^0(?=\d{9}$)/, ""),
+        email: formData.email.trim(),
+        district: formData.location,
+        role: "worker",
+        bio: formData.experience,
+        neonUserId: resolvedUserId,
+      };
+      const registrationBody = new FormData();
+      registrationBody.set("payload", JSON.stringify(profilePayload));
+      if (profilePhoto) registrationBody.set("profilePhoto", profilePhoto);
+      trainingCertificates.forEach((file) => registrationBody.append("trainingCertificates", file));
 
       const res = await fetch("/api/auth/profile", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          email: formData.email,
-          district: formData.location,
-          role: "worker",
-          bio: formData.experience,
-          neonUserId: data?.user?.id
-        }),
+        body: registrationBody,
       });
 
-      const profileData = await res.json();
+      const profileData = await readRegistrationResponse(res);
       if (!res.ok) {
         setError(profileData.error || t("register.errors.submission_failed"));
       } else {
-        if (data?.user && !data.user.emailVerified) {
+        if (!resolvedEmailVerified) {
           router.push(`/otp-verification?email=${encodeURIComponent(formData.email)}`);
         } else {
           setIsSuccess(true);
@@ -190,7 +280,7 @@ export default function WorkerRegisterPage() {
       }
     } catch (err: any) {
       console.error("Worker Registration Error:", err);
-      setError(err.message || t("register.errors.network_timeout"));
+      setError(explainRegistrationException(err) || t("register.errors.network_timeout"));
     } finally {
       setIsLoading(false);
     }
@@ -267,10 +357,14 @@ export default function WorkerRegisterPage() {
                     handleFileDrop={prepareFaydaDocument}
                     isProcessing={isProcessingId}
                     fileName={faydaFileName}
+                    profilePhotoPreview={profilePhotoPreview}
+                    onProfilePhoto={handleProfilePhoto}
+                    trainingCertificates={trainingCertificates}
+                    onTrainingCertificates={handleTrainingCertificates}
                   />
                 )}
                 {step === 3 && <StepServiceParameters formData={formData} setFormData={setFormData} toggleSkill={toggleSkill} categories={categories} locations={locations} />}
-                {step === 4 && <StepReview formData={formData} />}
+                {step === 4 && <StepReview formData={formData} profilePhotoPreview={profilePhotoPreview} trainingCertificates={trainingCertificates} />}
 
                 <div className="flex gap-4 pt-4">
                   {step > 1 && (

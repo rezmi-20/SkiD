@@ -29,6 +29,8 @@ interface WorkerVerificationContentProps {
     district: string;
     skills: string[];
     fayda_doc_url: string;
+    avatar_url?: string | null;
+    training_certificates?: Array<{ id: string; file_name: string; mime_type: string; file_size: number }>;
     is_verified: boolean;
     verification_status?: string | null;
     verification_reason?: string | null;
@@ -228,6 +230,14 @@ export default function WorkerVerificationContent({
 
         {/* Right Content: Document */}
         <main className="md:col-span-2 space-y-10 order-1 md:order-2">
+          <section className="rounded-[2rem] border border-surface-container-highest bg-surface-container-low p-6">
+            <h3 className="mb-4 text-xs font-black uppercase tracking-widest text-on-surface">Profile photo identity check</h3>
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+              {worker.avatar_url ? <img src={worker.avatar_url} alt={`${worker.full_name} profile photo`} className="h-40 w-40 rounded-2xl border border-surface-container-highest object-cover" /> : <div className="flex h-40 w-40 items-center justify-center rounded-2xl bg-surface-container-high text-xs text-on-surface-variant">No profile photo</div>}
+              <p className="max-w-md text-sm leading-6 text-on-surface-variant">Compare this profile photo visually with the photo on the Fayda ID below. This review is manual; the system does not perform face recognition.</p>
+            </div>
+          </section>
+
           <motion.section 
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -253,6 +263,24 @@ export default function WorkerVerificationContent({
                 )}
              </div>
           </motion.section>
+
+          <section className="overflow-hidden rounded-[2rem] border border-surface-container-highest bg-surface-container">
+            <div className="border-b border-surface-container-highest bg-surface-container-high p-6">
+              <h3 className="text-xs font-black uppercase tracking-widest text-on-surface">Learning certificates ({worker.training_certificates?.length || 0})</h3>
+            </div>
+            <div className="space-y-5 p-6">
+              {worker.training_certificates?.length ? worker.training_certificates.map((certificate) => (
+                <div key={certificate.id} className="rounded-2xl border border-surface-container-highest p-4">
+                  <p className="mb-3 break-all text-sm font-bold text-on-surface">{certificate.file_name} <span className="font-medium text-on-surface-variant">({Math.ceil(certificate.file_size / 1024)} KB)</span></p>
+                  <ProtectedVerificationDocumentViewer
+                    documentUrl={`/api/workers/${worker.user_id}/training-certificates/${certificate.id}`}
+                    title={`Protected training certificate: ${certificate.file_name}`}
+                    className="relative z-0 w-full"
+                  />
+                </div>
+              )) : <p className="text-sm text-on-surface-variant">No learning certificates were submitted.</p>}
+            </div>
+          </section>
 
           {readOnly ? (
             <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-5 py-4 text-sm font-bold text-on-surface">

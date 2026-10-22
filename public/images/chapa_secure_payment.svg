@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#061A14" />
+      <stop offset="50%" stop-color="#0B2B20" />
+      <stop offset="100%" stop-color="#04120D" />
+    </linearGradient>
+    <linearGradient id="chapaGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D287" />
+      <stop offset="100%" stop-color="#00965E" />
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#123B2D" stop-opacity="0.85" />
+      <stop offset="100%" stop-color="#0A241B" stop-opacity="0.95" />
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00FF9D" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#00FF9D" stop-opacity="0" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="16" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000000" flood-opacity="0.6" />
+    </filter>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="800" height="600" fill="url(#bgGrad)" />
+
+  <!-- Ambient Glow circles -->
+  <circle cx="680" cy="120" r="220" fill="url(#glowGrad)" />
+  <circle cx="100" cy="500" r="180" fill="url(#glowGrad)" />
+
+  <!-- Subtle Grid lines -->
+  <g stroke="#00FF9D" stroke-opacity="0.05" stroke-width="1">
+    <line x1="0" y1="100" x2="800" y2="100" />
+    <line x1="0" y1="200" x2="800" y2="200" />
+    <line x1="0" y1="300" x2="800" y2="300" />
+    <line x1="0" y1="400" x2="800" y2="400" />
+    <line x1="0" y1="500" x2="800" y2="500" />
+    <line x1="160" y1="0" x2="160" y2="600" />
+    <line x1="320" y1="0" x2="320" y2="600" />
+    <line x1="480" y1="0" x2="480" y2="600" />
+    <line x1="640" y1="0" x2="640" y2="600" />
+  </g>
+
+  <!-- Central Chapa Checkout Glass Card -->
+  <g filter="url(#shadow)" transform="translate(140, 70)">
+    <!-- Card Frame -->
+    <rect width="520" height="460" rx="28" fill="url(#cardGrad)" stroke="#00FF9D" stroke-opacity="0.3" stroke-width="1.5" />
+
+    <!-- Top Chapa Branding Bar -->
+    <g transform="translate(36, 32)">
+      <!-- Chapa Logo Symbol -->
+      <g>
+        <rect x="0" y="4" width="34" height="34" rx="10" fill="url(#chapaGreen)" />
+        <path d="M10 21 L16 27 L25 15" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+      </g>
+      <!-- Brand Text -->
+      <text x="46" y="24" fill="#FFFFFF" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="22" letter-spacing="1.5">CHAPA</text>
+      <text x="46" y="38" fill="#00D287" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="600" font-size="10" letter-spacing="1.2">ETHIOPIA'S PAYMENT GATEWAY</text>
+
+      <!-- Escrow Active Status -->
+      <g transform="translate(320, 4)">
+        <rect width="124" height="28" rx="14" fill="#003B26" stroke="#00FF9D" stroke-opacity="0.4" stroke-width="1" />
+        <circle cx="16" cy="14" r="4" fill="#00FF9D" />
+        <text x="26" y="18" fill="#E6FFF4" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="10" font-weight="700" letter-spacing="0.5">ESCROW SECURED</text>
+      </g>
+    </g>
+
+    <!-- Divider -->
+    <line x1="36" y1="92" x2="484" y2="92" stroke="#00FF9D" stroke-opacity="0.15" stroke-width="1" />
+
+    <!-- Payment Amount Section -->
+    <g transform="translate(36, 120)">
+      <text x="0" y="16" fill="#88B4A2" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="500">DireSkill Escrow Hold · Contract #DS-4920</text>
+      <text x="0" y="62" fill="#FFFFFF" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="44" font-weight="800" letter-spacing="-0.5">ETB 4,500<tspan font-size="24" font-weight="500" fill="#88B4A2">.00</tspan></text>
+      <text x="250" y="58" fill="#00FF9D" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="600">✓ Funds Held in Escrow</text>
+    </g>
+
+    <!-- Payment Channel Pills (Telebirr, CBE, Awash, Card) -->
+    <g transform="translate(36, 216)">
+      <text x="0" y="0" fill="#88B4A2" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11" font-weight="600" letter-spacing="0.8" text-transform="uppercase">Supported Channels</text>
+
+      <!-- Telebirr -->
+      <g transform="translate(0, 12)">
+        <rect width="102" height="36" rx="10" fill="#061D15" stroke="#00D287" stroke-opacity="0.3" stroke-width="1" />
+        <circle cx="18" cy="18" r="7" fill="#0072CE" />
+        <text x="32" y="22" fill="#FFFFFF" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11" font-weight="700">telebirr</text>
+      </g>
+
+      <!-- CBE Birr -->
+      <g transform="translate(112, 12)">
+        <rect width="102" height="36" rx="10" fill="#061D15" stroke="#00D287" stroke-opacity="0.3" stroke-width="1" />
+        <circle cx="18" cy="18" r="7" fill="#8A1538" />
+        <text x="32" y="22" fill="#FFFFFF" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11" font-weight="700">CBE Birr</text>
+      </g>
+
+      <!-- Awash Bank -->
+      <g transform="translate(224, 12)">
+        <rect width="108" height="36" rx="10" fill="#061D15" stroke="#00D287" stroke-opacity="0.3" stroke-width="1" />
+        <circle cx="18" cy="18" r="7" fill="#004A99" />
+        <text x="32" y="22" fill="#FFFFFF" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11" font-weight="700">Awash Bank</text>
+      </g>
+
+      <!-- Cards -->
+      <g transform="translate(342, 12)">
+        <rect width="106" height="36" rx="10" fill="#061D15" stroke="#00D287" stroke-opacity="0.3" stroke-width="1" />
+        <text x="14" y="22" fill="#FFFFFF" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11" font-weight="700">Visa / MCard</text>
+      </g>
+    </g>
+
+    <!-- Release Condition: 4-digit PIN verification -->
+    <g transform="translate(36, 298)">
+      <rect width="448" height="66" rx="14" fill="#051811" stroke="#00FF9D" stroke-opacity="0.2" stroke-width="1" />
+      <!-- Lock Icon -->
+      <g transform="translate(16, 17)">
+        <circle cx="16" cy="16" r="16" fill="#003B26" />
+        <path d="M12 15 V12 C12 9.8 13.8 8 16 8 C18.2 8 20 9.8 20 12 V15 M10 15 H22 V24 H10 Z" stroke="#00FF9D" stroke-width="1.8" fill="none" stroke-linejoin="round" />
+      </g>
+      <text x="60" y="28" fill="#FFFFFF" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="13" font-weight="700">Dual-Protection Escrow Release</text>
+      <text x="60" y="46" fill="#88B4A2" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11" font-weight="400">Payment released only when client enters 4-digit completion PIN.</text>
+    </g>
+
+    <!-- Chapa Security Footer -->
+    <g transform="translate(36, 394)">
+      <text x="0" y="16" fill="#00D287" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11" font-weight="600">🛡️ 256-Bit Bank Grade SSL Encryption · Licensed by National Bank of Ethiopia</text>
+    </g>
+  </g>
+</svg>
