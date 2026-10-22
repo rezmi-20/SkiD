@@ -136,7 +136,7 @@ export const Hero: React.FC<HeroProps> = ({ onSearch, onExploreStudio }) => {
 
         {/* Ambient Overlay Badges on Hero */}
         <div className="absolute bottom-6 sm:bottom-10 left-6 sm:left-10 right-6 sm:right-10 flex flex-col sm:flex-row items-center justify-between gap-4 pointer-events-auto">
-          <div className="bg-white/85 backdrop-blur-xl border border-white/60 px-5 py-3 rounded-full shadow-lg flex items-center gap-3">
+          <div className="max-w-full bg-white/85 backdrop-blur-xl border border-white/60 px-4 sm:px-5 py-3 rounded-full shadow-lg flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-center">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.7)] animate-pulse"></span>
             <span className="text-xs font-semibold text-[#1B1B1B] tracking-wide">
               {t.trustCollage.cards.fayda.badge}
@@ -144,7 +144,7 @@ export const Hero: React.FC<HeroProps> = ({ onSearch, onExploreStudio }) => {
             <span className="text-xs text-[#8C8880] hidden md:inline">· Dire Dawa, Ethiopia</span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="max-w-full flex flex-wrap items-center justify-center gap-2 sm:gap-3">
             <button
               onClick={() => onSearch('')}
               className="bg-white/90 hover:bg-white text-[#1B1B1B] backdrop-blur-xl border border-white/60 px-5 py-3 rounded-full text-xs font-bold uppercase tracking-wider transition-all hover:scale-105 active:scale-95 shadow-lg flex items-center gap-2 cursor-pointer"

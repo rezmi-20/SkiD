@@ -28,17 +28,17 @@ export default async function AdminLayout({
   const adminName = String(admin.fullName || admin.employeeId || "Admin");
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background font-body text-on-background antialiased transition-colors duration-300">
+    <div className="flex min-h-dvh bg-background font-body text-on-background antialiased transition-colors duration-300 lg:h-dvh lg:overflow-hidden">
       {/* Sidebar Navigation */}
       <Sidebar userEmail={email} adminRole={admin.role} permissions={admin.permissions} />
 
       {/* Main Container */}
-      <div className="flex-grow flex flex-col min-w-0 overflow-hidden">
+      <div className="flex min-w-0 flex-grow flex-col lg:overflow-hidden">
         {/* Top Header Bar */}
         <TopBar adminName={adminName} adminRole={admin.role} />
 
         {/* Dynamic Inner Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 no-scrollbar">
+        <main className="flex-1 p-4 pb-safe md:p-6 lg:min-h-0 lg:overflow-y-auto no-scrollbar">
           <div className="max-w-7xl mx-auto w-full">
             {children}
           </div>

@@ -40,6 +40,10 @@ function LandingView({ userRole }) {
   const [toastMessage, setToastMessage] = useState(null);
 
   useEffect(() => {
+    // Keep native scrolling on touch devices. Smooth-scroll interception can
+    // conflict with browser momentum scrolling, especially on mobile Safari.
+    if (window.matchMedia("(pointer: coarse)").matches) return;
+
     const lenis = new Lenis({
       duration: 1.15,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
