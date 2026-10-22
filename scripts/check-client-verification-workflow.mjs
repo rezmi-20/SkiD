@@ -112,16 +112,17 @@ report(
     clientContractsPage.includes('getContractSetupStatus(undefined, "/client/contracts")'),
 );
 report(
-  "protected document route authorizes owner or admin and disables caching",
-  protectedDocumentRoute.includes("isOwner") &&
-    protectedDocumentRoute.includes("isAdmin") &&
-    protectedDocumentRoute.includes("Forbidden") &&
-    protectedDocumentRoute.includes('"Cache-Control": "no-store, private"'),
+  "protected Fayda route permits only a one-time verification-admin reveal",
+  protectedDocumentRoute.includes("export async function POST") &&
+    protectedDocumentRoute.includes('admin.role !== "content_verification_admin"') &&
+    protectedDocumentRoute.includes('hasAdminPermission(admin, "verification.review")') &&
+    protectedDocumentRoute.includes("expectedAttemptId") &&
+    protectedDocumentRoute.includes("recordVerificationDocumentView") &&
+    protectedDocumentRoute.includes('"Cache-Control": "private, no-store"'),
 );
 report(
-  "protected document route audits admin reads without document or FIN contents",
-  protectedDocumentRoute.includes("client_verification_document_viewed") &&
-    protectedDocumentRoute.includes("adminId") &&
+  "Fayda reveal audit records access without FIN contents",
+  protectedDocumentRoute.includes("recordVerificationDocumentView") &&
     protectedDocumentRoute.includes("clientId") &&
     !protectedDocumentRoute.includes("fin_encrypted") &&
     !protectedDocumentRoute.includes("fin_fingerprint"),

@@ -43,7 +43,7 @@ export default function ProtectedVerificationDocumentViewer({
   }, [documentUrl]);
 
   const revealDocument = async () => {
-    if (!canReveal || !attemptId || state.status !== "hidden") return;
+    if (!canReveal || state.status !== "hidden") return;
     setState({ status: "loading" });
     try {
       const response = await fetch(documentUrl, {
