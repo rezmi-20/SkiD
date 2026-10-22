@@ -45,6 +45,7 @@ export function TopBar({ adminName, adminRole }: TopBarProps) {
     if (pathname.includes("/admin/workers"))   return t("admin.workers" as any);
     if (pathname.includes("/admin/clients"))   return t("admin.clients" as any);
     if (pathname.includes("/admin/verify"))    return t("nav.admin.verify" as any);
+    if (pathname.includes("/admin/worker-avatar-requests")) return "Worker Photo Requests";
     if (pathname.includes("/admin/jobs"))      return t("admin.jobs" as any);
     if (pathname.includes("/admin/contracts")) return t("admin.contracts" as any);
     if (pathname.includes("/admin/payments"))  return t("admin.payments" as any);
