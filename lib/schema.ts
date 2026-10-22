@@ -414,6 +414,30 @@ export const communityComments = pgTable("community_comments", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const communityPostVotes = pgTable("community_post_votes", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  postId: uuid("post_id").notNull().references(() => communityPosts.id, { onDelete: "cascade" }),
+  voteType: varchar("vote_type", { length: 20 }).notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("community_post_votes_user_post_unique").on(table.userId, table.postId),
+  index("community_post_votes_post_type_idx").on(table.postId, table.voteType),
+]);
+
+export const workerAvatarChangeRequests = pgTable("worker_avatar_change_requests", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  workerUserId: uuid("worker_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  requestedAvatarUrl: text("requested_avatar_url").notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("pending"),
+  reviewReason: text("review_reason"),
+  reviewedBy: uuid("reviewed_by").references(() => adminEmployees.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  reviewedAt: timestamp("reviewed_at"),
+}, (table) => [
+  index("worker_avatar_change_review_queue_idx").on(table.status, table.createdAt),
+]);
+
 // ─── Notifications ─────────────────────────────────────────────────────────────
 export const notifications = pgTable("notifications", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -806,3 +830,54 @@ export const notificationPreferences = pgTable("notification_preferences", {
   pushNotifications: boolean("push_notifications").default(true),
   smsNotifications: boolean("sms_notifications").default(false),
 });
+
+// ─── Landing Page Content: FAQs ────────────────────────────────────────────────
+export const landingFaqs = pgTable("landing_faqs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  topic: varchar("topic", { length: 100 }).notNull(),
+  question: text("question").notNull(),
+  answer: text("answer").notNull(),
+  takeaway: text("takeaway"),
+  language: varchar("language", { length: 10 }).notNull().default("EN"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  index("landing_faqs_lang_active_idx").on(table.language, table.isActive, table.sortOrder),
+]);
+
+// ─── Landing Page Content: Testimonials ─────────────────────────────────────────
+export const landingTestimonials = pgTable("landing_testimonials", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 150 }).notNull(),
+  role: varchar("role", { length: 100 }).notNull(),
+  trade: varchar("trade", { length: 100 }).notNull(),
+  jobs: varchar("jobs", { length: 50 }).notNull().default("Verified Job"),
+  quote: text("quote").notNull(),
+  language: varchar("language", { length: 10 }).notNull().default("EN"),
+  avatarBg: varchar("avatar_bg", { length: 150 }).default("bg-gradient-to-tr from-amber-600 via-amber-400 to-yellow-200 text-white"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  index("landing_testimonials_lang_active_idx").on(table.language, table.isActive, table.sortOrder),
+]);
+
+// ─── Super Admin Court & Legal Evidence Records ─────────────────────────────────
+export const courtEvidenceRecords = pgTable("court_evidence_records", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  contractId: uuid("contract_id").notNull().references(() => contracts.id),
+  caseNumber: varchar("case_number", { length: 120 }).notNull(),
+  courtName: varchar("court_name", { length: 200 }).notNull(),
+  purpose: text("purpose"),
+  authorizedByAdminId: uuid("authorized_by_admin_id").notNull().references(() => adminEmployees.id),
+  evidenceHash: varchar("evidence_hash", { length: 128 }).notNull(),
+  evidenceManifest: json("evidence_manifest").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+  index("court_evidence_contract_idx").on(table.contractId, table.createdAt),
+  index("court_evidence_case_idx").on(table.caseNumber),
+]);
+

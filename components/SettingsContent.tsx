@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { updateProfile } from "@/lib/actions/profile";
+import { requestWorkerAvatarChange } from "@/lib/actions/worker-avatar";
 import { useLanguage } from "@/context/LanguageContext";
 import {
   User,
@@ -73,6 +74,8 @@ export default function SettingsContent({ initialData, role }: Props) {
   const [activeSection, setActiveSection] = useState("personal");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [avatarRequestStatus, setAvatarRequestStatus] = useState<string | null>(initialData.avatar_change_request_status || null);
+  const [avatarRequestReason, setAvatarRequestReason] = useState<string>(initialData.avatar_change_request_reason || "");
   const hasChapaSubaccount = Boolean(initialData.chapa_subaccount_id);
   const verificationReason = searchParams.get("reason");
   const verificationStatus = initialData.verification_status || (initialData.is_verified ? "approved" : "not_started");
@@ -115,8 +118,9 @@ export default function SettingsContent({ initialData, role }: Props) {
       input.value = "";
       return;
     }
-    if (file.size > 2 * 1024 * 1024) {
-      setError(t("settings.errAvatarSize"));
+    const maxAvatarSize = role === "worker" ? 250 * 1024 : 2 * 1024 * 1024;
+    if (file.size > maxAvatarSize) {
+      setError(role === "worker" ? "Worker profile photos must be 250 KB or smaller." : t("settings.errAvatarSize"));
       input.value = "";
       return;
     }
@@ -129,7 +133,19 @@ export default function SettingsContent({ initialData, role }: Props) {
       const res = await fetch("/api/upload", { method: "POST", body });
       const data = await res.json();
       if (res.ok && data.url) {
-        setFormData((prev: typeof formData) => ({ ...prev, avatarUrl: data.url }));
+        if (role === "worker") {
+          const request = await requestWorkerAvatarChange(data.url);
+          if (!request.success) {
+            setError(request.error || "Could not request a photo change.");
+          } else {
+            setAvatarRequestStatus("pending");
+            setAvatarRequestReason("");
+            setSuccess(true);
+            setTimeout(() => setSuccess(false), 3500);
+          }
+        } else {
+          setFormData((prev: typeof formData) => ({ ...prev, avatarUrl: data.url }));
+        }
       } else {
         setError(data.error || t("settings.errUploadFailed"));
       }
@@ -339,11 +355,11 @@ export default function SettingsContent({ initialData, role }: Props) {
                 >
                   {/* Avatar Upload */}
                   <div className={`flex flex-col items-center gap-4 py-8 rounded-[3rem] border border-dashed transition-all ${
-                    initialData.is_verified ? "bg-primary/5 border-primary/20 opacity-90" : "bg-surface-container-low/30 border-surface-container-highest cursor-pointer"
+                    role === "worker" ? "bg-primary/5 border-primary/20" : initialData.is_verified ? "bg-primary/5 border-primary/20 opacity-90" : "bg-surface-container-low/30 border-surface-container-highest cursor-pointer"
                   }`}>
                     <div 
-                      className={`relative group ${initialData.is_verified ? "cursor-default" : "cursor-pointer"}`} 
-                      onClick={() => !initialData.is_verified && !uploading && fileInputRef.current?.click()}
+                      className={`relative group ${role === "worker" || !initialData.is_verified ? "cursor-pointer" : "cursor-default"}`} 
+                      onClick={() => !(role === "worker" && avatarRequestStatus === "pending") && (role === "worker" || !initialData.is_verified) && !uploading && fileInputRef.current?.click()}
                     >
                        <div className={`w-24 h-24 rounded-[2.5rem] border-4 shadow-xl flex items-center justify-center overflow-hidden transition-all ${
                          initialData.is_verified ? "bg-primary/10 border-primary" : "bg-surface-container-high border-surface"
@@ -354,7 +370,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                             <span className="text-3xl font-bold text-primary">{formData.fullName.charAt(0) || "U"}</span>
                           )}
                        </div>
-                       {!initialData.is_verified && !uploading && (
+                       {(role === "worker" || !initialData.is_verified) && avatarRequestStatus !== "pending" && !uploading && (
                          <div className="absolute inset-0 bg-black/40 rounded-[2.5rem] opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                             <Camera className="h-5 w-5 text-white" />
                          </div>
@@ -374,14 +390,24 @@ export default function SettingsContent({ initialData, role }: Props) {
                          ref={fileInputRef}
                          className="hidden"
                          accept="image/png,image/jpeg,image/webp"
+                         disabled={role === "worker" && avatarRequestStatus === "pending"}
                          onClick={(event) => event.stopPropagation()}
                          onChange={handleAvatarUpload}
                        />
                     </div>
                     <div className="text-center">
-                       <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-40">
-                         {initialData.is_verified ? t("settings.avatarOfficial") : t("settings.avatarUpdate")}
+                       <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-70">
+                         {role === "worker" ? "Verified worker photo" : initialData.is_verified ? t("settings.avatarOfficial") : t("settings.avatarUpdate")}
                        </p>
+                       {role === "worker" && (
+                         <div className="mt-2 max-w-sm space-y-1 text-xs text-muted-foreground">
+                           <p>Your photo is checked against your Fayda ID and stays locked after registration. To change it, upload a replacement here for admin review.</p>
+                           <p>Clients see your photo only after you accept their hiring request.</p>
+                           {avatarRequestStatus === "pending" && <p className="font-semibold text-amber-600">Photo change request pending review.</p>}
+                           {avatarRequestStatus === "approved" && <p className="font-semibold text-emerald-600">Your latest photo change was approved.</p>}
+                           {avatarRequestStatus === "rejected" && <p className="font-semibold text-destructive">Photo change rejected: {avatarRequestReason || "Please upload a clear photo that matches your Fayda ID."}</p>}
+                         </div>
+                       )}
                        {initialData.is_verified && (
                          <p className="text-[9px] text-primary font-bold uppercase tracking-tighter mt-1">{t("settings.lockedAfterVerification")}</p>
                        )}

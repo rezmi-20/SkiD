@@ -21,7 +21,16 @@ export async function GET() {
         END as other_user_id,
         u.role as other_role,
         COALESCE(wp.full_name, cp.full_name, u.email) as other_name,
-        COALESCE(wp.avatar_url, cp.avatar_url) as other_avatar,
+        CASE
+          WHEN u.role = 'worker' THEN CASE
+            WHEN EXISTS (
+              SELECT 1 FROM jobs accepted_job
+              WHERE accepted_job.worker_id = c.worker_id
+                AND accepted_job.client_id = c.client_id
+                AND accepted_job.status IN ('accepted', 'active', 'in_progress', 'completion_requested', 'completed', 'payment_pending', 'paid', 'closed')
+            ) THEN wp.avatar_url ELSE NULL END
+          ELSE cp.avatar_url
+        END as other_avatar,
         COALESCE(wp.is_verified, cp.is_verified, FALSE) as is_verified,
         wp.skills as other_skills,
         wp.bio as other_bio,

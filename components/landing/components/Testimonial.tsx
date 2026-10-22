@@ -14,8 +14,34 @@ interface ReviewCardItem {
   avatarBg: string;
 }
 
-export const Testimonial: React.FC = () => {
+interface TestimonialProps {
+  customTestimonials?: Array<{
+    id: string;
+    name: string;
+    role: string;
+    trade: string;
+    jobs?: string;
+    quote: string;
+    language?: string;
+    avatarBg?: string;
+  }>;
+}
+
+export const Testimonial: React.FC<TestimonialProps> = ({ customTestimonials = [] }) => {
   const { t, language } = useLanguage();
+
+  const langCustom = (customTestimonials || []).filter(
+    ct => ct.language === language || (!ct.language && language === 'EN')
+  ).map((ct, idx) => ({
+    id: ct.id || `custom-rev-${idx}`,
+    initial: (ct.name || "U").charAt(0).toUpperCase(),
+    name: ct.name,
+    role: ct.role,
+    trade: ct.trade,
+    jobs: ct.jobs || "Verified Job",
+    quote: ct.quote.startsWith("“") ? ct.quote : `“${ct.quote}”`,
+    avatarBg: ct.avatarBg || 'bg-gradient-to-tr from-emerald-600 via-teal-400 to-emerald-200 text-white'
+  }));
 
   const reviews: ReviewCardItem[] = language === 'አማ' ? [
     {
@@ -202,9 +228,15 @@ export const Testimonial: React.FC = () => {
     }
   ];
 
+  const combinedReviews = langCustom.length > 0 ? [...langCustom, ...reviews] : reviews;
+
   // Duplicate for seamless infinite sliding animation
-  const infiniteReviewsTrack1 = [...reviews, ...reviews, ...reviews];
-  const infiniteReviewsTrack2 = [...reviews.slice(3), ...reviews.slice(0, 3), ...reviews, ...reviews];
+  const infiniteReviewsTrack1 = [...combinedReviews, ...combinedReviews, ...combinedReviews];
+  const infiniteReviewsTrack2 = [
+    ...combinedReviews.slice(Math.min(3, combinedReviews.length)),
+    ...combinedReviews,
+    ...combinedReviews
+  ];
 
   return (
     <section id="reviews" className="py-24 md:py-32 bg-[#FAF9F5] border-t border-[#E8E6DF] overflow-hidden">

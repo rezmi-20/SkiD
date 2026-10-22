@@ -27,7 +27,7 @@ import { DigitalContractModal } from "./landing/components/modals/DigitalContrac
 import { LanguageProvider, useLanguage } from "./landing/context/LanguageContext";
 import { MASTER_WORKER } from "./landing/data/mockData";
 
-function LandingView({ userRole }) {
+function LandingView({ userRole, initialFaqs = [], initialTestimonials = [] }) {
   const { language, setLanguage } = useLanguage();
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedArticle, setSelectedArticle] = useState(null);
@@ -151,7 +151,7 @@ function LandingView({ userRole }) {
         />
 
         {/* 6. Frequently Asked Questions (FAQ) */}
-        <LumioStudio />
+        <LumioStudio customFaqs={initialFaqs} />
 
         {/* 7. Explore Categories */}
         <ExploreCategories onFindWorker={() => setIsFindWorkerOpen(true)} />
@@ -163,7 +163,7 @@ function LandingView({ userRole }) {
         />
 
         {/* 9. Testimonials */}
-        <Testimonial />
+        <Testimonial customTestimonials={initialTestimonials} />
 
         {/* 10. Problem, Solution, Benefit Cards */}
         <LatestUpdates
@@ -244,10 +244,14 @@ function LandingView({ userRole }) {
   );
 }
 
-export default function LandingPageContent({ userRole }) {
+export default function LandingPageContent({ userRole, initialFaqs = [], initialTestimonials = [] }) {
   return (
     <LanguageProvider>
-      <LandingView userRole={userRole} />
+      <LandingView 
+        userRole={userRole} 
+        initialFaqs={initialFaqs} 
+        initialTestimonials={initialTestimonials} 
+      />
     </LanguageProvider>
   );
 }

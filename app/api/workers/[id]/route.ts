@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
+import { auth } from "@/lib/auth";
 
 export async function GET(
   req: NextRequest,
@@ -7,6 +8,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const session = await auth();
     if (!id || typeof id !== "string") {
       return NextResponse.json({ error: "Invalid worker ID" }, { status: 400 });
     }
@@ -27,7 +29,12 @@ export async function GET(
           wp.latitude,
           wp.longitude,
           wp.hourly_rate,
-          wp.avatar_url,
+          MAX(CASE WHEN u.id = ${session?.user?.id ?? null} OR EXISTS (
+            SELECT 1 FROM jobs accepted_job
+            WHERE accepted_job.worker_id = u.id
+              AND accepted_job.client_id = ${session?.user?.id ?? null}
+              AND accepted_job.status IN ('accepted', 'active', 'in_progress', 'completion_requested', 'completed', 'payment_pending', 'paid', 'closed')
+          ) THEN wp.avatar_url ELSE NULL END) AS avatar_url,
           wp.is_verified,
           COALESCE(AVG(r.score), 0) AS avg_rating,
           COUNT(r.id) AS total_ratings
@@ -45,7 +52,7 @@ export async function GET(
           AND length(wp.fin_last4) = 4
           AND wp.fin_encrypted IS NOT NULL
           AND length(wp.fin_encrypted) > 0
-        GROUP BY u.id, wp.full_name, wp.bio, wp.skills, wp.latitude, wp.longitude, wp.hourly_rate, wp.avatar_url, wp.is_verified
+        GROUP BY u.id, wp.full_name, wp.bio, wp.skills, wp.latitude, wp.longitude, wp.hourly_rate, wp.is_verified
         LIMIT 1`,
       sql`
         SELECT

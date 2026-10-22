@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
+import { auth } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
   try {
+    const session = await auth();
     const { searchParams } = new URL(req.url);
     const queryStr = searchParams.get("query") || "";
     const category = searchParams.get("category") || "";
@@ -12,7 +14,7 @@ export async function GET(req: NextRequest) {
     const minRating = parseFloat(searchParams.get("minRating") || "0");
 
     const hasCoords = !isNaN(userLat) && !isNaN(userLng);
-    const params: (string | number)[] = [];
+    const params: (string | number | null)[] = [];
     
     let distanceSql = "NULL";
     if (hasCoords) {
@@ -45,7 +47,7 @@ export async function GET(req: NextRequest) {
         COALESCE(wp.latitude, 9.5931) as latitude,
         COALESCE(wp.longitude, 41.8661) as longitude,
         wp.hourly_rate,
-        wp.avatar_url,
+        __WORKER_AVATAR_VISIBILITY__,
         wp.is_verified,
         COALESCE(wp.availability, 'available') as availability,
         COALESCE(wr.avg_rating, 0) as avg_rating,
@@ -98,6 +100,17 @@ export async function GET(req: NextRequest) {
       params.push(minRating);
       query += ` AND COALESCE(wr.avg_rating, 0) >= $${params.length}`;
     }
+
+    const viewerIdParam = params.push(session?.user?.id ?? null);
+    query = query.replace(
+      "__WORKER_AVATAR_VISIBILITY__",
+      `CASE WHEN u.id = $${viewerIdParam} OR EXISTS (
+        SELECT 1 FROM jobs accepted_job
+        WHERE accepted_job.worker_id = u.id
+          AND accepted_job.client_id = $${viewerIdParam}
+          AND accepted_job.status IN ('accepted', 'active', 'in_progress', 'completion_requested', 'completed', 'payment_pending', 'paid', 'closed')
+      ) THEN wp.avatar_url ELSE NULL END AS avatar_url`,
+    );
 
     // Sorting
     if (hasCoords) {

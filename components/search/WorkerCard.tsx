@@ -14,16 +14,6 @@ interface WorkerCardProps {
   onClose?: () => void;
 }
 
-const TRADE_FALLBACK_IMAGES: Record<string, string> = {
-  "Electrician": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&auto=format&fit=crop&q=80",
-  "Plumber": "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=500&auto=format&fit=crop&q=80",
-  "Painter": "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=500&auto=format&fit=crop&q=80",
-  "Carpentry": "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=500&auto=format&fit=crop&q=80",
-  "Satellite Dish Installer": "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=500&auto=format&fit=crop&q=80",
-  "Satellite Dish": "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=500&auto=format&fit=crop&q=80",
-  "House Finishing": "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=500&auto=format&fit=crop&q=80",
-};
-
 export default function WorkerCard({ worker, className = "", onClose }: WorkerCardProps) {
   const { t } = useLanguage();
   const [imgError, setImgError] = useState(false);
@@ -50,10 +40,8 @@ export default function WorkerCard({ worker, className = "", onClose }: WorkerCa
     });
   };
 
-  // Determine photo source: uploaded photo > category portrait > UI avatar
-  const fallbackImg = TRADE_FALLBACK_IMAGES[worker.skill] || 
-    TRADE_FALLBACK_IMAGES[worker.category || ""] || 
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(worker.name || "Worker")}&background=181d24&color=a3e635&size=300&bold=true`;
+  // Use initials as the public placeholder so stock portraits cannot be mistaken for the worker.
+  const fallbackImg = `/default-avatar.svg`;
   
   const displayPhoto = imgError ? fallbackImg : (worker.photo || fallbackImg);
 

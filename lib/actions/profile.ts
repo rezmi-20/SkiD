@@ -28,9 +28,18 @@ export async function getProfileData() {
     const user = userRows[0];
 
     let profile;
+    let avatarChangeRequest: any = null;
     if (role === "worker") {
       const rows = await sql`SELECT * FROM worker_profiles WHERE user_id = ${userId}`;
       profile = rows[0];
+      const avatarRequests = await sql`
+        SELECT status, review_reason, created_at
+        FROM worker_avatar_change_requests
+        WHERE worker_user_id = ${userId}
+        ORDER BY created_at DESC
+        LIMIT 1
+      `;
+      avatarChangeRequest = avatarRequests[0] ?? null;
     } else {
       const rows = await sql`SELECT * FROM client_profiles WHERE user_id = ${userId}`;
       profile = rows[0];
@@ -61,6 +70,8 @@ export async function getProfileData() {
           has_fin: Boolean(profile.fin_last4),
           has_fayda_doc: Boolean(profile.fayda_doc_url),
           identity_complete: role === "worker" ? workerIdentityComplete : undefined,
+          avatar_change_request_status: avatarChangeRequest?.status ?? null,
+          avatar_change_request_reason: avatarChangeRequest?.review_reason ?? null,
         }
       : profile;
 
@@ -162,7 +173,7 @@ export async function updateProfile(data: any) {
         UPDATE worker_profiles 
         SET 
           full_name = ${isVerified ? currentProfile.full_name : data.fullName},
-          avatar_url = ${isVerified ? currentProfile.avatar_url : data.avatarUrl},
+          avatar_url = ${currentProfile.avatar_url},
           bio = ${data.bio},
           skills = ${data.skills},
           gender = ${data.gender},

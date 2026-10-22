@@ -4,6 +4,7 @@ import { sql } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { requireAdminPermission } from "@/lib/admin-authorization";
+import { sanitizeText } from "@/lib/sanitize";
 
 export async function getCommunityPosts(category?: string) {
   try {
@@ -17,10 +18,13 @@ export async function getCommunityPosts(category?: string) {
         cp.*,
         u.role,
         CASE WHEN u.role = 'worker' THEN wp.full_name ELSE clp.full_name END as author_name,
-        CASE WHEN u.role = 'worker' THEN wp.avatar_url ELSE clp.avatar_url END as author_avatar,
+        CASE WHEN u.role = 'worker' THEN NULL ELSE clp.avatar_url END as author_avatar,
         CASE WHEN u.role = 'worker' THEN COALESCE(wp.is_verified, false) ELSE COALESCE(clp.is_verified, false) END as is_verified,
         (SELECT COUNT(*) FROM community_likes WHERE post_id = cp.id AND user_id = ${currentUserId}) > 0 as is_liked,
-        (SELECT COUNT(*) FROM community_comments WHERE post_id = cp.id) as comments_count
+        (SELECT COUNT(*)::int FROM community_comments WHERE post_id = cp.id) as comments_count,
+        (SELECT COUNT(*)::int FROM community_post_votes WHERE post_id = cp.id AND vote_type = 'useful') as useful_count,
+        (SELECT COUNT(*)::int FROM community_post_votes WHERE post_id = cp.id AND vote_type = 'not_useful') as not_useful_count,
+        (SELECT vote_type FROM community_post_votes WHERE post_id = cp.id AND user_id = ${currentUserId} LIMIT 1) as current_user_vote
       FROM community_posts cp
       JOIN users u ON cp.user_id = u.id
       LEFT JOIN worker_profiles wp ON cp.user_id = wp.user_id AND u.role = 'worker'
@@ -33,6 +37,61 @@ export async function getCommunityPosts(category?: string) {
   } catch (error) {
     console.error("[GET_COMMUNITY_POSTS_ERROR]", error);
     return [];
+  }
+}
+
+export async function getCommunityComments(postId: string) {
+  const session = await auth();
+  if (!session?.user?.id) return [];
+  if (!/^[0-9a-f-]{36}$/i.test(postId)) return [];
+
+  try {
+    return await sql`
+      SELECT
+        cc.id,
+        cc.content,
+        cc.created_at,
+        u.role,
+        COALESCE(wp.full_name, cp.full_name, u.email, 'Community member') AS author_name,
+        CASE WHEN u.role = 'worker' THEN NULL ELSE cp.avatar_url END AS author_avatar
+      FROM community_comments cc
+      JOIN users u ON u.id = cc.user_id
+      LEFT JOIN worker_profiles wp ON wp.user_id = u.id AND u.role = 'worker'
+      LEFT JOIN client_profiles cp ON cp.user_id = u.id AND u.role = 'client'
+      JOIN community_posts p ON p.id = cc.post_id
+      WHERE cc.post_id = ${postId} AND p.is_removed = false
+      ORDER BY cc.created_at ASC
+      LIMIT 100
+    `;
+  } catch (error) {
+    console.error("[GET_COMMUNITY_COMMENTS_ERROR]", error);
+    return [];
+  }
+}
+
+export async function createCommunityComment(postId: string, rawContent: string) {
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, error: "Sign in to comment." };
+  if (!/^[0-9a-f-]{36}$/i.test(postId)) return { success: false, error: "Post not found." };
+
+  const content = sanitizeText(rawContent);
+  if (!content) return { success: false, error: "Write a comment first." };
+  if (content.length > 1000) return { success: false, error: "Comments must be 1,000 characters or fewer." };
+
+  try {
+    const inserted = await sql`
+      INSERT INTO community_comments (user_id, post_id, content)
+      SELECT ${session.user.id}, id, ${content}
+      FROM community_posts
+      WHERE id = ${postId} AND is_removed = false
+      RETURNING id
+    `;
+    if (!inserted[0]) return { success: false, error: "This post is no longer available." };
+    revalidatePath("/community/feed");
+    return { success: true };
+  } catch (error) {
+    console.error("[CREATE_COMMUNITY_COMMENT_ERROR]", error);
+    return { success: false, error: "Could not add your comment. Please try again." };
   }
 }
 
@@ -126,18 +185,37 @@ export async function removeCommunityPost(postId: string, isRemoved: boolean, re
   }
 }
 
-export async function votePostUseful(postId: string, type: 'useful' | 'not_useful') {
+export async function votePostUseful(postId: string, type: 'useful' | 'not_useful' | null) {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "Unauthorized" };
+  if (!/^[0-9a-f-]{36}$/i.test(postId) || (type !== null && !["useful", "not_useful"].includes(type))) {
+    return { success: false, error: "Invalid vote." };
+  }
 
   try {
-    if (type === 'useful') {
-      await sql`UPDATE community_posts SET useful_count = useful_count + 1 WHERE id = ${postId}`;
+    const post = await sql`SELECT id FROM community_posts WHERE id = ${postId} AND is_removed = false LIMIT 1`;
+    if (!post[0]) return { success: false, error: "This post is no longer available." };
+    if (type === null) {
+      await sql`DELETE FROM community_post_votes WHERE user_id = ${session.user.id} AND post_id = ${postId}`;
     } else {
-      await sql`UPDATE community_posts SET not_useful_count = not_useful_count + 1 WHERE id = ${postId}`;
+      await sql`
+        INSERT INTO community_post_votes (user_id, post_id, vote_type)
+        VALUES (${session.user.id}, ${postId}, ${type})
+        ON CONFLICT (user_id, post_id) DO UPDATE
+        SET vote_type = EXCLUDED.vote_type
+      `;
     }
+    const [usefulRows, notUsefulRows] = await Promise.all([
+      sql`SELECT COUNT(*)::int AS count FROM community_post_votes WHERE post_id = ${postId} AND vote_type = 'useful'`,
+      sql`SELECT COUNT(*)::int AS count FROM community_post_votes WHERE post_id = ${postId} AND vote_type = 'not_useful'`,
+    ]);
     revalidatePath("/community/feed");
-    return { success: true };
+    return {
+      success: true,
+      vote: type,
+      usefulCount: Number(usefulRows[0]?.count || 0),
+      notUsefulCount: Number(notUsefulRows[0]?.count || 0),
+    };
   } catch (error) {
     console.error("[VOTE_POST_ERROR]", error);
     return { success: false };

@@ -35,7 +35,7 @@ export default function StepIdCompliance({
       <section className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5">
         <div>
           <h2 className="text-sm font-bold text-white">Your profile photo <span className="text-red-400">*</span></h2>
-          <p className="mt-1 text-xs leading-5 text-zinc-400">Upload a recent, clear photo of your own face with good lighting. Our admins will visually compare it with your Fayda ID photo. This is a manual review, not automated face recognition.</p>
+          <p className="mt-1 text-xs leading-5 text-zinc-400">Upload a clear, recent photo of your own uncovered face in good lighting. It must look like your Fayda ID photo so an admin can compare them. Your photo stays locked after registration; changes need admin approval in Profile Settings. Clients see it only after you accept their hiring request.</p>
         </div>
         <div className="flex items-center gap-4">
           {profilePhotoPreview ? <img src={profilePhotoPreview} alt="Profile photo preview" className="h-20 w-20 rounded-full border border-green-400/50 object-cover" /> : <div className="flex h-20 w-20 items-center justify-center rounded-full bg-zinc-800 text-xs text-zinc-500">Photo</div>}

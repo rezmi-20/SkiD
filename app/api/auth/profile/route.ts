@@ -193,7 +193,7 @@ export async function POST(req: NextRequest) {
           UPDATE worker_profiles
           SET full_name = ${sanitizedFullName}, date_of_birth = ${dateOfBirth ? new Date(dateOfBirth) : null},
               gender = ${gender ?? null}, district = ${sanitizedDistrict}, skills = ${skills ?? null},
-              fayda_doc_url = ${faydaDocUrl ?? null}, avatar_url = ${profilePhotoDataUrl}, bio = ${sanitizedBio}
+              fayda_doc_url = ${faydaDocUrl ?? null}, bio = ${sanitizedBio}
           WHERE user_id = ${userId}
         `;
       } else {

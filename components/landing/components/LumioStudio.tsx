@@ -28,8 +28,19 @@ interface FAQItem {
   badge: string;
 }
 
-export const LumioStudio: React.FC = () => {
-  const { t } = useLanguage();
+interface LumioStudioProps {
+  customFaqs?: Array<{
+    id: string;
+    topic: string;
+    question: string;
+    answer: string;
+    takeaway?: string | null;
+    language?: string;
+  }>;
+}
+
+export const LumioStudio: React.FC<LumioStudioProps> = ({ customFaqs = [] }) => {
+  const { t, language } = useLanguage();
   const [activeQuestionIndex, setActiveQuestionIndex] = useState<number>(0);
 
   const icons = [
@@ -50,7 +61,12 @@ export const LumioStudio: React.FC = () => {
     { image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?q=80&w=800&auto=format&fit=crop', fallback: '/images/user_review_card.jpg' }
   ];
 
-  const faqs: FAQItem[] = t.faq.items.map((item, idx) => ({
+  // Filter custom database FAQs matching current language (or English fallback)
+  const langFilteredCustom = (customFaqs || []).filter(
+    f => f.language === language || (!f.language && language === 'EN')
+  );
+
+  const baseFaqs: FAQItem[] = t.faq.items.map((item, idx) => ({
     id: item.id,
     num: item.num,
     topic: item.topic,
@@ -62,6 +78,21 @@ export const LumioStudio: React.FC = () => {
     fallback: images[idx]?.fallback || '/images/diredawa_city.jpg',
     badge: item.badge
   }));
+
+  const dynamicFaqsList: FAQItem[] = langFilteredCustom.map((cf, idx) => ({
+    id: cf.id,
+    num: String(idx + 1).padStart(2, '0'),
+    topic: cf.topic,
+    icon: icons[idx % icons.length] || <ShieldCheck size={18} className="text-blue-400" />,
+    question: cf.question,
+    answer: cf.answer,
+    takeaway: cf.takeaway || cf.answer.slice(0, 100),
+    image: images[idx % images.length]?.image || '/images/user_fayda_card.jpg',
+    fallback: images[idx % images.length]?.fallback || '/images/diredawa_city.jpg',
+    badge: 'LIVE UPDATE'
+  }));
+
+  const faqs = dynamicFaqsList.length > 0 ? [...dynamicFaqsList, ...baseFaqs] : baseFaqs;
 
   const currentFaq = faqs[Math.max(0, activeQuestionIndex)];
 

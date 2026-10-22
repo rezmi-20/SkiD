@@ -46,7 +46,17 @@ export async function GET(
         m.action_url,
         m.metadata,
         COALESCE(wp.full_name, cp.full_name, u.email, 'DireSkill System') AS sender_name,
-        COALESCE(wp.avatar_url, cp.avatar_url) AS sender_avatar
+        CASE
+          WHEN u.role = 'worker' THEN CASE
+            WHEN EXISTS (
+              SELECT 1
+              FROM conversations c
+              JOIN jobs accepted_job ON accepted_job.worker_id = c.worker_id AND accepted_job.client_id = c.client_id
+              WHERE c.id = m.conversation_id
+                AND accepted_job.status IN ('accepted', 'active', 'in_progress', 'completion_requested', 'completed', 'payment_pending', 'paid', 'closed')
+            ) THEN wp.avatar_url ELSE NULL END
+          ELSE cp.avatar_url
+        END AS sender_avatar
       FROM messages m
       LEFT JOIN users u ON u.id = m.sender_id
       LEFT JOIN worker_profiles wp ON wp.user_id = u.id

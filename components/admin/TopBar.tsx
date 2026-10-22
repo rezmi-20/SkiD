@@ -51,6 +51,7 @@ export function TopBar({ adminName, adminRole }: TopBarProps) {
     if (pathname.includes("/admin/disputes"))  return t("admin.disputes" as any);
     if (pathname.includes("/admin/community")) return t("admin.community" as any);
     if (pathname.includes("/admin/reports"))   return t("admin.reports" as any);
+    if (pathname.includes("/admin/court-evidence")) return "Court Evidence Disclosure";
     if (pathname.includes("/admin/settings"))  return t("admin.settings" as any);
     return t("admin.portal" as any);
   };
