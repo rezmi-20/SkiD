@@ -308,7 +308,7 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
                           <span className="text-xs text-muted-foreground">· {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}</span>
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {post.role === "worker" ? "Skilled worker" : "Client"} · {post.category}
+                          {post.role === "admin" ? "DireSkill" : post.role === "worker" ? "Skilled worker" : "Client"} · {post.category}
                         </p>
                       </div>
                     </div>

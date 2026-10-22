@@ -21,7 +21,11 @@ export async function GET() {
           SELECT
             cp.*,
             u.role,
-            CASE WHEN u.role = 'worker' THEN wp.full_name ELSE clp.full_name END AS author_name,
+            CASE
+              WHEN u.role = 'admin' THEN 'DireSkill Community'
+              WHEN u.role = 'worker' THEN wp.full_name
+              ELSE clp.full_name
+            END AS author_name,
             CASE WHEN u.role = 'client' AND (
               cp.user_id = ${currentUserId}
               OR (
@@ -52,7 +56,11 @@ export async function GET() {
           SELECT
             cp.*,
             u.role,
-            CASE WHEN u.role = 'worker' THEN wp.full_name ELSE clp.full_name END AS author_name,
+            CASE
+              WHEN u.role = 'admin' THEN 'DireSkill Community'
+              WHEN u.role = 'worker' THEN wp.full_name
+              ELSE clp.full_name
+            END AS author_name,
             CASE WHEN u.role = 'client' AND (
               cp.user_id = ${currentUserId}
               OR (

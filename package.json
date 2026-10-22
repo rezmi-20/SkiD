@@ -50,6 +50,7 @@
     "test:payment:sandbox": "node scripts/test-payment-sandbox.mjs",
     "demo:seed": "node scripts/seed-demo-data.mjs",
     "demo:reset": "node scripts/reset-demo-data.mjs",
+    "seed:community-samples": "node scripts/seed-community-samples.mjs",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
