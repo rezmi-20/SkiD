@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { createCommunityComment, getCommunityComments, toggleLikePost, votePostUseful, flagPost } from "@/lib/actions/community";
 import CreatePostModal from "./CreatePostModal";
 import { formatDistanceToNow } from "date-fns";
@@ -16,7 +16,9 @@ import {
   CheckCircle2,
   Sparkles,
   Award,
-  ThumbsDown
+  ThumbsDown,
+  X,
+  ImageOff,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -33,9 +35,34 @@ type CommunityComment = {
   role: string;
 };
 
+function CommunityAttachment({ src, title }: { src: string; title: string }) {
+  const [unavailable, setUnavailable] = useState(false);
+
+  if (unavailable) {
+    return (
+      <div role="img" aria-label={`Photo unavailable for ${title}`} className="flex min-h-36 flex-col items-center justify-center gap-2 bg-muted px-4 py-8 text-center text-muted-foreground">
+        <ImageOff size={22} aria-hidden="true" />
+        <span className="text-xs font-medium">This photo is unavailable. Re-upload it to restore the attachment.</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={`Photo attached to ${title}`}
+      loading="lazy"
+      decoding="async"
+      onError={() => setUnavailable(true)}
+      className="block h-auto max-h-[32rem] w-full object-contain"
+    />
+  );
+}
+
 export default function CommunityFeedContent({ initialPosts }: { initialPosts: any[] }) {
   const [posts, setPosts] = useState(initialPosts);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [commentsByPost, setCommentsByPost] = useState<Record<string, CommunityComment[]>>({});
@@ -43,6 +70,12 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [feedback, setFeedback] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const prefersReducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (isSearchOpen) searchInputRef.current?.focus();
+  }, [isSearchOpen]);
 
   const fetchPosts = async () => {
     setLoading(true);
@@ -155,40 +188,87 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
 
   const filteredPosts = posts.filter((p) =>
     p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.content.toLowerCase().includes(searchQuery.toLowerCase())
+    p.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (p.author_name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (p.category || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6 pb-24">
       
       {/* ── Page Header ── */}
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between py-2">
+      <header className="flex items-start justify-between gap-4 py-2">
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-primary">DireSkill Community</p>
           <h1 className="text-3xl font-extrabold tracking-tight mt-0.5">Community</h1>
           <p className="text-sm text-muted-foreground mt-1">Local knowledge, trade tips, and lessons from the work.</p>
         </div>
-        <Button 
-          onClick={() => setIsModalOpen(true)}
-          className="h-11 rounded-full font-bold text-sm gap-1.5 shrink-0 shadow-sm px-5"
-        >
-          <Plus size={14} /> New Tip
-        </Button>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsSearchOpen((open) => {
+              if (open) setSearchQuery("");
+              return !open;
+            })}
+            aria-label={isSearchOpen ? "Close community search" : "Search community"}
+            aria-expanded={isSearchOpen}
+            title={isSearchOpen ? "Close search" : "Search"}
+            className={`inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-sm transition-all duration-200 hover:bg-muted active:scale-95 ${isSearchOpen ? "ring-2 ring-primary/25" : ""}`}
+          >
+            {isSearchOpen ? <X size={18} /> : <Search size={18} />}
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            aria-label="Create a community post"
+            title="New post"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-all duration-200 hover:brightness-95 active:scale-95"
+          >
+            <Plus size={19} />
+          </button>
+        </div>
       </header>
 
-      {/* ── Search bar (No category filters) ── */}
+      {/* ── Search expands from the compact header action ── */}
       {feedback && <div role="status" className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-foreground">{feedback}<button className="ml-3 font-semibold underline" onClick={() => setFeedback("")}>Dismiss</button></div>}
 
-      <div className="relative group w-full">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-        <Input
-          type="text"
-          placeholder="Search community posts and tips..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9 h-11 bg-card border-border rounded-xl text-sm"
-        />
-      </div>
+      <AnimatePresence initial={false}>
+        {isSearchOpen && (
+          <motion.div
+            key="community-search"
+            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, height: 0, y: -10, scaleY: 0.92 }}
+            animate={{ opacity: 1, height: "auto", y: 0, scaleY: 1 }}
+            exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, height: 0, y: -8, scaleY: 0.96 }}
+            transition={prefersReducedMotion ? { duration: 0.12 } : { type: "spring", stiffness: 340, damping: 28 }}
+            style={{ transformOrigin: "top" }}
+            className="overflow-hidden"
+          >
+            <div className="relative flex items-center rounded-full border border-border bg-card p-1.5 shadow-sm focus-within:ring-2 focus-within:ring-primary/25">
+              <Search aria-hidden="true" className="ml-3 shrink-0 text-muted-foreground" size={17} />
+              <Input
+                ref={searchInputRef}
+                type="search"
+                placeholder="Search posts, people, or trades..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    setSearchQuery("");
+                    setIsSearchOpen(false);
+                  }
+                }}
+                aria-label="Search community posts"
+                className="h-10 border-0 bg-transparent px-3 text-sm shadow-none focus-visible:ring-0"
+              />
+              {searchQuery && (
+                <span className="mr-2 shrink-0 rounded-full bg-muted px-2.5 py-1 text-[11px] font-semibold text-muted-foreground" aria-live="polite">
+                  {filteredPosts.length} {filteredPosts.length === 1 ? "result" : "results"}
+                </span>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Main Feed (Single column list) ── */}
       <div className="space-y-5">
@@ -248,8 +328,8 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
                     <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap break-words">{post.content}</p>
                     
                     {post.media_url && (
-                      <div className="rounded-xl overflow-hidden border border-border bg-muted max-h-96 mt-3">
-                        <img src={post.media_url} alt="Attachment" className="w-full h-full object-cover" />
+                      <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-muted">
+                        <CommunityAttachment src={post.media_url} title={post.title} />
                       </div>
                     )}
                   </div>

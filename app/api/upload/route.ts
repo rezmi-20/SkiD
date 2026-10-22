@@ -136,8 +136,19 @@ export async function POST(req: NextRequest) {
       secureUrl = await uploadToCloudinaryWithTimeout(file, cloudName, apiKey, apiSecret, 3500);
     }
 
-    // If Cloudinary timed out or not configured, persist to local public/uploads immediately
+    // Vercel's filesystem is ephemeral and not served as persistent user uploads.
+    // Never save an attachment URL that will disappear after this function exits.
     if (!secureUrl) {
+      if (process.env.VERCEL) {
+        return NextResponse.json(
+          {
+            error: cloudName && apiKey && apiSecret
+              ? "Photo storage is temporarily unavailable. Please try again."
+              : "Photo storage is not configured. Please contact support.",
+          },
+          { status: 503, headers: { "Cache-Control": "no-store" } },
+        );
+      }
       secureUrl = await saveToLocalStorage(file);
     }
 

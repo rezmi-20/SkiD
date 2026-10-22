@@ -118,6 +118,31 @@ export async function resetDemoData(sql) {
     WHERE user_id IN (${DEMO_IDS.client}, ${DEMO_IDS.worker}, ${DEMO_IDS.secondClient}, ${DEMO_IDS.secondWorker})
   `;
   await sql`
+    DELETE FROM community_comments
+    WHERE post_id IN (
+      SELECT id FROM community_posts
+      WHERE user_id IN (${DEMO_IDS.client}, ${DEMO_IDS.worker})
+    )
+  `;
+  await sql`
+    DELETE FROM community_likes
+    WHERE post_id IN (
+      SELECT id FROM community_posts
+      WHERE user_id IN (${DEMO_IDS.client}, ${DEMO_IDS.worker})
+    )
+  `;
+  await sql`
+    DELETE FROM community_flags
+    WHERE post_id IN (
+      SELECT id FROM community_posts
+      WHERE user_id IN (${DEMO_IDS.client}, ${DEMO_IDS.worker})
+    )
+  `;
+  await sql`
+    DELETE FROM community_posts
+    WHERE user_id IN (${DEMO_IDS.client}, ${DEMO_IDS.worker})
+  `;
+  await sql`
     DELETE FROM worker_profiles
     WHERE user_id IN (
       ${DEMO_IDS.worker},

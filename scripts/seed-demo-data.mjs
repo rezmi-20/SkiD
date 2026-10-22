@@ -221,6 +221,20 @@ try {
   `;
 
   await sql`
+    INSERT INTO community_posts (user_id, title, content, category, media_url, likes_count, flags_count, is_removed)
+    VALUES (
+      ${DEMO_IDS.worker},
+      'DEMO - Workshop notes from local skilled trades',
+      'A few practical lessons from a busy workshop: inspect tools before starting, keep the work area clear, and take a photo of the finished repair so the client can see the result.',
+      'DIY',
+      '/landing/skilled-workers-hero.jpg',
+      4,
+      0,
+      false
+    )
+  `;
+
+  await sql`
     INSERT INTO jobs (id, client_id, worker_id, title, description, status, budget, location, requested_date)
     VALUES
       (${DEMO_IDS.jobPending}, ${DEMO_IDS.client}, ${DEMO_IDS.worker}, 'DEMO - Pending outlet repair', 'Initial hiring request waiting for worker response.', 'pending', 1200, 'Kezira, Dire Dawa', NOW()),
