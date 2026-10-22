@@ -28,8 +28,8 @@ export const TrustMarquee: React.FC = () => {
       </p>
 
       <div className="flex justify-center items-center opacity-100 text-[#8C8880] w-full">
-        <div className="marquee-container">
-          <div className="marquee-content animate-marquee flex gap-[70px] md:gap-[100px] items-center text-[#8C8880]">
+        <div className="marquee-container touch-pan-y">
+          <div className="marquee-content animate-marquee flex gap-[70px] md:gap-[100px] items-center text-[#8C8880] touch-pan-y">
             {marqueeItems.map((item, i) => (
               <span
                 key={`item-1-${i}`}

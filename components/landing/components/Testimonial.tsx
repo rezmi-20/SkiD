@@ -265,9 +265,9 @@ export const Testimonial: React.FC<TestimonialProps> = ({ customTestimonials = [
         whileInView={{ opacity: 1, x: 0 }}
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-        className="relative w-full overflow-hidden marquee-container py-3"
+        className="relative w-full overflow-hidden marquee-container py-3 touch-pan-y"
       >
-        <div className="animate-marquee-right flex gap-5 hover:[animation-play-state:paused]">
+        <div className="animate-marquee-right flex gap-5 hover:[animation-play-state:paused] touch-pan-y">
           {infiniteReviewsTrack1.map((item, index) => (
             <div
               key={`${item.id}-t1-${index}`}
@@ -314,9 +314,9 @@ export const Testimonial: React.FC<TestimonialProps> = ({ customTestimonials = [
         whileInView={{ opacity: 1, x: 0 }}
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.8, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-        className="relative w-full overflow-hidden marquee-container py-3 mt-2"
+        className="relative w-full overflow-hidden marquee-container py-3 mt-2 touch-pan-y"
       >
-        <div className="animate-marquee flex gap-5 hover:[animation-play-state:paused]">
+        <div className="animate-marquee flex gap-5 hover:[animation-play-state:paused] touch-pan-y">
           {infiniteReviewsTrack2.map((item, index) => (
             <div
               key={`${item.id}-t2-${index}`}

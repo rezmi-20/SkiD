@@ -440,7 +440,7 @@ export const TeamUseCases: React.FC<TeamUseCasesProps> = ({ onFindWorker, onJoin
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-          className="flex justify-center mb-8 sm:mb-12 md:mb-16 w-full overflow-x-auto no-scrollbar py-1"
+          className="flex justify-center mb-8 sm:mb-12 md:mb-16 w-full overflow-x-auto no-scrollbar py-1 touch-pan-x"
         >
           <div className="bg-[#141518]/90 backdrop-blur-md p-1 sm:p-1.5 rounded-full border border-white/10 inline-flex items-center gap-1 shadow-lg max-w-full shrink-0">
             <button

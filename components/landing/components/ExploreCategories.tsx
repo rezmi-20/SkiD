@@ -210,7 +210,7 @@ export const ExploreCategories: React.FC<ExploreCategoriesProps> = ({ onFindWork
         </motion.div>
 
         {/* Clean Mobile Category Switcher Chips (Horizontal Scrollable, avoids cluttered card grid) */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-2.5 px-0.5 mt-2">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-2.5 px-0.5 mt-2 touch-pan-x">
           {categories.map((cat, idx) => {
             const isSelected = activeCategoryIndex === idx;
             return (

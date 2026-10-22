@@ -172,7 +172,7 @@ export default function AppShell({
         </header>
 
         {/* ── Main Content ── */}
-        <main className="flex-1 w-full overflow-x-hidden flex flex-col">
+        <main className="flex-1 w-full overflow-x-clip flex flex-col">
           {isMessagesPage ? (
             <div className="w-full flex-1 flex flex-col">
               {children}

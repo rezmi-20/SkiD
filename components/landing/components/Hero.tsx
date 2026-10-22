@@ -124,12 +124,12 @@ export const Hero: React.FC<HeroProps> = ({ onSearch, onExploreStudio }) => {
         whileInView={{ opacity: 1, scale: 1, y: 0 }}
         viewport={{ once: true, amount: 0.15 }}
         transition={{ duration: 0.95, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full max-w-[1492px] bg-[#F0EFEB] overflow-hidden shadow-2xl relative z-10 rounded-[28px] sm:rounded-[36px] md:rounded-[40px] h-[450px] sm:h-[600px] md:h-[780px] border border-[#D9D7D0]/40 group"
+        className="w-full max-w-[1492px] bg-[#F0EFEB] overflow-hidden shadow-2xl relative z-10 rounded-[28px] sm:rounded-[36px] md:rounded-[40px] h-[450px] sm:h-[600px] md:h-[780px] border border-[#D9D7D0]/40 group touch-pan-y"
       >
         <motion.img
           style={{ y: imageY, scale: imageScale }}
           alt="Historic Dire Dawa Railway Station · Dire Dawa, Ethiopia"
-          className="w-full h-full object-cover will-change-transform"
+          className="w-full h-full object-cover will-change-transform pointer-events-none select-none"
           src="/images/diredawa_station.jpg"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none"></div>

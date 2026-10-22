@@ -40,32 +40,51 @@ function LandingView({ userRole, initialFaqs = [], initialTestimonials = [] }) {
   const [toastMessage, setToastMessage] = useState(null);
 
   useEffect(() => {
-    // Keep native scrolling on touch devices. Smooth-scroll interception can
-    // conflict with browser momentum scrolling, especially on mobile Safari.
-    if (window.matchMedia("(pointer: coarse)").matches) return;
+    // Only run smooth momentum scrolling on desktop non-touch devices.
+    // Immediately bail out on any mobile, tablet, or touch-capable screen.
+    if (typeof window === "undefined") return;
 
-    const lenis = new Lenis({
-      duration: 1.15,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      orientation: "vertical",
-      gestureOrientation: "vertical",
-      smoothWheel: true,
-      wheelMultiplier: 0.95,
-      touchMultiplier: 1.5,
-    });
+    const isTouchOrMobile =
+      window.innerWidth < 1024 ||
+      "ontouchstart" in window ||
+      (navigator && navigator.maxTouchPoints > 0) ||
+      window.matchMedia("(pointer: coarse)").matches ||
+      window.matchMedia("(hover: none)").matches;
 
-    let animationFrameId;
-
-    function raf(time) {
-      lenis.raf(time);
-      animationFrameId = requestAnimationFrame(raf);
+    if (isTouchOrMobile) {
+      document.documentElement.classList.remove("lenis", "lenis-smooth", "lenis-stopped");
+      return;
     }
 
-    animationFrameId = requestAnimationFrame(raf);
+    let lenis;
+    let animationFrameId;
+
+    try {
+      lenis = new Lenis({
+        duration: 1.15,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        orientation: "vertical",
+        gestureOrientation: "vertical",
+        smoothWheel: true,
+        wheelMultiplier: 0.95,
+        touchMultiplier: 0,
+        syncTouch: false,
+      });
+
+      function raf(time) {
+        lenis?.raf(time);
+        animationFrameId = requestAnimationFrame(raf);
+      }
+
+      animationFrameId = requestAnimationFrame(raf);
+    } catch {
+      // Clean fallback to native scrolling
+    }
 
     return () => {
-      cancelAnimationFrame(animationFrameId);
-      lenis.destroy();
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      if (lenis) lenis.destroy();
+      document.documentElement.classList.remove("lenis", "lenis-smooth", "lenis-stopped");
     };
   }, []);
 
@@ -95,7 +114,7 @@ function LandingView({ userRole, initialFaqs = [], initialTestimonials = [] }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF9F5] text-[#1B1B1B] selection:bg-[#181818] selection:text-white relative">
+    <div className="min-h-screen w-full overflow-x-clip bg-[#FAF9F5] text-[#1B1B1B] selection:bg-[#181818] selection:text-white relative">
       {/* 1. Floating Nav */}
       <Navbar
         language={language}
