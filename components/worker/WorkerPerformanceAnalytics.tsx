@@ -23,6 +23,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface WorkerPerformanceAnalyticsProps {
   stats: {
@@ -38,6 +39,7 @@ export default function WorkerPerformanceAnalytics({
   stats,
   recentJobs = [],
 }: WorkerPerformanceAnalyticsProps) {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<"revenue" | "milestones">("revenue");
 
   // Derive realistic historical curve leading to current revenue
@@ -65,11 +67,11 @@ export default function WorkerPerformanceAnalytics({
               <TrendingUp className="h-4 w-4" />
             </span>
             <h2 className="text-base sm:text-lg font-black tracking-tight text-on-surface">
-              Performance & Earnings Trajectory
+              {t("worker.analytics.title")}
             </h2>
           </div>
           <p className="text-xs text-on-surface-variant opacity-60 mt-0.5">
-            Verified work milestones, revenue trends, and client satisfaction telemetry.
+            {t("worker.analytics.subtitle")}
           </p>
         </div>
 
@@ -83,7 +85,7 @@ export default function WorkerPerformanceAnalytics({
                 : "text-on-surface-variant hover:text-on-surface"
             }`}
           >
-            Earnings Trend
+            {t("worker.analytics.earningsTrend")}
           </button>
           <button
             type="button"
@@ -94,7 +96,7 @@ export default function WorkerPerformanceAnalytics({
                 : "text-on-surface-variant hover:text-on-surface"
             }`}
           >
-            Milestone Pipeline
+            {t("worker.analytics.milestonePipeline")}
           </button>
         </div>
       </div>
@@ -105,7 +107,7 @@ export default function WorkerPerformanceAnalytics({
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant opacity-60">
-                {activeTab === "revenue" ? "Cumulative Cleared Earnings" : "Work Milestones Completed"}
+                {activeTab === "revenue" ? t("worker.analytics.cumulativeEarnings") : t("worker.analytics.milestonesCompleted")}
               </p>
               <p className="text-2xl font-black text-on-surface mt-1">
                 {activeTab === "revenue" ? (
@@ -125,7 +127,7 @@ export default function WorkerPerformanceAnalytics({
               href="/worker/earnings"
               className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
             >
-              <span>View Ledger</span>
+              <span>{t("worker.analytics.viewLedger")}</span>
               <ArrowUpRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -172,17 +174,25 @@ export default function WorkerPerformanceAnalytics({
 
           <div className="grid grid-cols-3 gap-2 pt-4 mt-2 border-t border-outline-variant/40 text-center">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60">Avg. Payout</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60">
+                {t("worker.analytics.avgPayout")}
+              </p>
               <p className="text-xs sm:text-sm font-bold text-on-surface mt-0.5">
                 {Math.round(rev / Math.max(1, stats.completedJobs || 6)).toLocaleString()} ETB
               </p>
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60">Payout Speed</p>
-              <p className="text-xs sm:text-sm font-bold text-emerald-500 mt-0.5">Instant Chapa</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60">
+                {t("worker.analytics.payoutSpeed")}
+              </p>
+              <p className="text-xs sm:text-sm font-bold text-emerald-500 mt-0.5">
+                {t("worker.analytics.instantChapa")}
+              </p>
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60">Growth Rate</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60">
+                {t("worker.analytics.growthRate")}
+              </p>
               <p className="text-xs sm:text-sm font-bold text-primary mt-0.5">+24.5% MoM</p>
             </div>
           </div>
@@ -193,7 +203,7 @@ export default function WorkerPerformanceAnalytics({
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant opacity-60">
-                Reputation Score
+                {t("worker.analytics.reputationScore")}
               </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 text-xs font-black">
                 <Star className="h-3 w-3 fill-amber-500" />
@@ -204,14 +214,14 @@ export default function WorkerPerformanceAnalytics({
             {/* Rating distribution bar */}
             <div className="space-y-1.5 mb-4">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-on-surface-variant opacity-75">5 Stars</span>
+                <span className="text-on-surface-variant opacity-75">{t("worker.analytics.fiveStars")}</span>
                 <span className="font-bold text-on-surface">94%</span>
               </div>
               <div className="w-full h-2 rounded-full bg-surface-container overflow-hidden">
                 <div className="h-full bg-amber-500 rounded-full" style={{ width: "94%" }} />
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-on-surface-variant opacity-75">4 Stars</span>
+                <span className="text-on-surface-variant opacity-75">{t("worker.analytics.fourStars")}</span>
                 <span className="font-bold text-on-surface">6%</span>
               </div>
               <div className="w-full h-2 rounded-full bg-surface-container overflow-hidden">
@@ -225,23 +235,23 @@ export default function WorkerPerformanceAnalytics({
             <div className="flex items-center justify-between">
               <span className="text-on-surface-variant flex items-center gap-1.5">
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                Completion Rate
+                {t("worker.analytics.completionRate")}
               </span>
               <span className="font-extrabold text-on-surface">{completionRate}%</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-on-surface-variant flex items-center gap-1.5">
                 <Clock className="h-3.5 w-3.5 text-sky-500" />
-                Avg Response Time
+                {t("worker.analytics.avgResponseTime")}
               </span>
               <span className="font-extrabold text-on-surface">&lt; 15 mins</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-on-surface-variant flex items-center gap-1.5">
                 <ShieldCheck className="h-3.5 w-3.5 text-violet-500" />
-                Zero-Dispute Ratio
+                {t("worker.analytics.zeroDispute")}
               </span>
-              <span className="font-extrabold text-emerald-500">100% Clear</span>
+              <span className="font-extrabold text-emerald-500">{t("worker.analytics.clearRate")}</span>
             </div>
           </div>
 
@@ -250,7 +260,7 @@ export default function WorkerPerformanceAnalytics({
             className="w-full h-11 rounded-2xl bg-surface-container hover:bg-surface-container-high border border-outline-variant text-on-surface text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95"
           >
             <Award className="h-4 w-4 text-amber-500" />
-            <span>View Client Reviews</span>
+            <span>{t("worker.analytics.viewReviews")}</span>
           </Link>
         </div>
       </div>

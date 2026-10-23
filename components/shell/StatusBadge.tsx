@@ -1,4 +1,7 @@
+"use client";
+
 import React from "react";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   FileText,
   FileSignature,
@@ -116,11 +119,16 @@ const STATUS_STYLES: Record<string, StatusConfig> = {
 };
 
 export default function StatusBadge({ status, size = "sm" }: StatusBadgeProps) {
+  const { t } = useLanguage();
   const config = STATUS_STYLES[status] ?? {
     label: status ? String(status).replaceAll("_", " ") : "Unknown",
     icon: HelpCircle,
     className: "border-outline-variant bg-surface-container text-on-surface-variant",
   };
+
+  const key = `jobs.status.${status?.toLowerCase()}`;
+  const translated = t(key as any);
+  const displayLabel = translated && translated !== key ? translated : config.label;
 
   const Icon = config.icon;
 
@@ -131,7 +139,7 @@ export default function StatusBadge({ status, size = "sm" }: StatusBadgeProps) {
       }`}
     >
       <Icon className={size === "md" ? "h-3.5 w-3.5" : "h-3 w-3"} />
-      <span>{config.label}</span>
+      <span>{displayLabel}</span>
     </span>
   );
 }

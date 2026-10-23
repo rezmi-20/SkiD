@@ -78,6 +78,20 @@ export default function WorkerDashboardContent({
 }: WorkerDashboardContentProps) {
   const router = useRouter();
   const { t } = useLanguage();
+
+  const getGreetingText = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return t("common.goodMorning");
+    if (hour < 17) return t("common.goodAfternoon");
+    return t("common.goodEvening");
+  };
+
+  const getStatusLabel = (status: string) => {
+    const key = `jobs.status.${status?.toLowerCase()}`;
+    const translated = t(key as any);
+    return translated && translated !== key ? translated : (status || "Pending").replace("_", " ");
+  };
+
   const [accepting, setAccepting] = useState<string | null>(null);
   const [rejecting, setRejecting] = useState<string | null>(null);
   const [availability, setAvailability] = useState<string>(worker.availability || "available");
@@ -381,7 +395,7 @@ export default function WorkerDashboardContent({
             </span>
             <div className="flex items-center gap-2">
               <div className="text-right">
-                <p className="text-[11px] text-white/50">{greeting}</p>
+                <p className="text-[11px] text-white/50">{getGreetingText()}</p>
                 <p className="text-xs font-bold text-white leading-none">{worker.firstName}</p>
               </div>
               <Avatar className="h-8 w-8 border border-indigo-500/40">
@@ -456,10 +470,10 @@ export default function WorkerDashboardContent({
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-indigo-400" />
-            <p className="text-xs font-bold uppercase tracking-wider text-foreground">Pro Setup Checklist</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">{t("worker.dashboard.checklistTitle")}</p>
           </div>
           <span className="text-[11px] font-semibold text-muted-foreground">
-            {completedStepsCount} of 4 steps ready
+            {completedStepsCount} / 4 {t("worker.dashboard.stepsReady")}
           </span>
         </div>
 
@@ -485,10 +499,10 @@ export default function WorkerDashboardContent({
             </div>
             <div className="min-w-0">
               <p className="text-xs font-bold text-foreground flex items-center gap-1">
-                Fayda / Kebele ID {isVerified && <CheckCircle2 className="h-3 w-3 text-emerald-500" />}
+                {t("worker.dashboard.faydaKebeleId")} {isVerified && <CheckCircle2 className="h-3 w-3 text-emerald-500" />}
               </p>
               <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                {isVerified ? "Verified pro status active" : "Submit National / Kebele ID"}
+                {isVerified ? t("worker.dashboard.verifiedActive") : t("worker.dashboard.submitIdPrompt")}
               </p>
             </div>
           </Link>
@@ -502,9 +516,9 @@ export default function WorkerDashboardContent({
               <KeyRound className="h-3.5 w-3.5" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold text-foreground">Set Contract PIN</p>
+              <p className="text-xs font-bold text-foreground">{t("worker.dashboard.setPin")}</p>
               <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                6-digit electronic signature PIN
+                {t("worker.dashboard.pinDesc")}
               </p>
             </div>
           </Link>
@@ -522,9 +536,9 @@ export default function WorkerDashboardContent({
               {hasSkills ? <Check className="h-4 w-4" /> : "3"}
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold text-foreground">Trade Skills & Rate</p>
+              <p className="text-xs font-bold text-foreground">{t("worker.dashboard.tradeSkills")}</p>
               <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                {hasSkills ? `${worker.skills.length} skills listed` : "Set hourly rate & trades"}
+                {hasSkills ? `${worker.skills.length} ${t("worker.dashboard.skillsListed")}` : t("worker.dashboard.setHourlyTrades")}
               </p>
             </div>
           </Link>
@@ -538,9 +552,9 @@ export default function WorkerDashboardContent({
               <Wallet className="h-3.5 w-3.5" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold text-foreground">Direct Telebirr / Bank</p>
+              <p className="text-xs font-bold text-foreground">{t("worker.dashboard.directBank")}</p>
               <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                Zero escrow delays on completion
+                {t("worker.dashboard.zeroEscrow")}
               </p>
             </div>
           </Link>
@@ -554,10 +568,10 @@ export default function WorkerDashboardContent({
       <div className="rounded-2xl border border-border bg-card shadow-sm p-4 sm:p-5">
         <div className="flex items-center justify-between mb-3.5">
           <div className="flex items-center gap-2">
-            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Pending Inquiries</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("worker.dashboard.pendingInquiries")}</p>
             {pendingJobs.length > 0 && (
               <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 text-[10px] font-bold">
-                <Bell className="h-3 w-3" /> {pendingJobs.length} new
+                <Bell className="h-3 w-3" /> {pendingJobs.length} {t("worker.dashboard.newAlert")}
               </span>
             )}
           </div>
@@ -582,7 +596,7 @@ export default function WorkerDashboardContent({
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-xs font-extrabold text-foreground">{Number(job.budget || 0).toLocaleString()} ETB</p>
-                      <p className="text-[9px] text-muted-foreground">Proposed Budget</p>
+                      <p className="text-[9px] text-muted-foreground">{t("worker.dashboard.proposedBudget")}</p>
                     </div>
                   </div>
 
@@ -594,7 +608,7 @@ export default function WorkerDashboardContent({
                       onClick={() => handleReject(job.id)}
                       disabled={rejecting === job.id}
                     >
-                      <X className="h-3.5 w-3.5" /> Decline
+                      <X className="h-3.5 w-3.5" /> {t("worker.dashboard.decline")}
                     </Button>
                     <Button
                       size="default"
@@ -602,7 +616,7 @@ export default function WorkerDashboardContent({
                       onClick={() => handleAccept(job.id)}
                       disabled={accepting === job.id}
                     >
-                      <CheckCheck className="h-3.5 w-3.5" /> Accept Job
+                      <CheckCheck className="h-3.5 w-3.5" /> {t("worker.dashboard.acceptJob")}
                     </Button>
                   </div>
                 </div>
@@ -615,13 +629,13 @@ export default function WorkerDashboardContent({
               <ChevronsUp className="h-5 w-5" />
             </div>
             <div>
-              <p className="font-bold text-sm text-foreground">No pending job inquiries</p>
+              <p className="font-bold text-sm text-foreground">{t("worker.dashboard.noPendingInquiries")}</p>
               <p className="text-xs text-muted-foreground mt-0.5 max-w-sm">
-                Keep your profile and skills updated so clients searching for trades in your district can reach you.
+                {t("worker.dashboard.keepProfileUpdated")}
               </p>
             </div>
             <Button size="default" variant="outline" className="rounded-xl gap-1.5 mt-2 h-10 font-bold touch-manipulation" asChild>
-              <Link href="/worker/profile">Update Profile & Skills</Link>
+              <Link href="/worker/profile">{t("worker.dashboard.updateProfileSkills")}</Link>
             </Button>
           </div>
         )}
@@ -632,9 +646,9 @@ export default function WorkerDashboardContent({
         {/* Recent Jobs */}
         <div className="lg:col-span-2 rounded-2xl border border-border bg-card shadow-sm p-4 sm:p-5">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Recent Jobs</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("worker.dashboard.recentJobs")}</p>
             <Link href="/worker/jobs" className="text-xs text-indigo-400 font-semibold hover:underline flex items-center gap-1">
-              View All <ChevronRight className="h-3.5 w-3.5" />
+              {t("worker.dashboard.viewAll")} <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </div>
 
@@ -651,7 +665,7 @@ export default function WorkerDashboardContent({
                       <p className="text-xs font-bold text-foreground">{Number(job.budget || 0).toLocaleString()} ETB</p>
                     </div>
                     <Badge variant="outline" className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border ${statusStyle(job.status)}`}>
-                      {(job.status || "pending").replace("_", " ")}
+                      {getStatusLabel(job.status)}
                     </Badge>
                   </div>
                 </div>
@@ -660,7 +674,7 @@ export default function WorkerDashboardContent({
           ) : (
             <div className="py-8 flex flex-col items-center justify-center text-center gap-2">
               <Briefcase className="h-5 w-5 text-muted-foreground/40" />
-              <p className="text-xs text-muted-foreground">No recent jobs completed yet</p>
+              <p className="text-xs text-muted-foreground">{t("worker.dashboard.noRecentJobs")}</p>
             </div>
           )}
         </div>
@@ -669,7 +683,7 @@ export default function WorkerDashboardContent({
         <div className="rounded-2xl border border-border bg-card shadow-sm p-4 sm:p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Active Trade Skills</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("worker.dashboard.activeTradeSkills")}</p>
               <Star className="h-4 w-4 text-amber-400" />
             </div>
 
@@ -688,7 +702,7 @@ export default function WorkerDashboardContent({
 
           <div className="pt-2">
             <Button asChild size="default" variant="outline" className="rounded-xl w-full h-10 text-xs font-bold touch-manipulation">
-              <Link href="/worker/profile/settings">Edit Skills & Rates</Link>
+              <Link href="/worker/profile/settings">{t("worker.dashboard.editSkillsRates")}</Link>
             </Button>
           </div>
         </div>

@@ -22,6 +22,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface ClientPerformanceAnalyticsProps {
   stats: {
@@ -35,6 +36,7 @@ interface ClientPerformanceAnalyticsProps {
 export default function ClientPerformanceAnalytics({
   stats,
 }: ClientPerformanceAnalyticsProps) {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<"spending" | "velocity">("spending");
 
   const total = Math.max(stats.totalSpent, 18500);
@@ -56,11 +58,11 @@ export default function ClientPerformanceAnalytics({
               <TrendingUp className="h-4 w-4" />
             </span>
             <h2 className="text-base sm:text-lg font-black tracking-tight text-on-surface">
-              Project Spending & Hiring Velocity
+              {t("client.analytics.title")}
             </h2>
           </div>
           <p className="text-xs text-on-surface-variant opacity-60 mt-0.5">
-            Transparent milestone payouts, artisan talent distribution, and commissioning speed.
+            {t("client.analytics.subtitle")}
           </p>
         </div>
 
@@ -74,7 +76,7 @@ export default function ClientPerformanceAnalytics({
                 : "text-on-surface-variant hover:text-on-surface"
             }`}
           >
-            Capital Deployed
+            {t("client.analytics.capitalDeployed")}
           </button>
           <button
             type="button"
@@ -85,7 +87,7 @@ export default function ClientPerformanceAnalytics({
                 : "text-on-surface-variant hover:text-on-surface"
             }`}
           >
-            Project Velocity
+            {t("client.analytics.projectVelocity")}
           </button>
         </div>
       </div>
@@ -96,7 +98,7 @@ export default function ClientPerformanceAnalytics({
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant opacity-60">
-                {activeTab === "spending" ? "Total Milestone Capital Deployed" : "Trade Projects Commissioned"}
+                {activeTab === "spending" ? t("client.analytics.totalCapital") : t("client.analytics.projectVelocity")}
               </p>
               <p className="text-2xl font-black text-on-surface mt-1">
                 {activeTab === "spending" ? (
@@ -107,7 +109,7 @@ export default function ClientPerformanceAnalytics({
                 ) : (
                   <>
                     {stats.completedProjects + stats.activeHires}{" "}
-                    <span className="text-xs font-semibold text-primary">Contracts</span>
+                    <span className="text-xs font-semibold text-primary">{t("client.analytics.contractsCount")}</span>
                   </>
                 )}
               </p>
@@ -116,7 +118,7 @@ export default function ClientPerformanceAnalytics({
               href="/client/payments"
               className="inline-flex items-center gap-1 text-xs font-bold text-emerald-500 hover:underline"
             >
-              <span>Payment Invoices</span>
+              <span>{t("client.analytics.paymentInvoices")}</span>
               <ArrowUpRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -163,17 +165,25 @@ export default function ClientPerformanceAnalytics({
 
           <div className="grid grid-cols-3 gap-2 pt-4 mt-2 border-t border-outline-variant/40 text-center">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60">Avg. Project Size</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60">
+                {t("client.analytics.avgProjectSize")}
+              </p>
               <p className="text-xs sm:text-sm font-bold text-on-surface mt-0.5">
                 {Math.round(total / Math.max(1, stats.completedProjects + stats.activeHires || 5)).toLocaleString()} ETB
               </p>
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60">Settlement Method</p>
-              <p className="text-xs sm:text-sm font-bold text-emerald-500 mt-0.5">Direct Telebirr</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60">
+                {t("client.analytics.settlementMethod")}
+              </p>
+              <p className="text-xs sm:text-sm font-bold text-emerald-500 mt-0.5">
+                {t("client.analytics.directTelebirr")}
+              </p>
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60">Platform Fee</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60">
+                {t("client.analytics.platformFee")}
+              </p>
               <p className="text-xs sm:text-sm font-bold text-primary mt-0.5">5% Fixed</p>
             </div>
           </div>
@@ -184,11 +194,11 @@ export default function ClientPerformanceAnalytics({
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant opacity-60">
-                Active Skilled Workforce
+                {t("client.analytics.activeWorkforce")}
               </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-xs font-black">
                 <Users className="h-3 w-3" />
-                {stats.activeHires} On Site
+                {stats.activeHires} {t("client.analytics.onSite")}
               </span>
             </div>
 
@@ -214,16 +224,16 @@ export default function ClientPerformanceAnalytics({
             <div className="flex items-center justify-between">
               <span className="text-on-surface-variant flex items-center gap-1.5">
                 <Clock className="h-3.5 w-3.5 text-sky-500" />
-                Avg Turnaround Speed
+                {t("client.analytics.avgTurnaround")}
               </span>
               <span className="font-extrabold text-on-surface">2.4 Days</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-on-surface-variant flex items-center gap-1.5">
                 <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-                Fayda Identity Verified
+                {t("client.analytics.faydaVerified")}
               </span>
-              <span className="font-extrabold text-emerald-500">100% Guaranteed</span>
+              <span className="font-extrabold text-emerald-500">{t("client.analytics.guaranteed")}</span>
             </div>
           </div>
 
@@ -232,7 +242,7 @@ export default function ClientPerformanceAnalytics({
             className="w-full h-11 rounded-2xl bg-[#a3e635] hover:opacity-90 text-black text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95 shadow-sm"
           >
             <Briefcase className="h-4 w-4" />
-            <span>Manage All Contracts</span>
+            <span>{t("client.analytics.manageContracts")}</span>
           </Link>
         </div>
       </div>

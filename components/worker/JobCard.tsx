@@ -141,7 +141,7 @@ export default function JobCard({
                     {job.client_name || t("worker.jobs.anonymous")}
                   </h4>
                   <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-wider">
-                    Client
+                    {t("contract.client")}
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-on-surface-variant font-medium opacity-65 mt-0.5">
