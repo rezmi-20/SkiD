@@ -245,7 +245,11 @@ export default async function proxy(req: NextRequest) {
       }
     }
 
-    if (isLoggedIn && isAuthPage && !isLogout) {
+    // Signup and login can establish a session before email verification.
+    // Keep unverified users on the OTP screen instead of sending them into
+    // the role dashboard (which can then bounce them back to login).
+    const isUnverifiedOtpFlow = pathname === "/otp-verification" && !user?.emailVerified;
+    if (isLoggedIn && isAuthPage && !isLogout && !isUnverifiedOtpFlow) {
       const dbRole = accountState?.role;
       if (accountState?.is_suspended) return NextResponse.next();
       if (dbRole === "client") return NextResponse.redirect(new URL("/client/search", req.url));
@@ -274,3 +278,4 @@ export const config = {
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
+
