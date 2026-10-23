@@ -239,9 +239,13 @@ export async function generateCourtEvidenceDossier(input: EvidenceRequestInput) 
     SELECT 
       d.id,
       d.status,
-      d.reason,
-      d.claim_type AS "claimType",
-      d.disputed_amount AS "disputedAmount",
+      d.title,
+      d.category,
+      d.category AS "claimType",
+      d.description AS reason,
+      d.requested_resolution AS "requestedResolution",
+      d.final_decision AS "finalDecision",
+      d.final_reason AS "finalReason",
       d.resolution_notes AS "resolutionNotes",
       d.created_at AS "createdAt",
       d.resolved_at AS "resolvedAt"
