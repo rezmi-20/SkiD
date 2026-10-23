@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { updateProfile } from "@/lib/actions/profile";
 import { requestWorkerAvatarChange } from "@/lib/actions/worker-avatar";
+import { changeContractPin } from "@/lib/actions/contract-setup";
+import { authClient } from "@/lib/auth/client";
 import { useLanguage } from "@/context/LanguageContext";
 import {
   User,
@@ -23,6 +25,11 @@ import {
   CreditCard,
   Lock,
   ChevronRight,
+  ChevronDown,
+  KeyRound,
+  AlertCircle,
+  ShieldCheck,
+  UploadCloud,
 } from "lucide-react";
 
 interface Props {
@@ -80,6 +87,89 @@ export default function SettingsContent({ initialData, role }: Props) {
   const verificationReason = searchParams.get("reason");
   const verificationStatus = initialData.verification_status || (initialData.is_verified ? "approved" : "not_started");
   const clientCanSubmitVerification = role === "client" && verificationStatus !== "approved" && verificationStatus !== "pending";
+
+  // Security modals / panels
+  const [activeSecurityPanel, setActiveSecurityPanel] = useState<"none" | "pin" | "password">("none");
+  
+  // PIN change state
+  const [currentPin, setCurrentPin] = useState("");
+  const [newPin, setNewPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
+  const [pinLoading, setPinLoading] = useState(false);
+  const [pinError, setPinError] = useState<string | null>(null);
+  const [pinSuccess, setPinSuccess] = useState<string | null>(null);
+
+  // Password update state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+
+  const handlePinSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPinError(null);
+    setPinSuccess(null);
+    if (!/^\d{4}$/.test(newPin)) {
+      setPinError("New Contract PIN must be exactly 4 digits.");
+      return;
+    }
+    if (newPin !== confirmPin) {
+      setPinError("New PIN and confirmation do not match.");
+      return;
+    }
+    setPinLoading(true);
+    try {
+      const res = await changeContractPin(currentPin, newPin, confirmPin);
+      if (res.success) {
+        setPinSuccess(res.message || "Contract PIN updated successfully!");
+        setCurrentPin("");
+        setNewPin("");
+        setConfirmPin("");
+      } else {
+        setPinError(res.error || "Failed to update Contract PIN.");
+      }
+    } catch {
+      setPinError("Unexpected error while updating PIN.");
+    } finally {
+      setPinLoading(false);
+    }
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError(null);
+    setPasswordSuccess(null);
+    if (newPassword.length < 8) {
+      setPasswordError("New password must be at least 8 characters long.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Password confirmation does not match.");
+      return;
+    }
+    setPasswordLoading(true);
+    try {
+      const { error } = await authClient.changePassword({
+        currentPassword,
+        newPassword,
+        revokeOtherSessions: false,
+      });
+      if (error) {
+        setPasswordError(error.message || "Failed to update password. Please check your current password.");
+      } else {
+        setPasswordSuccess("Password updated successfully!");
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      }
+    } catch (err: any) {
+      setPasswordError(err?.message || "Failed to update password.");
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (role !== "worker") return;
@@ -353,64 +443,97 @@ export default function SettingsContent({ initialData, role }: Props) {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-8"
                 >
-                  {/* Avatar Upload */}
-                  <div className={`flex flex-col items-center gap-4 py-8 rounded-[3rem] border border-dashed transition-all ${
-                    role === "worker" ? "bg-primary/5 border-primary/20" : initialData.is_verified ? "bg-primary/5 border-primary/20 opacity-90" : "bg-surface-container-low/30 border-surface-container-highest cursor-pointer"
-                  }`}>
-                    <div 
-                      className={`relative group ${role === "worker" || !initialData.is_verified ? "cursor-pointer" : "cursor-default"}`} 
-                      onClick={() => !(role === "worker" && avatarRequestStatus === "pending") && (role === "worker" || !initialData.is_verified) && !uploading && fileInputRef.current?.click()}
-                    >
-                       <div className={`w-24 h-24 rounded-[2.5rem] border-4 shadow-xl flex items-center justify-center overflow-hidden transition-all ${
-                         initialData.is_verified ? "bg-primary/10 border-primary" : "bg-surface-container-high border-surface"
-                       }`}>
-                          {formData.avatarUrl ? (
-                            <img src={formData.avatarUrl} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <span className="text-3xl font-bold text-primary">{formData.fullName.charAt(0) || "U"}</span>
+                  {/* Avatar Upload & Verification Request Card */}
+                  <div className="p-6 sm:p-8 rounded-[3rem] border border-surface-container-highest bg-surface-container-low/40 space-y-6">
+                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                      <div 
+                        className={`relative group shrink-0 ${role === "worker" || !initialData.is_verified ? "cursor-pointer" : "cursor-default"}`} 
+                        onClick={() => !(role === "worker" && avatarRequestStatus === "pending") && (role === "worker" || !initialData.is_verified) && !uploading && fileInputRef.current?.click()}
+                      >
+                         <div className={`w-28 h-28 rounded-[2.5rem] border-4 shadow-xl flex items-center justify-center overflow-hidden transition-all ${
+                           initialData.is_verified ? "bg-primary/10 border-primary" : "bg-surface-container-high border-surface"
+                         }`}>
+                            {formData.avatarUrl ? (
+                              <img src={formData.avatarUrl} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-4xl font-bold text-primary">{formData.fullName.charAt(0) || "U"}</span>
+                            )}
+                         </div>
+                         {(role === "worker" || !initialData.is_verified) && avatarRequestStatus !== "pending" && !uploading && (
+                           <div className="absolute inset-0 bg-black/40 rounded-[2.5rem] opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                              <Camera className="h-6 w-6 text-white" />
+                           </div>
+                         )}
+                         {uploading && (
+                           <div className="absolute inset-0 bg-black/60 rounded-[2.5rem] flex items-center justify-center">
+                              <div className="w-7 h-7 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                           </div>
+                         )}
+                         {initialData.is_verified && (
+                           <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary text-on-primary rounded-full border-4 border-surface flex items-center justify-center shadow-lg">
+                              <CheckCircle2 className="h-4 w-4 text-on-primary" />
+                           </div>
+                         )}
+                         <input
+                           type="file"
+                           ref={fileInputRef}
+                           className="hidden"
+                           accept="image/png,image/jpeg,image/webp"
+                           disabled={role === "worker" && avatarRequestStatus === "pending"}
+                           onClick={(event) => event.stopPropagation()}
+                           onChange={handleAvatarUpload}
+                         />
+                      </div>
+
+                      <div className="flex-1 min-w-0 text-center sm:text-left space-y-3">
+                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                          <h3 className="text-sm font-black text-on-surface uppercase tracking-wider">
+                            {role === "worker" ? "Verified Worker Photo" : "Profile Photo"}
+                          </h3>
+                          {avatarRequestStatus === "pending" && (
+                            <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                              Review Pending
+                            </span>
                           )}
-                       </div>
-                       {(role === "worker" || !initialData.is_verified) && avatarRequestStatus !== "pending" && !uploading && (
-                         <div className="absolute inset-0 bg-black/40 rounded-[2.5rem] opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                            <Camera className="h-5 w-5 text-white" />
-                         </div>
-                       )}
-                       {uploading && (
-                         <div className="absolute inset-0 bg-black/60 rounded-[2.5rem] flex items-center justify-center">
-                            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                         </div>
-                       )}
-                       {initialData.is_verified && (
-                         <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary text-on-primary rounded-full border-4 border-surface flex items-center justify-center shadow-lg">
-                            <CheckCircle2 className="h-4 w-4 text-on-primary" />
-                         </div>
-                       )}
-                       <input
-                         type="file"
-                         ref={fileInputRef}
-                         className="hidden"
-                         accept="image/png,image/jpeg,image/webp"
-                         disabled={role === "worker" && avatarRequestStatus === "pending"}
-                         onClick={(event) => event.stopPropagation()}
-                         onChange={handleAvatarUpload}
-                       />
-                    </div>
-                    <div className="text-center">
-                       <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-70">
-                         {role === "worker" ? "Verified worker photo" : initialData.is_verified ? t("settings.avatarOfficial") : t("settings.avatarUpdate")}
-                       </p>
-                       {role === "worker" && (
-                         <div className="mt-2 max-w-sm space-y-1 text-xs text-muted-foreground">
-                           <p>Your photo is checked against your Fayda ID and stays locked after registration. To change it, upload a replacement here for admin review.</p>
-                           <p>Clients see your photo only after you accept their hiring request.</p>
-                           {avatarRequestStatus === "pending" && <p className="font-semibold text-amber-600">Photo change request pending review.</p>}
-                           {avatarRequestStatus === "approved" && <p className="font-semibold text-emerald-600">Your latest photo change was approved.</p>}
-                           {avatarRequestStatus === "rejected" && <p className="font-semibold text-destructive">Photo change rejected: {avatarRequestReason || "Please upload a clear photo that matches your Fayda ID."}</p>}
-                         </div>
-                       )}
-                       {initialData.is_verified && (
-                         <p className="text-[9px] text-primary font-bold uppercase tracking-tighter mt-1">{t("settings.lockedAfterVerification")}</p>
-                       )}
+                          {avatarRequestStatus === "approved" && (
+                            <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                              Approved & Verified
+                            </span>
+                          )}
+                          {avatarRequestStatus === "rejected" && (
+                            <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-destructive/10 text-destructive border border-destructive/20">
+                              Photo Rejected
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="text-xs text-on-surface-variant leading-relaxed opacity-75">
+                          {role === "worker"
+                            ? "Your photo is validated against your Fayda National ID for trust and fraud prevention. To replace your profile photo, upload a new image for administrator review."
+                            : "Upload a clear headshot photo to help skilled artisans identify you during on-site milestone visits."}
+                        </p>
+
+                        {avatarRequestStatus === "rejected" && (
+                          <div className="p-3 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-semibold">
+                            Rejection Reason: {avatarRequestReason || "Photo did not match the Fayda ID document. Please upload a clear, front-facing portrait."}
+                          </div>
+                        )}
+
+                        <div className="pt-1 flex flex-wrap items-center justify-center sm:justify-start gap-3">
+                          <button
+                            type="button"
+                            disabled={uploading || (role === "worker" && avatarRequestStatus === "pending")}
+                            onClick={() => fileInputRef.current?.click()}
+                            className="h-10 px-5 rounded-2xl bg-surface-container-highest hover:bg-surface-container text-on-surface text-xs font-black uppercase tracking-wider border border-surface-container-highest transition active:scale-95 disabled:opacity-50 flex items-center gap-2"
+                          >
+                            <Camera className="h-3.5 w-3.5 text-primary" />
+                            <span>{avatarRequestStatus === "pending" ? "Request Pending" : "Request New Photo"}</span>
+                          </button>
+                          <span className="text-[10px] text-on-surface-variant opacity-60">
+                            JPG, PNG or WebP &bull; Max 250 KB
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -764,15 +887,222 @@ export default function SettingsContent({ initialData, role }: Props) {
                         </div>
                      </div>
                      
-                     <div className="flex flex-col gap-3">
-                        <button type="button" className="w-full h-14 bg-surface-container-lowest border border-surface-container-highest rounded-2xl flex items-center justify-between px-6 hover:border-primary/30 transition-all group">
-                           <span className="text-xs font-bold text-on-surface uppercase tracking-widest">{t("settings.changePin")}</span>
-                           <ChevronRight className="h-4 w-4 text-on-surface-variant group-hover:text-primary transition-colors" />
-                        </button>
-                        <button type="button" className="w-full h-14 bg-surface-container-lowest border border-surface-container-highest rounded-2xl flex items-center justify-between px-6 hover:border-primary/30 transition-all group">
-                           <span className="text-xs font-bold text-on-surface uppercase tracking-widest">{t("settings.updatePassword")}</span>
-                           <ChevronRight className="h-4 w-4 text-on-surface-variant group-hover:text-primary transition-colors" />
-                        </button>
+                     <div className="flex flex-col gap-4">
+                        {/* Change Contract PIN */}
+                        <div className="rounded-2xl border border-surface-container-highest bg-surface-container-lowest overflow-hidden transition-all">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setActiveSecurityPanel(activeSecurityPanel === "pin" ? "none" : "pin");
+                              setPinError(null);
+                              setPinSuccess(null);
+                            }}
+                            className="w-full h-16 flex items-center justify-between px-6 hover:bg-surface-container/30 transition-all group"
+                          >
+                            <div className="flex items-center gap-3">
+                              <KeyRound className="h-4 w-4 text-amber-500" />
+                              <div className="text-left">
+                                <span className="text-xs font-bold text-on-surface uppercase tracking-widest block">{t("settings.changePin")}</span>
+                                <span className="text-[10px] text-on-surface-variant opacity-60">Digital contract signing PIN</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-bold text-amber-500/80 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">4 digits</span>
+                              {activeSecurityPanel === "pin" ? (
+                                <ChevronDown className="h-4 w-4 text-primary transition-transform" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4 text-on-surface-variant group-hover:text-primary transition-transform" />
+                              )}
+                            </div>
+                          </button>
+
+                          {activeSecurityPanel === "pin" && (
+                            <form onSubmit={handlePinSubmit} className="p-6 border-t border-surface-container-highest/60 bg-surface-container-low/20 space-y-4 animate-in fade-in duration-200">
+                              <p className="text-xs text-on-surface-variant leading-relaxed">
+                                Your 4-digit PIN secures your electronic contract signatures and agreements.
+                              </p>
+
+                              {pinError && (
+                                <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-semibold flex items-center gap-2">
+                                  <AlertCircle className="h-4 w-4 shrink-0" />
+                                  <span>{pinError}</span>
+                                </div>
+                              )}
+
+                              {pinSuccess && (
+                                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2">
+                                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                                  <span>{pinSuccess}</span>
+                                </div>
+                              )}
+
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div>
+                                  <label className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant block mb-1.5 opacity-70">Current PIN (if set)</label>
+                                  <input
+                                    type="password"
+                                    maxLength={4}
+                                    placeholder="••••"
+                                    value={currentPin}
+                                    onChange={(e) => setCurrentPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                                    className="w-full h-11 px-4 text-center font-mono text-base tracking-widest rounded-xl border border-surface-container-highest bg-surface-container-lowest text-on-surface outline-none focus:border-primary transition"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant block mb-1.5 opacity-70">New PIN (4 digits)</label>
+                                  <input
+                                    type="password"
+                                    required
+                                    maxLength={4}
+                                    placeholder="••••"
+                                    value={newPin}
+                                    onChange={(e) => setNewPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                                    className="w-full h-11 px-4 text-center font-mono text-base tracking-widest rounded-xl border border-surface-container-highest bg-surface-container-lowest text-on-surface outline-none focus:border-primary transition"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant block mb-1.5 opacity-70">Confirm New PIN</label>
+                                  <input
+                                    type="password"
+                                    required
+                                    maxLength={4}
+                                    placeholder="••••"
+                                    value={confirmPin}
+                                    onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                                    className="w-full h-11 px-4 text-center font-mono text-base tracking-widest rounded-xl border border-surface-container-highest bg-surface-container-lowest text-on-surface outline-none focus:border-primary transition"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="flex justify-end gap-3 pt-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setActiveSecurityPanel("none")}
+                                  className="h-10 px-4 rounded-xl border border-surface-container-highest text-xs font-bold text-on-surface hover:bg-surface-container transition"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  type="submit"
+                                  disabled={pinLoading || newPin.length !== 4 || confirmPin.length !== 4}
+                                  className="h-10 px-5 rounded-xl bg-primary text-on-primary text-xs font-black uppercase tracking-wider hover:opacity-90 active:scale-95 transition disabled:opacity-50 flex items-center gap-2"
+                                >
+                                  {pinLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                                  <span>Update Contract PIN</span>
+                                </button>
+                              </div>
+                            </form>
+                          )}
+                        </div>
+
+                        {/* Update Account Password */}
+                        <div className="rounded-2xl border border-surface-container-highest bg-surface-container-lowest overflow-hidden transition-all">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setActiveSecurityPanel(activeSecurityPanel === "password" ? "none" : "password");
+                              setPasswordError(null);
+                              setPasswordSuccess(null);
+                            }}
+                            className="w-full h-16 flex items-center justify-between px-6 hover:bg-surface-container/30 transition-all group"
+                          >
+                            <div className="flex items-center gap-3">
+                              <Lock className="h-4 w-4 text-primary" />
+                              <div className="text-left">
+                                <span className="text-xs font-bold text-on-surface uppercase tracking-widest block">{t("settings.updatePassword")}</span>
+                                <span className="text-[10px] text-on-surface-variant opacity-60">Account login credentials</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-bold text-primary/80 bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20">Better Auth</span>
+                              {activeSecurityPanel === "password" ? (
+                                <ChevronDown className="h-4 w-4 text-primary transition-transform" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4 text-on-surface-variant group-hover:text-primary transition-transform" />
+                              )}
+                            </div>
+                          </button>
+
+                          {activeSecurityPanel === "password" && (
+                            <form onSubmit={handlePasswordSubmit} className="p-6 border-t border-surface-container-highest/60 bg-surface-container-low/20 space-y-4 animate-in fade-in duration-200">
+                              <p className="text-xs text-on-surface-variant leading-relaxed">
+                                Enter your current password and choose a secure new password (minimum 8 characters).
+                              </p>
+
+                              {passwordError && (
+                                <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-semibold flex items-center gap-2">
+                                  <AlertCircle className="h-4 w-4 shrink-0" />
+                                  <span>{passwordError}</span>
+                                </div>
+                              )}
+
+                              {passwordSuccess && (
+                                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2">
+                                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                                  <span>{passwordSuccess}</span>
+                                </div>
+                              )}
+
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant block mb-1.5 opacity-70">Current Password</label>
+                                  <input
+                                    type="password"
+                                    required
+                                    placeholder="Enter current password"
+                                    value={currentPassword}
+                                    onChange={(e) => setCurrentPassword(e.target.value)}
+                                    className="w-full h-11 px-4 text-xs font-medium rounded-xl border border-surface-container-highest bg-surface-container-lowest text-on-surface outline-none focus:border-primary transition"
+                                  />
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant block mb-1.5 opacity-70">New Password (min 8)</label>
+                                    <input
+                                      type="password"
+                                      required
+                                      minLength={8}
+                                      placeholder="••••••••"
+                                      value={newPassword}
+                                      onChange={(e) => setNewPassword(e.target.value)}
+                                      className="w-full h-11 px-4 text-xs font-medium rounded-xl border border-surface-container-highest bg-surface-container-lowest text-on-surface outline-none focus:border-primary transition"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant block mb-1.5 opacity-70">Confirm New Password</label>
+                                    <input
+                                      type="password"
+                                      required
+                                      minLength={8}
+                                      placeholder="••••••••"
+                                      value={confirmPassword}
+                                      onChange={(e) => setConfirmPassword(e.target.value)}
+                                      className="w-full h-11 px-4 text-xs font-medium rounded-xl border border-surface-container-highest bg-surface-container-lowest text-on-surface outline-none focus:border-primary transition"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex justify-end gap-3 pt-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setActiveSecurityPanel("none")}
+                                  className="h-10 px-4 rounded-xl border border-surface-container-highest text-xs font-bold text-on-surface hover:bg-surface-container transition"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  type="submit"
+                                  disabled={passwordLoading || newPassword.length < 8 || confirmPassword.length < 8}
+                                  className="h-10 px-5 rounded-xl bg-primary text-on-primary text-xs font-black uppercase tracking-wider hover:opacity-90 active:scale-95 transition disabled:opacity-50 flex items-center gap-2"
+                                >
+                                  {passwordLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                                  <span>Update Password</span>
+                                </button>
+                              </div>
+                            </form>
+                          )}
+                        </div>
                      </div>
                   </div>
 

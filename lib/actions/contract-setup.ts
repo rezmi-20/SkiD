@@ -268,3 +268,82 @@ export async function verifyContractPin(pin: string): Promise<VerifyPinResult> {
     return { success: false, error: "Failed to verify Contract PIN.", code: "UNKNOWN" };
   }
 }
+
+export async function changeContractPin(
+  currentPin: string,
+  newPin: string,
+  confirmPin: string,
+): Promise<{ success: boolean; error?: string; message?: string }> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: "Please login to update your Contract PIN." };
+  }
+
+  if (!/^\d{4}$/.test(newPin)) {
+    return { success: false, error: "New Contract PIN must be exactly 4 digits." };
+  }
+
+  if (newPin !== confirmPin) {
+    return { success: false, error: "New PIN and confirmation do not match." };
+  }
+
+  try {
+    const rows = await sql`
+      SELECT pin_hash
+      FROM contract_setups
+      WHERE user_id = ${session.user.id}
+      LIMIT 1
+    `;
+
+    if (rows.length > 0 && rows[0].pin_hash) {
+      if (!currentPin) {
+        return { success: false, error: "Please enter your current 4-digit PIN." };
+      }
+      const isValid = await bcrypt.compare(currentPin, rows[0].pin_hash);
+      if (!isValid) {
+        return { success: false, error: "Current PIN is incorrect." };
+      }
+    }
+
+    const pinHash = await bcrypt.hash(newPin, 12);
+
+    await sql`
+      INSERT INTO contract_setups (
+        user_id,
+        pin_hash,
+        accepted_policy,
+        accepted_signature_use,
+        completed_at,
+        updated_at
+      )
+      VALUES (
+        ${session.user.id},
+        ${pinHash},
+        true,
+        true,
+        NOW(),
+        NOW()
+      )
+      ON CONFLICT (user_id)
+      DO UPDATE SET
+        pin_hash = EXCLUDED.pin_hash,
+        updated_at = NOW()
+    `;
+
+    await logAuditAction(session.user.id, "contract_pin_changed", {
+      role: session.user.role,
+      timestamp: new Date().toISOString(),
+    });
+
+    revalidatePath("/client/contract-setup");
+    revalidatePath("/worker/contract-setup");
+    revalidatePath("/client/profile/settings");
+    revalidatePath("/worker/profile/settings");
+
+    return { success: true, message: "Contract PIN updated successfully." };
+  } catch (error) {
+    console.error("[CHANGE_CONTRACT_PIN_ERROR]", error);
+    return { success: false, error: "Failed to change Contract PIN. Please try again." };
+  }
+}
+

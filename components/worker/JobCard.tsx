@@ -123,7 +123,7 @@ export default function JobCard({
 
   return (
     <>
-      <article className="border border-outline-variant/60 bg-surface-container-lowest dark:bg-[#161b22] rounded-3xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-all duration-200 relative overflow-hidden group">
+      <article className="border border-outline-variant/60 bg-surface-container-lowest dark:bg-[#161b22] rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-200 relative overflow-hidden group flex flex-col justify-between h-full">
         <div className="flex flex-col gap-5">
           {/* Top Row: Client Info & Status Badge */}
           <div className="flex items-start justify-between gap-4">
@@ -157,12 +157,12 @@ export default function JobCard({
 
           {/* Job Title & Main Key Highlights */}
           <div className="space-y-3">
-            <h3 className="text-lg sm:text-xl font-black text-on-surface tracking-tight group-hover:text-primary transition-colors">
+            <h3 className="text-base sm:text-lg font-black text-on-surface tracking-tight group-hover:text-primary transition-colors line-clamp-2">
               {job.title}
             </h3>
 
             {/* Quick Metrics Pills */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+            <div className="grid grid-cols-1 gap-2">
               <div className="rounded-2xl bg-surface-container-low/70 dark:bg-surface-container-high/40 border border-outline-variant/40 p-3 flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                   <Coins className="w-4 h-4 text-primary" />

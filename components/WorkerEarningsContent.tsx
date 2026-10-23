@@ -5,6 +5,7 @@ import { Download, CreditCard, ArrowUpRight, Receipt, Briefcase, Building2, Cloc
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import FadeContent from "@/components/ui/fade-content";
 import { Separator } from "@/components/ui/separator";
+import { getChapaReceiptUrl } from "@/lib/config";
 
 interface Transaction {
   id: string;
@@ -289,13 +290,13 @@ export default function WorkerEarningsContent({ earnings }: WorkerEarningsConten
                   {tx.status === "released" && tx.id && (
                     <div className="mt-2">
                       <a
-                        href={`/api/payments/${tx.id}/receipt`}
+                        href={getChapaReceiptUrl(tx.chapaRef)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-primary hover:underline"
                       >
                         <Receipt className="w-3.5 h-3.5" />
-                        PDF Receipt
+                        Chapa Receipt
                       </a>
                     </div>
                   )}

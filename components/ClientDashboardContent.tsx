@@ -38,6 +38,7 @@ import {
   ArrowRight,
   ShieldAlert,
 } from "lucide-react";
+import ClientPerformanceAnalytics from "@/components/client/ClientPerformanceAnalytics";
 
 /* ── Types ─────────────────────────────────────────────────────────── */
 interface ClientDashboardContentProps {
@@ -120,6 +121,13 @@ export default function ClientDashboardContent({
   }, 0);
   const uniqueWorkers = new Set(activeContracts.map((c) => c.worker_name || c.partner_name).filter(Boolean)).size;
   const initials      = userData.fullName ? userData.fullName.slice(0, 2).toUpperCase() : "CL";
+
+  const clientStats = {
+    totalSpent: totalBudget,
+    activeHires: activeCount,
+    completedProjects: recentJobs.filter((j) => j.status === "completed").length,
+    disputesCount: 0,
+  };
 
   // Calculate onboarding progress (out of 4 steps)
   const isVerified = Boolean(userData.identityVerified);
@@ -301,21 +309,19 @@ export default function ClientDashboardContent({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
         {/* Hero Card */}
         <div
-          className="lg:col-span-2 relative overflow-hidden rounded-3xl border border-border/70 min-h-[210px] flex flex-col justify-between p-6 sm:p-7 shadow-xl"
+          className="lg:col-span-2 relative overflow-hidden rounded-3xl border border-emerald-500/20 min-h-[220px] flex flex-col justify-between p-6 sm:p-7 shadow-xl group"
           style={{
-            background: "radial-gradient(ellipse at top left, #121c17 0%, #0a1410 50%, #060b09 100%)",
+            background: "#08110c",
           }}
         >
-          {/* Dire Dawa Contextual Backdrop with Dark Editorial Overlay */}
+          {/* Modern Homeowner / Commissioning High-Visibility Hero Image */}
           <div
-            className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-20 dark:opacity-15 mix-blend-luminosity"
-            style={{ backgroundImage: "url('/images/diredawa_banner.jpg')" }}
+            className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-80 transition-transform duration-700 group-hover:scale-105"
+            style={{ backgroundImage: "url('/images/client_project_hero.jpg')" }}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#060b09]/95 via-[#060b09]/80 to-[#060b09]/60 pointer-events-none" />
-
-          {/* Ambient Glows */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#a3e635]/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-20 w-40 h-40 bg-emerald-400/5 rounded-full blur-2xl pointer-events-none" />
+          {/* Vignette overlay: deep on left for text legibility, transparent over architectural interior on right */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#08110c]/95 via-[#08110c]/70 to-[#08110c]/25 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#08110c]/80 via-transparent to-black/30 pointer-events-none" />
 
           {/* Top greeting on mobile */}
           <div className="flex items-center justify-between z-10 mb-2">
@@ -519,171 +525,8 @@ export default function ClientDashboardContent({
         </div>
       </div>
 
-      {/* ── 5. HUB AND SPOKE OVERVIEW CARDS (Mobile-First 2-Col Grid) ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-        {/* Spoke 1: Pro Discovery & Map */}
-        <div className="rounded-3xl border border-outline-variant/60 bg-card p-5 sm:p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-full bg-[#12161f] dark:bg-[#181d24] text-[#a3e635] flex items-center justify-center shrink-0 shadow-sm">
-                  <MapPin className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-black text-foreground">Interactive Map Discovery</p>
-                  <p className="text-xs text-muted-foreground">Find vetted workers closest to your location</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="relative my-3">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="e.g. Electrician in Kezira, Dire Dawa..."
-                className="pl-9 h-11 rounded-full bg-background border-outline-variant/60 text-xs touch-manipulation"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 pt-1">
-            <Link
-              href={`/client/search?q=${encodeURIComponent(searchQuery)}`}
-              className="rounded-full bg-[#a3e635] text-black font-extrabold flex-1 h-10 text-xs flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shadow-sm touch-manipulation"
-            >
-              Search Workers
-            </Link>
-            <Link
-              href="/client/search?view=map"
-              className="rounded-full border border-outline-variant text-on-surface font-bold h-10 px-4 text-xs flex items-center justify-center hover:bg-surface-container active:scale-95 transition-all touch-manipulation"
-            >
-              Open Map
-            </Link>
-          </div>
-        </div>
-
-        {/* Spoke 2: Smart Digital Contracts */}
-        <div className="rounded-3xl border border-outline-variant/60 bg-card p-5 sm:p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-full bg-[#12161f] dark:bg-[#181d24] text-indigo-400 flex items-center justify-center shrink-0 shadow-sm">
-                  <Briefcase className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-black text-foreground">Digital Contracts Hub</p>
-                  <p className="text-xs text-muted-foreground">2-party signed electronic agreements with audit hash</p>
-                </div>
-              </div>
-              <Badge variant="outline" className="text-[10px] font-bold text-emerald-600 dark:text-[#a3e635] border-emerald-500/30 bg-emerald-500/10 rounded-full">
-                {activeCount} Active
-              </Badge>
-            </div>
-
-            <div className="bg-muted/40 dark:bg-muted/20 rounded-2xl p-3 border border-border/60 my-2 text-xs space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Contract Security PIN:</span>
-                <span className="font-semibold text-foreground flex items-center gap-1">
-                  <KeyRound className="h-3 w-3 text-amber-500" /> Configured
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Tamper Protection:</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">SHA-256 + QR Verified</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 pt-1">
-            <Link
-              href="/client/contracts"
-              className="rounded-full bg-[#a3e635] text-black font-extrabold flex-1 h-10 text-xs flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shadow-sm touch-manipulation"
-            >
-              View All Contracts
-            </Link>
-            <Link
-              href="/client/contract-setup"
-              className="rounded-full border border-outline-variant text-on-surface font-bold h-10 px-4 text-xs flex items-center justify-center hover:bg-surface-container active:scale-95 transition-all touch-manipulation"
-            >
-              PIN Settings
-            </Link>
-          </div>
-        </div>
-
-        {/* Spoke 3: Chapa Direct Payments & Invoices */}
-        <div className="rounded-3xl border border-outline-variant/60 bg-card p-5 sm:p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-full bg-[#12161f] dark:bg-[#181d24] text-emerald-400 flex items-center justify-center shrink-0 shadow-sm">
-                  <CreditCard className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-black text-foreground">Direct Billing (Chapa)</p>
-                  <p className="text-xs text-muted-foreground">Direct non-escrow payment to workers with receipts</p>
-                </div>
-              </div>
-              <Badge variant="outline" className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 border-emerald-500/20 bg-emerald-500/5 rounded-full">
-                Telebirr / CBE
-              </Badge>
-            </div>
-
-            <p className="text-xs text-muted-foreground my-2 leading-relaxed">
-              Payments go directly from your mobile wallet or bank to the skilled worker upon milestone completion. Download verified receipts anytime.
-            </p>
-          </div>
-
-          <div className="pt-1">
-            <Link
-              href="/client/payments"
-              className="rounded-full bg-[#a3e635] text-black font-extrabold w-full h-10 text-xs flex items-center justify-center hover:opacity-90 active:scale-95 transition-all shadow-sm touch-manipulation"
-            >
-              Manage Invoices & Receipts
-            </Link>
-          </div>
-        </div>
-
-        {/* Spoke 4: Real-Time Chat & Support */}
-        <div className="rounded-3xl border border-outline-variant/60 bg-card p-5 sm:p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-full bg-[#12161f] dark:bg-[#181d24] text-violet-400 flex items-center justify-center shrink-0 shadow-sm">
-                  <Headphones className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-black text-foreground">Support & Direct Chat</p>
-                  <p className="text-xs text-muted-foreground">Instant resolution with live audio chime updates</p>
-                </div>
-              </div>
-              <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-500">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" /> Live
-              </span>
-            </div>
-
-            <p className="text-xs text-muted-foreground my-2 leading-relaxed">
-              Have questions about a contract or need assistance? Open a support ticket with our team or chat with your hired workers in real-time.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 pt-1">
-            <Link
-              href="/client/support"
-              className="rounded-full border border-outline-variant text-on-surface font-bold flex-1 h-10 text-xs flex items-center justify-center hover:bg-surface-container active:scale-95 transition-all touch-manipulation"
-            >
-              <Headphones className="h-3.5 w-3.5 mr-1.5" /> Support Tickets
-            </Link>
-            <Link
-              href="/client/messages"
-              className="rounded-full border border-outline-variant text-on-surface font-bold flex-1 h-10 text-xs flex items-center justify-center hover:bg-surface-container active:scale-95 transition-all touch-manipulation"
-            >
-              <MessageSquare className="h-3.5 w-3.5 mr-1.5" /> Messages
-            </Link>
-          </div>
-        </div>
-      </div>
+      {/* ── 5. PROJECT COMMISSIONING & PERFORMANCE ANALYTICS ────────── */}
+      <ClientPerformanceAnalytics stats={clientStats} />
 
       {/* ── 6. ACTIVE CONTRACTS (Theme-Aware: Mobile Card List + Desktop Table) ─ */}
       <div className="rounded-3xl border border-outline-variant/60 bg-card text-card-foreground dark:bg-[#0e141d] shadow-sm p-5 sm:p-6">

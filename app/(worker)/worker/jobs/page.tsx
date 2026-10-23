@@ -127,8 +127,8 @@ export default function WorkerJobsPage() {
 
       {/* ── Loading State ── */}
       {loading && (
-        <div className="space-y-4">
-          {[1, 2].map((i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
               className="bg-surface-container-low border border-outline-variant rounded-[2rem] p-6 space-y-4 animate-pulse"
@@ -157,7 +157,7 @@ export default function WorkerJobsPage() {
           <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-on-surface-variant opacity-40 ml-1">
             {t("worker.jobs.awaiting")}
           </h2>
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
             {pendingJobs.map((job) => (
               <JobCard
                 key={job.id}
@@ -176,7 +176,7 @@ export default function WorkerJobsPage() {
           <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-on-surface-variant opacity-40 ml-1">
             {t("worker.jobs.previously")}
           </h2>
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
             {respondedJobs.map((job) => (
               <JobCard
                 key={job.id}

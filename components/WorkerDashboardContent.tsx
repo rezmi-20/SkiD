@@ -37,6 +37,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import WorkerPerformanceAnalytics from "@/components/worker/WorkerPerformanceAnalytics";
 
 interface WorkerDashboardContentProps {
   worker: {
@@ -360,18 +361,17 @@ export default function WorkerDashboardContent({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
         {/* Hero Card */}
         <div
-          className="lg:col-span-2 relative overflow-hidden rounded-2xl border border-border/70 min-h-[190px] flex flex-col justify-between p-5 sm:p-7 shadow-xl"
-          style={{ background: "linear-gradient(135deg, #0f0c29 0%, #1a1044 45%, #0c0a22 100%)" }}
+          className="lg:col-span-2 relative overflow-hidden rounded-2xl border border-amber-500/20 min-h-[200px] flex flex-col justify-between p-5 sm:p-7 shadow-xl group"
+          style={{ background: "#0c0a17" }}
         >
-          {/* Dire Dawa Contextual Backdrop */}
+          {/* Artisan Trades Workbench High-Visibility Hero Image */}
           <div
-            className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-20 mix-blend-luminosity"
-            style={{ backgroundImage: "url('/images/diredawa_street.jpg')" }}
+            className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-85 transition-transform duration-700 group-hover:scale-105"
+            style={{ backgroundImage: "url('/images/worker_workbench_hero.jpg')" }}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0f0c29]/95 via-[#1a1044]/80 to-transparent pointer-events-none" />
-
-          <div className="absolute top-0 right-0 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-20 w-48 h-48 bg-violet-500/8 rounded-full blur-2xl pointer-events-none" />
+          {/* Vignette overlay: deep on left for text legibility, revealing tools on right */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0c0a17]/95 via-[#0c0a17]/70 to-[#0c0a17]/25 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0c0a17]/80 via-transparent to-black/30 pointer-events-none" />
 
           {/* Top worker identity strip */}
           <div className="flex items-center justify-between z-10 mb-2">
@@ -547,152 +547,8 @@ export default function WorkerDashboardContent({
         </div>
       </div>
 
-      {/* ── 4. FOUR HUB SPOKE CARDS (Mobile Responsive Grid) ────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-        {/* Spoke 1: Job Discovery */}
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400">
-                  <Briefcase className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground">Job Discovery Hub</p>
-                  <p className="text-xs text-muted-foreground">Find local client job requests matching your trades</p>
-                </div>
-              </div>
-            </div>
-
-            <p className="text-xs text-muted-foreground my-2.5 leading-relaxed">
-              Explore open positions for electrical repairs, plumbing, painting, or woodwork across all districts in Dire Dawa.
-            </p>
-          </div>
-
-          <div className="pt-1">
-            <Button asChild size="default" className="rounded-xl w-full h-10 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white touch-manipulation">
-              <Link href="/worker/jobs">
-                <Briefcase className="h-3.5 w-3.5 mr-1.5" /> View Available Jobs
-              </Link>
-            </Button>
-          </div>
-        </div>
-
-        {/* Spoke 2: Digital Contracts & PIN */}
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
-                  <FileText className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground">Digital Work Agreements</p>
-                  <p className="text-xs text-muted-foreground">2-party signed electronic agreements with audit hashes</p>
-                </div>
-              </div>
-              <Badge variant="outline" className="text-[10px] font-bold text-emerald-400 border-emerald-500/20 bg-emerald-500/5">
-                {stats.activeJobs} In Progress
-              </Badge>
-            </div>
-
-            <div className="bg-muted/30 rounded-xl p-3 border border-border/60 my-2 text-xs space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Security PIN:</span>
-                <span className="font-semibold text-foreground flex items-center gap-1">
-                  <KeyRound className="h-3 w-3 text-amber-400" /> Active
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Verification:</span>
-                <span className="font-semibold text-emerald-400">SHA-256 + QR Protected</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 pt-1">
-            <Button asChild size="default" variant="outline" className="rounded-xl flex-1 h-10 text-xs font-bold touch-manipulation">
-              <Link href="/worker/contracts">
-                My Contracts
-              </Link>
-            </Button>
-            <Button asChild size="default" variant="ghost" className="rounded-xl h-10 text-xs font-semibold text-indigo-400 touch-manipulation">
-              <Link href="/worker/contract-setup">
-                Setup PIN
-              </Link>
-            </Button>
-          </div>
-        </div>
-
-        {/* Spoke 3: Earnings & Chapa Direct Payouts */}
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400">
-                  <Wallet className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground">Direct Telebirr / Bank Payouts</p>
-                  <p className="text-xs text-muted-foreground">Direct non-escrow payment on job completion</p>
-                </div>
-              </div>
-              <Badge variant="outline" className="text-[10px] font-bold text-amber-400 border-amber-500/20 bg-amber-500/5">
-                Zero Escrow Hold
-              </Badge>
-            </div>
-
-            <p className="text-xs text-muted-foreground my-2.5 leading-relaxed">
-              Clients pay your milestone directly through Chapa using Telebirr, CBE Birr, or card. Receipts are generated instantly.
-            </p>
-          </div>
-
-          <div className="pt-1">
-            <Button asChild size="default" variant="outline" className="rounded-xl w-full h-10 text-xs font-bold touch-manipulation">
-              <Link href="/worker/earnings">
-                View Payout History
-              </Link>
-            </Button>
-          </div>
-        </div>
-
-        {/* Spoke 4: Client Chat & Live Support */}
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-violet-500/10 text-violet-400">
-                  <Headphones className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground">Communication & Support</p>
-                  <p className="text-xs text-muted-foreground">Direct chat with clients & dedicated admin support</p>
-                </div>
-              </div>
-              <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" /> Audio Chime
-              </span>
-            </div>
-
-            <p className="text-xs text-muted-foreground my-2.5 leading-relaxed">
-              Communicate directly with hiring clients in real-time or get priority support assistance for any contract inquiries.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 pt-1">
-            <Button asChild size="default" variant="outline" className="rounded-xl flex-1 h-10 text-xs font-bold touch-manipulation">
-              <Link href="/worker/support">
-                <Headphones className="h-3.5 w-3.5 mr-1.5" /> Support
-              </Link>
-            </Button>
-            <Button asChild size="default" variant="outline" className="rounded-xl flex-1 h-10 text-xs font-bold touch-manipulation">
-              <Link href="/worker/messages">
-                <MessageSquare className="h-3.5 w-3.5 mr-1.5" /> Client Chat
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </div>
+      {/* ── 4. MODERN PERFORMANCE & EARNINGS ANALYTICS ─────────────── */}
+      <WorkerPerformanceAnalytics stats={stats} recentJobs={recentJobs} />
 
       {/* ── 5. PENDING JOB REQUESTS (Mobile Touch Cards) ─────────────── */}
       <div className="rounded-2xl border border-border bg-card shadow-sm p-4 sm:p-5">

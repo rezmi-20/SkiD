@@ -71,6 +71,8 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
 
   const isWorker = user.role === "worker";
   const contractsHref = isWorker ? "/worker/contracts" : "/client/contracts";
+  const ongoingJobsHref = isWorker ? "/worker/jobs" : "/client/dashboard";
+  const ratingsHref = isWorker ? "/worker/rate" : "/client/rate";
   const paymentsHref = isWorker ? "/worker/earnings" : "/client/payments";
   const settingsHref = isWorker ? "/worker/profile/settings" : "/client/profile/settings";
   const securityHref = isWorker ? "/worker/contract-setup" : "/client/contract-setup";
@@ -207,7 +209,7 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
 
               {/* Item 2: Ongoing Milestones / In Progress */}
               <Link
-                href={contractsHref}
+                href={ongoingJobsHref}
                 className="flex flex-col items-center group transition-transform active:scale-95 touch-manipulation"
               >
                 <div className="relative">
@@ -224,7 +226,7 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
 
               {/* Item 3: Ratings & Reviews */}
               <Link
-                href={contractsHref}
+                href={ratingsHref}
                 className="flex flex-col items-center group transition-transform active:scale-95 touch-manipulation"
               >
                 <Star className="h-6 w-6 text-[#a4fe47] stroke-[1.75] fill-[#a4fe47]/20" />

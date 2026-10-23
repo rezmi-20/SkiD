@@ -372,7 +372,7 @@ export const translations = {
     "admin.report.none": "No payments have been recorded yet.",
     "admin.report.total": "Total",
     "admin.report.status": "Status",
-    "admin.report.receipt": "Receipt",
+    "admin.report.receipt": "Chapa Receipt",
     "admin.report.notRecorded": "Not recorded",
 
 
@@ -1810,7 +1810,7 @@ export const translations = {
     "admin.report.none": "እስካሁን ምንም ክፍያ አልተመዘገበም።",
     "admin.report.total": "ጠቅላላ",
     "admin.report.status": "ሁኔታ",
-    "admin.report.receipt": "ደረሰኝ",
+    "admin.report.receipt": "የቻፓ ደረሰኝ",
     "admin.report.notRecorded": "አልተመዘገበም",
 
 
@@ -3249,7 +3249,7 @@ export const translations = {
     "admin.report.none": "Kaffaltiin galmeeffame hin jiru.",
     "admin.report.total": "Waliigala",
     "admin.report.status": "Haala",
-    "admin.report.receipt": "Ragaa",
+    "admin.report.receipt": "Ragaa Chapa",
     "admin.report.notRecorded": "Hin galmeeffamne",
 
 

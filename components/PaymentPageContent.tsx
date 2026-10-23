@@ -357,29 +357,16 @@ export default function PaymentPageContent({
                 <p className="text-xs text-on-surface-variant">The payment has been verified and released to the worker.</p>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3">
-                {(confirmedData.chapaReference || txRef) && (
-                  <a
-                    href={getChapaReceiptUrl(confirmedData.chapaReference || txRef)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full border border-[#a3e635]/60 bg-[#a3e635]/10 text-xs sm:text-sm font-bold uppercase tracking-wider text-[#a3e635] hover:bg-[#a3e635]/20 transition active:scale-[0.98]"
-                  >
-                    <Receipt className="h-4 w-4" />
-                    <span>Official Chapa Receipt</span>
-                  </a>
-                )}
-                {confirmedData.paymentId && (
-                  <a
-                    href={`/api/payments/${confirmedData.paymentId}/receipt`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full border border-outline-variant/60 bg-surface-container text-xs sm:text-sm font-bold uppercase tracking-wider text-on-surface hover:bg-surface-container-high transition active:scale-[0.98]"
-                  >
-                    <Receipt className="h-4 w-4" />
-                    <span>PDF Receipt</span>
-                  </a>
-                )}
+              <div className="flex flex-col gap-3">
+                <a
+                  href={getChapaReceiptUrl(confirmedData.chapaReference || txRef)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-12 w-full items-center justify-center gap-2 rounded-full border border-[#a3e635]/60 bg-[#a3e635]/10 text-xs sm:text-sm font-bold uppercase tracking-wider text-[#a3e635] hover:bg-[#a3e635]/20 transition active:scale-[0.98]"
+                >
+                  <Receipt className="h-4 w-4" />
+                  <span>Official Chapa Receipt</span>
+                </a>
               </div>
 
               <button

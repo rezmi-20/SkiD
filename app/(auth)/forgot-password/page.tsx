@@ -17,8 +17,9 @@ export default function ForgotPasswordPage() {
     setMessage("");
 
     try {
-      const appOrigin = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
-      const redirectTo = new URL("/reset-password", appOrigin).toString();
+      // Use the host serving this page so preview, production, and local reset
+      // links do not inherit a stale NEXT_PUBLIC_APP_URL from another deploy.
+      const redirectTo = new URL("/reset-password", window.location.origin).toString();
       const { error: resetError } = await authClient.requestPasswordReset({
         email: email.trim(),
         redirectTo,

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { CreditCard, Receipt, ArrowRight } from "lucide-react";
 import FadeContent from "@/components/ui/fade-content";
+import { getChapaReceiptUrl } from "@/lib/config";
 
 export const metadata = {
   title: "Payments | DireSkill",
@@ -138,13 +139,13 @@ export default async function ClientPaymentsPage() {
                             {payment.paymentStatus === "released" && payment.paymentId && (
                               <div className="pt-1">
                                 <a
-                                  href={`/api/payments/${payment.paymentId}/receipt`}
+                                  href={getChapaReceiptUrl(payment.chapaRef)}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-primary hover:underline"
                                 >
                                   <Receipt size={12} />
-                                  <span>PDF Receipt</span>
+                                  <span>Chapa Receipt</span>
                                 </a>
                               </div>
                             )}

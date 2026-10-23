@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { verifyAndReleasePayment, type PaymentProcessingResult } from "@/lib/payment-processing";
 import { CheckCircle2, AlertCircle, Receipt, LayoutDashboard, CreditCard } from "lucide-react";
+import { getChapaReceiptUrl } from "@/lib/config";
 
 
 
@@ -142,17 +143,20 @@ export default async function PaymentSuccessPage({
             </div>
           </div>
 
-          {result.success && result.paymentId && (
+          {result.success && (
             <div className="mt-5 border-t border-surface-variant pt-5 flex flex-col gap-2">
               <a
-                href={`/api/payments/${result.paymentId}/receipt`}
+                href={getChapaReceiptUrl(result.chapaReference || txRef)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary hover:bg-primary/95 px-4 text-sm font-bold text-on-primary transition-colors duration-200"
               >
                 <Receipt className="h-4 w-4" />
-                <span>Download PDF Receipt</span>
+                <span>Official Chapa Receipt</span>
               </a>
+              <p className="text-[11px] text-center text-on-surface-variant opacity-70">
+                Official payment receipt is issued and hosted directly by Chapa Payment Gateway.
+              </p>
             </div>
           )}
         </section>
