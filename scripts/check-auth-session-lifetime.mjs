@@ -41,7 +41,7 @@ check(
 
 check(
   "Underlying Neon session token is still used as fallback validation",
-  sessionCookie.includes("getNeonSessionFromTokenCookie(cookieStore.getAll())") &&
+  sessionCookie.includes("return getNeonSessionFromTokenCookie(all)") &&
     sessionCookie.includes('`${process.env.NEON_AUTH_BASE_URL}/get-session`')
 );
 

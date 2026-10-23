@@ -1,6 +1,9 @@
 import { neon } from "@neondatabase/serverless";
 import dns from "node:dns";
 import { Agent, setGlobalDispatcher } from "undici";
+import { validateProductionEnvironment } from "@/lib/env";
+
+validateProductionEnvironment();
 
 // Optimize connection on cellular hotspots and networks with unroutable IPv6 (LOCAL DEV ONLY)
 if (!process.env.VERCEL) {

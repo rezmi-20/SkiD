@@ -22,7 +22,8 @@ export async function GET(req: NextRequest) {
       longitude: rows[0]?.longitude,
     });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("[AVAILABILITY_GET_ERROR]", err instanceof Error ? err.name : "UnknownError");
+    return NextResponse.json({ error: "Unable to load availability." }, { status: 500 });
   }
 }
 
@@ -71,7 +72,7 @@ export async function POST(req: NextRequest) {
       worker: updateResult[0],
     });
   } catch (err: any) {
-    console.error("Availability update error:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("[AVAILABILITY_UPDATE_ERROR]", err instanceof Error ? err.name : "UnknownError");
+    return NextResponse.json({ error: "Unable to update availability." }, { status: 500 });
   }
 }

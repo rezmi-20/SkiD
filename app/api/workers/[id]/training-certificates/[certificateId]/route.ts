@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { getAdminPrincipal, hasAdminPermission } from "@/lib/admin-authorization";
+import { detectFileType } from "@/lib/file-signatures";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +45,7 @@ export async function GET(
 
   const bytes = Buffer.from(match[2].replace(/\s/g, ""), "base64");
   if (!bytes.length || bytes.length > 1024 * 1024) return fail("Invalid certificate", 415);
+  if (detectFileType(bytes) !== expectedMime) return fail("Invalid certificate content", 415);
   const safeName = String(certificate.file_name || "certificate").replace(/["\\\r\n]/g, "_");
   return new NextResponse(bytes, {
     status: 200,

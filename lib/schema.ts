@@ -6,6 +6,7 @@ import {
   timestamp,
   boolean,
   integer,
+  bigint,
   doublePrecision,
   pgEnum,
   json,
@@ -689,6 +690,10 @@ export const auditLogs = pgTable("audit_logs", {
   details: json("details"),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
+  sequenceNumber: bigint("sequence_number", { mode: "number" }),
+  eventHash: varchar("event_hash", { length: 64 }),
+  previousEventHash: varchar("previous_event_hash", { length: 64 }),
+  payloadDigest: varchar("payload_digest", { length: 64 }),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("audit_logs_created_idx").on(table.createdAt),
@@ -697,6 +702,8 @@ export const auditLogs = pgTable("audit_logs", {
   index("audit_logs_target_idx").on(table.targetType, table.targetId),
   index("audit_logs_module_idx").on(table.module, table.createdAt),
   index("audit_logs_high_risk_idx").on(table.highRisk, table.createdAt),
+  index("audit_logs_sequence_idx").on(table.sequenceNumber),
+  index("audit_logs_event_hash_idx").on(table.eventHash),
 ]);
 
 export const adminMisconductReviews = pgTable("admin_misconduct_reviews", {
@@ -875,9 +882,15 @@ export const courtEvidenceRecords = pgTable("court_evidence_records", {
   authorizedByAdminId: uuid("authorized_by_admin_id").notNull().references(() => adminEmployees.id),
   evidenceHash: varchar("evidence_hash", { length: 128 }).notNull(),
   evidenceManifest: json("evidence_manifest").notNull(),
+  pdfBase64: text("pdf_base64"),
+  requestedByUserId: uuid("requested_by_user_id").references(() => users.id),
+  participantRole: varchar("participant_role", { length: 30 }),
+  status: varchar("status", { length: 30 }).notNull().default("certified"),
+  documentManifestDigest: varchar("document_manifest_digest", { length: 64 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => [
   index("court_evidence_contract_idx").on(table.contractId, table.createdAt),
   index("court_evidence_case_idx").on(table.caseNumber),
+  index("court_evidence_requester_idx").on(table.requestedByUserId, table.createdAt),
 ]);
 

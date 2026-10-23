@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
+import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { sanitizeText } from "@/lib/sanitize";
 import { isTrustedUploadReference } from "@/lib/security";
+import { detectFileType } from "@/lib/file-signatures";
 import { createNotification } from "@/lib/actions/notifications";
 import { protectFaydaDocument, protectFin, revealFaydaDocument, validateFin } from "@/lib/fin-protection";
 import { getClientIdentityColumns, validateClientIdentityDocument } from "@/lib/client-verification";
@@ -123,6 +125,21 @@ export async function POST(req: NextRequest) {
     }
 
     const { email, role, fullName, phone, neonUserId } = parsed.data;
+    stage = "authenticate_registration_user";
+    const session = await auth();
+    if (!session?.user?.id || session.user.id !== neonUserId) {
+      return NextResponse.json({ error: "Sign in with the account being registered, then retry." }, { status: 401 });
+    }
+    if (!session.user.email || !email) {
+      return NextResponse.json({ error: "A login email is required to finish registration." }, { status: 400 });
+    }
+    if (session.user.email.trim().toLowerCase() !== email.trim().toLowerCase()) {
+      return NextResponse.json({ error: "The registration email does not match the signed-in account." }, { status: 403 });
+    }
+    if (session.user.role && session.user.role !== role) {
+      return NextResponse.json({ error: "The selected role does not match this account." }, { status: 409 });
+    }
+
     const phoneDigits = phone.replace(/\D/g, "");
     const normalizedPhone = phoneDigits.length === 10 && phoneDigits.startsWith("0") ? phoneDigits.slice(1) : phoneDigits;
     if (!/^\d{9}$/.test(normalizedPhone)) {
@@ -152,6 +169,9 @@ export async function POST(req: NextRequest) {
       if (!profilePhoto || !PROFILE_PHOTO_MIME_TYPES.has(profilePhoto.type) || profilePhoto.size === 0 || profilePhoto.size > MAX_PROFILE_PHOTO_SIZE) {
         return NextResponse.json({ error: "A valid profile photo under 250 KB is required." }, { status: 400 });
       }
+      if (detectFileType(Buffer.from(await profilePhoto.arrayBuffer())) !== profilePhoto.type) {
+        return NextResponse.json({ error: "Profile photo content does not match its declared format." }, { status: 400 });
+      }
       if (certificateFiles.length < 1 || certificateFiles.length > MAX_CERTIFICATES) {
         return NextResponse.json({ error: "Upload between 1 and 5 learning certificates." }, { status: 400 });
       }
@@ -159,6 +179,9 @@ export async function POST(req: NextRequest) {
       for (const file of certificateFiles) {
         if (!CERTIFICATE_MIME_TYPES.has(file.type) || file.size === 0 || file.size > MAX_CERTIFICATE_SIZE) {
           return NextResponse.json({ error: "Each certificate must be a PDF, JPG, PNG, or WEBP file no larger than 1 MB." }, { status: 400 });
+        }
+        if (detectFileType(Buffer.from(await file.arrayBuffer())) !== file.type) {
+          return NextResponse.json({ error: "A certificate's content does not match its declared format." }, { status: 400 });
         }
         certificatesSize += file.size;
         certificateDataUrls.push({
@@ -172,10 +195,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "All certificates together must be no larger than 2 MB." }, { status: 400 });
       }
       profilePhotoDataUrl = await toDataUrl(profilePhoto);
-    }
-
-    if (!neonUserId) {
-      return NextResponse.json({ error: "Missing Neon User ID" }, { status: 400 });
     }
 
     const sanitizedFullName = sanitizeText(fullName);
@@ -231,7 +250,7 @@ export async function POST(req: NextRequest) {
 
     // Neon Auth creates the identity first. Reuse its matching local row so a
     // retry can finish profile creation after a transient database/API failure.
-    const normalizedEmail = (email || `phone-${normalizedPhone}`).trim().toLowerCase();
+    const normalizedEmail = session.user.email.trim().toLowerCase();
     stage = "find_existing_user";
     const existingUsers = await sql`
       SELECT id, role

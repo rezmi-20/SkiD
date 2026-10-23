@@ -1,53 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { NextResponse } from "next/server";
 
 /**
- * POST /api/auth/lookup
- * Given a phone number, returns the associated email address from our users table.
- * This allows login-by-phone to work with Neon Auth's email-based identity system.
+ * This legacy route used to disclose the account email for a phone number.
+ * Phone-to-email resolution now happens inside the auth proxy.
  */
-export async function POST(req: NextRequest) {
-  try {
-    const { phone } = await req.json();
-
-    if (!phone || typeof phone !== "string") {
-      return NextResponse.json({ error: "Phone number is required" }, { status: 400 });
-    }
-
-    // Normalize: strip leading 0, strip +251 prefix if present
-    let normalized = phone.trim();
-    if (normalized.startsWith("+251")) normalized = normalized.slice(4);
-    if (normalized.startsWith("0")) normalized = normalized.slice(1);
-
-    const result = await sql`
-      SELECT email FROM users WHERE regexp_replace(phone, '^(\\+251|0)', '') = ${normalized} LIMIT 1
-    `;
-
-    if (!result || result.length === 0) {
-      return NextResponse.json({ error: "No account found with this phone number." }, { status: 404 });
-    }
-
-    const storedEmail = result[0].email as string;
-
-    // Detect legacy accounts that were registered with synthetic emails
-    // (format: "phone-XXXX"). These accounts don't exist in Neon Auth and
-    // cannot be used with signIn.email(). Return a specific error so the
-    // user knows they need to reset or re-register.
-    if (storedEmail.startsWith("phone-")) {
-      return NextResponse.json(
-        {
-          error: "legacy_account",
-          message:
-            "This account was created before our authentication update. Please contact support or register again with your email.",
-        },
-        { status: 409 },
-      );
-    }
-
-    // For new accounts, the stored email is the real email used with Neon Auth.
-    return NextResponse.json({ email: storedEmail });
-  } catch (error) {
-    console.error("[AUTH_LOOKUP_ERROR]", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
+export async function POST() {
+  return NextResponse.json(
+    { error: "This endpoint is no longer available." },
+    { status: 410, headers: { "Cache-Control": "no-store" } },
+  );
 }

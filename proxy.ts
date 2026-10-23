@@ -142,7 +142,7 @@ export default async function proxy(req: NextRequest) {
             ),
           );
         }
-        console.error("[PROXY_API_ACCOUNT_STATE_ERROR]", apiError);
+        console.error("[PROXY_API_ACCOUNT_STATE_ERROR]", apiError instanceof Error ? apiError.name : "UnknownError");
         return applyCorsHeaders(
           req,
           NextResponse.json(
@@ -258,7 +258,7 @@ export default async function proxy(req: NextRequest) {
 
     return NextResponse.next();
   } catch (error) {
-    console.error("[PROXY_ERROR]", error);
+    console.error("[PROXY_ERROR]", error instanceof Error ? error.name : "UnknownError");
     if (pathname.startsWith("/client") || pathname.startsWith("/worker") || pathname.startsWith("/admin")) {
       if (isAuthSessionUnavailableError(error)) {
         return new NextResponse("Authentication service temporarily unavailable. Please refresh and try again.", {
@@ -278,4 +278,3 @@ export const config = {
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
-

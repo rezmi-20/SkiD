@@ -18,26 +18,30 @@ const profileApi = read("app/api/auth/profile/route.ts");
 const profileActions = read("lib/actions/profile.ts");
 const settings = read("components/SettingsContent.tsx");
 const clientVerification = read("lib/client-verification.ts");
+const sharedClientVerification = read("lib/client-verification-shared.ts");
 const contractSetup = read("lib/actions/contract-setup.ts");
 const clientContractSetupPage = read("app/(client)/client/contract-setup/page.tsx");
 const clientContractsPage = read("app/(client)/client/contracts/page.tsx");
 const protectedDocumentRoute = read("app/api/clients/[clientId]/verification-document/route.ts");
 const adminClientReviewPage = read("app/(admin)/admin/clients/[id]/verify/page.tsx");
 const adminActions = read("lib/actions/admin.ts");
+const verificationOperations = read("lib/verification-operations.ts");
 const superAdminUsers = read("components/admin/SuperAdminUsersClient.tsx");
 const schema = read("lib/schema.ts");
 const packageJson = JSON.parse(read("package.json"));
 
 report(
   "client registration shows optional Fayda verification",
-  clientRegister.includes("Optional Fayda Verification") &&
-    clientRegister.includes("Skip for now") &&
-    clientRegister.includes("Optional during registration") &&
-    clientRegister.includes("Create Account & Submit Verification"),
+  clientRegister.includes('useState(false)') &&
+    clientRegister.includes("Optional Fayda Section") &&
+    clientRegister.includes("setWantsVerification((value) => !value)") &&
+    clientRegister.includes('t("auth.register.client.skip")') &&
+    clientRegister.includes('wantsVerification ? t("auth.register.client.submitWithVerification")'),
 );
 report(
   "client registration requires FIN and document together when chosen",
-  clientRegister.includes("Submit both your FIN and Fayda document, or choose Skip for now.") &&
+  clientRegister.includes("if (wantsVerification)") &&
+    clientRegister.includes("if (!formData.faydaFinNumber || !formData.faydaDocDataUrl)") &&
     profileApi.includes("Submit both your 12-digit FIN and Fayda ID image together, or skip verification for now."),
 );
 report(
@@ -85,15 +89,16 @@ report(
 );
 report(
   "client profile shows status, rejection reason, masked FIN, and Verify Now path",
-  settings.includes("Fayda Verification") &&
-    settings.includes("Pending Verification") &&
+  settings.includes('t("settings.faydaVerification")') &&
+    settings.includes('verificationStatus === "pending"') &&
     settings.includes("initialData.verification_reason") &&
     settings.includes("initialData.masked_fin") &&
-    settings.includes("Submit Verification"),
+    settings.includes('t("settings.submitVerification")') &&
+    settings.includes("clientCanSubmitVerification"),
 );
 report(
   "PIN setup uses dedicated verification message and preserves return URL",
-  clientVerification.includes("Fayda identity verification is required before setting up your contract PIN.") &&
+  sharedClientVerification.includes("Fayda identity verification is required before setting up your contract PIN.") &&
     contractSetup.includes("CLIENT_PIN_VERIFICATION_MESSAGE") &&
     contractSetup.includes("getClientVerificationHref(") &&
     clientContractSetupPage.includes("redirect(status.setupHref)"),
@@ -136,10 +141,12 @@ report(
 );
 report(
   "admin approval/rejection is admin-only, audited, and rejection requires reason",
-  adminActions.includes("session?.user?.role !== \"admin\"") &&
-    adminActions.includes("client_verification_status_changed") &&
-    adminActions.includes("A rejection reason is required.") &&
-    adminActions.includes("Client must submit FIN and Fayda document before approval."),
+  adminActions.includes("decideVerificationCase(\"client\"") &&
+    verificationOperations.includes("requireAdminPermission(requiredPermissionForDecision(nextStatus))") &&
+    verificationOperations.includes("cleanReason(reason)") &&
+    verificationOperations.includes("A clear reason is required for this verification decision.") &&
+    verificationOperations.includes("INSERT INTO verification_events") &&
+    verificationOperations.includes("hasCompleteWorkerIdentity"),
 );
 report(
   "client verification script is wired",

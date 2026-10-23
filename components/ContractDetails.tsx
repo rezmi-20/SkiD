@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import dynamic from "next/dynamic";
+import ParticipantEvidenceExportButton from "@/components/contract/ParticipantEvidenceExportButton";
 
 const JobSiteMap = dynamic(() => import("@/components/contract/JobSiteMap"), {
   ssr: false,
@@ -1674,6 +1675,8 @@ export default function ContractDetails({ contract, userId }: Props) {
             qrCodeDataUrl={contract.qr_code_data_url}
             activatedAt={contract.activated_at}
           />
+
+          <ParticipantEvidenceExportButton contractId={contract.id} />
         </aside>
       </section>
 

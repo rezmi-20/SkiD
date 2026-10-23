@@ -283,12 +283,24 @@ export function CourtEvidenceClient({ adminEmployeeId, adminFullName }: Props) {
               &larr; Back to Case Search
             </button>
             <div className="flex items-center gap-3">
+              {dossier.pdfDownloadUrl && (
+                <a
+                  href={dossier.pdfDownloadUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-700 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2 hover:from-red-500 hover:to-rose-600 shadow-lg cursor-pointer"
+                >
+                  <Download size={16} />
+                  <span>Download Certified PDF</span>
+                </a>
+              )}
               <button
                 onClick={handlePrint}
                 className="px-6 py-2.5 rounded-xl bg-white text-black text-xs font-bold uppercase tracking-wider flex items-center gap-2 hover:bg-zinc-200 shadow-lg cursor-pointer"
               >
                 <Printer size={16} />
-                <span>Print / Save Legal PDF</span>
+                <span>Print Dossier</span>
               </button>
             </div>
           </div>

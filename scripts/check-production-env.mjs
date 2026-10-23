@@ -26,6 +26,17 @@ const sandboxOnly = [
   "CHAPA_SANDBOX_LOW_VALUE_AMOUNT",
 ];
 
+const unsafeProductionFlags = [
+  "ALLOW_DEV_ADMIN_SEED",
+  "ALLOW_DEV_ADMIN_SEED_ACTIVE",
+  "ALLOW_DEV_ADMIN_SEED_RESET",
+  "ALLOW_LIVE_COMMUNITY_SAMPLE_SEED",
+  "ALLOW_OWNER_ADMIN_RESET",
+  "ALLOW_OWNER_EMPLOYEE_CONVERSION",
+  "OWNER_ADMIN_RESET_EMERGENCY",
+  "OWNER_EMPLOYEE_CONVERSION_EMERGENCY",
+];
+
 const failures = [];
 const warnings = [];
 
@@ -151,6 +162,14 @@ for (const name of sandboxOnly) {
     warn(`${name}: present; verify this is not a production deployment`);
   } else {
     pass(`${name}: absent`);
+  }
+}
+
+for (const name of unsafeProductionFlags) {
+  if (valueOf(name).toLowerCase() === "true") {
+    fail(`${name}: must be disabled in production`);
+  } else {
+    pass(`${name}: disabled`);
   }
 }
 

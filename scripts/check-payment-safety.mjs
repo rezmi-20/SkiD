@@ -12,6 +12,7 @@ const files = [
   "app/(client)/client/pay/[jobId]/page.tsx",
   "lib/actions/payments.ts",
   "lib/payment-processing.ts",
+  "lib/config.ts",
 ];
 
 const checks = [
@@ -26,7 +27,8 @@ const checks = [
   { label: "manual payment check verifies directly with Chapa", pattern: /source:\s*"client_confirm"/ },
   { label: "receipt route has auth", pattern: /const session = await auth\(\)/ },
   { label: "receipt route checks ownership", pattern: /canRead/ },
-  { label: "payment UI uses secured PDF receipt route", pattern: /\/api\/payments\/\$\{[^}]+\.paymentId|\/api\/payments\/\$\{confirmedData\.paymentId|\/api\/payments\/\$\{tx\.id/ },
+  { label: "payment success links to the official Chapa-hosted receipt", pattern: /href=\{getChapaReceiptUrl\(result\.chapaReference \|\| txRef\)\}/ },
+  { label: "receipt helper uses fixed Chapa HTTPS hosts", pattern: /https:\/\/checkout\.chapa\.co\/checkout\/test-payment-receipt\/\$\{referenceId\}[\s\S]*https:\/\/chapa\.link\/payment-receipt\/\$\{referenceId\}/ },
   { label: "query params alone cannot mark payment paid", pattern: /Only the paying client can verify this payment|Login required before verifying a returned payment/ },
   { label: "checkout page does not submit payment amount to API", pattern: /router\.push\(`\/client\/pay\/\$\{encodeURIComponent\(jobId\.trim\(\)\)\}`\)/ },
 ];
@@ -54,7 +56,8 @@ for (const required of [
   "manual payment check verifies directly with Chapa",
   "receipt route has auth",
   "receipt route checks ownership",
-  "payment UI uses secured PDF receipt route",
+  "payment success links to the official Chapa-hosted receipt",
+  "receipt helper uses fixed Chapa HTTPS hosts",
   "query params alone cannot mark payment paid",
   "checkout page does not submit payment amount to API",
 ]) {

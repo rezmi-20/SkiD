@@ -16,6 +16,7 @@ import {
   Scale,
 } from "lucide-react";
 import { GOVERNANCE_APPEAL_WINDOW_DAYS } from "@/lib/governance-constants";
+import ParticipantEvidenceExportButton from "@/components/contract/ParticipantEvidenceExportButton";
 
 function formatDate(value: string | Date | null | undefined) {
   if (!value) return "Not recorded";
@@ -118,6 +119,10 @@ export default function UserDisputeDetails({ data, role }: { data: any; role: "c
           </p>
         </div>
       </div>
+
+      {dispute.contract_id && (
+        <ParticipantEvidenceExportButton contractId={dispute.contract_id} />
+      )}
 
       {/* Main Unified Case Card */}
       <div className="divide-y divide-border/60 rounded-xl border border-border/80 bg-card shadow-xs">

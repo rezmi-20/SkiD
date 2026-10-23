@@ -26,8 +26,18 @@ export async function GET(
           wp.full_name,
           wp.bio,
           wp.skills,
-          wp.latitude,
-          wp.longitude,
+          CASE WHEN u.id = ${session?.user?.id ?? null} OR EXISTS (
+            SELECT 1 FROM jobs location_job
+            WHERE location_job.worker_id = u.id
+              AND location_job.client_id = ${session?.user?.id ?? null}
+              AND location_job.status IN ('accepted', 'active', 'in_progress', 'completion_requested', 'completed', 'payment_pending', 'paid', 'closed')
+          ) THEN wp.latitude ELSE ROUND(wp.latitude::numeric, 2)::double precision END AS latitude,
+          CASE WHEN u.id = ${session?.user?.id ?? null} OR EXISTS (
+            SELECT 1 FROM jobs location_job
+            WHERE location_job.worker_id = u.id
+              AND location_job.client_id = ${session?.user?.id ?? null}
+              AND location_job.status IN ('accepted', 'active', 'in_progress', 'completion_requested', 'completed', 'payment_pending', 'paid', 'closed')
+          ) THEN wp.longitude ELSE ROUND(wp.longitude::numeric, 2)::double precision END AS longitude,
           wp.hourly_rate,
           MAX(CASE WHEN u.id = ${session?.user?.id ?? null} OR EXISTS (
             SELECT 1 FROM jobs accepted_job
@@ -59,8 +69,8 @@ export async function GET(
           r.score,
           r.comment,
           r.created_at,
-          COALESCE(cp.full_name, 'Verified Client') as reviewer_name,
-          cp.avatar_url as reviewer_avatar
+          'Verified Client' as reviewer_name,
+          NULL::text as reviewer_avatar
         FROM ratings r
         JOIN jobs j ON r.job_id = j.id
         LEFT JOIN client_profiles cp ON r.rater_id = cp.user_id

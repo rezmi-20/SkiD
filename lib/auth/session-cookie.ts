@@ -77,8 +77,8 @@ export async function verifyNeonSessionDataCookie(
 
     if (!payload.user || typeof payload.user !== "object") return null;
     return payload as NeonCachedSession;
-  } catch (error) {
-    console.warn("[AUTH_SESSION_COOKIE_INVALID]", error);
+    } catch (error) {
+      console.warn("[AUTH_SESSION_COOKIE_INVALID]", error instanceof Error ? error.name : "UnknownError");
     return null;
   }
 }
@@ -195,7 +195,7 @@ async function getNeonSessionFromTokenCookie(
     if (isAuthSessionUnavailableError(error)) {
       throw error;
     }
-    console.warn("[AUTH_SESSION_TOKEN_FALLBACK_FAILED]", error);
+    console.warn("[AUTH_SESSION_TOKEN_FALLBACK_FAILED]", error instanceof Error ? error.name : "UnknownError");
     throw new AuthSessionUnavailableError();
   }
 }

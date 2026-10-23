@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
+import { z } from "zod";
+
+const conversationSchema = z.object({ workerId: z.string().uuid() }).strict();
 
 // GET /api/conversations
 export async function GET() {
@@ -63,9 +66,8 @@ export async function GET() {
 
     return NextResponse.json({ conversations });
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error("[CONVERSATIONS_GET]", message, err);
-    return NextResponse.json({ error: "Internal server error", message }, { status: 500 });
+    console.error("[CONVERSATIONS_GET]", err instanceof Error ? err.name : "UnknownError");
+    return NextResponse.json({ error: "Unable to load conversations." }, { status: 500 });
   }
 }
 
@@ -75,14 +77,40 @@ export async function POST(req: NextRequest) {
     const session = await auth();
     if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { workerId } = await req.json();
-    if (!workerId) return NextResponse.json({ error: "Worker ID required" }, { status: 400 });
+    if (session.user.role !== "client") {
+      return NextResponse.json({ error: "Only client accounts can start a worker conversation." }, { status: 403 });
+    }
+
+    const parsed = conversationSchema.safeParse(await req.json());
+    if (!parsed.success) return NextResponse.json({ error: "A valid worker ID is required." }, { status: 400 });
+    const { workerId } = parsed.data;
 
     const clientId = session.user.id;
 
     // Prevent chatting with self
     if (clientId === workerId) {
       return NextResponse.json({ error: "You cannot message yourself" }, { status: 400 });
+    }
+
+    const availableWorker = await sql`
+      SELECT u.id
+      FROM users u
+      JOIN worker_profiles wp ON wp.user_id = u.id
+      WHERE u.id = ${workerId}
+        AND u.role = 'worker'
+        AND u.is_suspended = false
+        AND wp.is_verified = true
+        AND wp.verification_status = 'approved'
+        AND wp.fayda_doc_url IS NOT NULL
+        AND length(wp.fayda_doc_url) > 0
+        AND wp.fin_last4 IS NOT NULL
+        AND length(wp.fin_last4) = 4
+        AND wp.fin_encrypted IS NOT NULL
+        AND length(wp.fin_encrypted) > 0
+      LIMIT 1
+    `;
+    if (availableWorker.length === 0) {
+      return NextResponse.json({ error: "Worker not found or unavailable." }, { status: 404 });
     }
 
     // Check if conversation already exists
@@ -111,7 +139,7 @@ export async function POST(req: NextRequest) {
       conversationId: rows[0].id 
     });
   } catch (err) {
-    console.error("[CONVERSATIONS_POST]", err);
+    console.error("[CONVERSATIONS_POST]", err instanceof Error ? err.name : "UnknownError");
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

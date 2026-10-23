@@ -44,8 +44,20 @@ export async function GET(req: NextRequest) {
         wp.full_name,
         wp.bio,
         wp.skills,
-        COALESCE(wp.latitude, 9.5931) as latitude,
-        COALESCE(wp.longitude, 41.8661) as longitude,
+        CASE WHEN u.id = $VIEWER_ID$ OR EXISTS (
+          SELECT 1 FROM jobs location_job
+          WHERE location_job.worker_id = u.id
+            AND location_job.client_id = $VIEWER_ID$
+            AND location_job.status IN ('accepted', 'active', 'in_progress', 'completion_requested', 'completed', 'payment_pending', 'paid', 'closed')
+        ) THEN COALESCE(wp.latitude, 9.5931)
+        ELSE ROUND(COALESCE(wp.latitude, 9.5931)::numeric, 2)::double precision END as latitude,
+        CASE WHEN u.id = $VIEWER_ID$ OR EXISTS (
+          SELECT 1 FROM jobs location_job
+          WHERE location_job.worker_id = u.id
+            AND location_job.client_id = $VIEWER_ID$
+            AND location_job.status IN ('accepted', 'active', 'in_progress', 'completion_requested', 'completed', 'payment_pending', 'paid', 'closed')
+        ) THEN COALESCE(wp.longitude, 41.8661)
+        ELSE ROUND(COALESCE(wp.longitude, 41.8661)::numeric, 2)::double precision END as longitude,
         wp.hourly_rate,
         __WORKER_AVATAR_VISIBILITY__,
         wp.is_verified,
@@ -102,6 +114,7 @@ export async function GET(req: NextRequest) {
     }
 
     const viewerIdParam = params.push(session?.user?.id ?? null);
+    query = query.replaceAll("$VIEWER_ID$", `$${viewerIdParam}`);
     query = query.replace(
       "__WORKER_AVATAR_VISIBILITY__",
       `CASE WHEN u.id = $${viewerIdParam} OR EXISTS (
@@ -125,7 +138,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ workers });
   } catch (error: any) {
-    console.error("[WORKERS_GET_CRITICAL_ERROR]", error);
-    return NextResponse.json({ error: error?.message || String(error) }, { status: 500 });
+    console.error("[WORKERS_GET_CRITICAL_ERROR]", error instanceof Error ? error.name : "UnknownError");
+    return NextResponse.json({ error: "Unable to load workers." }, { status: 500 });
   }
 }

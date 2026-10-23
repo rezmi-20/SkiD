@@ -92,8 +92,7 @@ export async function GET(req: NextRequest) {
         { status: 503 }
       );
     }
-    const message = error instanceof Error ? error.message : String(error);
-    console.error("[AUTH_ME_ERROR]", message, error);
-    return NextResponse.json({ error: "Internal server error", message }, { status: 500 });
+    console.error("[AUTH_ME_ERROR]", error instanceof Error ? error.name : "UnknownError");
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

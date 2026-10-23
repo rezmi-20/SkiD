@@ -4,6 +4,8 @@ import { getAdminPrincipal, hasAdminPermission } from "@/lib/admin-authorization
 import { recordVerificationDocumentView } from "@/lib/verification-operations";
 import { revealFaydaDocument } from "@/lib/fin-protection";
 import { isTrustedUploadReference } from "@/lib/security";
+import { decodeClientIdentityDocument } from "@/lib/client-verification";
+import { detectFileType } from "@/lib/file-signatures";
 
 export const dynamic = "force-dynamic";
 
@@ -15,20 +17,43 @@ const DOCUMENT_HEADERS = {
   "Content-Security-Policy": "default-src 'none'; frame-ancestors 'self'",
   "X-Frame-Options": "SAMEORIGIN",
 };
+const MAX_DOCUMENT_BYTES = 5 * 1024 * 1024;
+
+async function readBoundedBody(response: Response, maxBytes: number) {
+  if (!response.body) return null;
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > maxBytes) {
+        await reader.cancel();
+        return null;
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const result = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return result;
+}
 
 function documentError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status, headers: DOCUMENT_HEADERS });
 }
 
 function decodeDataDocument(value: string) {
-  const match = value.match(/^data:([^;,]+);base64,([A-Za-z0-9+/=\r\n]+)$/);
-  if (!match) return null;
-  const mimeType = match[1].toLowerCase();
-  if (!mimeType.startsWith("image/") && mimeType !== "application/pdf") return null;
-  return {
-    mimeType,
-    bytes: Buffer.from(match[2].replace(/\s/g, ""), "base64"),
-  };
+  const decoded = decodeClientIdentityDocument(value);
+  return decoded.ok ? decoded : null;
 }
 
 export async function POST(
@@ -99,11 +124,16 @@ export async function POST(
     return documentError("Verification document not available", 404);
   }
 
-  const contentType = (upstream.headers.get("content-type") || "application/octet-stream").toLowerCase();
-  if (!contentType.startsWith("image/") && !contentType.includes("pdf")) {
+  const contentType = (upstream.headers.get("content-type") || "application/octet-stream").split(";")[0].trim().toLowerCase();
+  const declaredDocumentType = ["image/png", "image/jpeg", "image/webp", "application/pdf"].includes(contentType);
+  const contentLength = Number(upstream.headers.get("content-length") || 0);
+  if (!declaredDocumentType || (contentLength > 0 && contentLength > MAX_DOCUMENT_BYTES)) {
     return documentError("Unsupported document type", 415);
   }
-  const bytes = await upstream.arrayBuffer();
+  const bytes = await readBoundedBody(upstream, MAX_DOCUMENT_BYTES);
+  if (!bytes?.length || detectFileType(bytes) !== contentType) {
+    return documentError("Verification document content is invalid or too large", 415);
+  }
   const claimed = await recordVerificationDocumentView("worker", workerId, admin).catch(() => false);
   if (!claimed) return documentError("This Fayda document has already been revealed for this review", 409);
   return new NextResponse(bytes, {
@@ -111,7 +141,7 @@ export async function POST(
     headers: {
       "Content-Type": contentType,
       ...DOCUMENT_HEADERS,
-      "Content-Disposition": `inline; filename="worker-verification-document.${contentType.includes("pdf") ? "pdf" : "img"}`,
+      "Content-Disposition": `inline; filename="worker-verification-document.${contentType === "application/pdf" ? "pdf" : "img"}`,
     },
   });
 }

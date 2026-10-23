@@ -122,13 +122,14 @@ async function getParticipantDispute(disputeId: string, userId: string) {
   const rows = await sql`
     SELECT
       d.*,
+      COALESCE(d.contract_id, c.id) AS contract_id,
       j.title AS job_title,
       j.status AS current_job_status,
       c.status AS current_contract_status,
       p.status AS current_payment_status
     FROM disputes d
     JOIN jobs j ON j.id = d.job_id
-    LEFT JOIN contracts c ON c.id = d.contract_id
+    LEFT JOIN contracts c ON c.id = d.contract_id OR c.job_id = d.job_id
     LEFT JOIN payments p ON p.id = d.payment_id
     WHERE d.id = ${disputeId}
       AND (d.client_id = ${userId} OR d.worker_id = ${userId})

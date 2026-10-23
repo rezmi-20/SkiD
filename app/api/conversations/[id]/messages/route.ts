@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { filterContactInfo } from "@/lib/filterContactInfo";
+import { isTrustedUploadReference } from "@/lib/security";
+import { z } from "zod";
+
+const messageSchema = z.object({
+  body: z.string().max(5000).optional(),
+  imageUrl: z.string().max(2048).optional(),
+  mediaType: z.enum(["image", "video"]).optional(),
+}).strict();
 
 // GET /api/conversations/[id]/messages
 export async function GET(
@@ -108,10 +116,15 @@ export async function POST(
     `;
     if (conv.length === 0) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    const { body, imageUrl, mediaType } = await req.json();
+    const parsed = messageSchema.safeParse(await req.json());
+    if (!parsed.success) return NextResponse.json({ error: "Invalid message details." }, { status: 400 });
+    const { body, imageUrl, mediaType } = parsed.data;
 
-    if (!body && !imageUrl) {
+    if ((!body || !body.trim()) && !imageUrl) {
       return NextResponse.json({ error: "Message cannot be empty" }, { status: 400 });
+    }
+    if (imageUrl && !isTrustedUploadReference(imageUrl)) {
+      return NextResponse.json({ error: "Message attachments must use trusted upload storage." }, { status: 400 });
     }
 
     // Contact info filter

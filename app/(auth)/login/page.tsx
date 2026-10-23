@@ -172,33 +172,7 @@ export default function LoginPage() {
 
     try {
 
-      let emailToUse = identifier.trim();
-
-      // If the user typed a phone number, look up their email from our DB
-      if (!isEmail) {
-        const lookupRes = await fetch("/api/auth/lookup", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: identifier }),
-        });
-
-        const lookupData = await lookupRes.json().catch(() => ({}));
-
-        if (lookupRes.status === 409 && lookupData.error === "legacy_account") {
-          setError(t("auth.login.errLegacyPhone"));
-          setIsLoading(false);
-          return;
-        }
-
-        if (!lookupRes.ok) {
-          setError(t("auth.login.errNoPhone"));
-          setIsLoading(false);
-          return;
-        }
-
-        const { email } = lookupData;
-        emailToUse = email;
-      }
+      const emailToUse = identifier.trim();
 
       const { error: signInError } = await authClient.signIn.email({
         email: emailToUse,
@@ -212,7 +186,12 @@ export default function LoginPage() {
           signInError.message?.toLowerCase().includes("verify") ||
           signInError.code?.toLowerCase().includes("verify")
         ) {
-          router.push(`/otp-verification?email=${encodeURIComponent(emailToUse)}`);
+          if (isEmail) {
+            router.push(`/otp-verification?email=${encodeURIComponent(emailToUse)}`);
+          } else {
+            sessionStorage.setItem("pendingPhoneVerification", emailToUse);
+            router.push("/otp-verification?phone=1");
+          }
           return;
         }
         if (signInError.status === 502 || signInError.message?.toLowerCase().includes("bad gateway")) {

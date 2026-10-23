@@ -32,7 +32,7 @@ export async function getClientIdentityVerificationStatus(userId?: string) {
     return { verified: false, status: "unauthorized", maskedFin: null, verificationHref: "/login" };
   }
 
-  if (targetUserId !== session.user.id && session.user.role !== "admin") {
+  if (targetUserId !== session.user.id) {
     return { verified: false, status: "forbidden", maskedFin: null, verificationHref: getClientVerificationHref() };
   }
 
@@ -66,7 +66,7 @@ export async function getContractSetupStatus(userId?: string, returnTo?: string)
     return { completed: false, setupHref: "/login" };
   }
 
-  if (targetUserId !== session.user.id && session.user.role !== "admin") {
+  if (targetUserId !== session.user.id) {
     return { completed: false, setupHref: getSetupHref(session.user.role) };
   }
 

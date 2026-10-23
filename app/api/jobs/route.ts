@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { z } from "zod";
 import { ensureContractSetupComplete } from "@/lib/actions/contract-setup";
 import { assertActiveVerifiedWorker } from "@/lib/identity-lifecycle";
+import { getAdminPrincipal, hasAdminPermission } from "@/lib/admin-authorization";
 
 const jobSchema = z.object({
   workerId: z.string().uuid().optional(),
@@ -136,8 +137,14 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: workerAccess.error || "Forbidden" }, { status: 403 });
       }
       rows = await sql`SELECT * FROM jobs WHERE worker_id = ${session.user.id} ORDER BY created_at DESC`;
-    } else {
+    } else if (session.user.role === "admin") {
+      const admin = await getAdminPrincipal();
+      if (!hasAdminPermission(admin, "reports.read")) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
       rows = await sql`SELECT * FROM jobs ORDER BY created_at DESC`;
+    } else {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     return NextResponse.json({ jobs: rows });

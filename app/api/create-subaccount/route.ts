@@ -7,6 +7,7 @@ import {
   createChapaSubaccount,
   extractChapaSubaccountId,
 } from "@/lib/chapa";
+import { getAdminPrincipal, hasAdminPermission } from "@/lib/admin-authorization";
 
 const createSubaccountSchema = z.object({
   workerId: z.string().uuid(),
@@ -37,7 +38,7 @@ async function writeAuditLog(userId: string, details: Record<string, unknown>) {
       VALUES (${userId}, 'worker_chapa_subaccount_created', ${JSON.stringify(details)})
     `;
   } catch (error) {
-    console.warn("[CREATE_SUBACCOUNT_AUDIT_SKIPPED]", error);
+    console.warn("[CREATE_SUBACCOUNT_AUDIT_SKIPPED]", error instanceof Error ? error.name : "UnknownError");
   }
 }
 
@@ -57,7 +58,14 @@ export async function POST(req: NextRequest) {
     }
 
     const input = parsed.data;
-    if (session.user.role !== "admin" && session.user.id !== input.workerId) {
+    if (session.user.role === "admin") {
+      const admin = await getAdminPrincipal();
+      const canManagePayouts = hasAdminPermission(admin, "payment_cases.review") ||
+        hasAdminPermission(admin, "admin_accounts.create");
+      if (!canManagePayouts) {
+        return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+      }
+    } else if (session.user.id !== input.workerId) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
@@ -114,9 +122,9 @@ export async function POST(req: NextRequest) {
     const subaccountId = extractChapaSubaccountId(chapaResponse);
 
     if (!subaccountId) {
-      console.error("[CHAPA_CREATE_SUBACCOUNT_MISSING_ID]", chapaResponse);
+      console.error("[CHAPA_CREATE_SUBACCOUNT_MISSING_ID]");
       return NextResponse.json(
-        { success: false, error: "Chapa did not return a subaccount ID.", details: chapaResponse },
+        { success: false, error: "Payout account setup could not be completed." },
         { status: 502 },
       );
     }
@@ -146,17 +154,17 @@ export async function POST(req: NextRequest) {
       message: "Chapa subaccount created successfully.",
     });
   } catch (error) {
-    console.error("[CREATE_SUBACCOUNT_ERROR]", error);
+    console.error("[CREATE_SUBACCOUNT_ERROR]", error instanceof Error ? error.name : "UnknownError");
 
     if (error instanceof ChapaApiError) {
       return NextResponse.json(
-        { success: false, error: error.message, details: error.payload },
-        { status: error.status || 502 },
+        { success: false, error: "Payout account setup could not be completed." },
+        { status: 502 },
       );
     }
 
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : "Unable to create subaccount." },
+      { success: false, error: "Unable to create subaccount." },
       { status: 500 },
     );
   }

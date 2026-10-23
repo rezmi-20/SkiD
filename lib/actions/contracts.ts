@@ -49,12 +49,21 @@ function parseOptionalDate(value: string) {
   return date;
 }
 
+import { recordAuditEvent } from "@/lib/audit-ledger";
+
 async function logAuditAction(userId: string, action: string, details: Record<string, unknown>) {
   try {
-    await sql`
-      INSERT INTO audit_logs (user_id, action, details)
-      VALUES (${userId}, ${action}, ${JSON.stringify(details)})
-    `;
+    const targetId = typeof details.contractId === "string" ? details.contractId : (typeof details.id === "string" ? details.id : null);
+    await recordAuditEvent({
+      actorType: "user",
+      userId,
+      action,
+      module: "contracts",
+      targetType: "contract",
+      targetId,
+      details,
+      reason: typeof details.reason === "string" ? details.reason : undefined,
+    });
   } catch (error) {
     console.warn("[AUDIT_LOG_SKIPPED]", action, error);
   }
@@ -695,17 +704,13 @@ export async function getContractForSigning(contractId: string) {
 
     const isClient = session.user.id === contract.client_id;
     const isWorker = session.user.id === contract.worker_id;
-    const isAdmin = session.user.role === "admin";
-
-    if (!isClient && !isWorker && !isAdmin) {
+    if (!isClient && !isWorker) {
       throw new Error("Forbidden");
     }
 
-    if (!isAdmin) {
-      const setup = await ensureContractSetupComplete(`/contracts/${contractId}`);
-      if (!setup.completed) {
-        throw new Error(setup.error || "Contract access requires completed setup.");
-      }
+    const setup = await ensureContractSetupComplete(`/contracts/${contractId}`);
+    if (!setup.completed) {
+      throw new Error(setup.error || "Contract access requires completed setup.");
     }
 
     const clientSigned = !!contract.client_signed_at;
@@ -718,7 +723,7 @@ export async function getContractForSigning(contractId: string) {
       worker_fin_last4: undefined,
       client_masked_fin: maskFinLast4(contract.client_fin_last4),
       worker_masked_fin: maskFinLast4(contract.worker_fin_last4),
-      user_role: isClient ? "client" : isWorker ? "worker" : "admin",
+      user_role: isClient ? "client" : "worker",
       user_has_signed: isClient ? clientSigned : isWorker ? workerSigned : false,
       signature_status: contractStatus,
     };

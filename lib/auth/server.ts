@@ -1,5 +1,8 @@
 // lib/auth/server.ts
 import { createNeonAuth } from '@neondatabase/auth/next/server';
+import { validateProductionEnvironment } from "@/lib/env";
+
+validateProductionEnvironment();
 
 const DEFAULT_SESSION_DATA_TTL_SECONDS = 60 * 60 * 24 * 7;
 

@@ -26,15 +26,18 @@ const signOut = read("app/api/auth/sign-out/route.ts");
 
 check(
   "401 redirects are preserved for confirmed unauthenticated protected routes",
-  proxy.includes("!isLoggedIn && (isClientArea || isWorkerArea || isAdminArea)") &&
+  proxy.includes("!isLoggedIn && (isClientArea || isWorkerArea)") &&
+    proxy.includes("!isLoggedIn && isSharedProtectedArea") &&
     proxy.includes('NextResponse.redirect(new URL("/login", req.url))')
 );
 
+const proxyCatchStart = proxy.lastIndexOf("} catch (error) {");
+const proxyCatch = proxyCatchStart >= 0 ? proxy.slice(proxyCatchStart) : "";
 check(
   "Proxy 5xx/auth-service failures do not redirect to login",
-  proxy.includes("isAuthSessionUnavailableError(error)") &&
-    proxy.includes("status: 503") &&
-    !/catch \(error\)[\s\S]*redirect\(new URL\("\/login"/.test(proxy)
+  proxyCatch.includes("isAuthSessionUnavailableError(error)") &&
+    proxyCatch.includes("status: 503") &&
+    !proxyCatch.includes('redirect(new URL("/login"')
 );
 
 check(
@@ -54,7 +57,7 @@ check(
 
 check(
   "Login waits for a usable session before redirecting",
-  loginPage.includes("Login succeeded, but the session could not be initialized. Please try again.") &&
+  loginPage.includes('setError(t("auth.login.errSessionInit"))') &&
     loginPage.includes("waitForUsableSession") &&
     !loginPage.includes('window.location.href = "/auth/callback"')
 );
@@ -91,9 +94,10 @@ check(
 
 check(
   "Pending verification page reflects restricted worker states",
-  pendingVerificationPage.includes("is_suspended") &&
-    pendingVerificationPage.includes("revoked") &&
-    pendingVerificationPage.includes("Account Suspended")
+  pendingVerificationPage.includes('const isSuspended = accountState === "suspended"') &&
+    pendingVerificationPage.includes('const isRevoked = accountState === "revoked"') &&
+    pendingVerificationPage.includes('t("verification.suspended.title")') &&
+    pendingVerificationPage.includes('t("verification.revoked.title")')
 );
 
 check(

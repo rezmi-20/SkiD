@@ -110,9 +110,14 @@ export async function POST(req: NextRequest) {
       jobId: result.jobId,
     });
 
-    return NextResponse.json({ received: true, ...result });
+    return NextResponse.json({
+      received: true,
+      success: result.success,
+      status: result.status,
+      message: result.message,
+    });
   } catch (error) {
-    console.error("[CHAPA_WEBHOOK_PROCESSING_ERROR]", error);
+    console.error("[CHAPA_WEBHOOK_PROCESSING_ERROR]", error instanceof Error ? error.name : "UnknownError");
     const response = paymentErrorResponse(error);
     return NextResponse.json({ received: false, ...response.body }, { status: response.status });
   }

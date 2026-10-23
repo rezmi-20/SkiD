@@ -8,6 +8,27 @@ import { maskFinLast4, protectFaydaDocument, protectFin, validateFin } from "@/l
 import { getClientIdentityColumns, getClientIdentityStatus, toClientDisplayStatus, validateClientIdentityDocument } from "@/lib/client-verification";
 import { recordVerificationSubmission } from "@/lib/verification-operations";
 import { hasCompleteWorkerIdentity, toWorkerDisplayStatus } from "@/lib/worker-verification";
+import { z } from "zod";
+import { detectFileType } from "@/lib/file-signatures";
+
+const optionalText = (max: number) => z.string().max(max).optional();
+const profileUpdateSchema = z.object({
+  fullName: z.string().trim().min(2).max(120).optional(),
+  email: z.union([z.literal(""), z.string().trim().email().max(254)]).optional(),
+  phone: z.string().trim().regex(/^\+?[0-9\-() ]{9,20}$/).optional(),
+  faydaFinNumber: z.union([z.literal(""), z.string().regex(/^\d{12}$/)]).optional(),
+  fin: z.union([z.literal(""), z.string().regex(/^\d{12}$/)]).optional(),
+  faydaDocDataUrl: z.string().max(7_000_000).optional(),
+  faydaDocUrl: z.string().max(7_000_000).optional(),
+  faydaDocName: optionalText(255),
+  bio: optionalText(5000),
+  skills: z.array(z.string().trim().min(1).max(80)).max(30).optional(),
+  gender: optionalText(40),
+  dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  district: optionalText(120),
+  hourlyRate: z.number().finite().min(0).max(10_000_000).optional(),
+  avatarUrl: z.string().max(7_000_000).optional(),
+}).strict();
 
 function maskDeprecatedIdentity(value: unknown) {
   const fan = String(value || "").trim();
@@ -86,21 +107,30 @@ export async function getProfileData() {
   }
 }
 
-export async function updateProfile(data: any) {
+export async function updateProfile(input: unknown) {
   const session = await auth();
   if (!session?.user) return { success: false, error: "Unauthorized" };
 
-  const isAdmin = session.user.role === "admin";
-  const targetUserId = (isAdmin && data.userId) ? data.userId : session.user.id;
+  const parsed = profileUpdateSchema.safeParse(input);
+  if (!parsed.success) return { success: false, error: "Invalid profile details." };
+  const data = parsed.data;
 
-  let targetRole = (session.user as any).role;
-    if (isAdmin && data.userId) {
-      const roleRows = await sql`SELECT role FROM users WHERE id = ${targetUserId}`;
-      if (roleRows && roleRows[0]) {
-        targetRole = roleRows[0].role;
-      }
+  const targetUserId = session.user.id;
+  const targetRole = session.user.role;
+  if (targetRole !== "client" && targetRole !== "worker") {
+    return { success: false, error: "Forbidden" };
+  }
+  if (data.avatarUrl && !isTrustedUploadReference(data.avatarUrl, { allowDataImage: true })) {
+    return { success: false, error: "Profile photo must use a supported upload." };
+  }
+  if (data.avatarUrl?.startsWith("data:")) {
+    const match = data.avatarUrl.match(/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/]+=*)$/i);
+    if (!match || Buffer.byteLength(match[2], "base64") > 250 * 1024 ||
+        detectFileType(Buffer.from(match[2], "base64")) !== `image/${match[1].toLowerCase()}`) {
+      return { success: false, error: "Profile photo content is invalid or too large." };
     }
-    const clientColumns = targetRole === "client" ? await getClientIdentityColumns() : null;
+  }
+  const clientColumns = targetRole === "client" ? await getClientIdentityColumns() : null;
 
   try {
     // 1. Fetch current verification status

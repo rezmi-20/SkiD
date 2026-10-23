@@ -359,12 +359,12 @@ export async function POST(req: NextRequest) {
       message: "Chapa checkout initialized.",
     });
   } catch (error) {
-    console.error("[PAYMENT_INITIATE_ERROR]", error);
+    console.error("[PAYMENT_INITIATE_ERROR]", error instanceof Error ? error.name : "UnknownError");
     if (error instanceof ChapaApiError) {
-      return NextResponse.json({ error: error.message, details: error.payload }, { status: error.status || 502 });
+      return NextResponse.json({ error: "Payment could not be initialized. Please retry shortly." }, { status: 502 });
     }
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Internal server error" },
+      { error: "Payment could not be initialized. Please retry shortly." },
       { status: 500 },
     );
   }
@@ -406,7 +406,7 @@ export async function PATCH(req: NextRequest) {
       completedAt: new Date().toISOString(),
     }, { status: result.success ? 200 : 409 });
   } catch (error) {
-    console.error("[PAYMENT_CONFIRM_ERROR]", error);
+    console.error("[PAYMENT_CONFIRM_ERROR]", error instanceof Error ? error.name : "UnknownError");
     const response = paymentErrorResponse(error);
     return NextResponse.json(response.body, { status: response.status });
   }

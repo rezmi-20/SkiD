@@ -22,7 +22,7 @@ export const auth = async () => {
       const result = await serverAuth.getSession();
       session = result.data as typeof session;
     } catch (err) {
-      console.warn("Neon Auth getSession failed", err);
+      console.warn("[AUTH_GET_SESSION_FAILED]", err instanceof Error ? err.name : "UnknownError");
       if (hasAuthCookie || isAuthSessionUnavailableError(err)) {
         throw new AuthSessionUnavailableError();
       }
@@ -87,13 +87,13 @@ export const auth = async () => {
           (session.user as any).role = rows[0].isSuspended ? "suspended" : rows[0].role;
         }
       } catch (fallbackError) {
-        console.warn("Auth wrapper role fallback warning:", fallbackError instanceof Error ? fallbackError.message : fallbackError);
+        console.warn("[AUTH_ROLE_FALLBACK_FAILED]", fallbackError instanceof Error ? fallbackError.name : "UnknownError");
       }
     } else if (/fetch failed|timeout|ETIMEDOUT|ConnectTimeoutError|connection/i.test(message)) {
       // Degrade gracefully during intermittent network latency/reconnects without crashing page rendering
-      console.warn("Auth wrapper database unreachable; continuing with signed session cache:", message);
+      console.warn("[AUTH_ROLE_FETCH_UNAVAILABLE]");
     } else {
-      console.error("Auth wrapper role fetch failed", err);
+      console.error("[AUTH_ROLE_FETCH_FAILED]", err instanceof Error ? err.name : "UnknownError");
     }
   }
 

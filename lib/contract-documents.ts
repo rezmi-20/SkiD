@@ -5,6 +5,7 @@ import PDFDocument from "pdfkit";
 import QRCode from "qrcode";
 import { sql } from "@/lib/db";
 import { maskFinLast4 } from "@/lib/fin-protection";
+import { recordAuditEvent } from "@/lib/audit-ledger";
 
 function formatDate(value: unknown) {
   if (!value) return "Not recorded";
@@ -581,15 +582,25 @@ export async function activateContractAfterFullSignature(contractId: string) {
     WHERE id = ${contract.job_id}
   `;
 
-  await sql`
-    INSERT INTO audit_logs (user_id, action, details)
-    VALUES (${contract.client_id}, 'contract_pdf_generated', ${JSON.stringify({ contractId, documentHash })})
-  `;
+  await recordAuditEvent({
+    actorType: "user",
+    userId: contract.client_id,
+    action: "contract_pdf_generated",
+    module: "contracts",
+    targetType: "contract",
+    targetId: contractId,
+    details: { contractId, documentHash },
+  });
 
-  await sql`
-    INSERT INTO audit_logs (user_id, action, details)
-    VALUES (${contract.client_id}, 'contract_activated', ${JSON.stringify({ contractId, jobId: contract.job_id })})
-  `;
+  await recordAuditEvent({
+    actorType: "user",
+    userId: contract.client_id,
+    action: "contract_activated",
+    module: "contracts",
+    targetType: "contract",
+    targetId: contractId,
+    details: { contractId, jobId: contract.job_id },
+  });
 
   await createContractNotification(
     contract.client_id,

@@ -19,8 +19,9 @@ export interface PaymentProcessingResult {
     commissionAmount: number;
     netAmount: number;
   };
-  verifiedData?: unknown;
 }
+
+import { recordAuditEvent } from "@/lib/audit-ledger";
 
 async function writeAuditLog(
   userId: string | null,
@@ -28,10 +29,16 @@ async function writeAuditLog(
   details: Record<string, unknown>,
 ) {
   try {
-    await sql`
-      INSERT INTO audit_logs (user_id, action, details)
-      VALUES (${userId}, ${action}, ${JSON.stringify(details)})
-    `;
+    await recordAuditEvent({
+      actorType: "system",
+      userId,
+      action,
+      module: "payments",
+      targetType: "payment",
+      targetId: typeof details.paymentId === "string" ? details.paymentId : null,
+      details,
+      newState: details.status ? { status: details.status } : undefined,
+    });
   } catch (error) {
     console.warn("[PAYMENT_AUDIT_SKIPPED]", action, error);
   }
@@ -238,7 +245,6 @@ export async function verifyAndReleasePayment({
       jobId: payment.job_id,
       paymentId: payment.payment_id,
       message: "Payment is still pending at Chapa. Complete the checkout, then check again.",
-      verifiedData: verified,
     };
   }
 
@@ -279,7 +285,6 @@ export async function verifyAndReleasePayment({
       jobId: payment.job_id,
       paymentId: payment.payment_id,
       message: "Chapa verification did not match the local payment record.",
-      verifiedData: verified,
     };
   }
 
@@ -401,7 +406,6 @@ export async function verifyAndReleasePayment({
       commissionAmount: Number(payment.commission_amount ?? 0),
       netAmount: Number(payment.net_amount ?? 0),
     },
-    verifiedData: verified,
   };
 }
 
@@ -410,12 +414,12 @@ export function paymentErrorResponse(error: unknown) {
   if (chapaError?.name === "ChapaApiError") {
     return {
       status: chapaError.status || 502,
-      body: { success: false, error: chapaError.message, details: chapaError.payload },
+      body: { success: false, error: "Payment provider verification failed." },
     };
   }
 
   return {
     status: 500,
-    body: { success: false, error: error instanceof Error ? error.message : "Payment verification failed." },
+    body: { success: false, error: "Payment verification failed." },
   };
 }

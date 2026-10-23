@@ -33,12 +33,23 @@ const OPEN_INVITATION_STATUSES = [
   "paid",
 ];
 
+import { recordAuditEvent } from "@/lib/audit-ledger";
+
 async function logAuditAction(userId: string, action: string, details: Record<string, unknown>) {
   try {
-    await sql`
-      INSERT INTO audit_logs (user_id, action, details)
-      VALUES (${userId}, ${action}, ${JSON.stringify(details)})
-    `;
+    const targetId = typeof details.jobId === "string" ? details.jobId : (typeof details.id === "string" ? details.id : null);
+    await recordAuditEvent({
+      actorType: "user",
+      userId,
+      action,
+      module: "jobs",
+      targetType: "job",
+      targetId,
+      details,
+      newState: details.newStatus ? { status: details.newStatus } : undefined,
+      previousState: details.previousStatus ? { status: details.previousStatus } : undefined,
+      reason: typeof details.reason === "string" ? details.reason : undefined,
+    });
   } catch (error) {
     console.warn("[AUDIT_LOG_SKIPPED]", action, error);
   }

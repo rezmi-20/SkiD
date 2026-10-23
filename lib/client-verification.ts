@@ -1,6 +1,7 @@
 import { sql } from "@/lib/db";
 import { maskFinLast4 } from "@/lib/fin-protection";
 import { evaluateClientApprovedConsistency } from "@/lib/client-verification-consistency";
+import { detectFileType } from "@/lib/file-signatures";
 
 import { toClientDisplayStatus } from "./client-verification-shared";
 export * from "./client-verification-shared";
@@ -59,6 +60,9 @@ export function validateClientIdentityDocument(value: unknown) {
   const bytes = Buffer.byteLength(base64, "base64");
   if (bytes <= 0 || bytes > MAX_CLIENT_ID_DOCUMENT_BYTES) {
     return { ok: false as const, error: "Fayda document must be 5 MB or smaller." };
+  }
+  if (detectFileType(Buffer.from(base64, "base64")) !== mimeType) {
+    return { ok: false as const, error: "The Fayda document content does not match its declared format." };
   }
 
   return { ok: true as const, mimeType, bytes };

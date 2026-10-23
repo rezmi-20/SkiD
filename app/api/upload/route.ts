@@ -3,6 +3,7 @@ import crypto from "crypto";
 import fs from "fs/promises";
 import path from "path";
 import { auth } from "@/lib/auth";
+import { detectFileType } from "@/lib/file-signatures";
 import "@/lib/db";
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
@@ -20,6 +21,18 @@ const ALLOWED_MIME_TYPES = new Set([
   "video/quicktime",
   "video/ogg",
 ]);
+
+const EXTENSION_BY_MIME_TYPE: Record<string, string> = {
+  "image/png": ".png",
+  "image/jpeg": ".jpg",
+  "image/webp": ".webp",
+  "image/gif": ".gif",
+  "application/pdf": ".pdf",
+  "video/mp4": ".mp4",
+  "video/webm": ".webm",
+  "video/quicktime": ".mov",
+  "video/ogg": ".ogg",
+};
 
 function getCloudinaryConfig() {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
@@ -89,7 +102,7 @@ async function saveToLocalStorage(file: File): Promise<string> {
   const uploadsDir = path.join(process.cwd(), "public", "uploads");
   await fs.mkdir(uploadsDir, { recursive: true });
 
-  const ext = path.extname(file.name) || (file.type.startsWith("image/") ? ".jpg" : file.type.startsWith("video/") ? ".mp4" : ".pdf");
+  const ext = EXTENSION_BY_MIME_TYPE[file.type];
   const randomSuffix = crypto.randomBytes(8).toString("hex");
   const safeBaseName = path.basename(file.name, ext).replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 30);
   const fileName = `${Date.now()}_${safeBaseName}_${randomSuffix}${ext}`;
@@ -118,13 +131,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (mime.startsWith("image/") && file.size > MAX_IMAGE_SIZE) {
+    const fileBytes = Buffer.from(await file.arrayBuffer());
+    if (detectFileType(fileBytes) !== mime) {
+      return NextResponse.json({ error: "The file content does not match its declared format." }, { status: 400 });
+    }
+
+    if (fileBytes.length === 0) {
+      return NextResponse.json({ error: "The uploaded file is empty." }, { status: 400 });
+    }
+    if (mime.startsWith("image/") && fileBytes.length > MAX_IMAGE_SIZE) {
       return NextResponse.json({ error: "Photos must be under 10 MB" }, { status: 400 });
     }
-    if (mime === "application/pdf" && file.size > MAX_PDF_SIZE) {
+    if (mime === "application/pdf" && fileBytes.length > MAX_PDF_SIZE) {
       return NextResponse.json({ error: "PDF documents must be under 20 MB" }, { status: 400 });
     }
-    if (mime.startsWith("video/") && file.size > MAX_VIDEO_SIZE) {
+    if (mime.startsWith("video/") && fileBytes.length > MAX_VIDEO_SIZE) {
       return NextResponse.json({ error: "Videos must be under 35 MB" }, { status: 400 });
     }
 
@@ -156,10 +177,10 @@ export async function POST(req: NextRequest) {
       url: secureUrl,
       fileName: file.name,
       mimeType: mime,
-      fileSize: file.size,
+      fileSize: fileBytes.length,
     });
   } catch (err: any) {
-    console.error("[UPLOAD_POST_FATAL]", err);
-    return NextResponse.json({ error: err?.message || "Internal server error" }, { status: 500 });
+    console.error("[UPLOAD_POST_FATAL]", err instanceof Error ? err.name : "UnknownError");
+    return NextResponse.json({ error: "Upload could not be completed." }, { status: 500 });
   }
 }

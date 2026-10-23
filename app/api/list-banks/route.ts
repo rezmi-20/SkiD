@@ -14,17 +14,17 @@ export async function GET() {
       message: result.message ?? "Banks fetched successfully.",
     });
   } catch (error) {
-    console.error("[CHAPA_LIST_BANKS_ERROR]", error);
+    console.error("[CHAPA_LIST_BANKS_ERROR]", error instanceof Error ? error.name : "UnknownError");
 
     if (error instanceof ChapaApiError) {
       return NextResponse.json(
-        { success: false, error: error.message, details: error.payload },
-        { status: error.status || 502 },
+        { success: false, error: "Unable to retrieve bank information right now." },
+        { status: 502 },
       );
     }
 
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : "Unable to list banks." },
+      { success: false, error: "Unable to retrieve bank information right now." },
       { status: 500 },
     );
   }

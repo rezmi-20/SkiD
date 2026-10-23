@@ -18,10 +18,19 @@ export default function OTPVerificationPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
+  const [phone, setPhone] = useState<string | null>(null);
+  const hasPhoneIdentifier = searchParams.get("phone") === "1";
+  const identifier = email || phone;
 
   useEffect(() => {
     setMounted(true);
-    if (!email) {
+    const pendingPhone = hasPhoneIdentifier
+      ? window.sessionStorage.getItem("pendingPhoneVerification")
+      : null;
+    setPhone(pendingPhone);
+    const activeIdentifier = email || pendingPhone;
+
+    if (!activeIdentifier) {
       router.push("/login");
       return;
     }
@@ -36,7 +45,7 @@ export default function OTPVerificationPage() {
       }
     };
     checkStatus();
-  }, [email, router]);
+  }, [email, hasPhoneIdentifier, router]);
 
   const otp = digits.join("");
 
@@ -68,20 +77,21 @@ export default function OTPVerificationPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (otp.length < 6 || !email) return;
+    if (otp.length < 6 || !identifier) return;
     setIsLoading(true);
     setError("");
 
     try {
       const { authClient } = await import("@/lib/auth/client");
       const { error: verifyError } = await authClient.emailOtp.verifyEmail({
-        email,
+        email: identifier,
         otp,
       });
 
       if (verifyError) {
         setError(verifyError.message || t("auth.otp.invalid"));
       } else {
+        if (phone) window.sessionStorage.removeItem("pendingPhoneVerification");
         router.push("/login?verified=true");
       }
     } catch (err: any) {
@@ -93,7 +103,7 @@ export default function OTPVerificationPage() {
   };
 
   const handleResend = async () => {
-    if (!email || isResending) return;
+    if (!identifier || isResending) return;
     setIsResending(true);
     setResent(false);
     setError("");
@@ -103,7 +113,7 @@ export default function OTPVerificationPage() {
     try {
        const { authClient } = await import("@/lib/auth/client");
        const { error: sendError } = await authClient.emailOtp.sendVerificationOtp({
-         email,
+         email: identifier,
          type: "email-verification"
        });
        if (sendError) {

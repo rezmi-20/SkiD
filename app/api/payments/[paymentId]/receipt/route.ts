@@ -7,6 +7,15 @@ import { getChapaReceiptUrl } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 
+function escapeHtml(value: unknown): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ paymentId: string }> },
@@ -81,6 +90,9 @@ export async function GET(
     }
 
     if (!chapaReceiptUrl) {
+      const jobTitle = escapeHtml(payment.job_title);
+      const amount = escapeHtml(payment.amount);
+      const safeReference = escapeHtml(reference || "N/A");
       return new NextResponse(
         `<!DOCTYPE html>
 <html>
@@ -88,10 +100,10 @@ export async function GET(
 <body style="font-family: system-ui, sans-serif; background: #0b0f17; color: #fff; padding: 2rem; display: flex; justify-content: center; align-items: center; min-height: 100vh;">
   <div style="max-width: 480px; background: #161b22; border: 1px solid #30363d; border-radius: 1.5rem; padding: 2rem; text-align: center;">
     <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem; color: #10b981;">Chapa Gateway Payment Record</h2>
-    <p style="font-size: 0.875rem; color: #8b949e; line-height: 1.5;">Payment for <strong>${payment.job_title}</strong> was processed directly via Chapa Gateway.</p>
+    <p style="font-size: 0.875rem; color: #8b949e; line-height: 1.5;">Payment for <strong>${jobTitle}</strong> was processed directly via Chapa Gateway.</p>
     <div style="background: #0d1117; border-radius: 0.75rem; padding: 1rem; margin: 1.5rem 0; text-align: left; font-size: 0.8125rem;">
-      <p style="margin: 0.25rem 0; color: #8b949e;">Amount: <strong style="color: #fff;">${payment.amount} ETB</strong></p>
-      <p style="margin: 0.25rem 0; color: #8b949e;">Gateway Ref: <strong style="color: #58a6ff;">${reference || "N/A"}</strong></p>
+      <p style="margin: 0.25rem 0; color: #8b949e;">Amount: <strong style="color: #fff;">${amount} ETB</strong></p>
+      <p style="margin: 0.25rem 0; color: #8b949e;">Gateway Ref: <strong style="color: #58a6ff;">${safeReference}</strong></p>
       <p style="margin: 0.25rem 0; color: #8b949e;">Status: <strong style="color: #10b981;">SUCCESS</strong></p>
     </div>
     <p style="font-size: 0.75rem; color: #6e7681; line-height: 1.4;">Non-Custodial Notice: DireSkill is a marketplace matching platform and does not hold funds or provide payment processing. All payment settlements and receipts are provided by Chapa Financial Technologies.</p>
@@ -105,7 +117,7 @@ export async function GET(
     // Direct users to the official Chapa payment receipt
     return NextResponse.redirect(chapaReceiptUrl, 307);
   } catch (error) {
-    console.error("[RECEIPT_API_ERROR]", error);
+    console.error("[RECEIPT_API_ERROR]", error instanceof Error ? error.name : "UnknownError");
     return NextResponse.json(
       { error: "Failed to fetch Chapa receipt. Please try again." },
       { status: 500 }
