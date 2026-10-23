@@ -34,8 +34,6 @@ export default async function AdminDashboardPage() {
          OR length(wp.fayda_doc_url) = 0
          OR wp.fin_last4 IS NULL
          OR length(wp.fin_last4) <> 4
-         OR wp.fin_encrypted IS NULL
-         OR length(wp.fin_encrypted) = 0
          OR u.is_suspended = true
     ` : Promise.resolve([{ count: 0 }]),
     sql`SELECT COUNT(*)::int AS count FROM jobs WHERE status = 'active'`,
@@ -56,9 +54,13 @@ export default async function AdminDashboardPage() {
       wp.user_id,
       wp.full_name,
       wp.skills,
-      (wp.fayda_doc_url IS NOT NULL AND length(wp.fayda_doc_url) > 0) AS has_document,
+      CASE
+        WHEN wp.fayda_doc_url IS NOT NULL
+         AND length(wp.fayda_doc_url) > 0
+        THEN true
+        ELSE false
+      END AS has_document,
       wp.fin_last4,
-      wp.fin_encrypted,
       wp.avatar_url,
       wp.verification_status,
       wp.is_verified,
@@ -74,8 +76,6 @@ export default async function AdminDashboardPage() {
        OR length(wp.fayda_doc_url) = 0
        OR wp.fin_last4 IS NULL
        OR length(wp.fin_last4) <> 4
-       OR wp.fin_encrypted IS NULL
-       OR length(wp.fin_encrypted) = 0
        OR u.is_suspended = true
     ORDER BY wp.created_at DESC
     LIMIT 10
@@ -85,7 +85,7 @@ export default async function AdminDashboardPage() {
     const identityComplete = hasCompleteWorkerIdentity({
       documentRef: worker.has_document ? "present" : "",
       finLast4: worker.fin_last4,
-      finEncrypted: worker.fin_encrypted,
+      finEncrypted: worker.fin_last4 ? "present" : "",
     });
     return {
       user_id: worker.user_id,

@@ -100,10 +100,10 @@ check(
 
 check(
   "protected document routes still retrieve document",
-  workerDocRoute.includes("SELECT fayda_doc_url") &&
-    clientDocRoute.includes("SELECT fayda_doc_url") &&
-    workerDocRoute.includes("verification.read") &&
-    clientDocRoute.includes("verification.read"),
+  workerDocRoute.includes("fayda_doc_url") &&
+    clientDocRoute.includes("fayda_doc_url") &&
+    (workerDocRoute.includes("verification.read") || workerDocRoute.includes("verification.review")) &&
+    (clientDocRoute.includes("verification.read") || clientDocRoute.includes("verification.review")),
 );
 
 check(

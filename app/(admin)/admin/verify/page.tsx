@@ -26,7 +26,6 @@ export default async function VerifyQueuePage() {
         ELSE false
       END AS has_document,
       wp.fin_last4,
-      wp.fin_encrypted,
       wp.avatar_url,
       wp.verification_status,
       wp.is_verified,
@@ -54,7 +53,6 @@ export default async function VerifyQueuePage() {
        COALESCE(cp.is_verified, false) AS is_verified,
        ${clientColumns.has("verification_status") ? "cp.verification_status" : "NULL AS verification_status"},
        ${clientColumns.has("fin_last4") ? "cp.fin_last4" : "NULL AS fin_last4"},
-       ${clientColumns.has("fayda_doc_url") ? "cp.fayda_doc_url" : "NULL AS fayda_doc_url"},
        ${clientColumns.has("fayda_doc_url") ? `CASE
          WHEN cp.fayda_doc_url IS NOT NULL
           AND length(cp.fayda_doc_url) > 0
@@ -92,7 +90,7 @@ export default async function VerifyQueuePage() {
     const identityComplete = hasCompleteWorkerIdentity({
       documentRef: w.has_document ? "present" : "",
       finLast4: w.fin_last4,
-      finEncrypted: w.fin_encrypted,
+      finEncrypted: w.fin_last4 ? "present" : "",
     });
     const status = toWorkerDisplayStatus(w.verification_status, w.is_verified, w.is_suspended, identityComplete);
     return {

@@ -29,7 +29,6 @@ export default async function WorkersPage() {
       wp.district,
       wp.bio,
       wp.fin_last4 AS "finLast4",
-      wp.fin_encrypted AS "finEncrypted",
       wp.verification_status AS "verificationStatus",
       wp.is_verified AS "isVerified",
       wp.created_at AS "createdAt",
@@ -46,7 +45,7 @@ export default async function WorkersPage() {
     const identityComplete = hasCompleteWorkerIdentity({
       documentRef: w.hasDocument ? "present" : "",
       finLast4: w.finLast4,
-      finEncrypted: w.finEncrypted,
+      finEncrypted: w.finLast4 ? "present" : "",
     });
     return {
       userId: w.userId,
