@@ -5,10 +5,10 @@ const required = [
   "NEXT_PUBLIC_APP_URL",
   "CORS_ALLOWED_ORIGINS",
   "CHAPA_SECRET_KEY",
-  "CHAPA_WEBHOOK_URL",
 ];
 
 const optional = [
+  "CHAPA_WEBHOOK_URL",
   "BASE_URL",
   "NEXT_PUBLIC_BASE_URL",
   "WEBHOOK_URL",

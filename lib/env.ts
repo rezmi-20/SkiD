@@ -5,7 +5,6 @@ const productionRequired = [
   "NEXT_PUBLIC_APP_URL",
   "CORS_ALLOWED_ORIGINS",
   "CHAPA_SECRET_KEY",
-  "CHAPA_WEBHOOK_URL",
 ] as const;
 
 function isValid32ByteKey(value: string) {
@@ -34,8 +33,9 @@ function isPlaceholder(value: string) {
 
 export function validateProductionEnvironment() {
   if (process.env.VERCEL_ENV !== "production") return;
+  if (process.env.NEXT_PHASE === "phase-production-build") return;
 
-  const missing = productionRequired.filter((name) => {
+  const missing: string[] = productionRequired.filter((name) => {
     const value = process.env[name]?.trim() || "";
     return !value || isPlaceholder(value);
   });
@@ -49,9 +49,15 @@ export function validateProductionEnvironment() {
     invalid.push("DATABASE_URL");
   }
 
-  for (const name of ["NEON_AUTH_BASE_URL", "NEXT_PUBLIC_APP_URL", "CHAPA_WEBHOOK_URL"] as const) {
+  for (const name of ["NEON_AUTH_BASE_URL", "NEXT_PUBLIC_APP_URL"] as const) {
     const value = process.env[name]?.trim();
     if (value && !isHttpsUrl(value)) invalid.push(name);
+  }
+
+  if (process.env.CHAPA_WEBHOOK_URL) {
+    const value = process.env.CHAPA_WEBHOOK_URL.trim();
+    if (isPlaceholder(value)) missing.push("CHAPA_WEBHOOK_URL");
+    else if (!isHttpsUrl(value)) invalid.push("CHAPA_WEBHOOK_URL");
   }
 
   if ((process.env.NEON_AUTH_COOKIE_SECRET || "").length < 32) {
