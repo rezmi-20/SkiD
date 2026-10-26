@@ -230,7 +230,7 @@ test("admin employee auth is separated from public sessions and sign-out scopes"
 
 test("staff login placement and admin login bootstrap UI stay focused", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator('footer a[href="/admin/login"]', { hasText: "Staff Login" })).toBeVisible();
+  await expect(page.locator('footer a[href="/admin/login"]')).toHaveCount(0);
   await expect(page.locator('nav a[href="/admin/login"]', { hasText: "Staff Login" })).toHaveCount(0);
 
   await page.goto("/admin/login");

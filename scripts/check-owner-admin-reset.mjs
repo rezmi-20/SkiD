@@ -45,7 +45,7 @@ check("public sign-out clears only public auth cookies", publicSignOut.includes(
 check("migration message explains public email login no longer grants admin access", migration.includes("public email login no longer grants administrator access"));
 check("migration message prints configured owner employee id", migration.includes("OWNER_ADMIN_EMPLOYEE_ID") && migration.includes("ownerEmail"));
 check("migration message points owner to reset command", migration.includes("reset:owner-admin"));
-check("footer contains lower-priority Staff Login", footer.includes("Staff Login") && footer.includes('/admin/login'));
+check("footer does not expose Staff Login or admin route", !footer.includes("Staff Login") && !footer.includes('/admin/login'));
 check("navbar does not expose Staff Login primary link", !navbar.includes("Staff Login"));
 check("public admin dashboard link removed from landing nav", !navbar.includes('? "/admin/dashboard"') && navbar.includes('? "/admin/login"'));
 check("admin login has employee id and password labels", loginForm.includes("Employee ID") && loginForm.includes("Password"));

@@ -216,12 +216,6 @@ export default function Footer({
             >
               Cookie Settings
             </button>
-            <a
-              href="/admin/login"
-              className="font-sans text-[11px] text-white/40 hover:text-white cursor-pointer transition-colors"
-            >
-              Staff Login
-            </a>
           </div>
         </div>
       </motion.div>
