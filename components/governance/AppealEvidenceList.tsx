@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { FileText, Film, Image as ImageIcon, ExternalLink, Download, X, Maximize2 } from "lucide-react";
 
 interface AppealEvidenceListProps {
+  appealId?: string;
   evidenceReferences?: string[] | null;
   title?: string;
 }
@@ -31,6 +32,7 @@ function getFilename(url: string): string {
 }
 
 export default function AppealEvidenceList({
+  appealId,
   evidenceReferences,
   title = "Submitted Evidence Files",
 }: AppealEvidenceListProps) {
@@ -73,6 +75,11 @@ export default function AppealEvidenceList({
     );
   }
 
+  const evidenceUrl = (url: string) => {
+    const index = urls.indexOf(url);
+    return appealId && index >= 0 ? `/api/appeals/${appealId}/evidence/${index}` : url;
+  };
+
   const images = urls.filter((u) => getFileType(u) === "image");
   const videos = urls.filter((u) => getFileType(u) === "video");
   const documents = urls.filter((u) => getFileType(u) === "pdf" || getFileType(u) === "other");
@@ -112,12 +119,12 @@ export default function AppealEvidenceList({
                   >
                     <button
                       type="button"
-                      onClick={() => setActiveMedia({ url, name, type: "image" })}
+                      onClick={() => setActiveMedia({ url: evidenceUrl(url), name, type: "image" })}
                       className="aspect-video w-full bg-muted/40 relative overflow-hidden flex items-center justify-center cursor-pointer group-hover:opacity-95"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={url}
+                        src={evidenceUrl(url)}
                         alt={name}
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                         loading="lazy"
@@ -134,14 +141,14 @@ export default function AppealEvidenceList({
                       <div className="flex items-center gap-1 shrink-0">
                         <button
                           type="button"
-                          onClick={() => setActiveMedia({ url, name, type: "image" })}
+                          onClick={() => setActiveMedia({ url: evidenceUrl(url), name, type: "image" })}
                           className="rounded p-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
                           title="Preview Fullscreen"
                         >
                           <Maximize2 className="h-3 w-3" />
                         </button>
                         <a
-                          href={url}
+                          href={evidenceUrl(url)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="rounded p-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -178,7 +185,7 @@ export default function AppealEvidenceList({
                   >
                     <div className="aspect-video w-full rounded bg-black/90 overflow-hidden flex items-center justify-center">
                       <video
-                        src={url}
+                        src={evidenceUrl(url)}
                         controls
                         preload="metadata"
                         className="h-full w-full object-contain"
@@ -193,14 +200,14 @@ export default function AppealEvidenceList({
                       <div className="flex items-center gap-2 shrink-0">
                         <button
                           type="button"
-                          onClick={() => setActiveMedia({ url, name, type: "video" })}
+                          onClick={() => setActiveMedia({ url: evidenceUrl(url), name, type: "video" })}
                           className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
                         >
                           <Maximize2 className="h-3 w-3" />
                           <span>Fullscreen</span>
                         </button>
                         <a
-                          href={url}
+                          href={evidenceUrl(url)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-[11px] font-bold text-muted-foreground hover:text-foreground"
@@ -232,7 +239,7 @@ export default function AppealEvidenceList({
                 return (
                   <a
                     key={`${url}-${idx}`}
-                    href={url}
+                    href={evidenceUrl(url)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="group flex items-center justify-between gap-3 rounded-lg border border-border/80 bg-background/60 p-3 hover:bg-accent/40 hover:border-primary/40 transition-colors"

@@ -372,7 +372,7 @@ export default function UnifiedChatWorkspace({ role, conversationId }: UnifiedCh
         setUploading(true);
         const fd = new FormData();
         fd.append("file", mediaFile);
-        const uploadRes = await fetch("/api/upload", { method: "POST", body: fd });
+        const uploadRes = await fetch("/api/private-upload", { method: "POST", body: fd });
         if (!uploadRes.ok) {
           setError("Failed to upload media. Please try again.");
           setMessages((prev) => prev.filter((m) => m.id !== optimisticId));

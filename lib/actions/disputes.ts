@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { sql } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { isTrustedUploadReference } from "@/lib/security";
+import { isAuthenticatedCloudinaryUrl } from "@/lib/cloudinary-private";
 import { getAdminPrincipal, hasAdminPermission, requireAdminPermission, type AdminPermission } from "@/lib/admin-authorization";
 import {
   DISPUTE_ACTIVE_STATUSES,
@@ -72,7 +73,7 @@ function normalizeEvidence(input: EvidenceInput[] | string[] | undefined | null)
 }
 
 function validateEvidence(item: EvidenceInput) {
-  if (!isTrustedUploadReference(item.url)) return "Evidence must use trusted upload storage.";
+  if (!isTrustedUploadReference(item.url) || !isAuthenticatedCloudinaryUrl(item.url)) return "Evidence must use private upload storage.";
   const mime = String(item.mimeType || "").toLowerCase();
   if (mime && !ALLOWED_EVIDENCE_MIME_TYPES.has(mime)) return "Unsupported evidence file type.";
   const size = Number(item.fileSize || 1);

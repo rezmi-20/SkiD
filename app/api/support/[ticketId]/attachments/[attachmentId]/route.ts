@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { getAdminPrincipal, hasAdminPermission } from "@/lib/admin-authorization";
+import { fetchStoredUpload } from "@/lib/cloudinary-private";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +40,7 @@ export async function GET(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const upstream = await fetch(attachment.file_url, { cache: "no-store" });
+  const upstream = await fetchStoredUpload(attachment.file_url);
   if (!upstream.ok || !upstream.body) {
     return NextResponse.json({ error: "Unable to load attachment" }, { status: 502 });
   }

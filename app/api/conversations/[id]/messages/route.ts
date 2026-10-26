@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { filterContactInfo } from "@/lib/filterContactInfo";
 import { isTrustedUploadReference } from "@/lib/security";
+import { isAuthenticatedCloudinaryUrl } from "@/lib/cloudinary-private";
 import { z } from "zod";
 
 const messageSchema = z.object({
@@ -90,7 +91,13 @@ export async function GET(
       ORDER BY m.created_at ASC
     `;
 
-    return NextResponse.json({ messages });
+    const messagesForViewer = messages.map((message: any) => ({
+      ...message,
+      image_url: message.image_url && isAuthenticatedCloudinaryUrl(message.image_url)
+        ? `/api/conversations/${id}/messages/${message.id}/attachment`
+        : message.image_url,
+    }));
+    return NextResponse.json({ messages: messagesForViewer }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (err) {
     console.error("[MESSAGES_GET]", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -123,8 +130,8 @@ export async function POST(
     if ((!body || !body.trim()) && !imageUrl) {
       return NextResponse.json({ error: "Message cannot be empty" }, { status: 400 });
     }
-    if (imageUrl && !isTrustedUploadReference(imageUrl)) {
-      return NextResponse.json({ error: "Message attachments must use trusted upload storage." }, { status: 400 });
+    if (imageUrl && (!isTrustedUploadReference(imageUrl) || !isAuthenticatedCloudinaryUrl(imageUrl))) {
+      return NextResponse.json({ error: "Message attachments must use private upload storage." }, { status: 400 });
     }
 
     // Contact info filter

@@ -61,7 +61,7 @@ export default async function AdminAppealDetailsPage({ params }: { params: Promi
       </section>
 
       {/* Submitted Evidence Section */}
-      <AppealEvidenceList evidenceReferences={appeal.evidence_references} title="Appellant Submitted Evidence Files" />
+      <AppealEvidenceList appealId={appeal.id} evidenceReferences={appeal.evidence_references} title="Appellant Submitted Evidence Files" />
 
       {/* Decision / Adjudication Form */}
       {["appeal_requested", "appeal_under_review"].includes(appeal.status) && (

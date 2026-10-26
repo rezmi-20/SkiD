@@ -71,7 +71,7 @@ export default async function WorkerAppealDetailsPage({ params }: { params: Prom
       </section>
 
       {/* Submitted Evidence */}
-      <AppealEvidenceList evidenceReferences={appeal.evidence_references} title="Your Attached Evidence Files" />
+      <AppealEvidenceList appealId={appeal.id} evidenceReferences={appeal.evidence_references} title="Your Attached Evidence Files" />
 
       {/* Events / Timeline */}
       <section className="rounded-xl border border-border/80 bg-card p-6 shadow-2xs space-y-4">

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { sql } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { isTrustedUploadReference } from "@/lib/security";
+import { isAuthenticatedCloudinaryUrl } from "@/lib/cloudinary-private";
 import { createNotification } from "@/lib/actions/notifications";
 import { hasAdminPermission, requireAdminPermission } from "@/lib/admin-authorization";
 import { writeGovernanceAudit } from "@/lib/actions/governance";
@@ -59,7 +60,7 @@ function normalizeAttachment(input: SupportAttachmentInput | null | undefined) {
 }
 
 function validateAttachment(input: SupportAttachmentInput) {
-  if (!isTrustedUploadReference(input.url)) return "Attachment must use trusted upload storage.";
+  if (!isTrustedUploadReference(input.url) || !isAuthenticatedCloudinaryUrl(input.url)) return "Attachment must use private upload storage.";
   const mime = String(input.mimeType || "").toLowerCase();
   if (!ATTACHMENT_MIME_SET.has(mime)) return "Unsupported attachment file type.";
   const size = Number(input.fileSize || 0);

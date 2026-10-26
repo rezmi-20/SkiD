@@ -46,7 +46,7 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await fetch("/api/upload", {
+      const res = await fetch("/api/private-upload", {
         method: "POST",
         body: formData,
       });

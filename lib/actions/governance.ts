@@ -3,6 +3,7 @@
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
 import { sql } from "@/lib/db";
+import { isAuthenticatedCloudinaryUrl } from "@/lib/cloudinary-private";
 import { auth } from "@/lib/auth";
 import { createNotification } from "@/lib/actions/notifications";
 import { assertCanModifyAdminAccount, hasAdminPermission, requireAdminPermission } from "@/lib/admin-authorization";
@@ -495,6 +496,10 @@ export async function createAppeal(input: {
   if (!appellantRole) return { success: false, status: 403, error: "Only affected clients or workers may appeal." };
   if (!isOneOf(APPEAL_TYPES, input.appealType)) return { success: false, status: 400, error: "Invalid appeal type." };
   if (!isOneOf(APPEAL_REASONS, input.reason)) return { success: false, status: 400, error: "Invalid appeal reason." };
+  const evidenceReferences = input.evidenceReferences ?? [];
+  if (!Array.isArray(evidenceReferences) || evidenceReferences.length > 12 || evidenceReferences.some((value) => !isAuthenticatedCloudinaryUrl(value))) {
+    return { success: false, status: 400, error: "Appeal evidence must use private upload storage." };
+  }
   if (!isUuid(input.targetId)) return { success: false, status: 400, error: "Invalid original decision identifier." };
   const explanation = cleanText(input.explanation, 5000);
   if (explanation.length < 25) return { success: false, status: 400, error: "Appeal explanation must add new context." };
@@ -545,7 +550,7 @@ export async function createAppeal(input: {
       'appeal_requested',
       ${input.reason},
       ${explanation},
-      ${input.evidenceReferences ?? []},
+      ${evidenceReferences},
       ${key}
     )
     RETURNING id, reference

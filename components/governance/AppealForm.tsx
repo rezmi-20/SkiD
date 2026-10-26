@@ -154,7 +154,7 @@ export default function AppealForm({
       const body = new FormData();
       body.append("file", file);
 
-      const res = await fetch("/api/upload", {
+      const res = await fetch("/api/private-upload", {
         method: "POST",
         body,
         signal: AbortSignal.timeout(15000),
