@@ -20,12 +20,14 @@ export default function VerificationResubmitForm({ mode = "resubmit" }: { mode?:
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Accept images and PDFs
-    if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
+    // Verification documents must be stored encrypted in the database, not as
+    // publicly reachable assets from the general-purpose upload endpoint.
+    const allowedTypes = new Set(["image/png", "image/jpeg", "image/webp", "application/pdf"]);
+    if (!allowedTypes.has(file.type)) {
       setError(t("verification.resubmit.err_invalid_type"));
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
+    if (file.size > 3 * 1024 * 1024) {
       setError(t("verification.resubmit.err_size"));
       return;
     }
@@ -35,16 +37,13 @@ export default function VerificationResubmitForm({ mode = "resubmit" }: { mode?:
     setFileName(file.name);
 
     try {
-      const body = new FormData();
-      body.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body });
-      const data = await res.json();
-      if (res.ok && data.url) {
-        setUploadedUrl(data.url);
-      } else {
-        setError(data.error || t("verification.resubmit.err_upload_fail"));
-        setFileName(null);
-      }
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Could not read file"));
+        reader.onerror = () => reject(new Error("Could not read file"));
+        reader.readAsDataURL(file);
+      });
+      setUploadedUrl(dataUrl);
     } catch {
       setError(t("verification.resubmit.err_conn"));
       setFileName(null);
@@ -158,7 +157,7 @@ export default function VerificationResubmitForm({ mode = "resubmit" }: { mode?:
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*,application/pdf"
+        accept="image/png,image/jpeg,image/webp,application/pdf"
         className="hidden"
         onChange={handleFileChange}
       />

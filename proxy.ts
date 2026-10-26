@@ -32,6 +32,41 @@ function applyCorsHeaders(req: NextRequest, res: NextResponse) {
   return res;
 }
 
+function createPageSecurity(req: NextRequest) {
+  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+  const isDev = process.env.NODE_ENV === "development";
+  const contentSecurityPolicy = [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "img-src 'self' data: blob: https:",
+    "font-src 'self' data: https://fonts.gstatic.com",
+    "connect-src 'self' https:",
+    "media-src 'self' https:",
+    "frame-src 'self' blob:",
+    "frame-ancestors 'none'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join("; ");
+
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("Content-Security-Policy", contentSecurityPolicy);
+
+  return {
+    next() {
+      const response = NextResponse.next({ request: { headers: requestHeaders } });
+      response.headers.set("Content-Security-Policy", contentSecurityPolicy);
+      return response;
+    },
+    apply(response: NextResponse) {
+      response.headers.set("Content-Security-Policy", contentSecurityPolicy);
+      return response;
+    },
+  };
+}
+
 const PROTECTED_API_PREFIXES = [
   "/api/admin",
   "/api/auth/profile",
@@ -156,6 +191,8 @@ export default async function proxy(req: NextRequest) {
     return applyCorsHeaders(req, NextResponse.next());
   }
 
+  const pageSecurity = createPageSecurity(req);
+
   try {
     const session = await getNeonSessionFromCookies(req.cookies);
     const isLoggedIn = !!session?.user;
@@ -171,7 +208,7 @@ export default async function proxy(req: NextRequest) {
 
     const isLogout = isAuthPage && (req.nextUrl.searchParams.get("logout") === "1" || req.nextUrl.searchParams.has("logout"));
     if (isLogout) {
-      const res = NextResponse.next();
+      const res = pageSecurity.next();
       const authCookieNames = [
         "__Secure-neon-auth.session_token",
         "neon-auth.session_token",
@@ -211,65 +248,66 @@ export default async function proxy(req: NextRequest) {
       const adminState = await getAdminEmployeeState(req);
       const isAdminLogout = isAdminLoginPage && (req.nextUrl.searchParams.get("logout") === "1" || req.nextUrl.searchParams.has("logout"));
       if (isAdminLogout) {
-        return NextResponse.next();
+        return pageSecurity.next();
       }
       if (isAdminLoginPage && isActiveAdminAccount(adminState)) {
-        return NextResponse.redirect(new URL("/admin/dashboard", req.url));
+        return pageSecurity.apply(NextResponse.redirect(new URL("/admin/dashboard", req.url)));
       }
       if (isAdminLoginPage && isActivationRequiredAdminAccount(adminState)) {
-        return NextResponse.redirect(new URL("/admin/activate", req.url));
+        return pageSecurity.apply(NextResponse.redirect(new URL("/admin/activate", req.url)));
       }
       if (!isAdminLoginPage && isActivationRequiredAdminAccount(adminState)) {
-        if (pathname !== "/admin/activate") return NextResponse.redirect(new URL("/admin/activate", req.url));
+        if (pathname !== "/admin/activate") return pageSecurity.apply(NextResponse.redirect(new URL("/admin/activate", req.url)));
       } else if (!isAdminLoginPage && pathname !== "/admin/activate" && !isActiveAdminAccount(adminState)) {
-        return NextResponse.redirect(new URL("/admin/login", req.url));
+        return pageSecurity.apply(NextResponse.redirect(new URL("/admin/login", req.url)));
       } else if (pathname === "/admin/activate" && isActiveAdminAccount(adminState)) {
-        return NextResponse.redirect(new URL("/admin/dashboard", req.url));
+        return pageSecurity.apply(NextResponse.redirect(new URL("/admin/dashboard", req.url)));
       }
-      return NextResponse.next();
+      return pageSecurity.next();
     }
 
     if (!isLoggedIn && (isClientArea || isWorkerArea)) {
-      return NextResponse.redirect(new URL("/login", req.url));
+      return pageSecurity.apply(NextResponse.redirect(new URL("/login", req.url)));
     }
 
     if (!isLoggedIn && isSharedProtectedArea) {
-      return NextResponse.redirect(new URL("/login", req.url));
+      return pageSecurity.apply(NextResponse.redirect(new URL("/login", req.url)));
     }
 
     let accountState = null;
     if (isLoggedIn) {
       accountState = await getAccountState(user.id);
       if (accountState?.is_suspended && isProtectedPage) {
-        return NextResponse.redirect(suspendedLoginUrl(req));
+        return pageSecurity.apply(NextResponse.redirect(suspendedLoginUrl(req)));
       }
     }
 
     // Signup and login can establish a session before email verification.
     // Keep unverified users on the OTP screen instead of sending them into
-    // the role dashboard (which can then bounce them back to login).
-    const isUnverifiedOtpFlow = pathname === "/otp-verification" && !user?.emailVerified;
+    const isUnverifiedOtpFlow =
+      pathname === "/otp-verification" &&
+      (!user?.emailVerified || req.nextUrl.searchParams.has("email") || req.nextUrl.searchParams.has("phone"));
     if (isLoggedIn && isAuthPage && !isLogout && !isUnverifiedOtpFlow) {
       const dbRole = accountState?.role;
-      if (accountState?.is_suspended) return NextResponse.next();
-      if (dbRole === "client") return NextResponse.redirect(new URL("/client/search", req.url));
-      if (dbRole === "worker") return NextResponse.redirect(new URL("/worker/dashboard", req.url));
+      if (accountState?.is_suspended) return pageSecurity.next();
+      if (dbRole === "client") return pageSecurity.apply(NextResponse.redirect(new URL("/client/search", req.url)));
+      if (dbRole === "worker") return pageSecurity.apply(NextResponse.redirect(new URL("/worker/dashboard", req.url)));
     }
 
-    return NextResponse.next();
+    return pageSecurity.next();
   } catch (error) {
     console.error("[PROXY_ERROR]", error instanceof Error ? error.name : "UnknownError");
     if (pathname.startsWith("/client") || pathname.startsWith("/worker") || pathname.startsWith("/admin")) {
       if (isAuthSessionUnavailableError(error)) {
-        return new NextResponse("Authentication service temporarily unavailable. Please refresh and try again.", {
+        return pageSecurity.apply(new NextResponse("Authentication service temporarily unavailable. Please refresh and try again.", {
           status: 503,
-        });
+        }));
       }
-      return new NextResponse("Unable to verify access. Please refresh and try again.", {
+      return pageSecurity.apply(new NextResponse("Unable to verify access. Please refresh and try again.", {
         status: 503,
-      });
+      }));
     }
-    return NextResponse.next();
+    return pageSecurity.next();
   }
 }
 

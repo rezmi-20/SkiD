@@ -316,7 +316,7 @@ export default function WorkerRegisterPage() {
         setError(profileData.error || t("register.errors.submission_failed"));
       } else {
         if (!resolvedEmailVerified) {
-          router.push(`/otp-verification?email=${encodeURIComponent(formData.email)}`);
+          window.location.href = `/otp-verification?email=${encodeURIComponent(formData.email.trim())}`;
         } else {
           setIsSuccess(true);
         }

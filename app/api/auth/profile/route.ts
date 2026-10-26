@@ -126,18 +126,41 @@ export async function POST(req: NextRequest) {
 
     const { email, role, fullName, phone, neonUserId } = parsed.data;
     stage = "authenticate_registration_user";
+    let normalizedEmail = (email || "").trim().toLowerCase();
+
     const session = await auth();
-    if (!session?.user?.id || session.user.id !== neonUserId) {
-      return NextResponse.json({ error: "Sign in with the account being registered, then retry." }, { status: 401 });
-    }
-    if (!session.user.email || !email) {
-      return NextResponse.json({ error: "A login email is required to finish registration." }, { status: 400 });
-    }
-    if (session.user.email.trim().toLowerCase() !== email.trim().toLowerCase()) {
-      return NextResponse.json({ error: "The registration email does not match the signed-in account." }, { status: 403 });
-    }
-    if (session.user.role && session.user.role !== role) {
-      return NextResponse.json({ error: "The selected role does not match this account." }, { status: 409 });
+    if (session?.user?.id) {
+      if (session.user.id !== neonUserId) {
+        return NextResponse.json({ error: "Sign in with the account being registered, then retry." }, { status: 401 });
+      }
+      if (!session.user.email || !email) {
+        return NextResponse.json({ error: "A login email is required to finish registration." }, { status: 400 });
+      }
+      if (session.user.email.trim().toLowerCase() !== normalizedEmail) {
+        return NextResponse.json({ error: "The registration email does not match the signed-in account." }, { status: 403 });
+      }
+      if (session.user.role && session.user.role !== role) {
+        return NextResponse.json({ error: "The selected role does not match this account." }, { status: 409 });
+      }
+      normalizedEmail = session.user.email.trim().toLowerCase();
+    } else {
+      // Unverified registration flow: signUp created user in neon_auth.user, but session cookie is not issued until email OTP is verified
+      if (!neonUserId || !normalizedEmail) {
+        return NextResponse.json({ error: "A login account and email are required to finish registration." }, { status: 400 });
+      }
+      const neonAuthUsers = await sql`
+        SELECT id, email, "emailVerified"
+        FROM neon_auth.user
+        WHERE id = ${neonUserId}
+        LIMIT 1
+      `;
+      if (!neonAuthUsers || neonAuthUsers.length === 0) {
+        return NextResponse.json({ error: "No matching login account found. Please restart registration." }, { status: 404 });
+      }
+      if (neonAuthUsers[0].email.trim().toLowerCase() !== normalizedEmail) {
+        return NextResponse.json({ error: "The registration email does not match the login account." }, { status: 403 });
+      }
+      normalizedEmail = neonAuthUsers[0].email.trim().toLowerCase();
     }
 
     const phoneDigits = phone.replace(/\D/g, "");
@@ -250,7 +273,6 @@ export async function POST(req: NextRequest) {
 
     // Neon Auth creates the identity first. Reuse its matching local row so a
     // retry can finish profile creation after a transient database/API failure.
-    const normalizedEmail = session.user.email.trim().toLowerCase();
     stage = "find_existing_user";
     const existingUsers = await sql`
       SELECT id, role

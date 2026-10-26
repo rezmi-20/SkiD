@@ -20,23 +20,14 @@ import Footer from "./landing/Footer";
 import { FileModal } from "./landing/components/modals/FileModal";
 import { ArticleModal } from "./landing/components/modals/ArticleModal";
 import { TeamModal } from "./landing/components/modals/TeamModal";
-import { WorkerDirectoryModal } from "./landing/components/modals/WorkerDirectoryModal";
-import { JoinProModal } from "./landing/components/modals/JoinProModal";
-import { DigitalContractModal } from "./landing/components/modals/DigitalContractModal";
 
 import { LanguageProvider, useLanguage } from "./landing/context/LanguageContext";
-import { MASTER_WORKER } from "./landing/data/mockData";
 
 function LandingView({ userRole, initialFaqs = [], initialTestimonials = [] }) {
   const { language, setLanguage } = useLanguage();
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
-  const [isFindWorkerOpen, setIsFindWorkerOpen] = useState(false);
-  const [isJoinProOpen, setIsJoinProOpen] = useState(false);
-  const [isContractOpen, setIsContractOpen] = useState(false);
-  const [activeWorker, setActiveWorker] = useState(null);
-  const [searchInitialQuery, setSearchInitialQuery] = useState("");
   const [toastMessage, setToastMessage] = useState(null);
 
   useEffect(() => {
@@ -95,22 +86,58 @@ function LandingView({ userRole, initialFaqs = [], initialTestimonials = [] }) {
     }, 4200);
   };
 
-  const handleSearchHero = (query) => {
-    setSearchInitialQuery(query || "");
-    setIsFindWorkerOpen(true);
+  const handleFindWorker = (queryOrTrade = "") => {
+    if (userRole) {
+      const dest =
+        userRole === "admin"
+          ? "/admin/login"
+          : userRole === "worker"
+          ? "/worker/dashboard"
+          : queryOrTrade
+          ? `/client/search?trade=${encodeURIComponent(queryOrTrade)}`
+          : "/client/search";
+      window.location.href = dest;
+    } else {
+      window.location.href = "/register/client";
+    }
   };
 
-  const handleHireWorker = (worker) => {
-    setActiveWorker(worker);
-    setIsContractOpen(true);
+  const handleJoinPro = () => {
+    if (userRole === "worker") {
+      window.location.href = "/worker/dashboard";
+    } else if (userRole === "admin") {
+      window.location.href = "/admin/login";
+    } else {
+      window.location.href = "/register/worker";
+    }
   };
 
-  const handleRegisteredPro = (name, trade) => {
-    showToast(`Welcome, ${name}! Your Fayda ID application for ${trade} is being audited.`);
+  const handleLogin = () => {
+    if (userRole) {
+      const dest =
+        userRole === "admin"
+          ? "/admin/login"
+          : userRole === "worker"
+          ? "/worker/dashboard"
+          : "/client/search";
+      window.location.href = dest;
+    } else {
+      window.location.href = "/login";
+    }
   };
 
-  const handlePaymentReleased = (amount, workerName) => {
-    showToast(`ETB ${amount.toLocaleString()} released via Chapa to ${workerName}.`);
+  const handleGetStarted = () => {
+    if (userRole) {
+      const dest =
+        userRole === "admin"
+          ? "/admin/login"
+          : userRole === "worker"
+          ? "/worker/dashboard"
+          : "/client/search";
+      window.location.href = dest;
+    } else {
+      window.location.href = "/register/client";
+    }
   };
 
   return (
@@ -119,31 +146,17 @@ function LandingView({ userRole, initialFaqs = [], initialTestimonials = [] }) {
       <Navbar
         language={language}
         onSelectLanguage={setLanguage}
-        onFindWorker={() => setIsFindWorkerOpen(true)}
-        onLogin={() => {
-          if (userRole) {
-            const dest = userRole === "admin" ? "/admin/login" : userRole === "worker" ? "/worker/dashboard" : "/client/search";
-            window.location.href = dest;
-          } else {
-            window.location.href = "/login";
-          }
-        }}
-        onGetStarted={() => {
-          if (userRole) {
-            const dest = userRole === "admin" ? "/admin/login" : userRole === "worker" ? "/worker/dashboard" : "/client/search";
-            window.location.href = dest;
-          } else {
-            setIsFindWorkerOpen(true);
-          }
-        }}
+        onFindWorker={() => handleFindWorker()}
+        onLogin={handleLogin}
+        onGetStarted={handleGetStarted}
         userRole={userRole}
       />
 
       <main id="main-content">
         {/* 1. Hero */}
         <Hero
-          onSearch={handleSearchHero}
-          onExploreStudio={() => setIsJoinProOpen(true)}
+          onSearch={(query) => handleFindWorker(query)}
+          onExploreStudio={handleJoinPro}
         />
 
         {/* 2. Trust Strip marquee */}
@@ -151,13 +164,7 @@ function LandingView({ userRole, initialFaqs = [], initialTestimonials = [] }) {
 
         {/* 3. Floating Visual Collage (5 Trust Pillars) */}
         <VisualCollage
-          onExplore={(code) => {
-            if (code === "CONTRACTS" || code === "CHAPA") {
-              setIsContractOpen(true);
-            } else {
-              setIsFindWorkerOpen(true);
-            }
-          }}
+          onExplore={() => handleFindWorker()}
         />
 
         {/* 4. Manifesto */}
@@ -165,20 +172,20 @@ function LandingView({ userRole, initialFaqs = [], initialTestimonials = [] }) {
 
         {/* 5. How It Works (4-Step Process & Direct Chapa Payments) */}
         <BrandOS
-          onOpenContract={() => setIsContractOpen(true)}
-          onFindWorker={() => setIsFindWorkerOpen(true)}
+          onOpenContract={() => handleFindWorker()}
+          onFindWorker={() => handleFindWorker()}
         />
 
         {/* 6. Frequently Asked Questions (FAQ) */}
         <LumioStudio customFaqs={initialFaqs} />
 
         {/* 7. Explore Categories */}
-        <ExploreCategories onFindWorker={() => setIsFindWorkerOpen(true)} />
+        <ExploreCategories onFindWorker={(catName) => handleFindWorker(catName)} />
 
         {/* 8. Features & Toolset */}
         <TeamUseCases
-          onFindWorker={() => setIsFindWorkerOpen(true)}
-          onJoinPro={() => setIsJoinProOpen(true)}
+          onFindWorker={() => handleFindWorker()}
+          onJoinPro={handleJoinPro}
         />
 
         {/* 9. Testimonials */}
@@ -186,14 +193,14 @@ function LandingView({ userRole, initialFaqs = [], initialTestimonials = [] }) {
 
         {/* 10. Problem, Solution, Benefit Cards */}
         <LatestUpdates
-          onFindWorker={() => setIsFindWorkerOpen(true)}
+          onFindWorker={() => handleFindWorker()}
           onSelectArticle={(article) => setSelectedArticle(article)}
         />
 
         {/* 11. Call to Action */}
         <CallToAction
-          onFindWorker={() => setIsFindWorkerOpen(true)}
-          onJoinPro={() => setIsJoinProOpen(true)}
+          onFindWorker={() => handleFindWorker()}
+          onJoinPro={handleJoinPro}
         />
       </main>
 
@@ -201,8 +208,8 @@ function LandingView({ userRole, initialFaqs = [], initialTestimonials = [] }) {
       <Footer
         language={language}
         onSelectLanguage={setLanguage}
-        onFindWorker={() => setIsFindWorkerOpen(true)}
-        onJoinPro={() => setIsJoinProOpen(true)}
+        onFindWorker={() => handleFindWorker()}
+        onJoinPro={handleJoinPro}
       />
 
       {/* Interactive Modals */}
@@ -221,28 +228,8 @@ function LandingView({ userRole, initialFaqs = [], initialTestimonials = [] }) {
         onClose={() => setSelectedCard(null)}
         onHire={() => {
           setSelectedCard(null);
-          setIsFindWorkerOpen(true);
+          handleFindWorker(selectedCard?.trade || "");
         }}
-      />
-
-      <WorkerDirectoryModal
-        isOpen={isFindWorkerOpen}
-        initialQuery={searchInitialQuery}
-        onClose={() => setIsFindWorkerOpen(false)}
-        onHireWorker={handleHireWorker}
-      />
-
-      <JoinProModal
-        isOpen={isJoinProOpen}
-        onClose={() => setIsJoinProOpen(false)}
-        onRegistered={handleRegisteredPro}
-      />
-
-      <DigitalContractModal
-        isOpen={isContractOpen}
-        worker={activeWorker || MASTER_WORKER}
-        onClose={() => setIsContractOpen(false)}
-        onPaymentReleased={handlePaymentReleased}
       />
 
       {/* Live Feedback Toast */}

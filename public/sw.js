@@ -1,6 +1,9 @@
-const CACHE_NAME = 'direskill-v2';
+const CACHE_NAME = 'direskill-v3';
 const ASSETS_TO_CACHE = [
   '/site.webmanifest',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/apple-touch-icon.png',
   '/icon-192.svg',
   '/icon-512.svg',
   '/noise.svg'

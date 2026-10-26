@@ -298,7 +298,11 @@ export async function resubmitVerification(faydaDocUrl: string, faydaFinNumber?:
     return { success: false, error: "Unauthorized" };
   }
 
-  if (!isTrustedUploadReference(faydaDocUrl, { allowDataImage: true })) {
+  const submittedDocument = validateClientIdentityDocument(faydaDocUrl);
+  // Re-verification documents contain national ID data. Accept only validated
+  // inline image/PDF data so they are encrypted at rest instead of storing a
+  // publicly reachable third-party asset URL.
+  if (!submittedDocument.ok || submittedDocument.bytes > 3 * 1024 * 1024) {
     return { success: false, error: "Invalid Fayda document reference" };
   }
 

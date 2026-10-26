@@ -231,9 +231,9 @@ export default function ClientRegisterPage() {
       } else {
         // If email verification is enabled, data.user.emailVerified will be false
         if (!resolvedEmailVerified) {
-          router.push(`/otp-verification?email=${encodeURIComponent(formData.email)}`);
+          window.location.href = `/otp-verification?email=${encodeURIComponent(formData.email.trim())}`;
         } else {
-          router.push("/login?registered=true");
+          window.location.href = "/login?registered=true";
         }
       }
     } catch (err: any) {
