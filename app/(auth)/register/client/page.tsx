@@ -291,9 +291,9 @@ export default function ClientRegisterPage() {
         </div>
         
         <div className="absolute bottom-12 left-12 flex items-center gap-4 text-sm font-medium text-zinc-500">
-          <Link href="#" className="hover:text-green-400 transition-colors">{t("auth.privacy")}</Link>
+          <Link href="/privacy" className="hover:text-green-400 transition-colors">{t("auth.privacy")}</Link>
           <span>&bull;</span>
-          <Link href="#" className="hover:text-green-400 transition-colors">{t("auth.terms")}</Link>
+          <Link href="/terms" className="hover:text-green-400 transition-colors">{t("auth.terms")}</Link>
         </div>
       </div>
 

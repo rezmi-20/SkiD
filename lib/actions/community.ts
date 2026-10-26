@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { requireAdminPermission } from "@/lib/admin-authorization";
 import { sanitizeText } from "@/lib/sanitize";
+import { isTrustedUploadReference } from "@/lib/security";
 
 export async function getCommunityPosts(category?: string) {
   try {
@@ -170,6 +171,45 @@ export async function createCommunityComment(postId: string, rawContent: string)
 export async function createCommunityPost(data: { title: string; content: string; mediaUrl?: string; category: string }) {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "Unauthorized" };
+  if (session.user.role !== "client" && session.user.role !== "worker") {
+    return { success: false, error: "This account cannot create community posts." };
+  }
+
+  const account = await sql`
+    SELECT is_suspended FROM users WHERE id = ${session.user.id} LIMIT 1
+  `;
+  if (!account[0] || account[0].is_suspended) {
+    return { success: false, error: "This account cannot create community posts." };
+  }
+
+  if (!data || typeof data !== "object" || typeof data.title !== "string" ||
+    typeof data.content !== "string" || typeof data.category !== "string") {
+    return { success: false, error: "Invalid post details." };
+  }
+
+  const title = sanitizeText(data.title).slice(0, 120);
+  const content = sanitizeText(data.content).slice(0, 5000);
+  const category = data.category.trim();
+  const mediaUrl = typeof data.mediaUrl === "string" ? data.mediaUrl.trim() : "";
+  const allowedCategories = new Set(["Plumbing", "Electrical", "Painting", "DIY", "Gardening"]);
+
+  if (!title || data.title.trim().length > 120 || !content || data.content.length > 5000 || !allowedCategories.has(category)) {
+    return { success: false, error: "Check the title, content, and category, then try again." };
+  }
+
+  if (mediaUrl) {
+    const isLocalImage = /^\/uploads\/[A-Za-z0-9_-]+\.(?:png|jpe?g|webp|gif)$/i.test(mediaUrl);
+    let isCloudinaryImage = false;
+    try {
+      const parsedUrl = new URL(mediaUrl);
+      isCloudinaryImage = parsedUrl.pathname.includes("/image/upload/");
+    } catch {
+      // Local upload paths are checked separately.
+    }
+    if (mediaUrl.length > 2048 || (!isLocalImage && (!isTrustedUploadReference(mediaUrl) || !isCloudinaryImage))) {
+      return { success: false, error: "The attached image is not a trusted upload." };
+    }
+  }
 
   const userId = session.user.id;
 
@@ -178,7 +218,7 @@ export async function createCommunityPost(data: { title: string; content: string
   try {
     await sql`
       INSERT INTO community_posts (user_id, title, content, media_url, category)
-      VALUES (${userId}, ${data.title}, ${data.content}, ${data.mediaUrl}, ${data.category})
+      VALUES (${userId}, ${title}, ${content}, ${mediaUrl || null}, ${category})
     `;
     revalidatePath("/community/feed");
     return { success: true };

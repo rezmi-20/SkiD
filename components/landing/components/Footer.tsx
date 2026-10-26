@@ -1,5 +1,6 @@
 "use client";
 import React from 'react';
+import Link from 'next/link';
 import { Share2, Globe } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Language } from '../types';
@@ -183,13 +184,36 @@ export const Footer: React.FC<FooterProps> = ({
           <p className="font-sans text-[11px] text-white/40 text-center md:text-left">
             © 2026 DireSkill. A Dire Dawa University Project. Compliant with Ethiopian Labour Proclamation 1156/2019.
           </p>
-          <div className="flex gap-8">
-            <span className="font-sans text-[11px] text-white/40 hover:text-white cursor-pointer transition-colors">
+          <div className="flex flex-wrap justify-center md:justify-end gap-x-6 gap-y-2">
+            <Link
+              href="/privacy"
+              className="font-sans text-[11px] text-white/40 hover:text-white cursor-pointer transition-colors"
+            >
               Privacy Policy
-            </span>
-            <span className="font-sans text-[11px] text-white/40 hover:text-white cursor-pointer transition-colors">
+            </Link>
+            <Link
+              href="/terms"
+              className="font-sans text-[11px] text-white/40 hover:text-white cursor-pointer transition-colors"
+            >
               Terms of Service
-            </span>
+            </Link>
+            <Link
+              href="/cookies"
+              className="font-sans text-[11px] text-white/40 hover:text-white cursor-pointer transition-colors"
+            >
+              Cookie Policy
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("skid-open-cookie-preferences"));
+                }
+              }}
+              className="font-sans text-[11px] text-white/40 hover:text-white cursor-pointer transition-colors"
+            >
+              Cookie Settings
+            </button>
             <a
               href="/admin/login"
               className="font-sans text-[11px] text-white/40 hover:text-white cursor-pointer transition-colors"

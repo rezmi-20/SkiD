@@ -1,6 +1,7 @@
 import "./globals.css";
 import Providers from "@/components/Providers";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
+import CookieConsentBanner from "@/components/cookies/CookieConsentBanner";
 import { headers } from "next/headers";
 
 export const metadata = {
@@ -74,6 +75,7 @@ export default async function RootLayout({ children }) {
       </head>
       <body className="bg-background text-on-background font-body min-h-screen flex flex-col" suppressHydrationWarning>
         <Providers>{children}</Providers>
+        <CookieConsentBanner />
         <ServiceWorkerRegistration />
       </body>
     </html>

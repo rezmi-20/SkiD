@@ -3,23 +3,17 @@ import crypto from "crypto";
 import fs from "fs/promises";
 import path from "path";
 import { auth } from "@/lib/auth";
+import { sql } from "@/lib/db";
 import { detectFileType } from "@/lib/file-signatures";
-import "@/lib/db";
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
-const MAX_PDF_SIZE = 20 * 1024 * 1024; // 20 MB
-const MAX_VIDEO_SIZE = 35 * 1024 * 1024; // 35 MB
+const MAX_REQUEST_SIZE = MAX_IMAGE_SIZE + 256 * 1024; // multipart framing and fields
 
 const ALLOWED_MIME_TYPES = new Set([
   "image/png",
   "image/jpeg",
   "image/webp",
   "image/gif",
-  "application/pdf",
-  "video/mp4",
-  "video/webm",
-  "video/quicktime",
-  "video/ogg",
 ]);
 
 const EXTENSION_BY_MIME_TYPE: Record<string, string> = {
@@ -27,11 +21,6 @@ const EXTENSION_BY_MIME_TYPE: Record<string, string> = {
   "image/jpeg": ".jpg",
   "image/webp": ".webp",
   "image/gif": ".gif",
-  "application/pdf": ".pdf",
-  "video/mp4": ".mp4",
-  "video/webm": ".webm",
-  "video/quicktime": ".mov",
-  "video/ogg": ".ogg",
 };
 
 function getCloudinaryConfig() {
@@ -119,6 +108,24 @@ export async function POST(req: NextRequest) {
     const session = await auth();
     if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+    // This endpoint is for public profile/community images only. Private case
+    // materials must use /api/private-upload, which stores authenticated assets.
+    if (session.user.role !== "client" && session.user.role !== "worker") {
+      return NextResponse.json({ error: "This account cannot upload public images." }, { status: 403 });
+    }
+
+    const declaredLength = Number(req.headers.get("content-length"));
+    if (Number.isFinite(declaredLength) && declaredLength > MAX_REQUEST_SIZE) {
+      return NextResponse.json({ error: "Photos must be under 10 MB." }, { status: 413 });
+    }
+
+    const accounts = await sql`
+      SELECT is_suspended FROM users WHERE id = ${session.user.id} LIMIT 1
+    `;
+    if (!accounts[0] || accounts[0].is_suspended) {
+      return NextResponse.json({ error: "This account cannot upload images." }, { status: 403 });
+    }
+
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
     if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -126,7 +133,7 @@ export async function POST(req: NextRequest) {
     const mime = file.type || "application/octet-stream";
     if (!ALLOWED_MIME_TYPES.has(mime)) {
       return NextResponse.json(
-        { error: "Unsupported file format. Please upload photos (PNG, JPG, WebP), PDFs, or videos (MP4, WebM, MOV)." },
+        { error: "Unsupported file format. Please upload a PNG, JPG, WebP, or GIF image." },
         { status: 400 }
       );
     }
@@ -139,14 +146,8 @@ export async function POST(req: NextRequest) {
     if (fileBytes.length === 0) {
       return NextResponse.json({ error: "The uploaded file is empty." }, { status: 400 });
     }
-    if (mime.startsWith("image/") && fileBytes.length > MAX_IMAGE_SIZE) {
-      return NextResponse.json({ error: "Photos must be under 10 MB" }, { status: 400 });
-    }
-    if (mime === "application/pdf" && fileBytes.length > MAX_PDF_SIZE) {
-      return NextResponse.json({ error: "PDF documents must be under 20 MB" }, { status: 400 });
-    }
-    if (mime.startsWith("video/") && fileBytes.length > MAX_VIDEO_SIZE) {
-      return NextResponse.json({ error: "Videos must be under 35 MB" }, { status: 400 });
+    if (fileBytes.length > MAX_IMAGE_SIZE) {
+      return NextResponse.json({ error: "Photos must be under 10 MB." }, { status: 413 });
     }
 
     let secureUrl: string | null = null;

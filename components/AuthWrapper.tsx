@@ -61,9 +61,9 @@ export default function AuthWrapper({
         </div>
         
         <div className="absolute bottom-12 left-12 flex items-center gap-4 text-sm font-bold text-on-surface-variant opacity-40 uppercase tracking-widest">
-          <Link href="#" className="hover:text-primary transition-colors">Privacy</Link>
+          <Link href="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
           <span>&bull;</span>
-          <Link href="#" className="hover:text-primary transition-colors">Terms</Link>
+          <Link href="/terms" className="hover:text-primary transition-colors">Terms</Link>
         </div>
       </div>
 
