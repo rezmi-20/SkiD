@@ -104,6 +104,7 @@ export default function MobileNav({ role }: MobileNavProps) {
           return (
             <Link
               key={item.id}
+              id={`tour-${item.id}`}
               href={item.href}
               title={item.label}
               aria-label={item.label}

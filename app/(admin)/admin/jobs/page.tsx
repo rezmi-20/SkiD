@@ -31,7 +31,7 @@ export default async function JobsPage() {
     workerName: j.workerName,
     budget: j.budget,
     status: j.status,
-    createdAt: String(j.createdAt),
+    createdAt: j.createdAt ? new Date(j.createdAt).toISOString() : "",
   }));
 
   return <JobsQueueClient initialJobs={formattedJobs} />;

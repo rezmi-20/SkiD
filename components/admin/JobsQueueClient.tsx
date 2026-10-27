@@ -20,8 +20,10 @@ interface Props {
 }
 
 function formatDate(dateStr: string) {
+  if (!dateStr) return "";
   const date = new Date(dateStr);
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  if (isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 function statusClass(status: string) {
@@ -161,8 +163,8 @@ export function JobsQueueClient({ initialJobs }: Props) {
                     <td className="px-5 py-4 text-on-surface-variant font-semibold">
                     {j.workerName || <span className="text-xs text-on-surface-variant/40 italic">{t("admin.verification.unassigned" as any)}</span>}
                     </td>
-                    <td className="px-5 py-4 font-extrabold text-on-surface">
-                      {j.budget ? `${j.budget.toLocaleString()} ETB` : "Negotiable"}
+                    <td className="px-5 py-4 font-extrabold text-on-surface" suppressHydrationWarning>
+                      {j.budget ? `${j.budget.toLocaleString("en-US")} ETB` : "Negotiable"}
                     </td>
                     <td className="px-5 py-4">
                       <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider border ${statusClass(j.status)}`}>
@@ -170,7 +172,7 @@ export function JobsQueueClient({ initialJobs }: Props) {
                       </span>
                     </td>
                     <td className="px-5 py-4 text-right">
-                      <span className="text-xs text-on-surface-variant font-semibold flex items-center justify-end gap-1.5">
+                      <span className="text-xs text-on-surface-variant font-semibold flex items-center justify-end gap-1.5" suppressHydrationWarning>
                         <Calendar className="w-3.5 h-3.5 opacity-60" />
                         {formatDate(j.createdAt)}
                       </span>

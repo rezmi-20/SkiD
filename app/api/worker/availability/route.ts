@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
+import { z } from "zod";
+
+const availabilitySchema = z.object({
+  availability: z.enum(["offline", "available"]),
+  reason: z.string().trim().max(500).optional(),
+  latitude: z.number().finite().min(-90).max(90).nullable().optional(),
+  longitude: z.number().finite().min(-180).max(180).nullable().optional(),
+});
 
 export async function GET(req: NextRequest) {
   try {
@@ -34,18 +42,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { availability, reason, latitude, longitude } = body;
-
-    const newStatus = availability === "offline" ? "offline" : "available";
+    const parsed = availabilitySchema.safeParse(await req.json().catch(() => null));
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid availability details." }, { status: 400 });
+    }
+    const { availability: newStatus, reason, latitude, longitude } = parsed.data;
 
     // Update worker profile
     const updateResult = await sql`
       UPDATE worker_profiles
       SET 
         availability = ${newStatus},
-        latitude = COALESCE(${latitude ? Number(latitude) : null}, latitude, 9.5931),
-        longitude = COALESCE(${longitude ? Number(longitude) : null}, longitude, 41.8661)
+        latitude = COALESCE(${latitude ?? null}, latitude, 9.5931),
+        longitude = COALESCE(${longitude ?? null}, longitude, 41.8661)
       WHERE user_id = ${session.user.id}
       RETURNING id, availability, latitude, longitude;
     `;

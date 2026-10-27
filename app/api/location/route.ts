@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { sql } from "@/lib/db";
+import { z } from "zod";
+
+const coordinatesSchema = z.object({
+  lat: z.number().finite().min(-90).max(90),
+  lng: z.number().finite().min(-180).max(180),
+});
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,11 +15,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { lat, lng } = await req.json();
-    if (typeof lat !== "number" || typeof lng !== "number") {
+    const parsed = coordinatesSchema.safeParse(await req.json().catch(() => null));
+    if (!parsed.success) {
       return NextResponse.json({ error: "Invalid coordinates" }, { status: 400 });
     }
 
+    const { lat, lng } = parsed.data;
     const userId = session.user.id;
     const role = session.user.role;
 
@@ -29,6 +36,8 @@ export async function POST(req: NextRequest) {
         SET latitude = ${lat}, longitude = ${lng} 
         WHERE user_id = ${userId}
       `;
+    } else {
+      return NextResponse.json({ error: "This account cannot update a profile location." }, { status: 403 });
     }
 
     return NextResponse.json({ success: true });

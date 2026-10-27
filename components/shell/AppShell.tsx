@@ -10,6 +10,7 @@ import NotificationBell from "@/components/shell/NotificationBell";
 import DireSkillLogo from "@/components/shell/DireSkillLogo";
 import ContractSetupPrompt from "@/components/ContractSetupPrompt";
 import Link from "next/link";
+import FirstTimeOnboardingModal from "@/components/onboarding/FirstTimeOnboardingModal";
 import { Sun, Moon, ChevronRight, User, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -183,7 +184,9 @@ export default function AppShell({
               </div>
 
               {/* Notification bell */}
-              <NotificationBell role={role} />
+              <div id="tour-notifications">
+                <NotificationBell role={role} />
+              </div>
 
               {/* Theme toggle */}
               <Button
@@ -214,6 +217,12 @@ export default function AppShell({
 
         {/* ── Mobile Bottom Nav ── */}
         <MobileNav role={role} />
+
+        {/* ── First-Time User Onboarding ── */}
+        <FirstTimeOnboardingModal
+          userRole={role}
+          userName={userEmail ? userEmail.split("@")[0] : ""}
+        />
       </div>
     </div>
   );

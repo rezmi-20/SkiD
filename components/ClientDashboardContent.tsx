@@ -176,7 +176,7 @@ export default function ClientDashboardContent({
       {/* ── 1. QUICK ACTIONS: CIRCULAR ON MOBILE (Image 1 style) / PILLS ON DESKTOP ── */}
       {/* Mobile view (< 640px): Circular icon buttons like the setting icon with labels */}
       {/* Mobile view (< 640px): Circular icon carousel */}
-      <div className="sm:hidden overflow-x-auto no-scrollbar -mx-2 px-3 py-2">
+      <div id="tour-dashboard-actions-mobile" className="sm:hidden overflow-x-auto no-scrollbar -mx-2 px-3 py-2">
         <div className="flex items-start gap-4 min-w-max">
           <Link
             href="/client/search"
@@ -253,7 +253,7 @@ export default function ClientDashboardContent({
       </div>
 
       {/* Desktop view (>= 640px): Horizontal pill carousel */}
-      <div className="hidden sm:block overflow-x-auto no-scrollbar -mx-2 px-2 py-1">
+      <div id="tour-dashboard-actions-desktop" className="hidden sm:block overflow-x-auto no-scrollbar -mx-2 px-2 py-1">
         <div className="flex items-center gap-2.5 min-w-max">
           <Link
             href="/client/search"
