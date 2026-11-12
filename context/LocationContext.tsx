@@ -101,6 +101,15 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
     );
   }, [handlePositionSuccess, handlePositionError]);
 
+  const handlePositionSuccessRef = useRef(handlePositionSuccess);
+  handlePositionSuccessRef.current = handlePositionSuccess;
+
+  const handlePositionErrorRef = useRef(handlePositionError);
+  handlePositionErrorRef.current = handlePositionError;
+
+  const refreshLocationRef = useRef(refreshLocation);
+  refreshLocationRef.current = refreshLocation;
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -116,14 +125,14 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
     }
 
     // 2. Fetch fresh high-accuracy position immediately
-    refreshLocation();
+    refreshLocationRef.current();
 
     // 3. Start active watchPosition for real-time live location tracking
     if (navigator.geolocation) {
       try {
         watchIdRef.current = navigator.geolocation.watchPosition(
-          handlePositionSuccess,
-          handlePositionError,
+          (pos) => handlePositionSuccessRef.current(pos),
+          (err) => handlePositionErrorRef.current(err),
           { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
         );
       } catch (err) {
@@ -136,7 +145,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
         navigator.geolocation.clearWatch(watchIdRef.current);
       }
     };
-  }, [refreshLocation, handlePositionSuccess, handlePositionError]);
+  }, []);
 
   return (
     <LocationContext.Provider value={{ location, error, loading, accuracy, isLive, refreshLocation }}>

@@ -1,247 +1,393 @@
 "use client";
 
-import Link from "next/link";
+import { useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
   CartesianGrid,
-  Legend,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
-import { Banknote, Landmark, Briefcase, Clock, Receipt, FileText, TrendingUp, Calendar } from "lucide-react";
-import type { AdminPaymentReport } from "@/lib/actions/admin-payments";
-import { useLanguage } from "@/context/LanguageContext";
+import {
+  Coins,
+  TrendingUp,
+  CreditCard,
+  ShieldCheck,
+  Search,
+  X,
+  UserRound,
+  Wrench,
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
+  Eye,
+} from "lucide-react";
+import type { AdminPaymentReport, AdminPaymentReportRow } from "@/lib/actions/admin-payments";
 import FadeContent from "@/components/ui/fade-content";
+import { useLanguage } from "@/context/LanguageContext";
+import { PaymentDetailDrawer } from "./admin/payments/PaymentDetailDrawer";
 
 function formatMoney(value: number) {
-  return `${Math.round(value).toLocaleString()} ETB`;
+  return `ETB ${Math.round(value).toLocaleString()}`;
 }
 
-function StatTile({
-  label,
-  value,
-  detail,
-  icon: Icon,
-}: {
-  label: string;
-  value: string;
-  detail: string;
-  icon: any;
-}) {
-  return (
-    <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-5 transition-all duration-200 hover:border-blue-500/30 hover:shadow-sm">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant opacity-60">{label}</p>
-          <p className="mt-3 truncate text-2xl font-extrabold text-on-surface leading-none">{value}</p>
-        </div>
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-container text-blue-500">
-          <Icon className="w-5 h-5" />
-        </div>
-      </div>
-      <p className="mt-3.5 text-xs text-on-surface-variant opacity-60">{detail}</p>
-    </div>
-  );
+function statusClass(status: string) {
+  if (status === "released") {
+    return "bg-success/10 text-success border-success/20";
+  }
+  if (status === "refunded") {
+    return "bg-destructive/10 text-destructive border-destructive/20";
+  }
+  return "bg-warning/10 text-warning border-warning/20";
 }
+
+const FILTER_TABS = ["all", "released", "held", "refunded"] as const;
 
 export default function AdminPaymentReportsContent({ report }: { report: AdminPaymentReport }) {
   const { t } = useLanguage();
+  const [search, setSearch] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState<string>("all");
+  const [drawerPayment, setDrawerPayment] = useState<AdminPaymentReportRow | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
   const hasChartData = report.monthly.length > 0;
+  const paymentsList = report.payments || [];
 
-  function formatDate(value: string | null) {
-    if (!value) return t("admin.report.notRecorded" as any);
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return t("admin.report.notRecorded" as any);
-    return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-  }
+  const query = search.trim().toLowerCase();
 
-  function statusClass(status: string) {
-    if (status === "released") {
-      return "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20";
-    }
-    if (status === "refunded") {
-      return "bg-rose-500/10 text-rose-500 border border-rose-500/20";
-    }
-    return "bg-surface-container text-on-surface-variant border border-outline-variant/40";
-  }
+  const filteredPayments = useMemo(() => {
+    return paymentsList.filter((p) => {
+      const matchesFilter = selectedFilter === "all" || p.status === selectedFilter;
+      const haystack = [
+        p.paymentId,
+        p.jobTitle,
+        p.clientName,
+        p.workerName,
+        p.chapaRef,
+        p.status,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      const matchesSearch = !query || haystack.includes(query);
+      return matchesFilter && matchesSearch;
+    });
+  }, [paymentsList, selectedFilter, query]);
+
+  const handleOpenDrawer = (p: AdminPaymentReportRow) => {
+    setDrawerPayment(p);
+    setIsDrawerOpen(true);
+  };
+
+  const inEscrowCustody = Math.max(0, report.totals.grossVolume - report.totals.releasedVolume);
 
   return (
-    <FadeContent blur duration={0.4} className="space-y-5 pb-10 max-w-full">
-      {/* Page Header */}
-      <div className="rounded-2xl border border-outline-variant bg-surface-container-low px-6 py-5 relative overflow-hidden transition-colors duration-300">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl pointer-events-none" />
-        <p className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-500 dark:text-blue-400">
-          {t("admin.portal" as any)}
-        </p>
-        <h1 className="mt-1.5 text-2xl font-extrabold text-on-surface tracking-tight">
-          {t("admin.report.revenue" as any)}
-        </h1>
-        <p className="mt-1 text-sm text-on-surface-variant opacity-70">
-          {t("admin.report.desc" as any)}
-        </p>
+    <FadeContent blur duration={0.3} className="space-y-6 w-full">
+      {/* 1. Flush, Unboxed Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pt-1">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+            {t("admin.payments.title")}
+          </h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {t("admin.payments.desc")}
+          </p>
+        </div>
       </div>
 
-      {/* Stats Cards Grid */}
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatTile
-          label={t("admin.report.released" as any)}
-          value={formatMoney(report.totals.releasedVolume)}
-          detail={`${report.totals.releasedCount} ${t("admin.report.successful" as any)}`}
-          icon={Banknote}
-        />
-        <StatTile
-          label={t("admin.report.commission" as any)}
-          value={formatMoney(report.totals.commissionRevenue)}
-          detail={t("admin.report.commissionDesc" as any)}
-          icon={Landmark}
-        />
-        <StatTile
-          label={t("admin.report.payouts" as any)}
-          value={formatMoney(report.totals.workerPayouts)}
-          detail={t("admin.report.payoutsDesc" as any)}
-          icon={Briefcase}
-        />
-        <StatTile
-          label={t("admin.report.pending" as any)}
-          value={String(report.totals.pendingCount)}
-          detail={`${report.totals.refundedCount} ${t("admin.report.refunded" as any)}`}
-          icon={Clock}
-        />
-      </section>
+      {/* 2. Top Summary KPI Cards (Reference layout) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {/* Card 1: Gross Escrow Volume */}
+        <div className="rounded-xl p-4 bg-card border border-accent/40 shadow-xs transition-all duration-200">
+          <div className="flex items-center justify-between text-muted-foreground mb-2">
+            <span className="text-xs font-medium">{t("admin.payments.kpi.grossVolume")}</span>
+            <div className="p-1.5 rounded-lg bg-accent/10 text-accent">
+              <Coins className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold text-foreground font-mono">
+            {formatMoney(report.totals.grossVolume)}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">Total platform throughput</p>
+        </div>
 
-      {/* Revenue Performance Chart */}
-      <section className="rounded-2xl border border-outline-variant bg-surface-container-lowest p-5 shadow-sm">
-        <div className="mb-5 flex items-center justify-between gap-3">
+        {/* Card 2: Artisan Payouts Released */}
+        <div className="rounded-xl p-4 bg-card border border-border shadow-xs">
+          <div className="flex items-center justify-between text-muted-foreground mb-2">
+            <span className="text-xs font-medium">{t("admin.payments.kpi.released")}</span>
+            <div className="p-1.5 rounded-lg bg-success/10 text-success">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold text-foreground font-mono">
+            {formatMoney(report.totals.workerPayouts)}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            {report.totals.releasedCount} settled releases
+          </p>
+        </div>
+
+        {/* Card 3: Platform Commission (10%) */}
+        <div className="rounded-xl p-4 bg-card border border-border shadow-xs">
+          <div className="flex items-center justify-between text-muted-foreground mb-2">
+            <span className="text-xs font-medium">{t("admin.payments.kpi.commission")}</span>
+            <div className="p-1.5 rounded-lg bg-accent/10 text-accent">
+              <TrendingUp className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold text-foreground font-mono">
+            {formatMoney(report.totals.commissionRevenue)}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">10% retained earnings</p>
+        </div>
+
+        {/* Card 4: In Escrow Custody */}
+        <div className="rounded-xl p-4 bg-card border border-border shadow-xs">
+          <div className="flex items-center justify-between text-muted-foreground mb-2">
+            <span className="text-xs font-medium">{t("admin.payments.kpi.inCustody")}</span>
+            <div className="p-1.5 rounded-lg bg-warning/10 text-warning">
+              <Clock className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold text-foreground font-mono">
+            {formatMoney(inEscrowCustody)}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            {report.totals.pendingCount} milestone holds
+          </p>
+        </div>
+      </div>
+
+      {/* 3. Monthly Escrow Distribution Chart Card */}
+      <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
           <div>
-            <h2 className="text-sm font-bold text-on-surface">
-              {t("admin.report.flow" as any)}
-            </h2>
-            <p className="text-xs text-on-surface-variant opacity-60">
-              {t("admin.report.flowDesc" as any)}
-            </p>
+            <h2 className="text-sm font-bold text-foreground">{t("admin.payments.chart.title")}</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">{t("admin.payments.chart.desc")}</p>
+          </div>
+          <div className="flex items-center gap-4 text-xs font-medium text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-accent inline-block" />
+              <span>{t("admin.payments.chart.gross")}</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
+              <span>{t("admin.payments.chart.commission")}</span>
+            </span>
           </div>
         </div>
 
-        <div className="h-[320px] w-full pr-4">
-          {hasChartData ? (
+        {hasChartData ? (
+          <div className="h-[220px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={report.monthly} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="grossGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--md-sys-color-on-surface)" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="var(--md-sys-color-on-surface)" stopOpacity={0.2} />
-                  </linearGradient>
-                  <linearGradient id="commissionGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--md-sys-color-primary)" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="var(--md-sys-color-primary)" stopOpacity={0.2} />
-                  </linearGradient>
-                  <linearGradient id="payoutsGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--md-sys-color-outline)" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="var(--md-sys-color-outline)" stopOpacity={0.2} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--md-sys-color-outline-variant)" opacity={0.3} />
-                <XAxis dataKey="month" tick={{ fill: "var(--md-sys-color-on-surface-variant)", fontSize: 11, fontWeight: 600 }} />
-                <YAxis tick={{ fill: "var(--md-sys-color-on-surface-variant)", fontSize: 11, fontWeight: 600 }} />
+              <BarChart data={report.monthly} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-border" vertical={false} />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "currentColor" }} className="text-muted-foreground" axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: "currentColor" }} className="text-muted-foreground" axisLine={false} tickLine={false} />
                 <Tooltip
-                  formatter={(value) => formatMoney(Number(value))}
-                  contentStyle={{
-                    background: "var(--md-sys-color-surface-container-lowest)",
-                    border: "1px solid var(--md-sys-color-outline-variant)",
-                    borderRadius: 12,
-                    color: "var(--md-sys-color-on-surface)",
-                    fontSize: 11,
-                    fontWeight: "bold",
+                  content={({ active, payload, label }) => {
+                    if (!active || !payload?.length) return null;
+                    return (
+                      <div className="rounded-xl border border-border bg-card shadow-xl p-3 text-xs">
+                        <p className="font-semibold text-muted-foreground mb-1">{label}</p>
+                        {payload.map((p: any, i: number) => (
+                          <p key={i} className="font-bold font-mono" style={{ color: p.color }}>
+                            {p.name}: {formatMoney(Number(p.value))}
+                          </p>
+                        ))}
+                      </div>
+                    );
                   }}
                 />
-                <Legend />
-                <Bar dataKey="grossVolume" name={t("admin.report.gross" as any)} fill="url(#grossGrad)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="commissionRevenue" name={t("admin.report.commission" as any)} fill="url(#commissionGrad)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="workerPayouts" name={t("admin.report.workerShare" as any)} fill="url(#payoutsGrad)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="grossVolume" name={t("admin.payments.chart.gross")} fill="#10B981" radius={[4, 4, 0, 0]} maxBarSize={36} />
+                <Bar dataKey="commissionRevenue" name={t("admin.payments.chart.commission")} fill="#3B82F6" radius={[4, 4, 0, 0]} maxBarSize={36} />
               </BarChart>
             </ResponsiveContainer>
-          ) : (
-            <div className="flex h-full items-center justify-center rounded-xl bg-surface-container-low text-sm font-semibold text-on-surface-variant">
-              {t("admin.report.noData" as any)}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Recent Activity Logs */}
-      <section className="rounded-2xl border border-outline-variant bg-surface-container-lowest overflow-hidden shadow-sm">
-        <div className="flex items-center justify-between border-b border-outline-variant px-5 py-4">
-          <div>
-            <h2 className="text-sm font-bold text-on-surface">
-              {t("admin.report.recent" as any)}
-            </h2>
-            <p className="text-xs text-on-surface-variant opacity-60">
-              {t("admin.report.recentDesc" as any)}
-            </p>
-          </div>
-          <span className="text-xs font-bold text-on-surface-variant bg-surface-container px-3 py-1 rounded-full border border-outline-variant/30">
-            {report.payments.length} {t("admin.report.records" as any)}
-          </span>
-        </div>
-
-        {report.payments.length === 0 ? (
-          <div className="px-5 py-16 text-center space-y-3">
-            <div className="w-12 h-12 bg-blue-500/5 rounded-full flex items-center justify-center mx-auto text-blue-500/60">
-              <Receipt className="w-6 h-6" />
-            </div>
-            <p className="text-sm font-black text-on-surface uppercase tracking-wider">{t("admin.report.none" as any)}</p>
           </div>
         ) : (
-          <div className="divide-y divide-outline-variant/40">
-            {report.payments.map((payment) => (
-              <article
-                key={payment.paymentId}
-                className="grid gap-4 p-5 lg:grid-cols-[1fr_130px_130px_120px_130px] lg:items-center hover:bg-surface-container/20 transition-colors duration-150 group"
-              >
-                <div className="min-w-0">
-                  <p className="truncate font-bold text-on-surface group-hover:text-blue-500 transition-colors text-sm">{payment.jobTitle}</p>
-                  <p className="mt-1 text-xs text-on-surface-variant opacity-75">
-                    {payment.clientName} to {payment.workerName} &bull; {formatDate(payment.createdAt)}
-                  </p>
-                  {payment.chapaRef && (
-                    <p className="mt-1 truncate font-mono text-[10px] text-on-surface-variant opacity-50">{payment.chapaRef}</p>
-                  )}
-                </div>
-
-                <div>
-                        <p className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant opacity-50">{t("admin.report.grossInvoice" as any)}</p>
-                  <p className="text-sm font-bold text-on-surface mt-0.5">{formatMoney(payment.amount)}</p>
-                </div>
-
-                <div>
-                        <p className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant opacity-50">{t("admin.report.platformFee" as any)}</p>
-                  <p className="text-sm font-semibold text-on-surface-variant mt-0.5">{formatMoney(payment.commissionAmount)}</p>
-                </div>
-
-                <div>
-                        <p className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant opacity-50 mb-1">{t("admin.report.status" as any)}</p>
-                  <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider border ${statusClass(payment.status)}`}>
-                    {payment.status}
-                  </span>
-                </div>
-
-                <div className="lg:text-right">
-                  <Link
-                    href={`/api/payments/${payment.paymentId}/receipt`}
-                    className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-outline-variant bg-surface-container text-on-surface hover:text-blue-500 hover:border-blue-500/30 px-3.5 text-xs font-black uppercase tracking-wider transition-all active:scale-95 shadow-sm"
-                  >
-                    <Receipt className="w-3.5 h-3.5" />
-                    {t("admin.report.receipt" as any)}
-                  </Link>
-                </div>
-              </article>
-            ))}
+          <div className="py-12 text-center text-xs text-muted-foreground">
+            {t("admin.payments.chart.noData")}
           </div>
         )}
-      </section>
+      </div>
+
+      {/* 4. Floating Search & Filters (deals.tsx pattern - uncontained) */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t("admin.payments.searchPlaceholder")}
+              className="w-72 h-9 pl-9 pr-8 rounded-lg bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent transition-all duration-200"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {FILTER_TABS.map((filter) => {
+              const isSelected = selectedFilter === filter;
+              const filterLabel =
+                filter === "all"
+                  ? t("admin.payments.filter.all")
+                  : filter === "released"
+                  ? t("admin.payments.filter.released")
+                  : filter === "held"
+                  ? t("admin.payments.filter.held")
+                  : filter === "refunded"
+                  ? t("admin.payments.filter.refunded")
+                  : filter;
+              return (
+                <button
+                  key={filter}
+                  type="button"
+                  onClick={() => setSelectedFilter(filter)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 cursor-pointer ${
+                    isSelected
+                      ? "bg-accent text-accent-foreground font-semibold"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {filterLabel}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* 5. Separate Data Table Card */}
+      <div className="bg-card border border-border rounded-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 shadow-xs">
+        <div className="overflow-x-auto no-scrollbar">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="border-b border-border bg-secondary/50 text-[11px] uppercase font-semibold text-muted-foreground tracking-wider">
+                <th className="py-3 px-4">{t("admin.payments.table.job")}</th>
+                <th className="py-3 px-4">{t("admin.payments.table.client")} / {t("admin.payments.table.worker")}</th>
+                <th className="py-3 px-4">{t("admin.payments.table.amount")}</th>
+                <th className="py-3 px-4">{t("admin.payments.kpi.released")}</th>
+                <th className="py-3 px-4">{t("admin.payments.kpi.commission")}</th>
+                <th className="py-3 px-4">{t("admin.payments.table.status")}</th>
+                <th className="py-3 px-4 text-right">{t("admin.payments.inspect")}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {filteredPayments.map((p) => (
+                <tr
+                  key={p.paymentId}
+                  className="hover:bg-secondary/30 transition-colors group"
+                >
+                  {/* Job info */}
+                  <td className="py-3 px-4">
+                    <div className="space-y-0.5">
+                      <p className="font-semibold text-foreground line-clamp-1">{p.jobTitle}</p>
+                      <p className="text-[10px] text-muted-foreground font-mono">
+                        {p.chapaRef || `#${p.paymentId.slice(0, 8)}`}
+                      </p>
+                    </div>
+                  </td>
+
+                  {/* Parties */}
+                  <td className="py-3 px-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5">
+                        <UserRound className="w-3 h-3 text-blue-500 shrink-0" />
+                        <span className="font-medium text-foreground truncate max-w-[120px]">
+                          {p.clientName}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Wrench className="w-3 h-3 text-emerald-500 shrink-0" />
+                        <span className="font-medium text-foreground truncate max-w-[120px]">
+                          {p.workerName}
+                        </span>
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* Gross Amount */}
+                  <td className="py-3 px-4 font-mono font-bold text-foreground">
+                    {formatMoney(p.amount)}
+                  </td>
+
+                  {/* Net Payout */}
+                  <td className="py-3 px-4 font-mono font-bold text-success">
+                    {formatMoney(p.netAmount)}
+                  </td>
+
+                  {/* Commission */}
+                  <td className="py-3 px-4 font-mono font-semibold text-accent">
+                    {formatMoney(p.commissionAmount)}
+                  </td>
+
+                  {/* Status */}
+                  <td className="py-3 px-4">
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-semibold border ${statusClass(
+                        p.status
+                      )}`}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80" />
+                      <span className="capitalize">{p.status}</span>
+                    </span>
+                  </td>
+
+                  {/* Action */}
+                  <td className="py-3 px-4 text-right">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenDrawer(p)}
+                      className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg bg-secondary hover:bg-secondary/80 text-foreground font-semibold border border-border transition cursor-pointer"
+                    >
+                      <Eye className="w-3 h-3 text-muted-foreground" />
+                      <span>{t("admin.payments.inspect")}</span>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+
+              {filteredPayments.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="py-16 text-center text-muted-foreground">
+                    <CreditCard className="mx-auto h-8 w-8 opacity-30 mb-2" />
+                    <p className="text-xs font-semibold text-foreground">
+                      {t("admin.payments.noPayments")}
+                    </p>
+                    {search && (
+                      <button
+                        type="button"
+                        onClick={() => setSearch("")}
+                        className="mt-2 text-xs text-accent hover:underline cursor-pointer"
+                      >
+                        Clear search filter
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Slide-out Payment Review Drawer */}
+      <PaymentDetailDrawer
+        payment={drawerPayment}
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+      />
     </FadeContent>
   );
 }

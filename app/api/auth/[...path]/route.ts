@@ -161,7 +161,26 @@ export async function GET(req: NextRequest, context: any) {
     return NextResponse.json({ error: "Untrusted request origin." }, { status: 403 });
   }
 
-  return handlers.GET(req, context);
+  const path = new URL(req.url).pathname;
+  if (path.endsWith("/get-session")) {
+    const hasToken = req.cookies.getAll().some((c) => c.name.includes("session_token") || c.name.includes("session_data"));
+    if (!hasToken) {
+      return NextResponse.json(null, { status: 200 });
+    }
+  }
+
+  try {
+    const res = await handlers.GET(req, context);
+    if (path.endsWith("/get-session") && res.status >= 500) {
+      return NextResponse.json(null, { status: 200 });
+    }
+    return res;
+  } catch {
+    if (path.endsWith("/get-session")) {
+      return NextResponse.json(null, { status: 200 });
+    }
+    return NextResponse.json({ error: "Authentication service temporarily unavailable" }, { status: 503 });
+  }
 }
 
 export async function POST(req: NextRequest, context: any) {

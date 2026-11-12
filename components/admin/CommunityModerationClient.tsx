@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Search, Megaphone, Flag, ThumbsUp, Eye, EyeOff } from "lucide-react";
+import { Search, Megaphone, Flag, ThumbsUp, Eye, EyeOff, MessageSquare } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { removeCommunityPost } from "@/lib/actions/community";
-import FadeContent from "@/components/ui/fade-content";
 
 interface PostData {
   id: string;
@@ -31,9 +30,10 @@ export function CommunityModerationClient({ initialPosts, canModerate }: Props) 
 
   const handleToggleRemove = (postId: string, currentRemoved: boolean) => {
     const nextStatus = !currentRemoved;
-    const reason = window.prompt(nextStatus ? t("admin.community.reasonHide" as any) : t("admin.community.reasonRestore" as any))?.trim();
+    const promptText = nextStatus ? "Reason for hiding post:" : "Reason for restoring post:";
+    const reason = window.prompt(promptText)?.trim();
     if (!reason) {
-      alert(t("admin.community.reasonRequired" as any));
+      alert("Reason is required to moderate content.");
       return;
     }
     startTransition(async () => {
@@ -43,7 +43,7 @@ export function CommunityModerationClient({ initialPosts, canModerate }: Props) 
           prev.map((p) => (p.id === postId ? { ...p, isRemoved: nextStatus } : p))
         );
       } else {
-        alert(res.error || t("admin.community.updateFailed" as any));
+        alert(res.error || "Failed to update post status.");
       }
     });
   };
@@ -63,165 +63,201 @@ export function CommunityModerationClient({ initialPosts, canModerate }: Props) 
     return matchesSearch && matchesFilter;
   });
 
+  const flaggedCount = posts.filter((p) => p.flagsCount > 0).length;
+  const hiddenCount = posts.filter((p) => p.isRemoved).length;
+
   return (
-    <FadeContent blur duration={0.4} className="space-y-5 pb-10 max-w-full">
-      {/* Welcome Banner */}
-      <div className="rounded-2xl border border-outline-variant bg-surface-container-low px-6 py-5 relative overflow-hidden transition-colors duration-300">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl pointer-events-none" />
-        <p className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-500 dark:text-blue-400">
-          {t("admin.portal" as any)}
-        </p>
-        <h1 className="mt-1.5 text-2xl font-extrabold text-on-surface tracking-tight">
-          {t("admin.community.title" as any)}
+    <div className="space-y-6 pb-24 w-full">
+      {/* 1. Header (Clean deals.tsx style: No dots, no uppercase pill badges) */}
+      <div>
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+          {t("admin.community.title")}
         </h1>
-        <p className="mt-1 text-sm text-on-surface-variant opacity-70">
-          {t("admin.community.desc" as any)}
+        <p className="text-sm text-muted-foreground mt-1">
+          {t("admin.community.desc")}
         </p>
       </div>
 
-      {/* Toolbar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant transition-colors duration-300">
-        {/* Search */}
-        <div className="relative flex-grow max-w-md w-full">
-          <Search className="absolute left-3.5 top-3 w-4 h-4 text-on-surface-variant opacity-60" />
-          <input
-            type="text"
-          placeholder={t("admin.community.searchPlaceholder" as any)}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-surface-container pl-10 pr-4 py-2.5 rounded-xl border border-outline-variant text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all"
-          />
+      {/* 2. KPI Summary Cards (deals.tsx pattern) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">{t("admin.community.kpi.total")}</p>
+              <p className="text-2xl font-bold tracking-tight text-foreground font-mono mt-1">{posts.length}</p>
+            </div>
+            <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground">
+              <MessageSquare className="w-4 h-4" />
+            </div>
+          </div>
         </div>
-        
-        {/* Filters */}
-        <div className="flex items-center gap-1.5 self-start md:self-auto bg-surface-container rounded-xl p-1 border border-outline-variant">
-          <button
-            onClick={() => setFilterRemoved("all")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              filterRemoved === "all"
-                ? "bg-on-surface text-surface shadow-sm"
-                : "text-on-surface-variant hover:text-on-surface"
-            }`}
-          >
-            {t("admin.workers.filterAll" as any)}
-          </button>
-          <button
-            onClick={() => setFilterRemoved("active")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              filterRemoved === "active"
-                ? "bg-on-surface text-surface shadow-sm"
-                : "text-on-surface-variant hover:text-on-surface"
-            }`}
-          >
-            {t("contracts.active" as any) ?? "Active"}
-          </button>
-          <button
-            onClick={() => setFilterRemoved("hidden")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              filterRemoved === "hidden"
-                ? "bg-on-surface text-surface shadow-sm"
-                : "text-on-surface-variant hover:text-on-surface"
-            }`}
-          >
-            Hidden
-          </button>
+
+        <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-amber-600 dark:text-amber-400">{t("admin.community.kpi.flagged")}</p>
+              <p className="text-2xl font-bold tracking-tight text-amber-600 dark:text-amber-400 font-mono mt-1">{flaggedCount}</p>
+            </div>
+            <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400">
+              <Flag className="w-4 h-4" />
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-rose-600 dark:text-rose-400">{t("admin.community.kpi.hidden")}</p>
+              <p className="text-2xl font-bold tracking-tight text-rose-600 dark:text-rose-400 font-mono mt-1">{hiddenCount}</p>
+            </div>
+            <div className="w-9 h-9 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-600 dark:text-rose-400">
+              <EyeOff className="w-4 h-4" />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Table Card */}
-      <div className="rounded-2xl border border-outline-variant bg-surface-container-lowest overflow-hidden transition-colors duration-300 shadow-sm">
+      {/* 3. Floating Search & Filters (OUTSIDE table container - deals.tsx pattern) */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder={t("admin.community.searchPlaceholder")}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-72 h-9 pl-9 pr-4 rounded-lg bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-accent transition-all duration-200"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            {[
+              { id: "all", label: t("admin.community.filter.all"), count: posts.length },
+              { id: "active", label: t("admin.community.filter.active"), count: posts.length - hiddenCount },
+              { id: "hidden", label: t("admin.community.filter.hidden"), count: hiddenCount },
+            ].map((tab) => {
+              const isSelected = filterRemoved === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setFilterRemoved(tab.id as any)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+                    isSelected
+                      ? "bg-accent text-accent-foreground font-semibold"
+                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  <span className="text-[10px] opacity-75 font-mono">({tab.count})</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Standalone Table Card */}
+      <div className="bg-card border border-border rounded-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 shadow-xs">
         {filtered.length === 0 ? (
-          <div className="py-20 text-center text-on-surface-variant space-y-3">
-            <div className="w-16 h-16 bg-blue-500/5 rounded-full flex items-center justify-center mx-auto">
-              <Megaphone className="w-8 h-8 text-blue-500/60" />
-            </div>
-            <p className="text-sm font-black text-on-surface uppercase tracking-wider">{t("admin.community.noPosts" as any)}</p>
+          <div className="py-16 text-center text-muted-foreground space-y-2">
+            <Megaphone className="w-8 h-8 opacity-40 mx-auto mb-2" />
+            <p className="text-xs font-semibold text-foreground">
+              {t("admin.community.noPosts")}
+            </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto no-scrollbar">
+            <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-outline-variant bg-surface-container-low/50">
-                  <th className="text-left px-5 py-3.5 text-[10px] font-black text-on-surface-variant uppercase tracking-widest opacity-60">
-                    {t("admin.community.table.post" as any)}
-                  </th>
-                  <th className="text-left px-5 py-3.5 text-[10px] font-black text-on-surface-variant uppercase tracking-widest opacity-60">
-                    {t("admin.community.table.category" as any)}
-                  </th>
-                  <th className="text-left px-5 py-3.5 text-[10px] font-black text-on-surface-variant uppercase tracking-widest opacity-60">
-                    {t("admin.community.table.likes" as any)}
-                  </th>
-                  <th className="text-left px-5 py-3.5 text-[10px] font-black text-on-surface-variant uppercase tracking-widest opacity-60">
-                    {t("admin.community.table.flags" as any)}
-                  </th>
-                  <th className="text-right px-5 py-3.5 text-[10px] font-black text-on-surface-variant uppercase tracking-widest opacity-60">
-                    {t("admin.community.table.actions" as any)}
-                  </th>
+                <tr className="border-b border-border bg-secondary/50 text-[11px] uppercase font-semibold text-muted-foreground tracking-wider">
+                  <th className="py-3 px-4">{t("admin.community.table.post")}</th>
+                  <th className="py-3 px-4">{t("admin.community.table.category")}</th>
+                  <th className="py-3 px-4">{t("admin.community.table.engagement")}</th>
+                  <th className="py-3 px-4">{t("admin.community.table.status")}</th>
+                  <th className="py-3 px-4 text-right">{t("admin.community.table.action")}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-outline-variant/40">
+              <tbody className="divide-y divide-border">
                 {filtered.map((p) => (
                   <tr
                     key={p.id}
-                    className="hover:bg-surface-container/50 transition-colors duration-150 group"
+                    className="hover:bg-secondary/30 transition-colors group"
                   >
-                    <td className="px-5 py-4 max-w-sm">
-                      <div>
-                        <p className="font-bold text-on-surface text-sm truncate group-hover:text-blue-500 transition-colors">{p.title}</p>
-                        <p className="text-xs text-on-surface-variant/70 mt-1.5 line-clamp-2">{p.content}</p>
-                        <p className="text-[10px] text-blue-500 font-black uppercase tracking-wider mt-2.5">
+                    <td className="py-3.5 px-4 max-w-sm">
+                      <div className="space-y-0.5">
+                        <p className="font-semibold text-foreground text-xs truncate group-hover:text-accent transition">
+                          {p.title}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
+                          {p.content}
+                        </p>
+                        <p className="text-[10px] text-accent font-medium mt-1">
                           By {p.authorName}
                         </p>
                       </div>
                     </td>
-                    <td className="px-5 py-4">
-                      <span className="text-[10px] font-black uppercase tracking-tight text-on-surface bg-surface-container px-2.5 py-1 rounded-lg border border-outline-variant">
+
+                    <td className="py-3.5 px-4">
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-secondary text-foreground capitalize border border-border">
                         {p.category}
                       </span>
                     </td>
-                    <td className="px-5 py-4">
-                      <span className="text-xs font-semibold text-on-surface flex items-center gap-1.5">
-                        <ThumbsUp className="w-3.5 h-3.5 text-blue-500" />
-                        {p.likesCount}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span
-                        className={`text-xs font-bold flex items-center gap-1.5 ${
-                          p.flagsCount > 0 ? "text-rose-500" : "text-on-surface-variant/40"
-                        }`}
-                      >
-                        <Flag className="w-3.5 h-3.5" />
-                        {p.flagsCount}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <button
-                        disabled={isPending}
-                        onClick={() => handleToggleRemove(p.id, p.isRemoved)}
-                        hidden={!canModerate}
-                        className={`inline-flex items-center gap-1 text-[11px] px-3 py-1.5 rounded-xl font-bold transition-all disabled:opacity-50 border active:scale-95 duration-200 ${
-                          p.isRemoved
-                            ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20"
-                            : "bg-rose-500/10 text-rose-500 border-rose-500/20 hover:bg-rose-500/20"
-                        }`}
-                      >
-                        {p.isRemoved ? (
-                          <>
-                            <Eye className="w-3.5 h-3.5" />
-                            {t("admin.community.action.restore" as any)}
-                          </>
-                        ) : (
-                          <>
-                            <EyeOff className="w-3.5 h-3.5" />
-                            {t("admin.community.action.remove" as any)}
-                          </>
-                        )}
-                      </button>
-                      {!canModerate && (
-                        <span className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant">
-                          Read only
+
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-muted-foreground flex items-center gap-1 font-mono">
+                          <ThumbsUp className="w-3.5 h-3.5 text-accent" />
+                          <span>{p.likesCount}</span>
                         </span>
+                        <span
+                          className={`text-xs font-semibold flex items-center gap-1 font-mono ${
+                            p.flagsCount > 0 ? "text-rose-500" : "text-muted-foreground"
+                          }`}
+                        >
+                          <Flag className="w-3.5 h-3.5" />
+                          <span>{p.flagsCount}</span>
+                        </span>
+                      </div>
+                    </td>
+
+                    <td className="py-3.5 px-4">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
+                          p.isRemoved
+                            ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
+                            : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                        }`}
+                      >
+                        {p.isRemoved ? t("admin.community.status.hidden") : t("admin.community.status.visible")}
+                      </span>
+                    </td>
+
+                    <td className="py-3.5 px-4 text-right">
+                      {canModerate ? (
+                        <button
+                          disabled={isPending}
+                          onClick={() => handleToggleRemove(p.id, p.isRemoved)}
+                          className={`inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg font-semibold transition disabled:opacity-50 border cursor-pointer ${
+                            p.isRemoved
+                              ? "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 dark:text-emerald-400 border-emerald-500/30"
+                              : "bg-destructive/10 text-destructive hover:bg-destructive/20 border-destructive/20"
+                          }`}
+                        >
+                          {p.isRemoved ? (
+                            <>
+                              <Eye className="w-3 h-3" />
+                              <span>{t("admin.community.action.restore")}</span>
+                            </>
+                          ) : (
+                            <>
+                              <EyeOff className="w-3 h-3" />
+                              <span>{t("admin.community.action.hide")}</span>
+                            </>
+                          )}
+                        </button>
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground">Read only</span>
                       )}
                     </td>
                   </tr>
@@ -231,6 +267,6 @@ export function CommunityModerationClient({ initialPosts, canModerate }: Props) 
           </div>
         )}
       </div>
-    </FadeContent>
+    </div>
   );
 }

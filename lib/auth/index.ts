@@ -19,11 +19,14 @@ export const auth = async () => {
 
   if (!session?.user) {
     try {
-      const result = await serverAuth.getSession();
-      session = result.data as typeof session;
+      const isConfigured = Boolean(process.env.NEON_AUTH_BASE_URL && !process.env.NEON_AUTH_BASE_URL.includes(".example"));
+      if (isConfigured) {
+        const result = await serverAuth.getSession();
+        session = result.data as typeof session;
+      }
     } catch (err) {
       console.warn("[AUTH_GET_SESSION_FAILED]", err instanceof Error ? err.name : "UnknownError");
-      if (hasAuthCookie || isAuthSessionUnavailableError(err)) {
+      if (isAuthSessionUnavailableError(err)) {
         throw new AuthSessionUnavailableError();
       }
       return null;

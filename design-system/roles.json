@@ -1,0 +1,337 @@
+{
+  "$comment": "Measured from https://dire-skill.vercel.app on 2026-11-10. Edit names or values here, then run extract.mjs --rebuild to regenerate tokens.css, theme.css, tokens.json and preview.html.",
+  "name": "Dire-skill",
+  "source": "https://dire-skill.vercel.app",
+  "colors": {
+    "background": "#020202",
+    "text": "#ffffffe6",
+    "heading": "#ffffff",
+    "text-muted": "#8c8880",
+    "text-subtle": "#666666",
+    "border": "#e2e0d8",
+    "surface": "#0a0b0d",
+    "surface-inverse": "#faf9f5",
+    "text-inverse": "#666666",
+    "primary": "#00e575",
+    "primary-foreground": "#000000"
+  },
+  "chart": [
+    "#00e575",
+    "#ffa1ad",
+    "#007a55",
+    "#ff416c"
+  ],
+  "dark": null,
+  "palette": {
+    "neutral-50": "#faf9f5",
+    "white-a90": "#ffffffe6",
+    "neutral-950": "#1b1b1b",
+    "neutral-900": "#333333",
+    "neutral-600": "#8c8880",
+    "white-a80": "#ffffffcc",
+    "neutral-700": "#666666",
+    "black": "#000000",
+    "green-400-a60": "#00e47599",
+    "neutral-950-2": "#0a0b0d",
+    "white-a95": "#fffffff2",
+    "neutral-100": "#f0efeb",
+    "white-a60": "#ffffff99",
+    "white-a50": "#ffffff80",
+    "green-400": "#00e575",
+    "white-a40": "#ffffff66",
+    "neutral-200": "#e2e0d8",
+    "green-500-a20": "#00be7d33",
+    "black-a60": "#00000099",
+    "white-a70": "#ffffffb2",
+    "white-a10": "#ffffff1a",
+    "white-a20": "#ffffff33",
+    "black-a10": "#0000001a",
+    "black-a20": "#00000033",
+    "neutral-950-3": "#111111",
+    "black-a25": "#00000040",
+    "neutral-300-a40": "#d9d7cf66",
+    "black-a50": "#00000080",
+    "white-a5": "#ffffff0d",
+    "teal-300": "#5ee9b5",
+    "black-a90": "#000000e6",
+    "black-a40": "#00000066",
+    "neutral-950-4": "#050807",
+    "neutral-950-a80": "#0c1410cc",
+    "black-a90-2": "#070b09e6",
+    "black-a15": "#00000026",
+    "black-a45": "#00000073",
+    "neutral-950-a30": "#0d1a174d",
+    "black-a30": "#0000004d",
+    "black-a75": "#000000bf",
+    "red-400": "#ffa1ad",
+    "green-500-a15": "#00bc8026",
+    "green-700": "#007a55",
+    "black-a80": "#000000cc",
+    "red-500": "#ff416c",
+    "neutral-300": "#d4d4d8",
+    "green-200-a80": "#a4f4cfcc",
+    "white-a15": "#ffffff26"
+  },
+  "fonts": {
+    "sans": {
+      "family": "Plus Jakarta Sans",
+      "measured": "Plus Jakarta Sans",
+      "free": true,
+      "stack": "\"Plus Jakarta Sans\", ui-sans-serif, system-ui, sans-serif",
+      "load": "Plus Jakarta Sans",
+      "source": "Google Fonts",
+      "note": "Plus Jakarta Sans is free (open licence)."
+    },
+    "mono": {
+      "family": "IBM Plex Mono",
+      "measured": "IBM Plex Mono",
+      "free": true,
+      "stack": "\"IBM Plex Mono\", ui-monospace, SFMono-Regular, Menlo, monospace",
+      "load": "IBM Plex Mono",
+      "source": "Not loaded: falls back to the next font in the stack",
+      "note": "IBM Plex Mono is free (open licence)."
+    }
+  },
+  "text": {
+    "display": {
+      "size": 104,
+      "lh": 1,
+      "ls": -0.025,
+      "weight": "700",
+      "font": "sans",
+      "phone": 30
+    },
+    "h1": {
+      "size": 82,
+      "lh": 1.05,
+      "ls": -0.04,
+      "weight": "700",
+      "font": "sans",
+      "phone": 44
+    },
+    "h2": {
+      "size": 48,
+      "lh": 1.15,
+      "ls": -0.025,
+      "weight": "400",
+      "font": "sans",
+      "phone": 30
+    },
+    "h3": {
+      "size": 30,
+      "lh": 1.2,
+      "ls": -0.025,
+      "weight": "600",
+      "font": "sans",
+      "phone": 24
+    },
+    "h4": {
+      "size": 24,
+      "lh": 1.25,
+      "ls": 0,
+      "weight": "700",
+      "font": "sans",
+      "phone": 20
+    },
+    "h5": {
+      "size": 20,
+      "lh": 1.625,
+      "ls": 0,
+      "weight": "400",
+      "font": "sans",
+      "phone": 16
+    },
+    "body-lg": {
+      "size": 18,
+      "lh": 1.625,
+      "ls": 0,
+      "weight": "400",
+      "font": "sans",
+      "phone": 14
+    },
+    "body": {
+      "size": 15,
+      "lh": 1.625,
+      "ls": 0,
+      "weight": "400",
+      "font": "sans"
+    },
+    "body-sm": {
+      "size": 14,
+      "lh": 1.625,
+      "ls": 0,
+      "weight": "400",
+      "font": "sans"
+    },
+    "caption": {
+      "size": 12,
+      "lh": 1.625,
+      "ls": 0,
+      "weight": "400",
+      "font": "sans"
+    },
+    "code": {
+      "size": 9,
+      "lh": 1.5,
+      "ls": 0,
+      "weight": "400",
+      "font": "mono"
+    }
+  },
+  "space": {
+    "base": 4,
+    "scale": [
+      4,
+      8,
+      12,
+      16,
+      20,
+      24,
+      28,
+      32,
+      36,
+      40,
+      48,
+      64,
+      112
+    ],
+    "section": [
+      112,
+      128
+    ],
+    "sectionPhone": 56
+  },
+  "radius": {
+    "2xl": 22,
+    "3xl": 44.8,
+    "full": 9999
+  },
+  "shadow": {
+    "xs": "rgba(0, 0, 0, 0.15) 0px 1px 3px 0px",
+    "sm": "rgba(0, 0, 0, 0.4) 0px 1px 3px 0px",
+    "md": "rgba(0, 0, 0, 0.25) 0px 1px 3px 0px, rgba(0, 0, 0, 0.25) 0px 1px 2px -1px",
+    "lg": "rgba(0, 0, 0, 0.25) 0px 1px 3px 0px, rgba(0, 0, 0, 0.25) 0px 2px 4px -1px",
+    "xl": "rgba(0, 0, 0, 0.3) 0px 1px 3px 0px, rgba(0, 0, 0, 0.3) 0px 4px 6px -1px",
+    "2xl": "rgb(5, 8, 7) 0px 4px 0px 0px, rgba(0, 0, 0, 0.5) 0px 8px 16px 0px"
+  },
+  "border": {
+    "width": 1
+  },
+  "container": {
+    "page": 1360,
+    "wide": 672,
+    "narrow": 1326
+  },
+  "breakpoint": {},
+  "duration": {
+    "fast": 150,
+    "base": 300,
+    "slow": 700
+  },
+  "ease": {
+    "standard": "cubic-bezier(0.4, 0, 0.2, 1)",
+    "alt-1": "cubic-bezier(0, 0, 0.2, 1)"
+  },
+  "components": {
+    "$comment": "Measured recipes. A colour is a role name from colors (so it follows your edits) or a hex where no role matched. Radius in px or \"full\"; padding [vertical, horizontal].",
+    "buttons": [
+      {
+        "variant": "subtle",
+        "label": "Electrician",
+        "bg": "#ffffffcc",
+        "fg": "#1b1b1b",
+        "border": {
+          "width": 1,
+          "style": "solid",
+          "color": "#d9d7d099"
+        },
+        "radius": "full",
+        "padding": [
+          4,
+          13
+        ],
+        "height": 26,
+        "font": {
+          "size": 12,
+          "weight": 500
+        },
+        "shadow": "rgba(0, 0, 0, 0.15) 0px 1px 3px 0px",
+        "hover": {
+          "bg": "heading"
+        }
+      },
+      {
+        "variant": "outline",
+        "label": "Share",
+        "bg": null,
+        "fg": "#ffffffb2",
+        "border": {
+          "width": 1,
+          "style": "solid",
+          "color": "#ffffff1a"
+        },
+        "radius": "full",
+        "padding": [
+          0,
+          11
+        ],
+        "height": 40,
+        "font": {
+          "size": 16,
+          "weight": 400
+        }
+      },
+      {
+        "variant": "dark",
+        "label": "Search",
+        "bg": "#000000",
+        "fg": "heading",
+        "border": null,
+        "radius": "full",
+        "padding": [
+          10,
+          24
+        ],
+        "height": 36,
+        "font": {
+          "size": 12,
+          "weight": 700,
+          "ls": 0.05,
+          "transform": "uppercase"
+        },
+        "hover": {
+          "bg": "#181818"
+        }
+      }
+    ],
+    "card": {
+      "bg": "heading",
+      "on": "surface-inverse",
+      "border": {
+        "width": 1,
+        "style": "solid",
+        "color": "border"
+      },
+      "radius": 28,
+      "padding": 24,
+      "shadow": "rgba(0, 0, 0, 0.15) 0px 1px 3px 0px"
+    },
+    "input": null,
+    "badge": {
+      "label": "From ETB 4,500",
+      "bg": "#00000099",
+      "fg": "#ffffffcc",
+      "border": null,
+      "radius": "full",
+      "padding": [
+        0,
+        4
+      ],
+      "font": {
+        "size": 9,
+        "weight": 400
+      }
+    },
+    "nav": null
+  }
+}

@@ -3,19 +3,19 @@
 import { useState } from "react";
 import Link from "next/link";
 import { openMisconductReview } from "@/lib/actions/governance";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   ShieldAlert,
-  UserCheck,
   AlertCircle,
-  Plus,
   ChevronRight,
   Clock,
   CheckCircle2,
   FileText,
-  UserX,
   Loader2,
-  Archive,
-  Search,
+  Shield,
+  Activity,
+  User,
+  Scale,
 } from "lucide-react";
 
 interface EmployeeIndicator {
@@ -49,33 +49,33 @@ function getOutcomeBadge(outcome?: string | null) {
   switch (outcome) {
     case "no_action":
       return {
-        label: "Ruling: No Action (Exonerated)",
-        classes: "border-border bg-muted/60 text-muted-foreground",
+        label: "No Action (Exonerated)",
+        classes: "border-border bg-secondary text-muted-foreground",
       };
     case "formal_warning":
       return {
-        label: "Ruling: Written Warning",
+        label: "Written Warning",
         classes: "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
       };
     case "mandatory_retraining":
       return {
-        label: "Ruling: Retraining Required",
+        label: "Retraining Required",
         classes: "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400",
       };
     case "temporary_suspension":
       return {
-        label: "Ruling: Suspended Account",
+        label: "Suspended Account",
         classes: "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400",
       };
     case "revoke_admin_access":
       return {
-        label: "Ruling: Access Revoked",
+        label: "Access Revoked",
         classes: "border-rose-500/40 bg-rose-500/15 text-rose-700 dark:text-rose-300",
       };
     default:
       return {
-        label: `Ruling: ${outcome.replaceAll("_", " ")}`,
-        classes: "border-primary/30 bg-primary/10 text-primary",
+        label: outcome.replaceAll("_", " "),
+        classes: "border-accent/30 bg-accent/10 text-accent",
       };
   }
 }
@@ -87,6 +87,7 @@ export default function MisconductReviewManager({
   indicators: EmployeeIndicator[];
   reviews: MisconductReviewItem[];
 }) {
+  const { t } = useLanguage();
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>(
     indicators[0]?.id || ""
   );
@@ -95,8 +96,6 @@ export default function MisconductReviewManager({
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  // Tabs for Reviews section: "all" | "active" | "resolved"
   const [reviewTab, setReviewTab] = useState<"all" | "active" | "resolved">("all");
 
   const selectedEmployee = indicators.find((i) => i.id === selectedEmployeeId);
@@ -158,33 +157,88 @@ export default function MisconductReviewManager({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Initiation Form Card */}
-      <div className="rounded-xl border border-border/80 bg-card p-5 sm:p-6 shadow-2xs space-y-4">
-        <div className="flex items-center justify-between border-b border-border/60 pb-3">
-          <div className="space-y-0.5">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
-              <ShieldAlert className="h-4 w-4 text-primary" />
-              <span>Initiate Formal Administrator Review</span>
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              Open an independent oversight investigation on a staff administrator with referenced audit records.
-            </p>
+    <div className="space-y-6 pb-24 w-full">
+      {/* 1. Header (Clean deals.tsx style: No dots, no uppercase pill badges) */}
+      <div>
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+          {t("admin.misconduct.title")}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          {t("admin.misconduct.desc")}
+        </p>
+      </div>
+
+      {/* 2. KPI Summary Cards (deals.tsx & forecasting.tsx pattern) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">{t("admin.misconduct.kpi.total")}</p>
+              <p className="text-2xl font-bold tracking-tight text-foreground font-mono mt-1">{reviews.length}</p>
+            </div>
+            <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground">
+              <Scale className="w-4 h-4" />
+            </div>
           </div>
-          <span className="rounded-md bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary uppercase">
-            Super Admin Authority
-          </span>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-amber-600 dark:text-amber-400">{t("admin.misconduct.kpi.active")}</p>
+              <p className="text-2xl font-bold tracking-tight text-amber-600 dark:text-amber-400 font-mono mt-1">{activeReviews.length}</p>
+            </div>
+            <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400">
+              <ShieldAlert className="w-4 h-4" />
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-rose-600 dark:text-rose-400">{t("admin.misconduct.kpi.flags")}</p>
+              <p className="text-2xl font-bold tracking-tight text-rose-600 dark:text-rose-400 font-mono mt-1">{indicators.length}</p>
+            </div>
+            <div className="w-9 h-9 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-600 dark:text-rose-400">
+              <Activity className="w-4 h-4" />
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">{t("admin.misconduct.kpi.concluded")}</p>
+              <p className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 font-mono mt-1">{resolvedReviews.length}</p>
+            </div>
+            <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Formal Investigation Initiation Form */}
+      <div className="rounded-xl border border-border bg-card p-5 shadow-xs space-y-4">
+        <div className="border-b border-border pb-3">
+          <h2 className="text-sm font-bold text-foreground">
+            {t("admin.misconduct.form.title")}
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {t("admin.misconduct.form.desc")}
+          </p>
         </div>
 
         {errorMessage && (
-          <div className="flex items-center gap-2.5 rounded-md border border-destructive/25 bg-destructive/10 p-3 text-xs font-semibold text-destructive">
+          <div className="flex items-center gap-2.5 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs font-semibold text-destructive">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>{errorMessage}</span>
           </div>
         )}
 
         {successMessage && (
-          <div className="flex items-center gap-2.5 rounded-md border border-emerald-500/25 bg-emerald-500/10 p-3 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+          <div className="flex items-center gap-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 className="h-4 w-4 shrink-0" />
             <span>{successMessage}</span>
           </div>
@@ -192,16 +246,15 @@ export default function MisconductReviewManager({
 
         <form onSubmit={handleOpenReview} className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {/* Employee Selector Dropdown */}
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                Target Administrator Employee
+              <label className="text-xs font-semibold text-foreground">
+                {t("admin.misconduct.form.employee")}
               </label>
               <select
                 value={selectedEmployeeId}
                 onChange={(e) => setSelectedEmployeeId(e.target.value)}
                 disabled={isSubmitting}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs font-semibold text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
+                className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-xs font-semibold text-foreground focus:outline-none focus:border-accent"
               >
                 {indicators.map((ind) => (
                   <option key={ind.id} value={ind.id}>
@@ -210,35 +263,33 @@ export default function MisconductReviewManager({
                 ))}
               </select>
               {selectedEmployee && (
-                <p className="text-[11px] text-muted-foreground">
-                  Role: <span className="font-semibold text-foreground">{selectedEmployee.admin_role}</span> · Activity Flag:{" "}
+                <p className="text-[11px] text-muted-foreground font-mono">
+                  Role: <span className="font-semibold text-foreground">{selectedEmployee.admin_role}</span> · Flag:{" "}
                   <span className="font-semibold capitalize text-foreground">{selectedEmployee.misuse_flag.replaceAll("_", " ")}</span>
                 </p>
               )}
             </div>
 
-            {/* Referenced Audit IDs (Optional) */}
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                Referenced Audit Entry IDs <span className="text-[10px] lowercase font-normal">(optional)</span>
+              <label className="text-xs font-semibold text-foreground">
+                {t("admin.misconduct.form.auditIds")}
               </label>
               <input
                 value={auditIds}
                 onChange={(e) => setAuditIds(e.target.value)}
                 disabled={isSubmitting}
                 placeholder="e.g. 21794c27-b73b-41a0-b8e4-cd504202a662"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs font-mono text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary placeholder:text-muted-foreground"
+                className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:border-accent placeholder:text-muted-foreground"
               />
               <p className="text-[11px] text-muted-foreground">
-                Links immutable audit ledger actions to this case dossier.
+                {t("admin.misconduct.form.auditIdsDesc")}
               </p>
             </div>
           </div>
 
-          {/* Investigation Reason */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-              Formal Investigation Grounds & Narrative
+            <label className="text-xs font-semibold text-foreground">
+              {t("admin.misconduct.form.reason")}
             </label>
             <textarea
               value={reason}
@@ -247,29 +298,26 @@ export default function MisconductReviewManager({
               required
               minLength={10}
               rows={3}
-              placeholder="State the factual basis, policy breach, or procedural irregularity requiring governance review..."
-              className="w-full rounded-md border border-input bg-background p-3 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary leading-relaxed"
+              placeholder={t("admin.misconduct.form.reasonPlaceholder")}
+              className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-xs text-foreground focus:outline-none focus:border-accent placeholder:text-muted-foreground"
             />
           </div>
 
-          <div className="flex items-center justify-between pt-1">
-            <p className="text-[11px] text-muted-foreground italic">
-              Conflict guard: Super Admins cannot open self-reviews or reviews on their own accounts.
-            </p>
+          <div className="flex justify-end pt-1">
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-primary px-5 text-xs font-bold uppercase tracking-wider text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-opacity shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-xs font-bold text-accent-foreground shadow-xs hover:bg-accent/90 transition disabled:opacity-50 cursor-pointer"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Opening Review...
+                  <span>Processing...</span>
                 </>
               ) : (
                 <>
-                  <Plus className="h-3.5 w-3.5" />
-                  Open Review Case
+                  <ShieldAlert className="h-3.5 w-3.5" />
+                  <span>{t("admin.misconduct.form.submit")}</span>
                 </>
               )}
             </button>
@@ -277,223 +325,129 @@ export default function MisconductReviewManager({
         </form>
       </div>
 
-      {/* Staff Activity & Misuse Indicators */}
-      <div className="rounded-xl border border-border/80 bg-card overflow-hidden shadow-2xs">
-        <div className="border-b border-border/60 px-5 py-3.5 bg-muted/20 flex items-center justify-between">
-          <div>
-            <h2 className="text-xs font-bold uppercase tracking-wider text-foreground">
-              Staff Administrator Activity Ledger ({indicators.length})
-            </h2>
-            <p className="text-[11px] text-muted-foreground">
-              Select any staff administrator below to quickly open an audit review on their recent activity.
-            </p>
-          </div>
-        </div>
-
-        <div className="divide-y divide-border/60">
-          {indicators.map((ind) => {
-            const isSelected = ind.id === selectedEmployeeId;
+      {/* 4. Floating Filter Bar (deals.tsx pattern) */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          {[
+            { id: "all", label: t("admin.misconduct.filter.all"), count: reviews.length },
+            { id: "active", label: t("admin.misconduct.filter.active"), count: activeReviews.length },
+            { id: "resolved", label: t("admin.misconduct.filter.resolved"), count: resolvedReviews.length },
+          ].map((tab) => {
+            const isSelected = reviewTab === tab.id;
             return (
-              <div
-                key={ind.id}
-                className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors ${
-                  isSelected ? "bg-primary/5" : "hover:bg-accent/30"
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setReviewTab(tab.id as any)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+                  isSelected
+                    ? "bg-accent text-accent-foreground font-semibold"
+                    : "bg-secondary text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <div className="space-y-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-xs font-bold text-primary">
-                      {ind.admin_employee_id}
-                    </span>
-                    <span className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground capitalize">
-                      {String(ind.admin_role).replaceAll("_", " ")}
-                    </span>
-                    <span
-                      className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase ${
-                        ind.misuse_flag === "high_risk_review"
-                          ? "border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400"
-                          : ind.misuse_flag === "attention_required"
-                          ? "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                          : "border-border bg-muted/40 text-muted-foreground"
-                      }`}
-                    >
-                      {ind.misuse_flag.replaceAll("_", " ")}
-                    </span>
-                  </div>
-
-                  <p className="text-sm font-bold text-foreground truncate">
-                    {ind.full_name}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedEmployeeId(ind.id);
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
-                    className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                      isSelected
-                        ? "bg-primary text-primary-foreground shadow-xs"
-                        : "border border-border bg-background text-foreground hover:bg-muted"
-                    }`}
-                  >
-                    {isSelected ? (
-                      <>
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                        Selected
-                      </>
-                    ) : (
-                      "Review this Admin"
-                    )}
-                  </button>
-                </div>
-              </div>
+                <span>{tab.label}</span>
+                <span className="text-[10px] opacity-75 font-mono">({tab.count})</span>
+              </button>
             );
           })}
         </div>
       </div>
 
-      {/* Governance Reviews & Historical Rulings Section */}
-      <div className="rounded-xl border border-border/80 bg-card overflow-hidden shadow-2xs space-y-0">
-        <div className="border-b border-border/60 px-5 py-4 bg-muted/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h2 className="text-xs font-bold uppercase tracking-wider text-foreground">
-              Misconduct Review Dossiers & Historical Rulings ({reviews.length})
-            </h2>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              Access ongoing investigations and inspect historical rulings (read-only audit archive).
-            </p>
-          </div>
-
-          {/* Filter Tabs */}
-          <div className="inline-flex rounded-lg border border-border bg-muted/50 p-1 text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => setReviewTab("all")}
-              className={`rounded-md px-3 py-1 transition-colors cursor-pointer ${
-                reviewTab === "all"
-                  ? "bg-background text-foreground shadow-2xs"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              All ({reviews.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setReviewTab("active")}
-              className={`rounded-md px-3 py-1 transition-colors cursor-pointer ${
-                reviewTab === "active"
-                  ? "bg-background text-foreground shadow-2xs"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Active ({activeReviews.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setReviewTab("resolved")}
-              className={`rounded-md px-3 py-1 transition-colors cursor-pointer ${
-                reviewTab === "resolved"
-                  ? "bg-background text-foreground shadow-2xs"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Resolved / Archive ({resolvedReviews.length})
-            </button>
-          </div>
-        </div>
-
+      {/* 5. Standalone Table Card */}
+      <div className="bg-card border border-border rounded-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 shadow-xs">
         {displayedReviews.length === 0 ? (
-          <div className="p-10 text-center text-muted-foreground space-y-1">
-            <CheckCircle2 className="mx-auto h-6 w-6 text-emerald-500 mb-2" />
-            <p className="text-xs font-bold text-foreground">
-              {reviewTab === "active"
-                ? "No Active Investigations"
-                : reviewTab === "resolved"
-                ? "No Historical Rulings in Archive"
-                : "No Governance Reviews Found"}
-            </p>
-            <p className="text-[11px]">
-              {reviewTab === "active"
-                ? "All staff administrators are currently in good standing."
-                : "Concluded reviews and disciplinary determinations will appear here."}
+          <div className="py-16 text-center text-muted-foreground space-y-1">
+            <CheckCircle2 className="mx-auto h-8 w-8 text-emerald-500 opacity-70 mb-2" />
+            <p className="text-xs font-semibold text-foreground">
+              {t("admin.misconduct.noInquiries")}
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-border/60">
-            {displayedReviews.map((review) => {
-              const isClosed = ["resolved", "dismissed"].includes(review.status);
-              const outcomeBadge = getOutcomeBadge(review.outcome);
+          <div className="overflow-x-auto no-scrollbar">
+            <table className="w-full text-xs text-left">
+              <thead>
+                <tr className="border-b border-border bg-secondary/50 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  <th className="px-4 py-3">{t("admin.misconduct.table.reference")}</th>
+                  <th className="px-4 py-3">{t("admin.misconduct.table.role")}</th>
+                  <th className="px-4 py-3">{t("admin.misconduct.table.grounds")}</th>
+                  <th className="px-4 py-3">{t("admin.misconduct.table.status")}</th>
+                  <th className="px-4 py-3">{t("admin.misconduct.table.ruling")}</th>
+                  <th className="px-4 py-3">{t("admin.misconduct.table.date")}</th>
+                  <th className="px-4 py-3 text-right">{t("admin.misconduct.table.action")}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {displayedReviews.map((review) => {
+                  const isClosed = ["resolved", "dismissed"].includes(review.status);
+                  const outcomeBadge = getOutcomeBadge(review.outcome);
 
-              return (
-                <Link
-                  key={review.id}
-                  href={`/admin/misconduct/${review.id}`}
-                  className="group flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-5 hover:bg-accent/40 transition-colors"
-                >
-                  <div className="space-y-1.5 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-primary">
-                        {review.reference}
-                      </span>
-                      <span
-                        className={`rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                          isClosed
-                            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                            : "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                        }`}
-                      >
-                        {review.status}
-                      </span>
+                  return (
+                    <tr
+                      key={review.id}
+                      className="hover:bg-secondary/30 transition-colors"
+                    >
+                      <td className="px-4 py-3.5">
+                        <div className="space-y-0.5">
+                          <span className="font-mono font-bold text-accent text-xs">
+                            {review.reference}
+                          </span>
+                          <p className="font-semibold text-foreground text-xs">{review.full_name}</p>
+                          <p className="font-mono text-[10px] text-muted-foreground">{review.admin_employee_id}</p>
+                        </div>
+                      </td>
 
-                      {outcomeBadge && (
-                        <span
-                          className={`rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${outcomeBadge.classes}`}
-                        >
-                          {outcomeBadge.label}
-                        </span>
-                      )}
-
-                      <span className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground capitalize">
+                      <td className="px-4 py-3.5 text-xs text-muted-foreground capitalize">
                         {String(review.admin_role).replaceAll("_", " ")}
-                      </span>
-                    </div>
+                      </td>
 
-                    <p className="text-sm font-bold text-foreground truncate">
-                      {review.full_name}{" "}
-                      <span className="text-xs font-normal text-muted-foreground font-mono">
-                        ({review.admin_employee_id})
-                      </span>
-                    </p>
+                      <td className="px-4 py-3.5 max-w-xs">
+                        <p className="text-xs text-foreground line-clamp-2 leading-relaxed">
+                          {review.reason}
+                        </p>
+                      </td>
 
-                    <p className="text-xs text-muted-foreground line-clamp-1">
-                      {review.reason}
-                    </p>
+                      <td className="px-4 py-3.5">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase border ${
+                            isClosed
+                              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                              : "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                          }`}
+                        >
+                          {review.status}
+                        </span>
+                      </td>
 
-                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      <span>
-                        Opened on{" "}
-                        {new Date(review.created_at).toLocaleDateString(undefined, {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                      </span>
-                    </div>
-                  </div>
+                      <td className="px-4 py-3.5">
+                        {outcomeBadge ? (
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${outcomeBadge.classes}`}
+                          >
+                            {outcomeBadge.label}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-[11px] italic">Pending Ruling</span>
+                        )}
+                      </td>
 
-                  <div className="flex items-center gap-1 text-xs font-bold text-muted-foreground group-hover:text-primary transition-colors shrink-0">
-                    <span>
-                      {isClosed ? "Inspect Ruling (Read-Only)" : "Manage Dossier"}
-                    </span>
-                    <ChevronRight className="h-4 w-4" />
-                  </div>
-                </Link>
-              );
-            })}
+                      <td className="px-4 py-3.5 text-xs font-mono text-muted-foreground">
+                        {new Date(review.created_at).toLocaleDateString()}
+                      </td>
+
+                      <td className="px-4 py-3.5 text-right">
+                        <Link
+                          href={`/admin/misconduct/${review.id}`}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline"
+                        >
+                          <span>{t("admin.misconduct.table.action")}</span>
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

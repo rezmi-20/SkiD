@@ -11,6 +11,21 @@ import { evaluateClientApprovedConsistency } from "@/lib/client-verification-con
 import { getClientVerificationReminderSummary, sendClientVerificationReminder } from "@/lib/client-verification-reminders";
 import ProtectedVerificationDocumentViewer from "@/components/admin/ProtectedVerificationDocumentViewer";
 import VerificationFinReveal from "@/components/admin/VerificationFinReveal";
+import {
+  ArrowLeft,
+  User,
+  ShieldCheck,
+  ShieldAlert,
+  AlertTriangle,
+  Clock,
+  History,
+  Mail,
+  Phone,
+  FileQuestion,
+  Bell,
+  Ban,
+  CheckCircle2,
+} from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -148,115 +163,225 @@ export default async function ClientVerificationReviewPage({
     redirect(`/admin/clients/${id}/verify`);
   }
 
+  // State: Not Started
   if (displayStatus === "not_started") {
     return (
-      <div className="mx-auto max-w-3xl space-y-6 pb-20">
-        <Link href="/admin/clients" className="text-xs font-bold uppercase tracking-widest text-primary">
-          Back to client directory
-        </Link>
+      <div className="space-y-6 pb-24">
+        {/* Flush Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
+          <div className="space-y-1.5">
+            <Link
+              href={`/admin/clients/${id}`}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>Back to Client Profile</span>
+            </Link>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                {client.full_name}
+              </h1>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                Not Verified
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {client.email} · +251 {client.phone || "No phone recorded"}
+            </p>
+          </div>
+        </div>
 
-        <header className="space-y-2 border-b border-outline-variant pb-5">
-          <p className="text-xs font-black uppercase tracking-widest text-primary">Client Verification Status</p>
-          <h1 className="text-3xl font-black text-on-surface">{client.full_name}</h1>
-          <p className="text-sm text-on-surface-variant">{client.email}</p>
-        </header>
+        {/* Informational Surface Card */}
+        <div className="rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#141E30] p-6 space-y-5 shadow-2xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+              <AlertTriangle className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                Verification Not Submitted
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                This client has not yet initiated their Fayda National ID verification submission.
+              </p>
+            </div>
+          </div>
 
-        <section className="space-y-4 rounded-lg border border-outline-variant bg-surface-container-lowest p-5 text-sm">
-          <div className="flex justify-between gap-4">
-            <span className="font-bold text-on-surface-variant">Status</span>
-            <span className="font-black uppercase text-on-surface">Not Verified</span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800">
+              <span className="text-[10px] uppercase font-bold text-slate-400">Escrow Contract Access</span>
+              <p className="font-bold text-rose-600 dark:text-rose-400 mt-1">Blocked until verified</p>
+            </div>
+            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800">
+              <span className="text-[10px] uppercase font-bold text-slate-400">Last Reminder Sent</span>
+              <p className="font-semibold text-slate-800 dark:text-slate-200 mt-1">
+                {reminderSummary.lastReminderAt ? new Date(reminderSummary.lastReminderAt).toLocaleDateString() : "Never"}
+              </p>
+            </div>
+            <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800">
+              <span className="text-[10px] uppercase font-bold text-slate-400">Account Standing</span>
+              <p className={`font-semibold mt-1 ${client.is_suspended ? "text-rose-500" : "text-emerald-500"}`}>
+                {client.is_suspended ? "Suspended" : "Active"}
+              </p>
+            </div>
           </div>
-          <p className="font-semibold text-on-surface-variant">
-            No verification submission has been made. Contracts remain unavailable until Fayda verification is completed.
-          </p>
-          <div className="flex justify-between gap-4">
-            <span className="font-bold text-on-surface-variant">Contract access</span>
-            <span className="font-black text-error">Blocked until verification</span>
-          </div>
-          <div className="flex justify-between gap-4">
-            <span className="font-bold text-on-surface-variant">Last reminder</span>
-            <span className="font-bold text-on-surface">
-              {reminderSummary.lastReminderAt ? new Date(reminderSummary.lastReminderAt).toLocaleDateString() : "Never"}
-            </span>
-          </div>
+
           {invalidApproved && (
-            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 font-bold text-on-surface">
-              Invalid legacy approval detected: {approvedConsistency.missing.join(", ")}. Use the consistency report before repair.
+            <div className="p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 text-xs font-semibold text-amber-700 dark:text-amber-300">
+              Invalid legacy approval detected: {approvedConsistency.missing.join(", ")}.
             </div>
           )}
-        </section>
 
-        {(capabilities.canReview || capabilities.canSuspendAccount || capabilities.canReactivateAccount) && (
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-black/[0.04] dark:border-white/[0.05]">
             {capabilities.canReview && (
               <form action={sendReminder}>
                 <button
                   type="submit"
                   disabled={reminderCoolingDown}
-                  className="h-12 rounded-lg bg-primary px-5 text-xs font-black uppercase tracking-widest text-on-primary disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold disabled:opacity-40 transition"
                 >
-                  {reminderCoolingDown ? "Reminder Sent Recently" : "Send Verification Reminder"}
+                  <Bell className="h-3.5 w-3.5" />
+                  <span>{reminderCoolingDown ? "Reminder Sent Recently" : "Send Fayda Verification Reminder"}</span>
                 </button>
               </form>
             )}
+
             {capabilities.canSuspendAccount && !client.is_suspended && (
               <form action={setClientSuspension}>
                 <input type="hidden" name="suspended" value="true" />
                 <button
                   type="submit"
-                  className="h-12 rounded-lg border border-error/20 bg-error/10 px-5 text-xs font-black uppercase tracking-widest text-error"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 text-rose-600 dark:text-rose-400 text-xs font-semibold transition"
                 >
-                  Suspend Account
+                  <Ban className="h-3.5 w-3.5" />
+                  <span>Suspend Account</span>
                 </button>
               </form>
             )}
+
             {capabilities.canReactivateAccount && client.is_suspended && (
               <form action={setClientSuspension}>
                 <input type="hidden" name="suspended" value="false" />
                 <button
                   type="submit"
-                  className="h-12 rounded-lg border border-primary/20 bg-primary/10 px-5 text-xs font-black uppercase tracking-widest text-primary"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition"
                 >
-                  Unsuspend Account
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span>Unsuspend Account</span>
                 </button>
               </form>
             )}
           </div>
-        )}
+        </div>
       </div>
     );
   }
 
+  // State: Reviewable Client Verification (Split-screen Studio)
   return (
-    <div className="mx-auto max-w-3xl space-y-6 pb-20">
-      <Link href="/admin/verify" className="text-xs font-bold uppercase tracking-widest text-primary">
-        Back to verification panel
-      </Link>
+    <div className="space-y-6 pb-24">
+      {/* 1. Flush, Unboxed Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1 pb-2">
+        <div className="space-y-2">
+          <Link
+            href={`/admin/clients/${id}`}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Back to Client Profile</span>
+          </Link>
 
-      <header className="space-y-2 border-b border-outline-variant pb-5">
-        <p className="text-xs font-black uppercase tracking-widest text-primary">Client Fayda Review</p>
-        <h1 className="text-3xl font-black text-on-surface">{client.full_name}</h1>
-        <p className="text-sm text-on-surface-variant">{client.email}</p>
-      </header>
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 border border-black/[0.08] dark:border-white/[0.1] flex items-center justify-center text-slate-700 dark:text-slate-200 font-bold text-base shadow-2xs">
+              {client.full_name?.charAt(0) || "C"}
+            </div>
 
-      <section className="grid gap-3 rounded-lg border border-outline-variant bg-surface-container-lowest p-5 text-sm">
-        {!capabilities.canReview && (
-          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 font-bold text-on-surface md:col-span-2">
-            Read-only oversight mode. You can inspect this case but cannot make a verification decision.
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                  {client.full_name}
+                </h1>
+                <span
+                  className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${
+                    displayStatus === "approved"
+                      ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                      : displayStatus === "pending"
+                      ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                      : "bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"
+                  }`}
+                >
+                  {displayStatus}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-3">
+                <span className="flex items-center gap-1">
+                  <Mail className="h-3 w-3" />
+                  {client.email}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Phone className="h-3 w-3" />
+                  +251 {client.phone || "No phone"}
+                </span>
+              </p>
+            </div>
           </div>
-        )}
-        {client.is_suspended && (
-          <div className="rounded-lg border border-error/20 bg-error-container p-3 font-bold text-on-error-container md:col-span-2">
-            This client account is suspended.
-          </div>
-        )}
-        <div className="flex justify-between gap-4">
-          <span className="font-bold text-on-surface-variant">Status</span>
-          <span className="font-black uppercase text-on-surface">{displayStatus}</span>
         </div>
-        <div className="flex justify-between gap-4">
-          <span className="font-bold text-on-surface-variant">Masked FIN</span>
-          <div className="max-w-sm text-right">
+
+        <div className="flex items-center gap-2">
+          <div className="px-3 py-1.5 rounded-lg bg-white dark:bg-[#141E30] border border-black/[0.06] dark:border-white/[0.08] shadow-2xs text-xs">
+            <span className="text-slate-400 font-medium">Attempt: </span>
+            <span className="font-bold text-slate-800 dark:text-slate-200">
+              #{attempt ? Number(attempt.attempt_number || attempt.attemptNumber || 1) : 1}
+            </span>
+          </div>
+          {!capabilities.canReview && (
+            <div className="px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-semibold">
+              Read-Only Mode
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 2. Main 2-Column Split Workspace */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column (8 cols): Document Inspection Studio */}
+        <div className="lg:col-span-7 xl:col-span-8 space-y-4">
+          {client.fayda_doc_url ? (
+            <ProtectedVerificationDocumentViewer
+              documentUrl={`/api/clients/${client.user_id}/verification-document`}
+              title="Client Fayda ID Document"
+              attemptId={attempt?.id ? String(attempt.id) : null}
+              canReveal={canRevealDocument}
+              revealUsed={Boolean(
+                (history || []).some(
+                  (event: any) =>
+                    event.action === "viewed_document" && event.reason === "one-time Fayda document reveal",
+                ),
+              )}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center min-h-[460px] p-8 rounded-xl border border-dashed border-slate-300 dark:border-slate-800 bg-white dark:bg-[#141E30] text-center">
+              <div className="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mb-3">
+                <FileQuestion className="h-8 w-8" />
+              </div>
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                No Fayda Document Uploaded
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm">
+                This client has not uploaded a digital scan of their Fayda ID.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Right Column (4 cols): Decision & Credentials Console (Sticky) */}
+        <div className="lg:col-span-5 xl:col-span-4 space-y-4 lg:sticky lg:top-4">
+          {/* Fayda FIN Card */}
+          <div className="rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#141E30] p-4 space-y-3 shadow-2xs">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Identity Verification
+            </h3>
+
             <VerificationFinReveal
               accountType="client"
               accountUserId={client.user_id}
@@ -264,213 +389,164 @@ export default async function ClientVerificationReviewPage({
               maskedFin={maskFinLast4(client.fin_last4)}
               canReveal={canRevealFin}
             />
-          </div>
-        </div>
-        <div className="flex justify-between gap-4">
-          <span className="font-bold text-on-surface-variant">Phone</span>
-          <span className="font-bold text-on-surface">{client.phone || "Not recorded"}</span>
-        </div>
-        <div className="flex justify-between gap-4">
-          <span className="font-bold text-on-surface-variant">Reviewer</span>
-          <span className="font-bold text-on-surface">{client.reviewer_email || "Not recorded"}</span>
-        </div>
-        <div className="flex justify-between gap-4">
-          <span className="font-bold text-on-surface-variant">Decision Time</span>
-          <span className="font-bold text-on-surface">
-            {client.verified_at ? new Date(client.verified_at).toLocaleString() : "Not recorded"}
-          </span>
-        </div>
-        <div className="flex justify-between gap-4">
-          <span className="font-bold text-on-surface-variant">Current Attempt</span>
-          <span className="font-bold text-on-surface">
-            {attempt ? `Attempt ${Number(attempt.attempt_number || attempt.attemptNumber || 1)}` : "Attempt pending"}
-          </span>
-        </div>
-        <div className="flex justify-between gap-4">
-          <span className="font-bold text-on-surface-variant">Submitted</span>
-          <span className="font-bold text-on-surface">
-            {attempt?.submitted_at || attempt?.submittedAt ? new Date(attempt.submitted_at || attempt.submittedAt).toLocaleString() : "Not recorded"}
-          </span>
-        </div>
-        {client.verification_reason && (
-          <div className="rounded-lg border border-error/20 bg-error-container p-3 text-on-error-container">
-            {client.verification_reason}
-          </div>
-        )}
-      </section>
 
-      {client.fayda_doc_url ? (
-        <section className="overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest">
-          <div className="border-b border-outline-variant px-4 py-3 text-xs font-black uppercase tracking-widest text-on-surface-variant">
-            Secure identity-document viewer
-          </div>
-          <ProtectedVerificationDocumentViewer
-            documentUrl={`/api/clients/${client.user_id}/verification-document`}
-            title="Protected client Fayda document"
-            attemptId={attempt?.id ? String(attempt.id) : null}
-            canReveal={canRevealDocument}
-            revealUsed={Boolean((history || []).some((event: any) => event.action === "viewed_document" && event.reason === "one-time Fayda document reveal"))}
-            className="bg-black/50 p-4"
-          />
-        </section>
-      ) : (
-        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm font-bold text-on-surface">
-          No Fayda document is attached.
-        </div>
-      )}
-
-      <section className="space-y-3 rounded-lg border border-outline-variant bg-surface-container-lowest p-5">
-        <h2 className="text-sm font-black uppercase tracking-widest text-on-surface">Timeline and History</h2>
-        {(history || []).length === 0 ? (
-          <p className="text-sm font-semibold text-on-surface-variant">No verification history recorded yet.</p>
-        ) : (
-          <div className="space-y-3">
-            {(history || []).map((event: any) => (
-              <div key={event.id} className="rounded-lg border border-outline-variant bg-surface-container p-3 text-sm">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="font-black uppercase tracking-wider text-on-surface">{String(event.action).replaceAll("_", " ")}</p>
-                  <p className="text-xs font-bold text-on-surface-variant">{new Date(event.created_at).toLocaleString()}</p>
-                </div>
-                <p className="mt-1 text-xs font-bold text-on-surface-variant">
-                  Attempt {event.attempt_number || "-"} · {event.old_status || "new"} → {event.new_status}
-                </p>
-                <p className="mt-1 text-xs text-on-surface-variant">
-                  {event.admin_name || event.admin_employee_id || "System"} {event.admin_role ? `· ${event.admin_role.replaceAll("_", " ")}` : ""}
-                </p>
-                {event.reason && <p className="mt-2 text-sm text-on-surface">{event.reason}</p>}
+            <div className="pt-2 border-t border-black/[0.04] dark:border-white/[0.05] space-y-1.5 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Reviewer</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">
+                  {client.reviewer_email || "Unassigned"}
+                </span>
               </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {capabilities.canReview && displayStatus === "pending" && (
-        <div className="grid gap-4 md:grid-cols-2">
-          {capabilities.canApprove && (
-            <form action={approveClient}>
-              <button
-                type="submit"
-                className="h-12 w-full rounded-lg bg-primary px-4 text-xs font-black uppercase tracking-widest text-on-primary"
-              >
-                Approve
-              </button>
-            </form>
-          )}
-
-          <form action={updateClientStatus} className="space-y-3 md:row-span-2">
-            <textarea
-              name="reason"
-              rows={3}
-              placeholder="Reason required for rejection, suspension, or revocation"
-              className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-3 text-sm"
-            />
-            <div className="grid gap-3">
-              {capabilities.canReject && (
-                <button
-                  type="submit"
-                  name="status"
-                  value="rejected"
-                  className="h-12 w-full rounded-lg bg-error px-4 text-xs font-black uppercase tracking-widest text-on-error"
-                >
-                  Reject
-                </button>
-              )}
-              <button
-                type="submit"
-                name="status"
-                value="suspended"
-                className="h-12 w-full rounded-lg border border-error/20 bg-error/10 px-4 text-xs font-black uppercase tracking-widest text-error"
-              >
-                Suspend Verification
-              </button>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Decision Time</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">
+                  {client.verified_at ? new Date(client.verified_at).toLocaleDateString() : "Pending"}
+                </span>
+              </div>
             </div>
-          </form>
+          </div>
 
-          {capabilities.canRequestResubmission && (
-            <form action={updateClientStatus}>
-              <button
-                type="submit"
-                name="status"
-                value="pending"
-                className="h-12 w-full rounded-lg border border-outline-variant bg-surface-container px-4 text-xs font-black uppercase tracking-widest text-on-surface"
-              >
-                Request Resubmission
-              </button>
-            </form>
-          )}
-        </div>
-      )}
+          {/* Decision Actions Card */}
+          <div className="rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#141E30] p-4 space-y-3 shadow-2xs">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Decision Controls
+            </h3>
 
-      {capabilities.canReview && displayStatus === "approved" && (
-        <form action={updateClientStatus} className="space-y-3 rounded-lg border border-outline-variant bg-surface-container-lowest p-4">
-          <textarea
-            name="reason"
-            rows={3}
-            placeholder="Reason required for revocation"
-            className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-3 text-sm"
-          />
-          <label className="flex items-start gap-2 rounded-lg border border-error/20 bg-error/5 p-3 text-xs font-bold text-on-surface">
-            <input type="checkbox" name="confirmRevocation" className="mt-0.5" />
-            I confirm this approved verification should be revoked.
-          </label>
-          {capabilities.canRevoke && (
-            <button
-              type="submit"
-              name="status"
-              value="revoked"
-              className="h-12 w-full rounded-lg border border-error/20 bg-error/10 px-4 text-xs font-black uppercase tracking-widest text-error"
-            >
-              Revoke Verification
-            </button>
-          )}
-        </form>
-      )}
+            {!capabilities.canReview ? (
+              <div className="rounded-lg border border-amber-500/20 bg-amber-50 dark:bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300 font-medium">
+                Read-only oversight mode. You can inspect this case but cannot make a verification decision.
+              </div>
+            ) : displayStatus === "pending" ? (
+              <div className="space-y-3">
+                {capabilities.canApprove && (
+                  <form action={approveClient}>
+                    <button
+                      type="submit"
+                      className="w-full h-10 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm transition"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span>Approve Client</span>
+                    </button>
+                  </form>
+                )}
 
-      {capabilities.canReview && (displayStatus === "rejected" || displayStatus === "revoked") && (
-        <form action={sendReminder}>
-          <button
-            type="submit"
-            disabled={reminderCoolingDown}
-            className="h-12 rounded-lg bg-primary px-5 text-xs font-black uppercase tracking-widest text-on-primary disabled:opacity-50"
-          >
-            {reminderCoolingDown
-              ? "Reminder Sent Recently"
-              : displayStatus === "revoked"
-                ? "Send Reverification Reminder"
-                : "Send Resubmission Reminder"}
-          </button>
-        </form>
-      )}
+                <form action={updateClientStatus} className="space-y-2">
+                  <textarea
+                    name="reason"
+                    rows={2}
+                    placeholder="Reason required for rejection or resubmission..."
+                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    {capabilities.canReject && (
+                      <button
+                        type="submit"
+                        name="status"
+                        value="rejected"
+                        className="h-9 rounded-lg border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center justify-center gap-1 transition"
+                      >
+                        <Ban className="h-3.5 w-3.5" />
+                        <span>Reject</span>
+                      </button>
+                    )}
 
-      {(capabilities.canSuspendAccount || capabilities.canReactivateAccount) && (
-        <section className="space-y-3 rounded-lg border border-outline-variant bg-surface-container-lowest p-4">
-          <h2 className="text-sm font-black uppercase tracking-widest text-on-surface">Account Controls</h2>
-          <div className="flex flex-wrap gap-3">
-            {capabilities.canSuspendAccount && !client.is_suspended && (
-              <form action={setClientSuspension}>
-                <input type="hidden" name="suspended" value="true" />
-                <button
-                  type="submit"
-                  className="h-12 rounded-lg border border-error/20 bg-error/10 px-5 text-xs font-black uppercase tracking-widest text-error"
-                >
-                  Suspend Account
-                </button>
+                    {capabilities.canRequestResubmission && (
+                      <button
+                        type="submit"
+                        name="status"
+                        value="pending"
+                        className="h-9 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center justify-center gap-1 transition"
+                      >
+                        <Clock className="h-3.5 w-3.5 text-amber-500" />
+                        <span>Resubmit</span>
+                      </button>
+                    )}
+                  </div>
+                </form>
+              </div>
+            ) : displayStatus === "approved" ? (
+              <form action={updateClientStatus} className="space-y-3">
+                <textarea
+                  name="reason"
+                  rows={2}
+                  placeholder="Reason required for revocation..."
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-xs text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none"
+                />
+                <label className="flex items-start gap-2 p-2 rounded-lg bg-rose-50 dark:bg-rose-500/10 text-xs text-rose-700 dark:text-rose-300 cursor-pointer">
+                  <input type="checkbox" name="confirmRevocation" className="mt-0.5 rounded" />
+                  <span>I confirm this approved verification should be revoked.</span>
+                </label>
+                {capabilities.canRevoke && (
+                  <button
+                    type="submit"
+                    name="status"
+                    value="revoked"
+                    className="w-full h-9 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition"
+                  >
+                    <ShieldAlert className="h-3.5 w-3.5" />
+                    <span>Revoke Verification</span>
+                  </button>
+                )}
               </form>
-            )}
-            {capabilities.canReactivateAccount && client.is_suspended && (
-              <form action={setClientSuspension}>
-                <input type="hidden" name="suspended" value="false" />
-                <button
-                  type="submit"
-                  className="h-12 rounded-lg border border-primary/20 bg-primary/10 px-5 text-xs font-black uppercase tracking-widest text-primary"
-                >
-                  Unsuspend Account
-                </button>
-              </form>
+            ) : (
+              <div className="space-y-2">
+                <form action={sendReminder}>
+                  <button
+                    type="submit"
+                    disabled={reminderCoolingDown}
+                    className="w-full h-9 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition"
+                  >
+                    <Bell className="h-3.5 w-3.5" />
+                    <span>Send Resubmission Reminder</span>
+                  </button>
+                </form>
+              </div>
             )}
           </div>
-        </section>
-      )}
+
+          {/* Audit History Timeline */}
+          <div className="rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#141E30] p-4 space-y-3 shadow-2xs">
+            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <History className="h-3.5 w-3.5 text-blue-500" />
+              <span>Audit Timeline ({(history || []).length})</span>
+            </div>
+
+            {(history || []).length > 0 ? (
+              <div className="space-y-3 max-h-56 overflow-y-auto no-scrollbar pt-1">
+                {(history || []).map((event: any) => (
+                  <div
+                    key={event.id}
+                    className="relative pl-4 border-l-2 border-slate-200 dark:border-slate-800 space-y-1 text-xs"
+                  >
+                    <div className="absolute -left-[5px] top-1 w-2 h-2 rounded-full bg-blue-500" />
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-bold text-slate-800 dark:text-slate-200">
+                        {String(event.action).replaceAll("_", " ")}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {new Date(event.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-500">
+                      <span>{event.old_status || "new"} → </span>
+                      <span className="font-bold text-slate-700 dark:text-slate-300">
+                        {event.new_status}
+                      </span>
+                    </div>
+                    {event.reason && (
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 italic bg-slate-50 dark:bg-slate-900/60 p-1.5 rounded">
+                        "{event.reason}"
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-400 italic">No verification history recorded yet.</p>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

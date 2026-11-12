@@ -1,0 +1,3212 @@
+{
+  "site": {
+    "url": "https://dire-skill.vercel.app",
+    "host": "dire-skill.vercel.app",
+    "name": "Dire-skill",
+    "title": "DireSkill | Find Verified Workers in Dire Dawa",
+    "measured": "2026-11-10",
+    "pages": [
+      {
+        "url": "https://dire-skill.vercel.app/",
+        "label": "desktop",
+        "scheme": "light",
+        "ok": true,
+        "status": 200,
+        "title": "DireSkill | Find Verified Workers in Dire Dawa",
+        "elements": 769
+      },
+      {
+        "url": "https://dire-skill.vercel.app/",
+        "label": "phone",
+        "scheme": "light",
+        "ok": true,
+        "status": 200,
+        "title": "DireSkill | Find Verified Workers in Dire Dawa",
+        "elements": 628
+      },
+      {
+        "url": "https://dire-skill.vercel.app/",
+        "label": "dark",
+        "scheme": "dark",
+        "ok": true,
+        "status": 200,
+        "title": "DireSkill | Find Verified Workers in Dire Dawa",
+        "elements": 903
+      }
+    ],
+    "frameworks": [
+      "Next.js",
+      "Tailwind classes"
+    ],
+    "themeColor": "#f8f9fb"
+  },
+  "colors": {
+    "roles": {
+      "background": "#020202",
+      "text": "#ffffffe6",
+      "heading": "#ffffff",
+      "text-muted": "#8c8880",
+      "text-subtle": "#666666",
+      "border": "#e2e0d8",
+      "surface": "#0a0b0d",
+      "surface-inverse": "#faf9f5",
+      "text-inverse": "#666666",
+      "primary": "#00e575",
+      "primary-foreground": "#000000"
+    },
+    "evidence": {
+      "background": "the page background on most pages",
+      "text": "body copy (paragraphs and lists)",
+      "heading": "headings (h1–h6)",
+      "text-muted": "10% of text: secondary copy",
+      "text-subtle": "10% of text: the quietest copy",
+      "border": "the most used border colour (by length)",
+      "surface": "panels and sections a step off the background",
+      "surface-inverse": "the contrasting band (dark sections on a light site, or the reverse)",
+      "text-inverse": "text on the contrasting band",
+      "primary": "the saturated colour on buttons and links",
+      "primary-foreground": "the readable choice on primary"
+    },
+    "chart": [
+      {
+        "hex": "#00e575",
+        "evidence": "the primary"
+      },
+      {
+        "hex": "#ffa1ad",
+        "evidence": "red, 0.3% of colour use"
+      },
+      {
+        "hex": "#007a55",
+        "evidence": "green, 0.3% of colour use"
+      },
+      {
+        "hex": "#ff416c",
+        "evidence": "red, 0.2% of colour use"
+      }
+    ],
+    "primaryCandidates": [
+      {
+        "hex": "#00e575",
+        "onStart": 0.3,
+        "acrossPages": 0.3,
+        "inLinks": 0,
+        "score": 0.322
+      },
+      {
+        "hex": "#5ee9b5",
+        "onStart": 0,
+        "acrossPages": 0,
+        "inLinks": 0,
+        "score": 0.034
+      },
+      {
+        "hex": "#ffa1ad",
+        "onStart": 0,
+        "acrossPages": 0,
+        "inLinks": 0,
+        "score": 0.022
+      },
+      {
+        "hex": "#007a55",
+        "onStart": 0,
+        "acrossPages": 0,
+        "inLinks": 0,
+        "score": 0.021
+      }
+    ],
+    "dark": null,
+    "palette": [
+      {
+        "hex": "#faf9f5",
+        "name": "neutral-50",
+        "oklch": "oklch(98.2% 0.005 95.1)",
+        "share": 0.3982,
+        "usage": {
+          "bg": 0.89,
+          "text": 0.1,
+          "icon": 0.01
+        },
+        "pages": 1,
+        "merged": [
+          "#ffffff",
+          "#ecfdf5"
+        ]
+      },
+      {
+        "hex": "#ffffffe6",
+        "name": "white-a90",
+        "oklch": "oklch(100.0% 0.000 0)",
+        "share": 0.0732,
+        "usage": {
+          "text": 1,
+          "bg": 0
+        },
+        "pages": 1,
+        "wide": "oklab(0.999994 0.0000455678 0.0000200868 / 0.9)"
+      },
+      {
+        "hex": "#1b1b1b",
+        "name": "neutral-950",
+        "oklch": "oklch(22.2% 0.000 0)",
+        "share": 0.049,
+        "usage": {
+          "text": 0.95,
+          "border": 0.02,
+          "icon": 0.01,
+          "bg": 0.01
+        },
+        "pages": 1
+      },
+      {
+        "hex": "#333333",
+        "name": "neutral-900",
+        "oklch": "oklch(32.1% 0.000 0)",
+        "share": 0.0395,
+        "usage": {
+          "text": 1
+        },
+        "pages": 1
+      },
+      {
+        "hex": "#8c8880",
+        "name": "neutral-600",
+        "oklch": "oklch(62.8% 0.013 84.6)",
+        "share": 0.0353,
+        "usage": {
+          "text": 0.77,
+          "icon": 0.23
+        },
+        "pages": 1
+      },
+      {
+        "hex": "#ffffffcc",
+        "name": "white-a80",
+        "oklch": "oklch(100.0% 0.000 0)",
+        "share": 0.0317,
+        "usage": {
+          "text": 0.71,
+          "border": 0.29,
+          "bg": 0,
+          "icon": 0
+        },
+        "pages": 1,
+        "wide": "oklab(0.999994 0.0000455677 0.0000200868 / 0.8)",
+        "merged": [
+          "#faf9f5cc"
+        ]
+      },
+      {
+        "hex": "#666666",
+        "name": "neutral-700",
+        "oklch": "oklch(51.0% 0.000 0)",
+        "share": 0.027,
+        "usage": {
+          "text": 1
+        },
+        "pages": 1
+      },
+      {
+        "hex": "#000000",
+        "name": "black",
+        "oklch": "oklch(0.0% 0.000 0)",
+        "share": 0.023,
+        "usage": {
+          "bg": 0.53,
+          "gradient": 0.26,
+          "icon": 0.12,
+          "text": 0.09
+        },
+        "pages": 1
+      },
+      {
+        "hex": "#00e47599",
+        "name": "green-400-a60",
+        "oklch": "oklch(80.5% 0.213 151.8)",
+        "share": 0.0206,
+        "usage": {
+          "icon": 1
+        },
+        "pages": 1
+      },
+      {
+        "hex": "#0a0b0d",
+        "name": "neutral-950-2",
+        "oklch": "oklch(14.9% 0.005 264.5)",
+        "share": 0.0166,
+        "usage": {
+          "bg": 1
+        },
+        "pages": 1
+      },
+      {
+        "hex": "#fffffff2",
+        "name": "white-a95",
+        "oklch": "oklch(100.0% 0.000 0)",
+        "share": 0.0154,
+        "usage": {
+          "text": 0.91,
+          "border": 0.09
+        },
+        "pages": 1,
+        "wide": "oklab(0.999994 0.0000455678 0.0000200868 / 0.95)"
+      },
+      {
+        "hex": "#f0efeb",
+        "name": "neutral-100",
+        "oklch": "oklch(95.2% 0.005 95.1)",
+        "share": 0.0148,
+        "usage": {
+          "bg": 0.8,
+          "border": 0.2
+        },
+        "pages": 1
+      },
+      {
+        "hex": "#ffffff99",
+        "name": "white-a60",
+        "oklch": "oklch(100.0% 0.000 0)",
+        "share": 0.0144,
+        "usage": {
+          "text": 0.92,
+          "border": 0.08
+        },
+        "pages": 1,
+        "wide": "oklab(0.999994 0.0000455677 0.0000200868 / 0.6)"
+      },
+      {
+        "hex": "#ffffff80",
+        "name": "white-a50",
+        "oklch": "oklch(100.0% 0.000 0)",
+        "share": 0.0136,
+        "usage": {
+          "text": 1
+        },
+        "pages": 1,
+        "wide": "oklab(0.999994 0.0000455678 0.0000200868 / 0.5)"
+      },
+      {
+        "hex": "#00e575",
+        "name": "green-400",
+        "oklch": "oklch(80.7% 0.214 151.7)",
+        "share": 0.0131,
+        "usage": {
+          "icon": 0.55,
+          "text": 0.39,
+          "border": 0.03,
+          "bg": 0.02,
+          "shadow": 0.01
+        },
+        "pages": 1
+      },
+      {
+        "hex": "#ffffff66",
+        "name": "white-a40",
+        "oklch": "oklch(100.0% 0.000 0)",
+        "share": 0.0124,
+        "usage": {
+          "text": 0.91,
+          "border": 0.09
+        },
+        "pages": 1,
+        "wide": "oklab(0.999994 0.0000455678 0.0000200868 / 0.4)"
+      },
+      {
+        "hex": "#e2e0d8",
+        "name": "neutral-200",
+        "oklch": "oklch(90.6% 0.011 95.2)",
+        "share": 0.0273,
+        "usage": {
+          "border": 1
+        },
+        "pages": 1,
+        "merged": [
+          "#e4e2da",
+          "#e8e6df"
+        ]
+      },
+      {
+        "hex": "#00be7d33",
+        "name": "green-500-a20",
+        "oklch": "oklch(70.7% 0.160 159.9)",
+        "share": 0.0114,
+        "usage": {
+          "border": 1
+        },
+        "pages": 1
+      },
+      {
+        "hex": "#00000099",
+        "name": "black-a60",
+        "oklch": "oklch(0.0% 0.000 0)",
+        "share": 0.0101,
+        "usage": {
+          "gradient": 0.77,
+          "bg": 0.23
+        },
+        "pages": 1,
+        "wide": "oklab(0 0 0 / 0.6)"
+      },
+      {
+        "hex": "#ffffffb2",
+        "name": "white-a70",
+        "oklch": "oklch(100.0% 0.000 0)",
+        "share": 0.0094,
+        "usage": {
+          "text": 0.85,
+          "icon": 0.15
+        },
+        "pages": 1,
+        "wide": "oklab(0.999994 0.0000455677 0.0000200868 / 0.7)"
+      },
+      {
+        "hex": "#ffffff1a",
+        "name": "white-a10",
+        "oklch": "oklch(100.0% 0.000 0)",
+        "share": 0.0085,
+        "usage": {
+          "border": 0.93,
+          "bg": 0.07
+        },
+        "pages": 1,
+        "wide": "oklab(0.999994 0.0000455678 0.0000200868 / 0.1)"
+      },
+      {
+        "hex": "#ffffff33",
+        "name": "white-a20",
+        "oklch": "oklch(100.0% 0.000 0)",
+        "share": 0.008,
+        "usage": {
+          "border": 0.98,
+          "bg": 0.02
+        },
+        "pages": 1,
+        "wide": "oklab(0.999994 0.0000455678 0.0000200868 / 0.2)"
+      },
+      {
+        "hex": "#0000001a",
+        "name": "black-a10",
+        "oklch": "oklch(0.0% 0.000 0)",
+        "share": 0.0079,
+        "usage": {
+          "border": 0.82,
+          "gradient": 0.17,
+          "shadow": 0.01
+        },
+        "pages": 1,
+        "wide": "oklab(0 0 0 / 0.1)"
+      },
+      {
+        "hex": "#00000033",
+        "name": "black-a20",
+        "oklch": "oklch(0.0% 0.000 0)",
+        "share": 0.0078,
+        "usage": {
+          "gradient": 1
+        },
+        "pages": 1,
+        "wide": "oklab(0 0 0 / 0.2)"
+      },
+      {
+        "hex": "#111111",
+        "name": "neutral-950-3",
+        "oklch": "oklch(17.8% 0.000 0)",
+        "share": 0.0068,
+        "usage": {
+          "bg": 1
+        },
+        "pages": 1
+      },
+      {
+        "hex": "#00000040",
+        "name": "black-a25",
+        "oklch": "oklch(0.0% 0.000 0)",
+        "share": 0.0067,
+        "usage": {
+          "shadow": 0.88,
+          "gradient": 0.12
+        },
+        "pages": 1,
+        "wide": "oklab(0 0 0 / 0.25)"
+      },
+      {
+        "hex": "#d9d7cf66",
+        "name": "neutral-300-a40",
+        "oklch": "oklch(87.8% 0.011 95.2)",
+        "share": 0.0056,
+        "usage": {
+          "border": 1
+        },
+        "pages": 1
+      },
+      {
+        "hex": "#00000080",
+        "name": "black-a50",
+        "oklch": "oklch(0.0% 0.000 0)",
+        "share": 0.0054,
+        "usage": {
+          "shadow": 0.64,
+          "gradient": 0.36
+        },
+        "pages": 1,
+        "wide": "oklab(0 0 0 / 0.5)"
+      },
+      {
+        "hex": "#ffffff0d",
+        "name": "white-a5",
+        "oklch": "oklch(100.0% 0.000 0)",
+        "share": 0.005,
+        "usage": {
+          "border": 1
+        },
+        "pages": 1
+      },
+      {
+        "hex": "#5ee9b5",
+        "name": "teal-300",
+        "oklch": "oklch(84.4% 0.143 165.2)",
+        "share": 0.0044,
+        "usage": {
+          "text": 0.72,
+          "icon": 0.28
+        },
+        "pages": 1,
+        "wide": "lab(83.9203 -48.7124 13.8849)"
+      },
+      {
+        "hex": "#000000e6",
+        "name": "black-a90",
+        "oklch": "oklch(0.0% 0.000 0)",
+        "share": 0.004,
+        "usage": {
+          "gradient": 1
+        },
+        "pages": 1,
+        "wide": "oklab(0 0 0 / 0.9)"
+      },
+      {
+        "hex": "#00000066",
+        "name": "black-a40",
+        "oklch": "oklch(0.0% 0.000 0)",
+        "share": 0.0036,
+        "usage": {
+          "gradient": 0.81,
+          "shadow": 0.19
+        },
+        "pages": 1,
+        "wide": "oklab(0 0 0 / 0.4)"
+      },
+      {
+        "hex": "#050807",
+        "name": "neutral-950-4",
+        "oklch": "oklch(12.9% 0.007 174.7)",
+        "share": 0.0036,
+        "usage": {
+          "shadow": 1
+        },
+        "pages": 1
+      },
+      {
+        "hex": "#0c1410cc",
+        "name": "neutral-950-a80",
+        "oklch": "oklch(18.1% 0.015 162.8)",
+        "share": 0.0035,
+        "usage": {
+          "gradient": 1
+        },
+        "pages": 1,
+        "wide": "lab(5.55256 -3.58823 1.21086 / 0.8)"
+      },
+      {
+        "hex": "#070b09e6",
+        "name": "black-a90-2",
+        "oklch": "oklch(14.4% 0.008 165.0)",
+        "share": 0.0035,
+        "usage": {
+          "gradient": 1
+        },
+        "pages": 1,
+        "wide": "lab(2.74366 -1.30288 0.379351 / 0.9)"
+      },
+      {
+        "hex": "#00000026",
+        "name": "black-a15",
+        "oklch": "oklch(0.0% 0.000 0)",
+        "share": 0.0034,
+        "usage": {
+          "shadow": 1
+        },
+        "pages": 1
+      },
+      {
+        "hex": "#00000073",
+        "name": "black-a45",
+        "oklch": "oklch(0.0% 0.000 0)",
+        "share": 0.0033,
+        "usage": {
+          "gradient": 1
+        },
+        "pages": 1,
+        "wide": "oklab(0 0 0 / 0.45)"
+      },
+      {
+        "hex": "#0d1a174d",
+        "name": "neutral-950-a30",
+        "oklch": "oklch(20.4% 0.019 178.1)",
+        "share": 0.0031,
+        "usage": {
+          "bg": 1
+        },
+        "pages": 1,
+        "wide": "lab(8.74447 -7.91208 2.02878 / 0.3)"
+      },
+      {
+        "hex": "#0000004d",
+        "name": "black-a30",
+        "oklch": "oklch(0.0% 0.000 0)",
+        "share": 0.0031,
+        "usage": {
+          "shadow": 0.79,
+          "gradient": 0.21
+        },
+        "pages": 1,
+        "wide": "oklab(0 0 0 / 0.3)"
+      },
+      {
+        "hex": "#000000bf",
+        "name": "black-a75",
+        "oklch": "oklch(0.0% 0.000 0)",
+        "share": 0.003,
+        "usage": {
+          "gradient": 1
+        },
+        "pages": 1,
+        "wide": "oklab(0 0 0 / 0.75)"
+      },
+      {
+        "hex": "#ffa1ad",
+        "name": "red-400",
+        "oklch": "oklch(80.6% 0.112 11.6)",
+        "share": 0.0029,
+        "usage": {
+          "text": 0.79,
+          "icon": 0.21
+        },
+        "pages": 1,
+        "wide": "lab(76.6339 38.3549 9.68835)"
+      },
+      {
+        "hex": "#00bc8026",
+        "name": "green-500-a15",
+        "oklch": "oklch(70.3% 0.155 161.6)",
+        "share": 0.0028,
+        "usage": {
+          "border": 1
+        },
+        "pages": 1
+      },
+      {
+        "hex": "#007a55",
+        "name": "green-700",
+        "oklch": "oklch(51.3% 0.110 163.6)",
+        "share": 0.0027,
+        "usage": {
+          "text": 1
+        },
+        "pages": 1,
+        "wide": "lab(44.4871 -41.0396 11.0361)"
+      },
+      {
+        "hex": "#000000cc",
+        "name": "black-a80",
+        "oklch": "oklch(0.0% 0.000 0)",
+        "share": 0.0023,
+        "usage": {
+          "gradient": 1
+        },
+        "pages": 1,
+        "wide": "oklab(0 0 0 / 0.8)"
+      },
+      {
+        "hex": "#ff416c",
+        "name": "red-500",
+        "oklch": "oklch(66.8% 0.224 13.1)",
+        "share": 0.0022,
+        "usage": {
+          "text": 1,
+          "bg": 0
+        },
+        "pages": 1
+      },
+      {
+        "hex": "#d4d4d8",
+        "name": "neutral-300",
+        "oklch": "oklch(87.1% 0.005 286.3)",
+        "share": 0.0036,
+        "usage": {
+          "text": 0.59,
+          "border": 0.41
+        },
+        "pages": 1,
+        "wide": "lab(84.9837 0.601262 -2.17986)",
+        "merged": [
+          "#d9d7d0"
+        ]
+      },
+      {
+        "hex": "#a4f4cfcc",
+        "name": "green-200-a80",
+        "oklch": "oklch(90.5% 0.094 163.9)",
+        "share": 0.0019,
+        "usage": {
+          "text": 1
+        },
+        "pages": 1,
+        "wide": "oklab(0.904997 -0.0894656 0.0254185 / 0.8)"
+      },
+      {
+        "hex": "#ffffff26",
+        "name": "white-a15",
+        "oklch": "oklch(100.0% 0.000 0)",
+        "share": 0.0019,
+        "usage": {
+          "border": 0.99,
+          "bg": 0.01
+        },
+        "pages": 1,
+        "wide": "oklab(0.999994 0.0000455678 0.0000200868 / 0.15)"
+      }
+    ],
+    "gradients": [
+      {
+        "value": "linear-gradient(to top, oklab(0 0 0 / 0.6) 0%, oklab(0 0 0 / 0.2) 50%, rgba(0, 0, 0, 0) 100%)",
+        "area": 1056524
+      },
+      {
+        "value": "linear-gradient(to top, rgb(0, 0, 0) 0%, oklab(0 0 0 / 0.75) 50%, oklab(0 0 0 / 0.45) 100%)",
+        "area": 560640
+      },
+      {
+        "value": "linear-gradient(to right bottom, lab(5.55256 -3.58823 1.21086 / 0.8) 0%, lab(2.74366 -1.30288 0.379351 / 0.9) 50%, rgba(0, 0, 0, 0) 100%)",
+        "area": 468698
+      },
+      {
+        "value": "linear-gradient(to top, rgb(0, 0, 0) 0%, oklab(0 0 0 / 0.8) 50%, oklab(0 0 0 / 0.5) 100%)",
+        "area": 401720
+      },
+      {
+        "value": "linear-gradient(to top, oklab(0 0 0 / 0.9) 0%, oklab(0 0 0 / 0.4) 50%, rgba(0, 0, 0, 0) 100%)",
+        "area": 362689
+      },
+      {
+        "value": "linear-gradient(to top, oklab(0 0 0 / 0.9) 0%, oklab(0 0 0 / 0.35) 50%, oklab(0 0 0 / 0.1) 100%)",
+        "area": 230528
+      }
+    ],
+    "pairs": [
+      {
+        "fg": "#333333",
+        "bg": "#ffffff",
+        "chars": 722,
+        "contrast": 12.63
+      },
+      {
+        "fg": "#ffffffe6",
+        "bg": "#111111",
+        "chars": 583,
+        "contrast": 15.41
+      },
+      {
+        "fg": "#666666",
+        "bg": "#faf9f5",
+        "chars": 428,
+        "contrast": 5.45
+      },
+      {
+        "fg": "#1b1b1b",
+        "bg": "#ffffff",
+        "chars": 386,
+        "contrast": 17.22
+      },
+      {
+        "fg": "#1b1b1b",
+        "bg": "#faf9f5",
+        "chars": 382,
+        "contrast": 16.35
+      },
+      {
+        "fg": "#ffffffcc",
+        "bg": "#faf9f5",
+        "chars": 349,
+        "contrast": 1.04
+      },
+      {
+        "fg": "#ffffff",
+        "bg": "#faf9f5",
+        "chars": 315,
+        "contrast": 1.05
+      },
+      {
+        "fg": "#8c8880",
+        "bg": "#faf9f5",
+        "chars": 276,
+        "contrast": 3.35
+      },
+      {
+        "fg": "#fffffff2",
+        "bg": "#faf9f5",
+        "chars": 275,
+        "contrast": 1.05
+      },
+      {
+        "fg": "#ffffffe6",
+        "bg": "#0a0b0d",
+        "chars": 256,
+        "contrast": 15.92
+      },
+      {
+        "fg": "#ffffff66",
+        "bg": "#000000",
+        "chars": 193,
+        "contrast": 3.66
+      },
+      {
+        "fg": "#8c8880",
+        "bg": "#ffffff",
+        "chars": 180,
+        "contrast": 3.53
+      }
+    ]
+  },
+  "typography": {
+    "families": [
+      {
+        "family": "Plus Jakarta Sans",
+        "use": "body and headings",
+        "share": 0.844,
+        "stack": "\"Plus Jakarta Sans\", \"Noto Sans Ethiopic\", sans-serif",
+        "weights": [
+          "400",
+          "500",
+          "600",
+          "700",
+          "800",
+          "900"
+        ],
+        "files": [
+          {
+            "weight": "400",
+            "style": "normal",
+            "file": "https://fonts.gstatic.com/s/plusjakartasans/v12/LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko70yyygA.woff2"
+          },
+          {
+            "weight": "400",
+            "style": "normal",
+            "file": "https://fonts.gstatic.com/s/plusjakartasans/v12/LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko50yyygA.woff2"
+          },
+          {
+            "weight": "400",
+            "style": "normal",
+            "file": "https://fonts.gstatic.com/s/plusjakartasans/v12/LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko40yyygA.woff2"
+          },
+          {
+            "weight": "400",
+            "style": "normal",
+            "file": "https://fonts.gstatic.com/s/plusjakartasans/v12/LDIoaomQNQcsA88c7O9yZ4KMCoOg4Ko20yw.woff2"
+          }
+        ],
+        "source": "Google Fonts",
+        "free": true
+      },
+      {
+        "family": "IBM Plex Mono",
+        "use": "code",
+        "share": 0.15,
+        "stack": "\"IBM Plex Mono\", monospace",
+        "weights": [
+          "400",
+          "500",
+          "600",
+          "700",
+          "800",
+          "900"
+        ],
+        "files": [],
+        "source": "Not loaded: falls back to the next font in the stack",
+        "free": null
+      }
+    ],
+    "roles": [
+      {
+        "role": "display",
+        "size": 104,
+        "lh": 1,
+        "ls": -0.025,
+        "weight": "700",
+        "family": "Plus Jakarta Sans",
+        "transform": null,
+        "share": 0.005,
+        "tags": [
+          "h2"
+        ],
+        "sample": "Why Thousands Trust DireSkill",
+        "phone": 30
+      },
+      {
+        "role": "h1",
+        "size": 82,
+        "lh": 1.05,
+        "ls": -0.04,
+        "weight": "700",
+        "family": "Plus Jakarta Sans",
+        "transform": null,
+        "share": 0.007,
+        "tags": [
+          "h1"
+        ],
+        "sample": "Find Verified Skilled Workers in Dire Dawa",
+        "phone": 44
+      },
+      {
+        "role": "h2",
+        "size": 48,
+        "lh": 1.15,
+        "ls": -0.025,
+        "weight": "400",
+        "family": "Plus Jakarta Sans",
+        "transform": null,
+        "share": 0.035,
+        "tags": [
+          "h2",
+          "h3"
+        ],
+        "sample": "“DireSkill was built with the desire to liberate",
+        "phone": 30
+      },
+      {
+        "role": "h3",
+        "size": 30,
+        "lh": 1.2,
+        "ls": -0.025,
+        "weight": "600",
+        "family": "Plus Jakarta Sans",
+        "transform": null,
+        "share": 0.026,
+        "tags": [
+          "span",
+          "h3"
+        ],
+        "sample": "ZERO ANONYMOUS REVIEWS",
+        "phone": 24
+      },
+      {
+        "role": "h4",
+        "size": 24,
+        "lh": 1.25,
+        "ls": 0,
+        "weight": "700",
+        "family": "Plus Jakarta Sans",
+        "transform": null,
+        "share": 0.017,
+        "tags": [
+          "h3",
+          "button"
+        ],
+        "sample": "Find Verified Worker",
+        "phone": 20
+      },
+      {
+        "role": "h5",
+        "size": 20,
+        "lh": 1.625,
+        "ls": 0,
+        "weight": "400",
+        "family": "Plus Jakarta Sans",
+        "transform": null,
+        "share": 0.022,
+        "tags": [
+          "p",
+          "h3",
+          "button"
+        ],
+        "sample": "Get Fayda-verified professionals with digital co",
+        "phone": 16
+      },
+      {
+        "role": "body-lg",
+        "size": 18,
+        "lh": 1.625,
+        "ls": 0,
+        "weight": "400",
+        "family": "Plus Jakarta Sans",
+        "transform": null,
+        "share": 0.154,
+        "tags": [
+          "p",
+          "button",
+          "h4",
+          "span"
+        ],
+        "sample": "By combining Fayda ID verification, binding digi",
+        "phone": 14
+      },
+      {
+        "role": "body",
+        "size": 15,
+        "lh": 1.625,
+        "ls": 0,
+        "weight": "400",
+        "family": "Plus Jakarta Sans",
+        "transform": null,
+        "share": 0.174,
+        "tags": [
+          "p",
+          "button",
+          "a",
+          "li"
+        ],
+        "sample": "“DireSkill has completely changed how I manage m"
+      },
+      {
+        "role": "body-sm",
+        "size": 14,
+        "lh": 1.625,
+        "ls": 0,
+        "weight": "400",
+        "family": "Plus Jakarta Sans",
+        "transform": null,
+        "share": 0.132,
+        "tags": [
+          "p",
+          "h4",
+          "span",
+          "div"
+        ],
+        "sample": "Browse skilled artisans across Kezira, Sabian, a"
+      },
+      {
+        "role": "caption",
+        "size": 12,
+        "lh": 1.625,
+        "ls": 0,
+        "weight": "400",
+        "family": "Plus Jakarta Sans",
+        "transform": null,
+        "share": 0.234,
+        "tags": [
+          "p",
+          "button",
+          "span",
+          "div"
+        ],
+        "sample": "Every worker's identity confirmed by Ethiopia's "
+      },
+      {
+        "role": "code",
+        "size": 9,
+        "lh": 1.5,
+        "ls": 0,
+        "weight": "400",
+        "family": "IBM Plex Mono",
+        "transform": null,
+        "share": 0.049,
+        "tags": [
+          "span"
+        ],
+        "sample": "From ETB 4,500"
+      }
+    ],
+    "sizes": [
+      {
+        "size": 104,
+        "share": 0.005,
+        "tags": [
+          "h2"
+        ]
+      },
+      {
+        "size": 82,
+        "share": 0.007,
+        "tags": [
+          "h1"
+        ]
+      },
+      {
+        "size": 48,
+        "share": 0.035,
+        "tags": [
+          "h2",
+          "h3"
+        ]
+      },
+      {
+        "size": 46,
+        "share": 0.01,
+        "tags": [
+          "h2"
+        ]
+      },
+      {
+        "size": 30,
+        "share": 0.026,
+        "tags": [
+          "span",
+          "h3"
+        ]
+      },
+      {
+        "size": 24,
+        "share": 0.017,
+        "tags": [
+          "h3",
+          "button"
+        ]
+      },
+      {
+        "size": 20,
+        "share": 0.022,
+        "tags": [
+          "p",
+          "h3",
+          "button"
+        ]
+      },
+      {
+        "size": 18,
+        "share": 0.154,
+        "tags": [
+          "p",
+          "button",
+          "h4"
+        ]
+      },
+      {
+        "size": 16,
+        "share": 0.042,
+        "tags": [
+          "span"
+        ]
+      },
+      {
+        "size": 15,
+        "share": 0.174,
+        "tags": [
+          "p",
+          "button",
+          "li"
+        ]
+      },
+      {
+        "size": 14,
+        "share": 0.132,
+        "tags": [
+          "p",
+          "h4",
+          "span"
+        ]
+      },
+      {
+        "size": 12,
+        "share": 0.234,
+        "tags": [
+          "p",
+          "span",
+          "button"
+        ]
+      },
+      {
+        "size": 11,
+        "share": 0.056,
+        "tags": [
+          "span",
+          "p",
+          "a"
+        ]
+      },
+      {
+        "size": 10,
+        "share": 0.038,
+        "tags": [
+          "span",
+          "button",
+          "h4"
+        ]
+      },
+      {
+        "size": 9,
+        "share": 0.049,
+        "tags": [
+          "span"
+        ]
+      }
+    ],
+    "weights": [
+      {
+        "weight": "400",
+        "share": 0.646
+      },
+      {
+        "weight": "700",
+        "share": 0.223
+      },
+      {
+        "weight": "500",
+        "share": 0.064
+      },
+      {
+        "weight": "600",
+        "share": 0.045
+      },
+      {
+        "weight": "900",
+        "share": 0.012
+      },
+      {
+        "weight": "800",
+        "share": 0.01
+      }
+    ],
+    "ratio": 1.2,
+    "smoothing": "antialiased",
+    "matches": null
+  },
+  "spacing": {
+    "base": 4,
+    "fit": 0.817,
+    "loose": false,
+    "candidates": [
+      {
+        "unit": 8,
+        "fit": 0.379
+      },
+      {
+        "unit": 4,
+        "fit": 0.817
+      },
+      {
+        "unit": 6,
+        "fit": 0.322
+      },
+      {
+        "unit": 5,
+        "fit": 0.276
+      },
+      {
+        "unit": 10,
+        "fit": 0.276
+      }
+    ],
+    "scale": [
+      {
+        "px": 2,
+        "share": 0.049,
+        "onGrid": false
+      },
+      {
+        "px": 4,
+        "share": 0.098,
+        "onGrid": true
+      },
+      {
+        "px": 6,
+        "share": 0.05,
+        "onGrid": false
+      },
+      {
+        "px": 8,
+        "share": 0.092,
+        "onGrid": true
+      },
+      {
+        "px": 10,
+        "share": 0.109,
+        "onGrid": false
+      },
+      {
+        "px": 12,
+        "share": 0.13,
+        "onGrid": true
+      },
+      {
+        "px": 14,
+        "share": 0.013,
+        "onGrid": false
+      },
+      {
+        "px": 16,
+        "share": 0.084,
+        "onGrid": true
+      },
+      {
+        "px": 20,
+        "share": 0.119,
+        "onGrid": true
+      },
+      {
+        "px": 24,
+        "share": 0.095,
+        "onGrid": true
+      },
+      {
+        "px": 28,
+        "share": 0.052,
+        "onGrid": true
+      },
+      {
+        "px": 32,
+        "share": 0.013,
+        "onGrid": true
+      },
+      {
+        "px": 36,
+        "share": 0.011,
+        "onGrid": true
+      },
+      {
+        "px": 40,
+        "share": 0.024,
+        "onGrid": true
+      },
+      {
+        "px": 48,
+        "share": 0.012,
+        "onGrid": true
+      },
+      {
+        "px": 64,
+        "share": 0.011,
+        "onGrid": true
+      },
+      {
+        "px": 112,
+        "share": 0.011,
+        "onGrid": true
+      }
+    ],
+    "section": [
+      {
+        "px": 112,
+        "count": 8
+      },
+      {
+        "px": 128,
+        "count": 5
+      },
+      {
+        "px": 96,
+        "count": 2
+      },
+      {
+        "px": 160,
+        "count": 2
+      },
+      {
+        "px": 180,
+        "count": 2
+      }
+    ],
+    "sectionPhone": [
+      {
+        "px": 56,
+        "count": 6
+      },
+      {
+        "px": 96,
+        "count": 5
+      },
+      {
+        "px": 48,
+        "count": 3
+      },
+      {
+        "px": 80,
+        "count": 2
+      }
+    ],
+    "phonePadding": [
+      {
+        "px": 20,
+        "count": 92
+      },
+      {
+        "px": 16,
+        "count": 61
+      },
+      {
+        "px": 8,
+        "count": 58
+      },
+      {
+        "px": 12,
+        "count": 44
+      },
+      {
+        "px": 2,
+        "count": 42
+      },
+      {
+        "px": 4,
+        "count": 35
+      },
+      {
+        "px": 10,
+        "count": 32
+      },
+      {
+        "px": 14,
+        "count": 28
+      }
+    ]
+  },
+  "radii": [
+    {
+      "name": "2xl",
+      "value": 22,
+      "share": 0.16
+    },
+    {
+      "name": "3xl",
+      "value": 28,
+      "share": 0.047
+    },
+    {
+      "name": "3xl",
+      "value": 32,
+      "share": 0.047
+    },
+    {
+      "name": "3xl",
+      "value": 37.4,
+      "share": 0.03
+    },
+    {
+      "name": "3xl",
+      "value": 44.8,
+      "share": 0.178
+    },
+    {
+      "name": "full",
+      "value": 9999,
+      "share": 0.503
+    }
+  ],
+  "shadows": {
+    "drop": [
+      {
+        "name": "xs",
+        "value": "rgba(0, 0, 0, 0.15) 0px 1px 3px 0px",
+        "share": 0.282,
+        "elevation": 4,
+        "kind": "drop",
+        "layers": 1
+      },
+      {
+        "name": "sm",
+        "value": "rgba(0, 0, 0, 0.4) 0px 1px 3px 0px",
+        "share": 0.055,
+        "elevation": 4,
+        "kind": "drop",
+        "layers": 1
+      },
+      {
+        "name": "md",
+        "value": "rgba(0, 0, 0, 0.25) 0px 1px 3px 0px, rgba(0, 0, 0, 0.25) 0px 1px 2px -1px",
+        "share": 0.055,
+        "elevation": 4,
+        "kind": "drop",
+        "layers": 2
+      },
+      {
+        "name": "lg",
+        "value": "rgba(0, 0, 0, 0.25) 0px 1px 3px 0px, rgba(0, 0, 0, 0.25) 0px 2px 4px -1px",
+        "share": 0.191,
+        "elevation": 6,
+        "kind": "drop",
+        "layers": 2
+      },
+      {
+        "name": "xl",
+        "value": "rgba(0, 0, 0, 0.3) 0px 1px 3px 0px, rgba(0, 0, 0, 0.3) 0px 4px 6px -1px",
+        "share": 0.073,
+        "elevation": 10,
+        "kind": "drop",
+        "layers": 2
+      },
+      {
+        "name": "2xl",
+        "value": "rgb(5, 8, 7) 0px 4px 0px 0px, rgba(0, 0, 0, 0.5) 0px 8px 16px 0px",
+        "share": 0.264,
+        "elevation": 24,
+        "kind": "drop",
+        "layers": 2
+      }
+    ],
+    "ring": [],
+    "inset": []
+  },
+  "borders": {
+    "widths": [
+      {
+        "px": 1,
+        "count": 468
+      },
+      {
+        "px": 2,
+        "count": 12
+      }
+    ],
+    "styles": [
+      "solid"
+    ]
+  },
+  "motion": {
+    "durations": [
+      {
+        "name": "fast",
+        "ms": 150,
+        "count": 474
+      },
+      {
+        "name": "base",
+        "ms": 300,
+        "count": 71
+      },
+      {
+        "name": "slow",
+        "ms": 700,
+        "count": 92
+      }
+    ],
+    "easings": [
+      {
+        "name": "standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "count": 607
+      },
+      {
+        "name": "alt-1",
+        "value": "cubic-bezier(0, 0, 0.2, 1)",
+        "count": 30
+      },
+      {
+        "name": "alt-2",
+        "value": "cubic-bezier(0.25, 1, 0.5, 1)",
+        "count": 18
+      }
+    ],
+    "properties": [
+      "all",
+      "color",
+      "background-color",
+      "border-color",
+      "outline-color",
+      "text-decoration-color",
+      "fill",
+      "stroke"
+    ],
+    "keyframes": [
+      "swipe-out-left",
+      "swipe-out-right",
+      "swipe-out-up",
+      "swipe-out-down",
+      "sonner-fade-in",
+      "sonner-fade-out",
+      "sonner-spin",
+      "fadeIn",
+      "fadeOut",
+      "slideFromBottom"
+    ],
+    "animations": [
+      {
+        "value": "pulse|2s|cubic-bezier(0.4, 0, 0.6, 1)",
+        "count": 2
+      },
+      {
+        "value": "marquee|28s|linear",
+        "count": 2
+      },
+      {
+        "value": "spin|80s|linear",
+        "count": 1
+      },
+      {
+        "value": "marquee-right|32s|linear",
+        "count": 1
+      }
+    ],
+    "reducedMotion": true
+  },
+  "layout": {
+    "containers": [
+      {
+        "px": 1360,
+        "count": 10
+      },
+      {
+        "px": 672,
+        "count": 5
+      },
+      {
+        "px": 1326,
+        "count": 3
+      },
+      {
+        "px": 1344,
+        "count": 3
+      }
+    ],
+    "maxWidths": [
+      {
+        "px": 1728,
+        "count": 10
+      },
+      {
+        "px": 672,
+        "count": 5
+      },
+      {
+        "px": 768,
+        "count": 2
+      },
+      {
+        "px": 1060,
+        "count": 1
+      },
+      {
+        "px": 1024,
+        "count": 1
+      },
+      {
+        "px": 1492,
+        "count": 1
+      }
+    ],
+    "breakpoints": [],
+    "approach": "mobile-first (min-width queries)",
+    "gridColumns": [
+      {
+        "cols": 4,
+        "count": 3
+      },
+      {
+        "cols": 12,
+        "count": 3
+      },
+      {
+        "cols": 2,
+        "count": 1
+      },
+      {
+        "cols": 3,
+        "count": 1
+      }
+    ],
+    "bands": [
+      {
+        "bg": "#faf9f5",
+        "y": 0,
+        "h": 11292
+      },
+      {
+        "bg": "#0a0b0d",
+        "y": 6798,
+        "h": 1017
+      },
+      {
+        "bg": "#faf9f5",
+        "y": 7839,
+        "h": 1078
+      },
+      {
+        "bg": "#000000",
+        "y": 10625,
+        "h": 667
+      }
+    ],
+    "containerQueries": 0
+  },
+  "components": {
+    "buttons": [
+      {
+        "count": 5,
+        "label": "Electrician",
+        "bg": "#ffffffcc",
+        "fg": "#1b1b1b",
+        "gradient": null,
+        "border": {
+          "width": 1,
+          "style": "solid",
+          "hex": "#d9d7d099",
+          "sides": 4
+        },
+        "radius": "full",
+        "shadow": "rgba(0, 0, 0, 0.15) 0px 1px 3px 0px",
+        "h": 26,
+        "w": 84.8,
+        "padding": [
+          4,
+          13,
+          4,
+          13
+        ],
+        "gap": null,
+        "font": {
+          "family": "Plus Jakarta Sans",
+          "size": 12,
+          "weight": "500",
+          "lh": 1.333,
+          "ls": 0,
+          "transform": null
+        },
+        "backdrop": null,
+        "transition": "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
+        "parentBg": "#faf9f5",
+        "y": 494.69,
+        "variant": "subtle",
+        "hover": {
+          "bg": "#ffffff",
+          "fg": "#1b1b1b",
+          "shadow": null,
+          "transform": null,
+          "border": "1px solid lab(85.9951 -0.213444 3.71798 / 0.6)"
+        },
+        "focus": {
+          "outline": "1px auto oklab(0.854496 -0.157047 0.0582466 / 0.5)",
+          "offset": "0px",
+          "shadow": "rgba(0, 0, 0, 0.15) 0px 1px 3px 0px"
+        }
+      },
+      {
+        "count": 2,
+        "label": "Share",
+        "bg": null,
+        "fg": "#ffffffb2",
+        "gradient": null,
+        "border": {
+          "width": 1,
+          "style": "solid",
+          "hex": "#ffffff1a",
+          "sides": 4
+        },
+        "radius": "full",
+        "shadow": null,
+        "h": 40,
+        "w": 40,
+        "padding": [
+          0,
+          11,
+          0,
+          11
+        ],
+        "gap": 0,
+        "font": {
+          "family": "Plus Jakarta Sans",
+          "size": 16,
+          "weight": "400",
+          "lh": 1.5,
+          "ls": 0,
+          "transform": null
+        },
+        "backdrop": null,
+        "transition": "color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
+        "parentBg": "#000000",
+        "y": 11042.77,
+        "variant": "outline"
+      },
+      {
+        "count": 1,
+        "label": "D",
+        "bg": null,
+        "fg": "#1b1b1b",
+        "gradient": null,
+        "border": {
+          "width": 1,
+          "style": "solid",
+          "hex": "#faf9f5cc",
+          "sides": 4
+        },
+        "radius": "full",
+        "shadow": null,
+        "h": 34,
+        "w": 34,
+        "padding": [
+          0,
+          11.8,
+          0,
+          11.8
+        ],
+        "gap": 0,
+        "font": {
+          "family": "Plus Jakarta Sans",
+          "size": 16,
+          "weight": "400",
+          "lh": 1.5,
+          "ls": 0,
+          "transform": null
+        },
+        "backdrop": null,
+        "transition": "transform, translate, scale, rotate 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
+        "parentBg": "#000000",
+        "y": 36,
+        "variant": "outline",
+        "hover": {
+          "bg": null,
+          "fg": "#1b1b1b",
+          "shadow": null,
+          "transform": null,
+          "border": "1px solid lab(97.9199 -0.17488 2.0476 / 0.8)"
+        },
+        "focus": {
+          "outline": "1px auto oklab(0.854496 -0.157047 0.0582466 / 0.5)",
+          "offset": "0px",
+          "shadow": null
+        }
+      },
+      {
+        "count": 1,
+        "label": "Get Started",
+        "bg": null,
+        "fg": "#faf9f5",
+        "gradient": null,
+        "border": {
+          "width": 1,
+          "style": "solid",
+          "hex": "#f8f8f54d",
+          "sides": 4
+        },
+        "radius": "full",
+        "shadow": null,
+        "h": 32,
+        "w": 118,
+        "padding": [
+          0,
+          17,
+          0,
+          17
+        ],
+        "gap": 0,
+        "font": {
+          "family": "Plus Jakarta Sans",
+          "size": 12,
+          "weight": "600",
+          "lh": 1.333,
+          "ls": 0.05,
+          "transform": "uppercase"
+        },
+        "backdrop": null,
+        "transition": "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        "parentBg": "#000000",
+        "y": 37,
+        "variant": "outline",
+        "hover": {
+          "bg": "#faf9f5",
+          "fg": "#000000",
+          "shadow": null,
+          "transform": null,
+          "border": "1px solid lab(97.9199 -0.17488 2.0476 / 0.3)"
+        },
+        "focus": {
+          "outline": "1px auto oklab(0.854496 -0.157047 0.0582466 / 0.5)",
+          "offset": "0px",
+          "shadow": null
+        }
+      },
+      {
+        "count": 1,
+        "label": "Search",
+        "bg": "#000000",
+        "fg": "#ffffff",
+        "gradient": null,
+        "border": null,
+        "radius": "full",
+        "shadow": null,
+        "h": 36,
+        "w": 101.1,
+        "padding": [
+          10,
+          24,
+          10,
+          24
+        ],
+        "gap": null,
+        "font": {
+          "family": "Plus Jakarta Sans",
+          "size": 12,
+          "weight": "700",
+          "lh": 1.333,
+          "ls": 0.05,
+          "transform": "uppercase"
+        },
+        "backdrop": null,
+        "transition": "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
+        "parentBg": "#ffffff",
+        "y": 433.69,
+        "variant": "dark",
+        "hover": {
+          "bg": "#181818",
+          "fg": "#ffffff",
+          "shadow": null,
+          "transform": null,
+          "border": "0px solid lab(8.7842 0.190727 -0.689891)"
+        },
+        "focus": {
+          "outline": "1px auto oklab(0.854496 -0.157047 0.0582466 / 0.5)",
+          "offset": "0px",
+          "shadow": null
+        }
+      },
+      {
+        "count": 1,
+        "label": "Explore Directory",
+        "bg": "#ffffffe6",
+        "fg": "#1b1b1b",
+        "gradient": null,
+        "border": {
+          "width": 1,
+          "style": "solid",
+          "hex": "#ffffff99",
+          "sides": 4
+        },
+        "radius": "full",
+        "shadow": "rgba(0, 0, 0, 0.3) 0px 1px 3px 0px, rgba(0, 0, 0, 0.3) 0px 4px 6px -1px",
+        "h": 42,
+        "w": 199.1,
+        "padding": [
+          12,
+          21,
+          12,
+          21
+        ],
+        "gap": 8,
+        "font": {
+          "family": "Plus Jakarta Sans",
+          "size": 12,
+          "weight": "700",
+          "lh": 1.333,
+          "ls": 0.05,
+          "transform": "uppercase"
+        },
+        "backdrop": "blur(24px)",
+        "transition": "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
+        "parentBg": "#f0efeb",
+        "y": 1265.69,
+        "variant": "subtle",
+        "hover": {
+          "bg": "#ffffff",
+          "fg": "#1b1b1b",
+          "shadow": null,
+          "transform": null,
+          "border": "1px solid oklab(0.999994 0.0000455677 0.0000200868 / 0.6)"
+        },
+        "focus": {
+          "outline": "1px auto oklab(0.854496 -0.157047 0.0582466 / 0.5)",
+          "offset": "0px",
+          "shadow": "rgba(0, 0, 0, 0.3) 0px 1px 3px 0px, rgba(0, 0, 0, 0.3) 0px 4px 6px -1px"
+        }
+      },
+      {
+        "count": 1,
+        "label": "Join as a Pro",
+        "bg": "#000000",
+        "fg": "#ffffff",
+        "gradient": null,
+        "border": null,
+        "radius": "full",
+        "shadow": "rgba(0, 0, 0, 0.3) 0px 1px 3px 0px, rgba(0, 0, 0, 0.3) 0px 8px 10px -1px",
+        "h": 40,
+        "w": 132.7,
+        "padding": [
+          12,
+          20,
+          12,
+          20
+        ],
+        "gap": null,
+        "font": {
+          "family": "Plus Jakarta Sans",
+          "size": 12,
+          "weight": "700",
+          "lh": 1.333,
+          "ls": 0.05,
+          "transform": "uppercase"
+        },
+        "backdrop": null,
+        "transition": "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
+        "parentBg": "#f0efeb",
+        "y": 1266.69,
+        "variant": "dark"
+      },
+      {
+        "count": 1,
+        "label": "Previous Question",
+        "bg": "#ffffff26",
+        "fg": "#ffffff",
+        "gradient": null,
+        "border": {
+          "width": 1,
+          "style": "solid",
+          "hex": "#ffffff33",
+          "sides": 4
+        },
+        "radius": "full",
+        "shadow": null,
+        "h": 36,
+        "w": 36,
+        "padding": [
+          0,
+          11,
+          0,
+          11
+        ],
+        "gap": 0,
+        "font": {
+          "family": "Plus Jakarta Sans",
+          "size": 16,
+          "weight": "400",
+          "lh": 1.5,
+          "ls": 0,
+          "transform": null
+        },
+        "backdrop": "blur(8px)",
+        "transition": "color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
+        "parentBg": "#faf9f5",
+        "y": 5502.45,
+        "variant": "subtle",
+        "hover": {
+          "bg": null,
+          "fg": "#ffffff",
+          "shadow": null,
+          "transform": null,
+          "border": "1px solid oklab(0.999994 0.0000455678 0.0000200868 / 0.2)"
+        },
+        "focus": {
+          "outline": "1px auto oklab(0.854496 -0.157047 0.0582466 / 0.5)",
+          "offset": "0px",
+          "shadow": null
+        }
+      }
+    ],
+    "inputs": [],
+    "cards": [
+      {
+        "count": 8,
+        "label": "“it my job”Ffrom verified jobsHomeownerE",
+        "bg": "#ffffff",
+        "fg": "#1b1b1b",
+        "gradient": null,
+        "border": {
+          "width": 1,
+          "style": "solid",
+          "hex": "#e4e2da",
+          "sides": 4
+        },
+        "radius": 28,
+        "shadow": "rgba(0, 0, 0, 0.15) 0px 1px 3px 0px",
+        "h": 204.1,
+        "w": 420,
+        "padding": [
+          24,
+          24,
+          24,
+          24
+        ],
+        "gap": 0,
+        "font": {
+          "family": "Plus Jakarta Sans",
+          "size": 16,
+          "weight": "400",
+          "lh": 1.5,
+          "ls": 0,
+          "transform": null
+        },
+        "backdrop": null,
+        "transition": "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        "parentBg": "#faf9f5",
+        "y": 8336.77
+      },
+      {
+        "count": 3,
+        "label": "38JOBS DONE",
+        "bg": "#14161bcc",
+        "fg": "#ffffff",
+        "gradient": null,
+        "border": {
+          "width": 1,
+          "style": "solid",
+          "hex": "#ffffff1a",
+          "sides": 4
+        },
+        "radius": 37.4,
+        "shadow": "rgba(0, 0, 0, 0.25) 0px 1px 3px 0px, rgba(0, 0, 0, 0.25) 0px 2px 4px -1px",
+        "h": 97,
+        "w": 184,
+        "padding": [
+          20,
+          20,
+          20,
+          20
+        ],
+        "gap": null,
+        "font": {
+          "family": "Plus Jakarta Sans",
+          "size": 16,
+          "weight": "400",
+          "lh": 1.5,
+          "ls": 0,
+          "transform": null
+        },
+        "backdrop": "blur(8px)",
+        "transition": null,
+        "parentBg": "#0a0b0d",
+        "y": 7466.52
+      },
+      {
+        "count": 1,
+        "label": "Key TakeawayManual admin verification en",
+        "bg": "#ffffff1a",
+        "fg": "#1b1b1b",
+        "gradient": null,
+        "border": {
+          "width": 1,
+          "style": "solid",
+          "hex": "#ffffff26",
+          "sides": 4
+        },
+        "radius": 37.4,
+        "shadow": null,
+        "h": 93,
+        "w": 582,
+        "padding": [
+          16,
+          16,
+          16,
+          16
+        ],
+        "gap": null,
+        "font": {
+          "family": "Plus Jakarta Sans",
+          "size": 16,
+          "weight": "400",
+          "lh": 1.5,
+          "ls": 0,
+          "transform": null
+        },
+        "backdrop": "blur(12px)",
+        "transition": null,
+        "parentBg": "#faf9f5",
+        "y": 5377.45
+      },
+      {
+        "count": 1,
+        "label": "FAYDA VERIFIEDIdentity confirmed by nati",
+        "bg": "#0e281ce6",
+        "fg": "#ffffff",
+        "gradient": null,
+        "border": {
+          "width": 1,
+          "style": "solid",
+          "hex": "#00e67566",
+          "sides": 4
+        },
+        "radius": 37.4,
+        "shadow": "rgba(0, 0, 0, 0.25) 0px 1px 3px 0px, rgba(0, 0, 0, 0.25) 0px 2px 4px -1px",
+        "h": 80,
+        "w": 576,
+        "padding": [
+          20,
+          20,
+          20,
+          20
+        ],
+        "gap": 14,
+        "font": {
+          "family": "Plus Jakarta Sans",
+          "size": 16,
+          "weight": "400",
+          "lh": 1.5,
+          "ls": 0,
+          "transform": null
+        },
+        "backdrop": "blur(8px)",
+        "transition": null,
+        "parentBg": "#0a0b0d",
+        "y": 7583.52
+      }
+    ],
+    "badges": [
+      {
+        "count": 8,
+        "label": "From ETB 4,500",
+        "bg": "#00000099",
+        "fg": "#ffffffcc",
+        "gradient": null,
+        "border": null,
+        "radius": "full",
+        "shadow": null,
+        "h": 24.1,
+        "w": 78.4,
+        "padding": [
+          0,
+          4,
+          0,
+          4
+        ],
+        "gap": null,
+        "font": {
+          "family": "IBM Plex Mono",
+          "size": 9,
+          "weight": "400",
+          "lh": 1.5,
+          "ls": 0,
+          "transform": null
+        },
+        "backdrop": null,
+        "transition": null,
+        "parentBg": "#faf9f5",
+        "y": 6145.96
+      },
+      {
+        "count": 6,
+        "label": "Verified Job",
+        "bg": "#ecfdf5",
+        "fg": "#007a55",
+        "gradient": null,
+        "border": null,
+        "radius": "full",
+        "shadow": null,
+        "h": 19,
+        "w": 54.5,
+        "padding": [
+          2,
+          8,
+          2,
+          8
+        ],
+        "gap": null,
+        "font": {
+          "family": "IBM Plex Mono",
+          "size": 10,
+          "weight": "400",
+          "lh": 1.5,
+          "ls": 0,
+          "transform": null
+        },
+        "backdrop": null,
+        "transition": null,
+        "parentBg": "#ffffff",
+        "y": 8495.64
+      },
+      {
+        "count": 5,
+        "label": "Next",
+        "bg": "#00000099",
+        "fg": "#ffffffe6",
+        "gradient": null,
+        "border": {
+          "width": 1,
+          "style": "solid",
+          "hex": "#ffffff33",
+          "sides": 4
+        },
+        "radius": "full",
+        "shadow": null,
+        "h": 26,
+        "w": 65,
+        "padding": [
+          4,
+          12,
+          4,
+          12
+        ],
+        "gap": null,
+        "font": {
+          "family": "IBM Plex Mono",
+          "size": 10,
+          "weight": "400",
+          "lh": 1.5,
+          "ls": 0,
+          "transform": null
+        },
+        "backdrop": "blur(12px)",
+        "transition": null,
+        "parentBg": "#0f172b",
+        "y": 1922.94
+      },
+      {
+        "count": 1,
+        "label": "ENአማORO",
+        "bg": "#ffffff1a",
+        "fg": "#1b1b1b",
+        "gradient": null,
+        "border": {
+          "width": 1,
+          "style": "solid",
+          "hex": "#ffffff1a",
+          "sides": 4
+        },
+        "radius": "full",
+        "shadow": null,
+        "h": 25,
+        "w": 106.1,
+        "padding": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "gap": 0,
+        "font": {
+          "family": "Plus Jakarta Sans",
+          "size": 10,
+          "weight": "600",
+          "lh": 1.5,
+          "ls": 0,
+          "transform": null
+        },
+        "backdrop": null,
+        "transition": null,
+        "parentBg": "#000000",
+        "y": 40.5
+      }
+    ],
+    "links": [],
+    "nav": null,
+    "footer": {
+      "bg": "#000000",
+      "fg": "#ffffff",
+      "y": 10625,
+      "h": 667
+    }
+  },
+  "icons": {
+    "count": 72,
+    "logos": 0,
+    "bySize": [
+      {
+        "px": 39,
+        "count": 29,
+        "style": "line",
+        "lineAt24": 1.75
+      },
+      {
+        "px": 16,
+        "count": 11,
+        "style": "line",
+        "lineAt24": 1.75
+      },
+      {
+        "px": 14,
+        "count": 9,
+        "style": "line",
+        "lineAt24": 1.75
+      },
+      {
+        "px": 13,
+        "count": 8,
+        "style": "line",
+        "lineAt24": 1.75
+      }
+    ],
+    "style": "line",
+    "lineAt24": 1.75,
+    "drawnAsFills": 0,
+    "coverage": 0.23,
+    "kind": "outline",
+    "kinds": {
+      "outline": 65,
+      "mixed": 7
+    },
+    "strokeAt24": 2.2,
+    "cap": "round",
+    "join": "round",
+    "sizes": [
+      {
+        "px": 39,
+        "count": 29
+      },
+      {
+        "px": 16,
+        "count": 11
+      },
+      {
+        "px": 14,
+        "count": 9
+      },
+      {
+        "px": 13,
+        "count": 8
+      }
+    ],
+    "viewBoxes": [
+      {
+        "box": 24,
+        "count": 72
+      }
+    ],
+    "currentColor": 1
+  },
+  "effects": {
+    "gradients": [
+      {
+        "value": "linear-gradient(to top, oklab(0 0 0 / 0.6) 0%, oklab(0 0 0 / 0.2) 50%, rgba(0, 0, 0, 0) 100%)",
+        "area": 1056524
+      },
+      {
+        "value": "linear-gradient(to top, rgb(0, 0, 0) 0%, oklab(0 0 0 / 0.75) 50%, oklab(0 0 0 / 0.45) 100%)",
+        "area": 560640
+      },
+      {
+        "value": "linear-gradient(to right bottom, lab(5.55256 -3.58823 1.21086 / 0.8) 0%, lab(2.74366 -1.30288 0.379351 / 0.9) 50%, rgba(0, 0, 0, 0) 100%)",
+        "area": 468698
+      },
+      {
+        "value": "linear-gradient(to top, rgb(0, 0, 0) 0%, oklab(0 0 0 / 0.8) 50%, oklab(0 0 0 / 0.5) 100%)",
+        "area": 401720
+      },
+      {
+        "value": "linear-gradient(to top, oklab(0 0 0 / 0.9) 0%, oklab(0 0 0 / 0.4) 50%, rgba(0, 0, 0, 0) 100%)",
+        "area": 362689
+      },
+      {
+        "value": "linear-gradient(to top, oklab(0 0 0 / 0.9) 0%, oklab(0 0 0 / 0.35) 50%, oklab(0 0 0 / 0.1) 100%)",
+        "area": 230528
+      }
+    ],
+    "filters": [
+      {
+        "value": "filter: drop-shadow(rgba(0, 0, 0, 0.12) 0px 3px 3px)",
+        "count": 39
+      },
+      {
+        "value": "filter: blur(1.1px) drop-shadow(rgba(0, 229, 117, 0.5) 0px 0px 10px)",
+        "count": 29
+      },
+      {
+        "value": "backdrop-filter: blur(12px)",
+        "count": 11
+      },
+      {
+        "value": "backdrop-filter: blur(8px)",
+        "count": 9
+      },
+      {
+        "value": "filter: drop-shadow(rgba(0, 0, 0, 0.15) 0px 1px 2px)",
+        "count": 8
+      },
+      {
+        "value": "backdrop-filter: blur(24px)",
+        "count": 3
+      }
+    ]
+  },
+  "graphics": {
+    "canvases": [],
+    "videos": 0,
+    "images": 27,
+    "svgImages": 0,
+    "largeSvgs": 1
+  },
+  "css": {
+    "sheets": 6,
+    "system": "--color-",
+    "siteTokens": [
+      {
+        "name": "--primary",
+        "hex": "#51f0a8",
+        "value": "lab(85.3327% -55.5481 22.2815)",
+        "uses": 112
+      },
+      {
+        "name": "--color-white",
+        "hex": "#ffffff",
+        "value": "#fff",
+        "uses": 84
+      },
+      {
+        "name": "--color-black",
+        "hex": "#000000",
+        "value": "#000",
+        "uses": 56
+      },
+      {
+        "name": "--color-green-400",
+        "hex": "#05df72",
+        "value": "lab(78.503% -64.9265 39.7492)",
+        "uses": 41
+      },
+      {
+        "name": "--border",
+        "hex": "#19191a",
+        "value": "lab(8.7842% .190727 -.689891)",
+        "uses": 31
+      },
+      {
+        "name": "--color-emerald-500",
+        "hex": "#00bc7d",
+        "value": "lab(66.9756% -58.27 19.5419)",
+        "uses": 30
+      },
+      {
+        "name": "--color-outline-variant",
+        "hex": "#3a3d42",
+        "value": "#3a3d42",
+        "uses": 30
+      },
+      {
+        "name": "--color-surface-container",
+        "hex": "#1e1e1e",
+        "value": "#1e1e1e",
+        "uses": 29
+      },
+      {
+        "name": "--color-amber-500",
+        "hex": "#fe9a00",
+        "value": "lab(72.7183% 31.8672 97.9407)",
+        "uses": 26
+      },
+      {
+        "name": "--foreground",
+        "hex": "#f0f0f0",
+        "value": "lab(94.7916% -.0000298023 0)",
+        "uses": 25
+      },
+      {
+        "name": "--color-on-surface-variant",
+        "hex": "#a0a5b1",
+        "value": "#a0a5b1",
+        "uses": 22
+      },
+      {
+        "name": "--muted-foreground",
+        "hex": "#969696",
+        "value": "lab(62.0796% 0 -.0000119209)",
+        "uses": 22
+      },
+      {
+        "name": "--color-blue-500",
+        "hex": "#2b7fff",
+        "value": "lab(54.1736% 13.3369 -74.6839)",
+        "uses": 21
+      },
+      {
+        "name": "--color-surface-container-low",
+        "hex": "#1a1a1a",
+        "value": "#1a1a1a",
+        "uses": 21
+      },
+      {
+        "name": "--color-red-500",
+        "hex": "#fb2c36",
+        "value": "lab(55.4814% 75.0732 48.8528)",
+        "uses": 20
+      },
+      {
+        "name": "--color-rose-500",
+        "hex": "#ff2056",
+        "value": "lab(56.101% 79.4328 31.4532)",
+        "uses": 20
+      },
+      {
+        "name": "--background",
+        "hex": "#020202",
+        "value": "lab(.462488% 0 0)",
+        "uses": 16
+      },
+      {
+        "name": "--color-error",
+        "hex": "#ffb4ab",
+        "value": "#ffb4ab",
+        "uses": 15
+      },
+      {
+        "name": "--color-surface",
+        "hex": "#121212",
+        "value": "#121212",
+        "uses": 14
+      },
+      {
+        "name": "--color-surface-container-high",
+        "hex": "#252525",
+        "value": "#252525",
+        "uses": 13
+      },
+      {
+        "name": "--color-zinc-900",
+        "hex": "#18181b",
+        "value": "lab(8.30603% .618205 -2.16572)",
+        "uses": 13
+      },
+      {
+        "name": "--color-indigo-500",
+        "hex": "#615fff",
+        "value": "lab(48.295% 38.3129 -81.9673)",
+        "uses": 12
+      },
+      {
+        "name": "--color-surface-container-lowest",
+        "hex": "#0d0d0d",
+        "value": "#0d0d0d",
+        "uses": 12
+      },
+      {
+        "name": "--color-amber-400",
+        "hex": "#ffb900",
+        "value": "lab(80.1641% 16.6016 99.2089)",
+        "uses": 11
+      },
+      {
+        "name": "--color-green-500",
+        "hex": "#00c950",
+        "value": "lab(70.5521% -66.5147 45.8073)",
+        "uses": 11
+      },
+      {
+        "name": "--color-zinc-800",
+        "hex": "#27272a",
+        "value": "lab(15.7305% .613764 -2.16959)",
+        "uses": 11
+      },
+      {
+        "name": "--color-purple-500",
+        "hex": "#ad46ff",
+        "value": "lab(52.0183% 66.11 -78.2316)",
+        "uses": 10
+      },
+      {
+        "name": "--accent",
+        "hex": "#093723",
+        "value": "lab(19.6497% -20.2664 8.01376)",
+        "uses": 9
+      },
+      {
+        "name": "--color-sky-500",
+        "hex": "#00a6f4",
+        "value": "lab(63.3038% -18.433 -51.0407)",
+        "uses": 9
+      },
+      {
+        "name": "--color-surface-container-highest",
+        "hex": "#2e2e2e",
+        "value": "#2e2e2e",
+        "uses": 9
+      },
+      {
+        "name": "--color-emerald-400",
+        "hex": "#00d492",
+        "value": "lab(75.0771% -60.7313 19.4147)",
+        "uses": 8
+      },
+      {
+        "name": "--color-on-surface",
+        "hex": "#f0f2f5",
+        "value": "#f0f2f5",
+        "uses": 8
+      },
+      {
+        "name": "--color-zinc-500",
+        "hex": "#71717b",
+        "value": "lab(47.8878% 1.65477 -5.77283)",
+        "uses": 8
+      },
+      {
+        "name": "--color-amber-300",
+        "hex": "#ffd230",
+        "value": "lab(86.4156% 6.13147 78.3961)",
+        "uses": 7
+      },
+      {
+        "name": "--color-orange-500",
+        "hex": "#ff6900",
+        "value": "lab(64.272% 57.1788 90.3583)",
+        "uses": 7
+      },
+      {
+        "name": "--color-red-400",
+        "hex": "#ff6467",
+        "value": "lab(63.7053% 60.745 31.3109)",
+        "uses": 7
+      },
+      {
+        "name": "--primary-foreground",
+        "hex": "#000000",
+        "value": "lab(0% 0 0)",
+        "uses": 7
+      },
+      {
+        "name": "--color-blue-400",
+        "hex": "#50a2ff",
+        "value": "lab(65.0361% -1.42065 -56.9802)",
+        "uses": 6
+      },
+      {
+        "name": "--color-zinc-200",
+        "hex": "#e4e4e7",
+        "value": "lab(90.6853% .399232 -1.45452)",
+        "uses": 6
+      },
+      {
+        "name": "--color-zinc-700",
+        "hex": "#3f3f46",
+        "value": "lab(26.8019% 1.35387 -4.68303)",
+        "uses": 6
+      },
+      {
+        "name": "--accent-foreground",
+        "hex": "#fefefe",
+        "value": "lab(99.652% 0 0)",
+        "uses": 5
+      },
+      {
+        "name": "--color-amber-700",
+        "hex": "#bb4d00",
+        "value": "lab(47.2709% 42.9082 69.2966)",
+        "uses": 5
+      },
+      {
+        "name": "--color-error-container",
+        "hex": "#93000a",
+        "value": "#93000a",
+        "uses": 5
+      },
+      {
+        "name": "--color-indigo-400",
+        "hex": "#7c86ff",
+        "value": "lab(59.866% 22.4834 -64.4485)",
+        "uses": 5
+      },
+      {
+        "name": "--color-red-950",
+        "hex": "#460809",
+        "value": "lab(13.003% 29.04 16.7519)",
+        "uses": 5
+      },
+      {
+        "name": "--color-rose-300",
+        "hex": "#ffa1ad",
+        "value": "lab(76.6339% 38.3549 9.68835)",
+        "uses": 5
+      },
+      {
+        "name": "--color-rose-400",
+        "hex": "#ff637e",
+        "value": "lab(64.4125% 63.0291 19.2068)",
+        "uses": 5
+      },
+      {
+        "name": "--color-slate-200",
+        "hex": "#e2e8f0",
+        "value": "lab(91.7353% -.998765 -4.76968)",
+        "uses": 5
+      },
+      {
+        "name": "--color-zinc-950",
+        "hex": "#09090b",
+        "value": "lab(2.51107% .242703 -.886115)",
+        "uses": 5
+      },
+      {
+        "name": "--color-amber-200",
+        "hex": "#fee685",
+        "value": "lab(91.7203% -.505269 49.9084)",
+        "uses": 4
+      },
+      {
+        "name": "--color-blue-300",
+        "hex": "#8ec5ff",
+        "value": "lab(77.5052% -6.4629 -36.42)",
+        "uses": 4
+      },
+      {
+        "name": "--color-emerald-200",
+        "hex": "#a4f4cf",
+        "value": "lab(90.2247% -31.039 9.47084)",
+        "uses": 4
+      },
+      {
+        "name": "--color-emerald-600",
+        "hex": "#009966",
+        "value": "lab(55.0481% -49.9246 15.93)",
+        "uses": 4
+      },
+      {
+        "name": "--color-green-300",
+        "hex": "#7bf1a8",
+        "value": "lab(86.9953% -47.2691 25.0054)",
+        "uses": 4
+      },
+      {
+        "name": "--color-on-primary",
+        "hex": "#003912",
+        "value": "#003912",
+        "uses": 4
+      },
+      {
+        "name": "--color-pink-500",
+        "hex": "#f6339a",
+        "value": "lab(56.9303% 76.8162 -8.07021)",
+        "uses": 4
+      },
+      {
+        "name": "--color-rose-200",
+        "hex": "#ffccd3",
+        "value": "lab(86.806% 19.1909 4.07754)",
+        "uses": 4
+      },
+      {
+        "name": "--color-rose-600",
+        "hex": "#ec003f",
+        "value": "lab(49.1882% 81.577 36.0311)",
+        "uses": 4
+      },
+      {
+        "name": "--color-slate-100",
+        "hex": "#f1f5f9",
+        "value": "lab(96.286% -.852436 -2.46847)",
+        "uses": 4
+      },
+      {
+        "name": "--color-slate-300",
+        "hex": "#cad5e2",
+        "value": "lab(84.7652% -1.94535 -7.93337)",
+        "uses": 4
+      }
+    ],
+    "tokenHints": {
+      "background": {
+        "hex": "#f0f2f5",
+        "name": "--color-on-background"
+      },
+      "surface": {
+        "hex": "#121212",
+        "name": "--color-surface"
+      },
+      "text": {
+        "hex": "#f0f0f0",
+        "name": "--foreground"
+      },
+      "border": {
+        "hex": "#19191a",
+        "name": "--color-border"
+      }
+    },
+    "variables": [
+      {
+        "name": "--spacing",
+        "uses": 713,
+        "value": ".25rem",
+        "defs": 1
+      },
+      {
+        "name": "--color-white",
+        "uses": 84,
+        "value": "#ffffff",
+        "defs": 1
+      },
+      {
+        "name": "--color-black",
+        "uses": 56,
+        "value": "#000000",
+        "defs": 1
+      },
+      {
+        "name": "--color-green-400",
+        "uses": 41,
+        "value": "#05df72",
+        "defs": 2
+      },
+      {
+        "name": "--radius",
+        "uses": 38,
+        "value": "1.4rem",
+        "defs": 1
+      },
+      {
+        "name": "--color-emerald-500",
+        "uses": 30,
+        "value": "#00bc7d",
+        "defs": 2
+      },
+      {
+        "name": "--color-outline-variant",
+        "uses": 30,
+        "value": "#3a3d42",
+        "defs": 1
+      },
+      {
+        "name": "--color-surface-container",
+        "uses": 29,
+        "value": "#1e1e1e",
+        "defs": 1
+      },
+      {
+        "name": "--color-amber-500",
+        "uses": 26,
+        "value": "#fe9a00",
+        "defs": 2
+      },
+      {
+        "name": "--color-on-surface-variant",
+        "uses": 22,
+        "value": "#a0a5b1",
+        "defs": 1
+      },
+      {
+        "name": "--color-blue-500",
+        "uses": 21,
+        "value": "#2b7fff",
+        "defs": 2
+      },
+      {
+        "name": "--color-surface-container-low",
+        "uses": 21,
+        "value": "#1a1a1a",
+        "defs": 1
+      },
+      {
+        "name": "--color-red-500",
+        "uses": 20,
+        "value": "#fb2c36",
+        "defs": 2
+      },
+      {
+        "name": "--color-rose-500",
+        "uses": 20,
+        "value": "#ff2056",
+        "defs": 2
+      },
+      {
+        "name": "--color-error",
+        "uses": 15,
+        "value": "#ffb4ab",
+        "defs": 1
+      },
+      {
+        "name": "--tracking-normal",
+        "uses": 14,
+        "value": "0em",
+        "defs": 1
+      },
+      {
+        "name": "--color-surface",
+        "uses": 14,
+        "value": "#121212",
+        "defs": 1
+      },
+      {
+        "name": "--color-zinc-900",
+        "uses": 13,
+        "value": "#18181b",
+        "defs": 2
+      },
+      {
+        "name": "--color-surface-container-high",
+        "uses": 13,
+        "value": "#252525",
+        "defs": 1
+      },
+      {
+        "name": "--color-indigo-500",
+        "uses": 12,
+        "value": "#615fff",
+        "defs": 2
+      },
+      {
+        "name": "--color-surface-container-lowest",
+        "uses": 12,
+        "value": "#0d0d0d",
+        "defs": 1
+      },
+      {
+        "name": "--color-amber-400",
+        "uses": 11,
+        "value": "#ffb900",
+        "defs": 2
+      },
+      {
+        "name": "--color-green-500",
+        "uses": 11,
+        "value": "#00c950",
+        "defs": 2
+      },
+      {
+        "name": "--color-zinc-800",
+        "uses": 11,
+        "value": "#27272a",
+        "defs": 2
+      },
+      {
+        "name": "--color-purple-500",
+        "uses": 10,
+        "value": "#ad46ff",
+        "defs": 2
+      },
+      {
+        "name": "--y",
+        "uses": 10,
+        "value": "translateY(100%)",
+        "defs": 6
+      },
+      {
+        "name": "--color-sky-500",
+        "uses": 9,
+        "value": "#00a6f4",
+        "defs": 2
+      },
+      {
+        "name": "--color-surface-container-highest",
+        "uses": 9,
+        "value": "#2e2e2e",
+        "defs": 1
+      },
+      {
+        "name": "--color-emerald-400",
+        "uses": 8,
+        "value": "#00d492",
+        "defs": 2
+      },
+      {
+        "name": "--color-zinc-500",
+        "uses": 8,
+        "value": "#71717b",
+        "defs": 2
+      },
+      {
+        "name": "--default-transition-duration",
+        "uses": 8,
+        "value": ".15s",
+        "defs": 1
+      },
+      {
+        "name": "--default-transition-timing-function",
+        "uses": 8,
+        "value": "cubic-bezier(.4, 0, .2, 1)",
+        "defs": 1
+      },
+      {
+        "name": "--color-on-surface",
+        "uses": 8,
+        "value": "#f0f2f5",
+        "defs": 1
+      },
+      {
+        "name": "--color-red-400",
+        "uses": 7,
+        "value": "#ff6467",
+        "defs": 2
+      },
+      {
+        "name": "--color-orange-500",
+        "uses": 7,
+        "value": "#ff6900",
+        "defs": 2
+      },
+      {
+        "name": "--color-amber-300",
+        "uses": 7,
+        "value": "#ffd230",
+        "defs": 2
+      },
+      {
+        "name": "--color-blue-400",
+        "uses": 6,
+        "value": "#50a2ff",
+        "defs": 2
+      },
+      {
+        "name": "--color-zinc-200",
+        "uses": 6,
+        "value": "#e4e4e7",
+        "defs": 2
+      },
+      {
+        "name": "--color-zinc-700",
+        "uses": 6,
+        "value": "#3f3f46",
+        "defs": 2
+      },
+      {
+        "name": "--text-sm",
+        "uses": 6,
+        "value": ".875rem",
+        "defs": 1
+      },
+      {
+        "name": "--text-sm--line-height",
+        "uses": 6,
+        "value": "calc(1.25 / .875)",
+        "defs": 1
+      },
+      {
+        "name": "--lift",
+        "uses": 6,
+        "value": "1",
+        "defs": 2
+      },
+      {
+        "name": "--color-red-950",
+        "uses": 5,
+        "value": "#460809",
+        "defs": 2
+      },
+      {
+        "name": "--color-amber-700",
+        "uses": 5,
+        "value": "#bb4d00",
+        "defs": 2
+      },
+      {
+        "name": "--color-indigo-400",
+        "uses": 5,
+        "value": "#7c86ff",
+        "defs": 2
+      },
+      {
+        "name": "--color-rose-300",
+        "uses": 5,
+        "value": "#ffa1ad",
+        "defs": 2
+      },
+      {
+        "name": "--color-rose-400",
+        "uses": 5,
+        "value": "#ff637e",
+        "defs": 2
+      },
+      {
+        "name": "--color-slate-200",
+        "uses": 5,
+        "value": "#e2e8f0",
+        "defs": 2
+      },
+      {
+        "name": "--color-zinc-950",
+        "uses": 5,
+        "value": "#09090b",
+        "defs": 2
+      },
+      {
+        "name": "--text-xs",
+        "uses": 5,
+        "value": ".75rem",
+        "defs": 1
+      },
+      {
+        "name": "--text-xs--line-height",
+        "uses": 5,
+        "value": "calc(1 / .75)",
+        "defs": 1
+      },
+      {
+        "name": "--text-lg",
+        "uses": 5,
+        "value": "1.125rem",
+        "defs": 1
+      },
+      {
+        "name": "--text-lg--line-height",
+        "uses": 5,
+        "value": "calc(1.75 / 1.125)",
+        "defs": 1
+      },
+      {
+        "name": "--text-5xl",
+        "uses": 5,
+        "value": "3rem",
+        "defs": 1
+      },
+      {
+        "name": "--text-5xl--line-height",
+        "uses": 5,
+        "value": "1",
+        "defs": 1
+      },
+      {
+        "name": "--color-error-container",
+        "uses": 5,
+        "value": "#93000a",
+        "defs": 1
+      },
+      {
+        "name": "--card-spacing",
+        "uses": 5,
+        "value": "calc(var(--spacing) * 4)",
+        "defs": 1
+      },
+      {
+        "name": "--color-amber-200",
+        "uses": 4,
+        "value": "#fee685",
+        "defs": 2
+      },
+      {
+        "name": "--color-green-300",
+        "uses": 4,
+        "value": "#7bf1a8",
+        "defs": 2
+      },
+      {
+        "name": "--color-emerald-200",
+        "uses": 4,
+        "value": "#a4f4cf",
+        "defs": 2
+      }
+    ],
+    "prefixes": [
+      {
+        "prefix": "--color-",
+        "count": 146
+      },
+      {
+        "prefix": "--tw-",
+        "count": 94
+      },
+      {
+        "prefix": "--text-",
+        "count": 24
+      },
+      {
+        "prefix": "--md-",
+        "count": 22
+      },
+      {
+        "prefix": "--shadow-",
+        "count": 12
+      },
+      {
+        "prefix": "--container-",
+        "count": 11
+      }
+    ],
+    "properties": [],
+    "darkMedia": 0,
+    "darkSelectors": {
+      ".dark": 1,
+      "[data-sonner-theme=\"dark\"]": 6
+    },
+    "layers": [
+      "properties",
+      "theme",
+      "base",
+      "utilities"
+    ]
+  },
+  "files": {
+    "screens": [
+      "C:\\Users\\Remedan\\.gemini\\antigravity\\scratch\\SkiD\\design-system\\source\\screens\\desktop-home-1.jpg",
+      "C:\\Users\\Remedan\\.gemini\\antigravity\\scratch\\SkiD\\design-system\\source\\screens\\desktop-home-2.jpg",
+      "C:\\Users\\Remedan\\.gemini\\antigravity\\scratch\\SkiD\\design-system\\source\\screens\\desktop-home-3.jpg",
+      "C:\\Users\\Remedan\\.gemini\\antigravity\\scratch\\SkiD\\design-system\\source\\screens\\desktop-home-4.jpg",
+      "C:\\Users\\Remedan\\.gemini\\antigravity\\scratch\\SkiD\\design-system\\source\\screens\\phone-home-1.jpg",
+      "C:\\Users\\Remedan\\.gemini\\antigravity\\scratch\\SkiD\\design-system\\source\\screens\\phone-home-2.jpg",
+      "C:\\Users\\Remedan\\.gemini\\antigravity\\scratch\\SkiD\\design-system\\source\\screens\\dark-home-1.jpg",
+      "C:\\Users\\Remedan\\.gemini\\antigravity\\scratch\\SkiD\\design-system\\source\\screens\\dark-home-2.jpg"
+    ],
+    "icons": "C:\\Users\\Remedan\\.gemini\\antigravity\\scratch\\SkiD\\design-system\\source\\screens\\icons.png",
+    "fonts": []
+  },
+  "notes": [
+    "No other pages of the same site were linked from the start page, so only it was measured. Add pages with --include /path,/other.",
+    "The site looks the same with dark mode on, so there's no dark theme to extract (it may switch with a toggle instead; see css.darkSelectors).",
+    "The CSS has dark-mode selectors (.dark, [data-sonner-theme=\"dark\"]) but the page didn't switch with the system setting: dark mode is a toggle, or a class for dark sections only. Check the screenshots before adding a dark theme."
+  ]
+}

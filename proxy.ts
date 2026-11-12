@@ -35,20 +35,31 @@ function applyCorsHeaders(req: NextRequest, res: NextResponse) {
 function createPageSecurity(req: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const isDev = process.env.NODE_ENV === "development";
-  const contentSecurityPolicy = [
-    "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "img-src 'self' data: blob: https:",
-    "font-src 'self' data: https://fonts.gstatic.com",
-    "connect-src 'self' https:",
-    "media-src 'self' https:",
-    "frame-src 'self' blob:",
-    "frame-ancestors 'none'",
-    "object-src 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-  ].join("; ");
+  const contentSecurityPolicy = isDev
+    ? [
+        "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:",
+        "script-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: https:",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "img-src 'self' data: blob: https:",
+        "font-src 'self' data: https://fonts.gstatic.com",
+        "connect-src 'self' https: http: ws: wss:",
+        "media-src 'self' https:",
+        "frame-src 'self' blob:",
+      ].join("; ")
+    : [
+        "default-src 'self'",
+        `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "img-src 'self' data: blob: https:",
+        "font-src 'self' data: https://fonts.gstatic.com",
+        "connect-src 'self' https:",
+        "media-src 'self' https:",
+        "frame-src 'self' blob:",
+        "frame-ancestors 'none'",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+      ].join("; ");
 
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-nonce", nonce);
@@ -140,6 +151,9 @@ function suspendedLoginUrl(req: NextRequest) {
 
 export default async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  if (pathname.startsWith("/_next/") || pathname === "/favicon.ico") {
+    return NextResponse.next();
+  }
   const isApiRoute = pathname.startsWith("/api/");
 
   if (isApiRoute) {
@@ -313,6 +327,6 @@ export default async function proxy(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|_next/hmr|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

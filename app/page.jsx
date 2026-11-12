@@ -3,7 +3,12 @@ import { sql } from "@/lib/db";
 import LandingPageContent from "@/components/LandingPageContent";
 
 export default async function HomePage({ searchParams }) {
-  const session = await auth();
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    session = null;
+  }
 
   let initialFaqs = [];
   let initialTestimonials = [];

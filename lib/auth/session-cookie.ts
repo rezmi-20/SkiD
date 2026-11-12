@@ -123,8 +123,8 @@ async function getNeonSessionFromTokenCookie(
   if (!sessionTokenCookie) return null;
 
   try {
-    if (!process.env.NEON_AUTH_BASE_URL) {
-      console.warn("[AUTH_SESSION_TOKEN_FALLBACK_SKIPPED] NEON_AUTH_BASE_URL not set");
+    if (!process.env.NEON_AUTH_BASE_URL || process.env.NEON_AUTH_BASE_URL.includes(".example")) {
+      console.warn("[AUTH_SESSION_TOKEN_FALLBACK_SKIPPED] NEON_AUTH_BASE_URL is placeholder or not set");
       return null;
     }
 
@@ -182,11 +182,8 @@ async function getNeonSessionFromTokenCookie(
           continue;
         }
 
-        if (isAuthSessionUnavailableError(error)) {
-          throw error;
-        }
-
-        throw new AuthSessionUnavailableError();
+        console.warn("[AUTH_SESSION_TOKEN_FETCH_FAILED]", error instanceof Error ? error.message : "FetchFailed");
+        return null;
       }
     }
 
@@ -196,6 +193,6 @@ async function getNeonSessionFromTokenCookie(
       throw error;
     }
     console.warn("[AUTH_SESSION_TOKEN_FALLBACK_FAILED]", error instanceof Error ? error.name : "UnknownError");
-    throw new AuthSessionUnavailableError();
+    return null;
   }
 }

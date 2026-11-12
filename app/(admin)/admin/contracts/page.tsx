@@ -11,6 +11,11 @@ export default async function ContractsPage() {
   const contractsData = await sql`
     SELECT
       c.id,
+      c.status,
+      c.terms_status AS "termsStatus",
+      c.payment_amount AS "paymentAmount",
+      c.work_location AS "workLocation",
+      c.created_at AS "createdAt",
       c.pdf_url AS "pdfUrl",
       c.client_signed_at AS "clientSignedAt",
       c.worker_signed_at AS "workerSignedAt",
@@ -31,6 +36,11 @@ export default async function ContractsPage() {
     jobTitle: c.jobTitle,
     clientName: c.clientName,
     workerName: c.workerName,
+    status: c.status,
+    termsStatus: c.termsStatus,
+    amount: Number(c.paymentAmount || 0),
+    workLocation: c.workLocation,
+    createdAt: c.createdAt ? String(c.createdAt) : null,
     clientSignedAt: c.clientSignedAt ? String(c.clientSignedAt) : null,
     workerSignedAt: c.workerSignedAt ? String(c.workerSignedAt) : null,
     signedAt: c.signedAt ? String(c.signedAt) : null,

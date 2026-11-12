@@ -4,36 +4,238 @@ import { useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTheme } from "next-themes";
 import { useLanguage } from "@/context/LanguageContext";
 import DireSkillLogo from "@/components/shell/DireSkillLogo";
+import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Users, ShieldCheck, Briefcase, UserRound, Camera,
   FileText, DollarSign, Scale, Megaphone,
-  BarChart2, Gavel, ChevronLeft, ChevronRight, LogOut, Crown, LifeBuoy, ClipboardList, UserCircle, AlertTriangle, FileCheck,
+  BarChart2, Gavel, ChevronLeft, ChevronRight, ChevronDown, LogOut, Crown,
+  LifeBuoy, ClipboardList, AlertTriangle, FileCheck, Sun, Moon,
+  Settings, FolderKanban
 } from "lucide-react";
 import type { AdminPermission, AdminRole } from "@/lib/admin-authorization";
 
 interface SidebarProps {
   userEmail: string | null;
+  adminName?: string;
   adminRole: AdminRole;
   permissions: AdminPermission[];
 }
 
-export function Sidebar({ userEmail, adminRole, permissions }: SidebarProps) {
+interface NavItem {
+  href: string;
+  icon: ReactNode;
+  label: string;
+  visible: boolean;
+  dotColor?: string;
+  badge?: string;
+}
+
+interface NavGroup {
+  id: string;
+  title: string;
+  icon: ReactNode;
+  items: NavItem[];
+}
+
+export function Sidebar({ userEmail, adminName, adminRole, permissions }: SidebarProps) {
   const pathname = usePathname();
   const { t } = useLanguage();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const isSuperAdmin = adminRole === "super_admin";
 
+  const can = (permission: AdminPermission) => permissions.includes(permission);
+
+  // Grouped Navigation preserving all 18 categories based on platform role and functionality
+  const navGroups: NavGroup[] = [
+    {
+      id: "overview",
+      title: t("admin.sidebar.overview" as any) || "Overview",
+      icon: <LayoutDashboard className="w-4 h-4" />,
+      items: [
+        {
+          href: "/admin/dashboard",
+          icon: <LayoutDashboard className="w-4 h-4" />,
+          label: t("admin.sidebar.dashboard" as any) || "Dashboard",
+          visible: true,
+          dotColor: "bg-blue-500",
+        },
+      ],
+    },
+    {
+      id: "identity",
+      title: t("admin.sidebar.identity" as any) || "Identity & Verification",
+      icon: <ShieldCheck className="w-4 h-4" />,
+      items: [
+        {
+          href: "/admin/verify",
+          icon: <ShieldCheck className="w-4 h-4" />,
+          label: t("admin.sidebar.verifyQueue" as any) || "Verification Queue",
+          visible: can("verification.read"),
+          dotColor: "bg-emerald-500",
+        },
+        {
+          href: "/admin/worker-avatar-requests",
+          icon: <Camera className="w-4 h-4" />,
+          label: t("admin.sidebar.photoRequests" as any) || "Photo Requests",
+          visible: can("verification.read"),
+        },
+        {
+          href: "/admin/workers",
+          icon: <Users className="w-4 h-4" />,
+          label: t("admin.sidebar.workers" as any) || "Workers Directory",
+          visible: can("verification.read"),
+        },
+        {
+          href: "/admin/clients",
+          icon: <UserRound className="w-4 h-4" />,
+          label: t("admin.sidebar.clients" as any) || "Clients Directory",
+          visible: can("verification.read"),
+        },
+      ],
+    },
+    {
+      id: "disputes",
+      title: t("admin.sidebar.disputesGroup" as any) || "Disputes & Legal",
+      icon: <Scale className="w-4 h-4" />,
+      items: [
+        {
+          href: "/admin/disputes",
+          icon: <Scale className="w-4 h-4" />,
+          label: t("admin.sidebar.disputes" as any) || "Disputes Adjudication",
+          visible: can("disputes.read"),
+          dotColor: "bg-rose-500",
+        },
+        {
+          href: "/admin/court-evidence",
+          icon: <FileCheck className="w-4 h-4" />,
+          label: t("admin.sidebar.courtEvidence" as any) || "Court Evidence",
+          visible: isSuperAdmin,
+          badge: "Legal",
+        },
+        {
+          href: "/admin/appeals",
+          icon: <Gavel className="w-4 h-4" />,
+          label: t("admin.sidebar.appeals" as any) || "Appeals",
+          visible: can("appeals.read") && isSuperAdmin,
+        },
+        {
+          href: "/admin/misconduct",
+          icon: <AlertTriangle className="w-4 h-4" />,
+          label: t("admin.sidebar.misconduct" as any) || "Admin Misconduct",
+          visible: can("admin_misconduct.review") && isSuperAdmin,
+        },
+      ],
+    },
+    {
+      id: "operations",
+      title: t("admin.sidebar.operations" as any) || "Operations & Marketplace",
+      icon: <FolderKanban className="w-4 h-4" />,
+      items: [
+        {
+          href: "/admin/payments",
+          icon: <DollarSign className="w-4 h-4" />,
+          label: t("admin.sidebar.payments" as any) || "Payment Cases",
+          visible: can("payment_cases.read"),
+          dotColor: "bg-amber-500",
+        },
+        {
+          href: "/admin/support",
+          icon: <LifeBuoy className="w-4 h-4" />,
+          label: t("admin.sidebar.support" as any) || "Support Tickets",
+          visible: can("support.read"),
+          dotColor: "bg-violet-500",
+        },
+        {
+          href: "/admin/jobs",
+          icon: <Briefcase className="w-4 h-4" />,
+          label: t("admin.sidebar.jobs" as any) || "Jobs Oversight",
+          visible: can("reports.read"),
+        },
+        {
+          href: "/admin/contracts",
+          icon: <FileText className="w-4 h-4" />,
+          label: t("admin.sidebar.contracts" as any) || "Contracts Registry",
+          visible: can("reports.read"),
+        },
+        {
+          href: "/admin/community",
+          icon: <Megaphone className="w-4 h-4" />,
+          label: t("admin.sidebar.community" as any) || "Community Moderation",
+          visible: can("content.read"),
+        },
+      ],
+    },
+    {
+      id: "system",
+      title: t("admin.sidebar.system" as any) || "System & Governance",
+      icon: <Crown className="w-4 h-4" />,
+      items: [
+        {
+          href: "/admin/reports",
+          icon: <BarChart2 className="w-4 h-4" />,
+          label: t("admin.sidebar.reports" as any) || "Platform Analytics",
+          visible: can("reports.read"),
+        },
+        {
+          href: "/admin/users",
+          icon: <Crown className="w-4 h-4" />,
+          label: t("admin.sidebar.users" as any) || "Staff & Access Roles",
+          visible: can("admin_accounts.read") && isSuperAdmin,
+          badge: "Full",
+        },
+        {
+          href: "/admin/audit",
+          icon: <ClipboardList className="w-4 h-4" />,
+          label: t("admin.sidebar.audit" as any) || "System Audit Logs",
+          visible: can("audit.read") && isSuperAdmin,
+        },
+        {
+          href: "/admin/settings",
+          icon: <Settings className="w-4 h-4" />,
+          label: t("admin.sidebar.settings" as any) || "Platform Settings",
+          visible: isSuperAdmin,
+        },
+      ],
+    },
+  ];
+
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    overview: true,
+    identity: true,
+    disputes: true,
+    operations: false,
+    system: false,
+  });
+
   useEffect(() => {
+    setMounted(true);
     const saved = localStorage.getItem("admin-sidebar-collapsed");
     if (saved === "true") setCollapsed(true);
-  }, []);
 
-  const toggle = () => {
+    navGroups.forEach((group) => {
+      const hasActive = group.items.some(
+        (item) => pathname === item.href || (item.href !== "/admin/dashboard" && pathname?.startsWith(item.href))
+      );
+      if (hasActive) {
+        setOpenGroups((prev) => ({ ...prev, [group.id]: true }));
+      }
+    });
+  }, [pathname]);
+
+  const toggleGroup = (id: string) => {
+    setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const toggleCollapse = () => {
     setCollapsed((c) => {
-      localStorage.setItem("admin-sidebar-collapsed", String(!c));
-      return !c;
+      const next = !c;
+      localStorage.setItem("admin-sidebar-collapsed", String(next));
+      return next;
     });
   };
 
@@ -42,147 +244,276 @@ export function Sidebar({ userEmail, adminRole, permissions }: SidebarProps) {
     window.location.href = "/admin/login";
   };
 
-  const can = (permission: AdminPermission) => permissions.includes(permission);
-  const navItems: Array<{
-    href: string;
-    icon: ReactNode;
-    label: string;
-    visible: boolean;
-    superOnly?: boolean;
-  }> = [
-    { href: "/admin/dashboard", icon: <LayoutDashboard className="w-5 h-5" />, label: t("admin.dashboard" as any), visible: true },
-    { href: "/admin/profile", icon: <UserCircle className="w-5 h-5" />, label: "Profile", visible: true },
-    { href: "/admin/verify", icon: <ShieldCheck className="w-5 h-5" />, label: "Verification", visible: can("verification.read") },
-    { href: "/admin/worker-avatar-requests", icon: <Camera className="w-5 h-5" />, label: "Photo Requests", visible: can("verification.read") },
-    { href: "/admin/workers", icon: <Users className="w-5 h-5" />, label: t("admin.workers" as any), visible: can("verification.read") },
-    { href: "/admin/clients", icon: <UserRound className="w-5 h-5" />, label: t("admin.clients" as any), visible: can("verification.read") },
-    { href: "/admin/community", icon: <Megaphone className="w-5 h-5" />, label: t("admin.community" as any), visible: can("content.read") },
-    { href: "/admin/disputes", icon: <Scale className="w-5 h-5" />, label: t("admin.disputes" as any), visible: can("disputes.read") },
-    { href: "/admin/payments", icon: <DollarSign className="w-5 h-5" />, label: t("admin.payments" as any), visible: can("payment_cases.read") },
-    { href: "/admin/support", icon: <LifeBuoy className="w-5 h-5" />, label: "Support Tickets", visible: can("support.read") },
-    { href: "/admin/reports", icon: <BarChart2 className="w-5 h-5" />, label: t("admin.reports" as any), visible: can("reports.read") },
-    { href: "/admin/jobs", icon: <Briefcase className="w-5 h-5" />, label: t("admin.jobs" as any), visible: can("reports.read") },
-    { href: "/admin/contracts", icon: <FileText className="w-5 h-5" />, label: t("admin.contracts" as any), visible: can("reports.read") },
-    { href: "/admin/audit", icon: <ClipboardList className="w-5 h-5" />, label: "Audit Logs", visible: can("audit.read"), superOnly: true },
-    { href: "/admin/appeals", icon: <Gavel className="w-5 h-5" />, label: "Appeals", visible: can("appeals.read"), superOnly: true },
-    { href: "/admin/misconduct", icon: <AlertTriangle className="w-5 h-5" />, label: "Admin Conduct", visible: can("admin_misconduct.review"), superOnly: true },
-    { href: "/admin/court-evidence", icon: <FileCheck className="w-5 h-5" />, label: "Court Evidence", visible: isSuperAdmin, superOnly: true },
-    { href: "/admin/users", icon: <Crown className="w-5 h-5" />, label: t("admin.users" as any), visible: can("admin_accounts.read"), superOnly: true },
-  ] as const;
+  const getInitials = (str: string | null) => {
+    if (!str) return "AD";
+    const cleaned = str.split("@")[0].replace(/[^a-zA-Z0-9]/g, "");
+    return cleaned.substring(0, 2).toUpperCase() || "AD";
+  };
 
-  const visibleItems = navItems.filter((item) => item.visible);
+  const isDark = mounted ? theme === "dark" || theme === "grayscale" : false;
 
   return (
     <aside
-      className={`relative hidden lg:flex flex-col shrink-0 border-r transition-all duration-300 ease-in-out
-        bg-surface-container-low border-outline-variant
-        ${collapsed ? "w-[68px]" : "w-[220px]"}`}
+      className={cn(
+        "relative hidden lg:flex flex-col shrink-0 h-full transition-all duration-300 ease-out select-none z-30",
+        "bg-sidebar border-r border-sidebar-border",
+        collapsed ? "w-[68px]" : "w-[245px]"
+      )}
     >
-      {/* Brand */}
-      <div className={`flex items-center gap-2 px-3 h-[60px] border-b border-outline-variant ${collapsed ? "justify-center" : ""}`}>
-        <DireSkillLogo
-          variant="color"
-          iconSize={32}
-          showWordmark={!collapsed}
-        />
+      {/* ── Brand Header (Flush Top with Top Collapse Button) ── */}
+      <div
+        className={cn(
+          "flex items-center h-16 px-3.5 border-b border-sidebar-border",
+          collapsed ? "flex-col justify-center gap-1 py-2 h-auto" : "justify-between"
+        )}
+      >
+        <div className="flex items-center gap-2.5 overflow-hidden">
+          <DireSkillLogo variant="color" iconSize={26} showWordmark={!collapsed} />
+        </div>
+
+        <button
+          onClick={toggleCollapse}
+          className="w-7 h-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200 cursor-pointer"
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? (
+            <ChevronRight className="w-4 h-4" />
+          ) : (
+            <ChevronLeft className="w-4 h-4" />
+          )}
+        </button>
       </div>
 
-      {/* Super Admin Banner (only when not collapsed) */}
-      {isSuperAdmin && !collapsed && (
-        <div className="mx-2 mt-2 flex items-center gap-1.5 px-2.5 py-1.5 bg-gradient-to-r from-amber-400/20 to-orange-400/10 border border-amber-300/40 rounded-lg">
-          <Crown className="w-3 h-3 text-amber-500 shrink-0" />
-          <span className="text-[10px] font-black text-amber-600 uppercase tracking-wider truncate">
-            Super Admin
-          </span>
-        </div>
-      )}
-      {isSuperAdmin && collapsed && (
-        <div className="mt-2 flex justify-center">
-          <Crown className="w-4 h-4 text-amber-500" />
-        </div>
-      )}
+      {/* ── Navigation Links (Preserves All 18 Categories) ── */}
+      <nav className="flex-1 overflow-y-auto no-scrollbar py-3 px-2 space-y-2">
+        {navGroups.map((group) => {
+          const visibleItems = group.items.filter((item) => item.visible);
+          if (visibleItems.length === 0) return null;
 
-      {/* Nav Links */}
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 space-y-0.5 px-2">
-        {/* Separator before super admin section */}
-        {visibleItems.map(({ href, icon, label, superOnly }) => {
-          const isActive = pathname?.startsWith(href);
+          const isGroupOpen = openGroups[group.id] ?? false;
+
+          if (collapsed) {
+            return (
+              <div key={group.id} className="py-1 border-b border-sidebar-border/40 last:border-none space-y-1">
+                {visibleItems.map(({ href, icon, label, dotColor }) => {
+                  const isActive = pathname === href || (href !== "/admin/dashboard" && pathname?.startsWith(href));
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      title={label}
+                      className={cn(
+                        "relative flex items-center justify-center w-10 h-10 mx-auto rounded-lg transition-all duration-200 group",
+                        isActive
+                          ? "bg-sidebar-accent text-accent shadow-xs"
+                          : "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                      )}
+                    >
+                      {/* Active Left Indicator Bar */}
+                      <span
+                        className={cn(
+                          "absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-accent transition-all duration-300",
+                          isActive ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      <span className="transition-transform duration-200 group-hover:scale-110">
+                        {icon}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            );
+          }
+
+          if (group.id === "overview") {
+            const item = visibleItems[0];
+            const isActive = pathname === item.href || pathname === "/admin";
+            return (
+              <div key={group.id} className="px-1">
+                <Link
+                  href={item.href}
+                  className={cn(
+                    "group relative w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200",
+                    isActive
+                      ? "bg-sidebar-accent text-sidebar-foreground font-semibold"
+                      : "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                  )}
+                >
+                  {/* Active Left Indicator Bar */}
+                  <span
+                    className={cn(
+                      "absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-accent transition-all duration-300",
+                      isActive ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "shrink-0 transition-transform duration-200",
+                      isActive ? "text-accent" : "text-muted-foreground group-hover:scale-110 group-hover:text-foreground"
+                    )}
+                  >
+                    {item.icon}
+                  </span>
+                  <span className="truncate flex-1">{item.label}</span>
+                </Link>
+              </div>
+            );
+          }
+
           return (
-            <div key={href}>
-              {superOnly && !collapsed && (
-                <div className="px-3 pt-3 pb-1">
-                  <div className="h-px bg-outline-variant" />
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-amber-500 mt-2 flex items-center gap-1">
-                    <Crown className="w-2.5 h-2.5" />
-                    Super Admin
-                  </p>
-                </div>
-              )}
-              {superOnly && collapsed && (
-                <div className="py-1.5 flex justify-center">
-                  <div className="w-8 h-px bg-outline-variant" />
-                </div>
-              )}
-              <Link
-                href={href}
-                title={label}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 group
-                  ${isActive
-                    ? superOnly
-                      ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white"
-                      : "bg-primary text-on-primary"
-                    : superOnly
-                      ? "text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-900/20"
-                      : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
-                  }
-                  ${collapsed ? "justify-center" : ""}`}
+            <div key={group.id} className="rounded-lg">
+              <button
+                type="button"
+                onClick={() => toggleGroup(group.id)}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 text-left text-muted-foreground hover:text-sidebar-foreground transition-colors group cursor-pointer"
               >
-                <span className="shrink-0">{icon}</span>
-                {!collapsed && (
-                  <span className="truncate">{label}</span>
-                )}
-              </Link>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 group-hover:text-sidebar-foreground">
+                  {group.title}
+                </span>
+                <ChevronDown
+                  className={cn(
+                    "w-3.5 h-3.5 transition-transform duration-200 text-muted-foreground/60 group-hover:text-sidebar-foreground",
+                    isGroupOpen ? "rotate-0" : "-rotate-90"
+                  )}
+                />
+              </button>
+
+              {isGroupOpen && (
+                <div className="mt-1 space-y-0.5">
+                  {visibleItems.map(({ href, icon, label, dotColor, badge }) => {
+                    const isActive = pathname === href || (href !== "/admin/dashboard" && pathname?.startsWith(href));
+                    return (
+                      <Link
+                        key={href}
+                        href={href}
+                        className={cn(
+                          "group relative w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200",
+                          isActive
+                            ? "bg-sidebar-accent text-sidebar-foreground font-semibold"
+                            : "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                        )}
+                      >
+                        {/* Active Left Indicator Bar */}
+                        <span
+                          className={cn(
+                            "absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-accent transition-all duration-300",
+                            isActive ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        <span
+                          className={cn(
+                            "shrink-0 transition-transform duration-200",
+                            isActive ? "text-accent" : "text-muted-foreground group-hover:scale-110 group-hover:text-foreground"
+                          )}
+                        >
+                          {icon}
+                        </span>
+                        <span className="truncate flex-1">{label}</span>
+                        {badge && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase tracking-wider">
+                            {badge}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           );
         })}
       </nav>
 
-      {/* Footer — user + logout */}
-      <div className={`border-t border-outline-variant p-3 space-y-1 ${collapsed ? "flex flex-col items-center" : ""}`}>
-        {!collapsed && (
-          <div className="px-2 py-1.5 mb-1">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <p className="text-xs font-bold text-on-surface truncate">{userEmail ?? "Admin"}</p>
-              {isSuperAdmin && (
-                <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-400 to-orange-500 text-white">
-                  Owner
-                </span>
-              )}
+      {/* ── Bottom Sidebar: Admin Profile & Segmented Theme Switcher ── */}
+      <div className="p-2.5 border-t border-sidebar-border bg-sidebar space-y-2">
+        <div
+          className={cn(
+            "flex items-center gap-2 p-1.5 rounded-xl border border-sidebar-border bg-sidebar-accent/40",
+            collapsed && "justify-center p-1"
+          )}
+        >
+          <Link
+            href="/admin/profile"
+            className="w-8 h-8 rounded-lg bg-gradient-to-tr from-accent to-chart-1 text-accent-foreground flex items-center justify-center font-bold text-xs shrink-0 shadow-xs hover:opacity-90 transition"
+            title="Profile"
+          >
+            {getInitials(userEmail || adminName || "AD")}
+          </Link>
+
+          {!collapsed && (
+            <div className="min-w-0 flex-1">
+              <Link href="/admin/profile" className="block group">
+                <p className="text-xs font-semibold text-sidebar-foreground truncate leading-tight group-hover:text-accent">
+                  {adminName || userEmail?.split("@")[0] || "Admin"}
+                </p>
+                <p className="text-[10px] text-muted-foreground truncate leading-tight">
+                  {userEmail || "admin@example.com"}
+                </p>
+              </Link>
             </div>
-            <p className="text-[10px] text-on-surface-variant font-medium">{t("admin.portal")}</p>
+          )}
+
+          {!collapsed && (
+            <button
+              onClick={handleLogout}
+              title={t("admin.exitSystem" as any) || "Sign Out"}
+              className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition shrink-0 cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Light & Dark Mode Segmented Toggle */}
+        {mounted && (
+          <div
+            className={cn(
+              "flex items-center bg-secondary/80 rounded-lg p-0.5 border border-border/50",
+              collapsed ? "justify-center" : "w-full"
+            )}
+          >
+            {collapsed ? (
+              <button
+                onClick={() => setTheme(isDark ? "light" : "dark")}
+                className="w-8 h-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition cursor-pointer"
+                title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              >
+                {isDark ? <Moon className="w-3.5 h-3.5 text-accent" /> : <Sun className="w-3.5 h-3.5 text-amber-500" />}
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setTheme("light")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[11px] font-semibold transition-all cursor-pointer",
+                    !isDark
+                      ? "bg-card text-foreground shadow-xs font-bold"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Sun className={cn("w-3.5 h-3.5", !isDark ? "text-amber-500" : "text-muted-foreground")} />
+                  <span>Light</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTheme("dark")}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-[11px] font-semibold transition-all cursor-pointer",
+                    isDark
+                      ? "bg-card text-foreground shadow-xs font-bold"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Moon className={cn("w-3.5 h-3.5", isDark ? "text-accent" : "text-muted-foreground")} />
+                  <span>Dark</span>
+                </button>
+              </>
+            )}
           </div>
         )}
-        <button
-          onClick={handleLogout}
-          title={t("admin.exitSystem" as any)}
-          className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold
-            text-error hover:bg-error-container hover:text-on-error-container transition-all duration-150
-            ${collapsed ? "justify-center" : ""}`}
-        >
-          <LogOut className="w-4 h-4 shrink-0" />
-          {!collapsed && t("admin.exitSystem" as any)}
-        </button>
       </div>
-
-      {/* Collapse Toggle */}
-      <button
-        onClick={toggle}
-        className="absolute -right-3.5 top-[72px] w-7 h-7 rounded-full border border-outline-variant
-          bg-surface-container flex items-center justify-center
-          text-on-surface-variant hover:bg-surface-container-high transition-all shadow-sm z-10"
-      >
-        {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-      </button>
     </aside>
   );
 }

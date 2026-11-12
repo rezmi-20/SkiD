@@ -59,44 +59,47 @@ export default async function MisconductReviewDetailsPage({
   const isClosed = ["resolved", "dismissed"].includes(review.status);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 pb-20">
+    <div className="w-full space-y-6 pb-24">
       <Link
         href="/admin/misconduct"
         className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
-        Back to misconduct reviews
+        <span>Back to misconduct reviews</span>
       </Link>
 
-      <header className="rounded-xl border border-border/80 bg-card p-6 shadow-2xs space-y-2">
-        <div className="inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-2.5 py-0.5 text-[11px] font-bold text-primary tracking-wide uppercase">
-          <ShieldAlert className="h-3 w-3" />
-          {review.reference}
-        </div>
-        <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
-          {review.full_name}
-        </h1>
-        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground pt-1">
-          <span className="font-mono font-bold text-foreground">{review.admin_employee_id}</span>
-          <span>·</span>
-          <span className="capitalize">{String(review.admin_role).replaceAll("_", " ")}</span>
-          <span>·</span>
-          <span
-            className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase ${
-              isClosed
-                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                : "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400"
-            }`}
-          >
-            Status: {review.status}
-          </span>
-          {review.outcome && (
-            <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase text-primary">
-              Outcome: {review.outcome.replaceAll("_", " ")}
+      <div className="rounded-xl border border-border bg-card p-5 shadow-xs space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-1">
+            <span className="font-mono text-xs font-bold text-accent">
+              {review.reference}
             </span>
-          )}
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+              {review.full_name}
+            </h1>
+            <p className="text-xs text-muted-foreground font-mono">
+              Employee ID: {review.admin_employee_id} · Role: <span className="capitalize">{String(review.admin_role).replaceAll("_", " ")}</span>
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span
+              className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase ${
+                isClosed
+                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  : "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+              }`}
+            >
+              Status: {review.status}
+            </span>
+            {review.outcome && (
+              <span className="rounded-full border border-accent/30 bg-accent/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase text-accent">
+                Outcome: {review.outcome.replaceAll("_", " ")}
+              </span>
+            )}
+          </div>
         </div>
-      </header>
+      </div>
 
       {/* Case Reason & Grounds */}
       <section className="rounded-xl border border-border/80 bg-card p-5 shadow-2xs space-y-3">

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import AdminDisputeCaseTabs from "@/components/admin/AdminDisputeCaseTabs";
+import { AdminDisputeCaseHeader } from "@/components/admin/disputes/AdminDisputeCaseHeader";
 import {
   addInternalDisputeNote,
   claimDispute,
@@ -8,6 +9,7 @@ import {
   getAdminDisputeDetails,
   requestDisputeResponse,
   resolveDispute,
+  updateDisputeCategory,
 } from "@/lib/actions/disputes";
 import {
   approveFinancialAction,
@@ -42,9 +44,24 @@ export default async function AdminDisputeCasePage({
   const isDisputePaymentAdmin = admin.role === "dispute_payment_admin";
   const isAssignedToCurrentAdmin = dispute.assigned_admin_id === admin.id;
   const isTerminal = ["resolved", "dismissed"].includes(String(dispute.status || ""));
-  const canClaim = hasAdminPermission(admin, "disputes.review") && isDisputePaymentAdmin && !isConflicted && !isTerminal && !isAssignedToCurrentAdmin;
-  const canDeclareConflict = hasAdminPermission(admin, "disputes.review") && isDisputePaymentAdmin && !isConflicted && isAssignedToCurrentAdmin && !isTerminal;
-  const canOperate = hasAdminPermission(admin, "disputes.review") && isDisputePaymentAdmin && !isConflicted && isAssignedToCurrentAdmin && !isTerminal;
+  const canClaim =
+    hasAdminPermission(admin, "disputes.review") &&
+    isDisputePaymentAdmin &&
+    !isConflicted &&
+    !isTerminal &&
+    !isAssignedToCurrentAdmin;
+  const canDeclareConflict =
+    hasAdminPermission(admin, "disputes.review") &&
+    isDisputePaymentAdmin &&
+    !isConflicted &&
+    isAssignedToCurrentAdmin &&
+    !isTerminal;
+  const canOperate =
+    hasAdminPermission(admin, "disputes.review") &&
+    isDisputePaymentAdmin &&
+    !isConflicted &&
+    isAssignedToCurrentAdmin &&
+    !isTerminal;
   const canRequest = canOperate && hasAdminPermission(admin, "disputes.request_evidence");
   const canResolve = canOperate && hasAdminPermission(admin, "disputes.resolve");
 
@@ -63,7 +80,9 @@ export default async function AdminDisputeCasePage({
     const dueAt = String(formData.get("dueAt") || "") || null;
     const result = await requestDisputeResponse(id, target, instruction, dueAt);
     if (!result.success) {
-      redirect(`/admin/disputes/${id}?disputeActionError=${encodeURIComponent(result.error || "Unable to request information.")}`);
+      redirect(
+        `/admin/disputes/${id}?disputeActionError=${encodeURIComponent(result.error || "Unable to request information.")}`
+      );
     }
     redirect(`/admin/disputes/${id}`);
   }
@@ -98,19 +117,17 @@ export default async function AdminDisputeCasePage({
     "use server";
     const reason = String(formData.get("reason") || "");
     const result = await placePaymentHold(id, reason);
-    if (!result.success) throw new Error(result.error ?? "Unable to place payment hold.");
+    if (!result.success) throw new Error(result.error || "Payment hold failed");
     redirect(`/admin/disputes/${id}`);
   }
 
   async function proposeFinancial(formData: FormData) {
     "use server";
     const action = String(formData.get("action") || "") as any;
+    const amount = Number(formData.get("amount") || 0) || null;
     const reason = String(formData.get("reason") || "");
-    const amount = formData.get("amount") ? Number(formData.get("amount")) : null;
     const result = await proposeFinancialAction(id, action, reason, amount);
-    if (!result.success) {
-      throw new Error(("error" in result ? result.error : null) ?? "Unable to propose financial action.");
-    }
+    if (!result.success) throw new Error((result as any).error || "Failed to propose financial action");
     redirect(`/admin/disputes/${id}`);
   }
 
@@ -118,7 +135,7 @@ export default async function AdminDisputeCasePage({
     "use server";
     const actionId = String(formData.get("actionId") || "");
     const result = await approveFinancialAction(actionId);
-    if (!result.success) throw new Error(result.error ?? "Unable to approve financial action.");
+    if (!result.success) throw new Error(result.error || "Approval failed");
     redirect(`/admin/disputes/${id}`);
   }
 
@@ -127,7 +144,7 @@ export default async function AdminDisputeCasePage({
     const actionId = String(formData.get("actionId") || "");
     const reason = String(formData.get("reason") || "");
     const result = await rejectFinancialAction(actionId, reason);
-    if (!result.success) throw new Error(result.error ?? "Unable to reject financial action.");
+    if (!result.success) throw new Error(result.error || "Rejection failed");
     redirect(`/admin/disputes/${id}`);
   }
 
@@ -135,36 +152,29 @@ export default async function AdminDisputeCasePage({
     "use server";
     const actionId = String(formData.get("actionId") || "");
     const result = await executeApprovedRelease(actionId);
-    if (!result.success) throw new Error(result.error ?? "Unable to execute payment release.");
+    if (!result.success) throw new Error(result.error || "Execution failed");
+    redirect(`/admin/disputes/${id}`);
+  }
+
+  async function reclassify(formData: FormData) {
+    "use server";
+    const category = String(formData.get("category") || "");
+    const result = await updateDisputeCategory(id, category);
+    if (!result.success) throw new Error(result.error);
     redirect(`/admin/disputes/${id}`);
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 pb-16">
-      <Link href="/admin/disputes" className="text-xs font-black uppercase tracking-widest text-primary">
-        Back to dispute queue
-      </Link>
+    <div className="w-full space-y-6 pb-24">
+      {/* 1. Flush, Unboxed Header with 100% Trilingual Localization */}
+      <AdminDisputeCaseHeader
+        dispute={dispute}
+        isDisputePaymentAdmin={isDisputePaymentAdmin}
+        isTerminal={isTerminal}
+        actionError={actionError}
+      />
 
-      <header className="rounded-2xl border border-outline-variant bg-surface-container-low p-6">
-        <p className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">Dispute Case</p>
-        <h1 className="mt-2 text-3xl font-black text-on-surface">{dispute.title || dispute.job_title}</h1>
-        <p className="mt-2 text-sm font-semibold text-on-surface-variant">
-          #{String(dispute.id).slice(0, 8)} - {String(dispute.status).replaceAll("_", " ")} - {dispute.category || "other"}
-        </p>
-      </header>
-
-      {!isDisputePaymentAdmin && (
-        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm font-bold">
-          Read-only oversight mode. Super admin can inspect this case but cannot perform ordinary dispute operations.
-        </div>
-      )}
-
-      {isTerminal && (
-        <div className="rounded-lg border border-primary/30 bg-primary/10 p-4 text-sm font-bold">
-          This dispute is terminal and read-only. Final decision, timeline, evidence, responses, internal notes, and resulting job/payment state remain available for review.
-        </div>
-      )}
-
+      {/* 2. Unified Case Tabs Component */}
       <AdminDisputeCaseTabs
         dispute={dispute}
         financialCase={financialCase}
@@ -193,6 +203,7 @@ export default async function AdminDisputeCasePage({
         approveFinancial={approveFinancial}
         rejectFinancial={rejectFinancial}
         executeRelease={executeRelease}
+        reclassify={reclassify}
       />
     </div>
   );

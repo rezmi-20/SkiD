@@ -173,7 +173,7 @@ export default async function AdminSupportDetailsPage({
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 pb-24 animate-in fade-in duration-300">
+    <div className="w-full space-y-6 pb-24 animate-in fade-in duration-300">
       
       {/* ── BREADCRUMB & HEADER COMMAND BAR ─────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/40 pb-4">

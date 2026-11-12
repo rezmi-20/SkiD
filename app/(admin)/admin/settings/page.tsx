@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { sql } from "@/lib/db";
 import { PlatformSettingsClient } from "@/components/admin/PlatformSettingsClient";
 import { requireAnyAdminPermission } from "@/lib/admin-authorization";
@@ -30,5 +31,9 @@ export default async function SettingsPage() {
     totalPayments: paymentsCount[0]?.count ?? 0,
   };
 
-  return <PlatformSettingsClient stats={stats} />;
+  return (
+    <Suspense fallback={<div className="p-8 text-sm text-muted-foreground">Loading platform parameters...</div>}>
+      <PlatformSettingsClient stats={stats} />
+    </Suspense>
+  );
 }

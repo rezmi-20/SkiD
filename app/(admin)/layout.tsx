@@ -1,6 +1,7 @@
 import { getActivationRequiredAdminPrincipal, getAdminPrincipal } from "@/lib/admin-authorization";
 import { Sidebar } from "@/components/admin/Sidebar";
 import { TopBar } from "@/components/admin/TopBar";
+import { AdminUnauthorizedNoticeModal } from "@/components/admin/modals/AdminUnauthorizedNoticeModal";
 
 export default async function AdminLayout({
   children,
@@ -12,13 +13,13 @@ export default async function AdminLayout({
     const activationAdmin = await getActivationRequiredAdminPrincipal();
     if (activationAdmin) {
       return (
-        <div className="min-h-screen bg-background font-body text-on-background antialiased">
+        <div className="min-h-screen bg-[#F4F6F8] dark:bg-[#090D16] font-['Inter',system-ui,sans-serif] text-slate-800 dark:text-slate-100 antialiased">
           {children}
         </div>
       );
     }
     return (
-      <div className="min-h-screen bg-background font-body text-on-background antialiased">
+      <div className="min-h-screen bg-[#F4F6F8] dark:bg-[#090D16] font-['Inter',system-ui,sans-serif] text-slate-800 dark:text-slate-100 antialiased">
         {children}
       </div>
     );
@@ -28,22 +29,30 @@ export default async function AdminLayout({
   const adminName = String(admin.fullName || admin.employeeId || "Admin");
 
   return (
-    <div className="flex min-h-dvh bg-background font-body text-on-background antialiased transition-colors duration-300 lg:h-dvh lg:overflow-hidden">
-      {/* Sidebar Navigation */}
-      <Sidebar userEmail={email} adminRole={admin.role} permissions={admin.permissions} />
+    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground antialiased selection:bg-blue-500 selection:text-white font-['Inter',system-ui,sans-serif]">
+      {/* ── Flush Left Navigation Sidebar (180px, Collapsible to 64px) ── */}
+      <Sidebar
+        userEmail={email}
+        adminName={adminName}
+        adminRole={admin.role}
+        permissions={admin.permissions}
+      />
 
-      {/* Main Container */}
-      <div className="flex min-w-0 flex-grow flex-col lg:overflow-hidden">
-        {/* Top Header Bar */}
+      {/* ── Main Full-Window Workspace (100% Edge-to-Edge) ── */}
+      <div className="flex min-w-0 flex-1 flex-col h-full overflow-hidden">
+        {/* Integrated Top Navigation */}
         <TopBar adminName={adminName} adminRole={admin.role} />
 
-        {/* Dynamic Inner Page Content */}
-        <main className="flex-1 p-4 pb-safe md:p-6 lg:min-h-0 lg:overflow-y-auto no-scrollbar">
-          <div className="max-w-7xl mx-auto w-full">
+        {/* Dynamic Scrollable Workspace */}
+        <main className="flex-1 w-full overflow-y-auto no-scrollbar p-4 sm:p-6 bg-background">
+          <div className="w-full">
             {children}
           </div>
         </main>
       </div>
+
+      {/* Global Friendly Unauthorized Action Modal */}
+      <AdminUnauthorizedNoticeModal />
     </div>
   );
 }

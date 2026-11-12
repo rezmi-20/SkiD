@@ -1,0 +1,161 @@
+/* Dire-skill design tokens as a Tailwind CSS v4 theme (measured from https://dire-skill.vercel.app on 2026-11-10).
+   In your main CSS file, after Tailwind:
+     @import "tailwindcss";
+     @import "./design-system/theme.css";   (adjust the path)
+   Then use bg-primary, text-heading, text-text-muted, font-sans, text-h1, rounded-md, shadow-md, max-w-page…
+   "static" keeps every variable in the CSS, so var(--color-primary) works anywhere, used by a class or not.
+   To allow only these colours (no bg-blue-500 by accident), add  --color-*: initial;  as the first line inside @theme. */
+
+@theme static {
+  /* Colour roles: use these in components */
+  --color-background: #020202;
+  --color-text: #ffffffe6;
+  --color-heading: #ffffff;
+  --color-text-muted: #8c8880;
+  --color-text-subtle: #666666;
+  --color-border: #e2e0d8;
+  --color-surface: #0a0b0d;
+  --color-surface-inverse: #faf9f5;
+  --color-text-inverse: #666666;
+  --color-primary: #00e575;
+  --color-primary-foreground: #000000;
+
+  /* Chart series, in order: the first is the highlight */
+  --color-chart-1: #00e575;
+  --color-chart-2: #ffa1ad;
+  --color-chart-3: #007a55;
+  --color-chart-4: #ff416c;
+
+  /* Palette: every colour measured on the site, by hue and lightness */
+  --color-neutral-50: #faf9f5;
+  --color-white-a90: #ffffffe6;
+  --color-neutral-950: #1b1b1b;
+  --color-neutral-900: #333333;
+  --color-neutral-600: #8c8880;
+  --color-white-a80: #ffffffcc;
+  --color-neutral-700: #666666;
+  --color-black: #000000;
+  --color-green-400-a60: #00e47599;
+  --color-neutral-950-2: #0a0b0d;
+  --color-white-a95: #fffffff2;
+  --color-neutral-100: #f0efeb;
+  --color-white-a60: #ffffff99;
+  --color-white-a50: #ffffff80;
+  --color-green-400: #00e575;
+  --color-white-a40: #ffffff66;
+  --color-neutral-200: #e2e0d8;
+  --color-green-500-a20: #00be7d33;
+  --color-black-a60: #00000099;
+  --color-white-a70: #ffffffb2;
+  --color-white-a10: #ffffff1a;
+  --color-white-a20: #ffffff33;
+  --color-black-a10: #0000001a;
+  --color-black-a20: #00000033;
+  --color-neutral-950-3: #111111;
+  --color-black-a25: #00000040;
+  --color-neutral-300-a40: #d9d7cf66;
+  --color-black-a50: #00000080;
+  --color-white-a5: #ffffff0d;
+  --color-teal-300: #5ee9b5;
+  --color-black-a90: #000000e6;
+  --color-black-a40: #00000066;
+  --color-neutral-950-4: #050807;
+  --color-neutral-950-a80: #0c1410cc;
+  --color-black-a90-2: #070b09e6;
+  --color-black-a15: #00000026;
+  --color-black-a45: #00000073;
+  --color-neutral-950-a30: #0d1a174d;
+  --color-black-a30: #0000004d;
+  --color-black-a75: #000000bf;
+  --color-red-400: #ffa1ad;
+  --color-green-500-a15: #00bc8026;
+  --color-green-700: #007a55;
+  --color-black-a80: #000000cc;
+  --color-red-500: #ff416c;
+  --color-neutral-300: #d4d4d8;
+  --color-green-200-a80: #a4f4cfcc;
+  --color-white-a15: #ffffff26;
+
+  /* Type */
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --text-display: 104px;
+  --text-display--line-height: 1;
+  --text-display--letter-spacing: -0.025em;
+  --text-display--font-weight: 700;
+  --text-h1: 82px;
+  --text-h1--line-height: 1.05;
+  --text-h1--letter-spacing: -0.04em;
+  --text-h1--font-weight: 700;
+  --text-h2: 48px;
+  --text-h2--line-height: 1.15;
+  --text-h2--letter-spacing: -0.025em;
+  --text-h2--font-weight: 400;
+  --text-h3: 30px;
+  --text-h3--line-height: 1.2;
+  --text-h3--letter-spacing: -0.025em;
+  --text-h3--font-weight: 600;
+  --text-h4: 24px;
+  --text-h4--line-height: 1.25;
+  --text-h4--font-weight: 700;
+  --text-h5: 20px;
+  --text-h5--line-height: 1.625;
+  --text-h5--font-weight: 400;
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 1.625;
+  --text-body-lg--font-weight: 400;
+  --text-body: 15px;
+  --text-body--line-height: 1.625;
+  --text-body--font-weight: 400;
+  --text-body-sm: 14px;
+  --text-body-sm--line-height: 1.625;
+  --text-body-sm--font-weight: 400;
+  --text-caption: 12px;
+  --text-caption--line-height: 1.625;
+  --text-caption--font-weight: 400;
+  --text-code: 9px;
+  --text-code--line-height: 1.5;
+  --text-code--font-weight: 400;
+
+  /* Space: a 4px grid. --space-<n> is n × 4px; Tailwind's own --spacing stays 4px, so p-4 is 16px */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-9: 36px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-28: 112px;
+  --space-section: 112px;
+  --space-section-alt: 128px;
+  --space-section-phone: 56px;
+
+  /* Shape */
+  --radius-2xl: 22px;
+  --radius-3xl: 44.8px;
+  --radius-full: 9999px;
+  --shadow-xs: rgba(0, 0, 0, 0.15) 0px 1px 3px 0px;
+  --shadow-sm: rgba(0, 0, 0, 0.4) 0px 1px 3px 0px;
+  --shadow-md: rgba(0, 0, 0, 0.25) 0px 1px 3px 0px, rgba(0, 0, 0, 0.25) 0px 1px 2px -1px;
+  --shadow-lg: rgba(0, 0, 0, 0.25) 0px 1px 3px 0px, rgba(0, 0, 0, 0.25) 0px 2px 4px -1px;
+  --shadow-xl: rgba(0, 0, 0, 0.3) 0px 1px 3px 0px, rgba(0, 0, 0, 0.3) 0px 4px 6px -1px;
+  --shadow-2xl: rgb(5, 8, 7) 0px 4px 0px 0px, rgba(0, 0, 0, 0.5) 0px 8px 16px 0px;
+  --border-width: 1px;
+
+  /* Layout */
+  --container-page: 1360px;
+  --container-wide: 672px;
+  --container-narrow: 1326px;
+
+  /* Motion */
+  --duration-fast: 150ms;
+  --duration-base: 300ms;
+  --duration-slow: 700ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-alt-1: cubic-bezier(0, 0, 0.2, 1);
+}

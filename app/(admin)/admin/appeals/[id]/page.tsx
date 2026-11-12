@@ -25,7 +25,7 @@ export default async function AdminAppealDetailsPage({ params }: { params: Promi
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 pb-16">
+    <div className="space-y-6 pb-16 w-full">
       <Link href="/admin/appeals" className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors">
         ← Back to appeals queue
       </Link>

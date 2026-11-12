@@ -20,21 +20,23 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
   children,
   initialLanguage = 'EN'
 }) => {
-  const [language, setLanguageState] = useState<Language>(() => {
+  const [language, setLanguageState] = useState<Language>(initialLanguage);
+
+  useEffect(() => {
     try {
       const savedLanding = localStorage.getItem('direskill_language') as Language;
       if (savedLanding && (savedLanding === 'EN' || savedLanding === 'አማ' || savedLanding === 'ORO')) {
-        return savedLanding;
+        setLanguageState(savedLanding);
+        return;
       }
       const savedGlobal = localStorage.getItem('direskill-lang');
-      if (savedGlobal === 'am') return 'አማ';
-      if (savedGlobal === 'om') return 'ORO';
-      if (savedGlobal === 'en') return 'EN';
+      if (savedGlobal === 'am') setLanguageState('አማ');
+      else if (savedGlobal === 'om') setLanguageState('ORO');
+      else if (savedGlobal === 'en') setLanguageState('EN');
     } catch {
       // ignore
     }
-    return initialLanguage;
-  });
+  }, []);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);

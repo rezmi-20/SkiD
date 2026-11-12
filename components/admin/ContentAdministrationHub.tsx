@@ -421,27 +421,24 @@ export function ContentAdministrationHub({
   });
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-16">
-      {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-zinc-900 border border-white/10 text-white shadow-xl">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 border border-purple-500/30">
-            <Megaphone size={24} />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold font-sans tracking-tight">Content Administration & Landing Portal</h1>
-            <p className="text-xs text-zinc-400 mt-1 max-w-2xl">
-              Control landing page FAQs, manage public testimonials, moderate community feeds, and broadcast official platform bulletins.
-            </p>
-          </div>
+    <div className="space-y-6 pb-24 w-full">
+      {/* Flush Unboxed Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pt-1">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+            Content Administration Hub
+          </h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Control landing page FAQs, manage public testimonials, moderate community feeds, and broadcast official bulletins.
+          </p>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center gap-1 bg-black/50 p-1.5 rounded-xl border border-white/10 self-start sm:self-auto overflow-x-auto">
+        <div className="flex items-center gap-1 bg-secondary/80 p-1 rounded-xl border border-border self-start sm:self-auto overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab("faqs")}
             className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === "faqs" ? "bg-white text-black font-bold shadow" : "text-zinc-400 hover:text-white"
+              activeTab === "faqs" ? "bg-card text-foreground font-bold shadow-xs border border-border" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             Landing FAQs ({faqs.length})
@@ -449,7 +446,7 @@ export function ContentAdministrationHub({
           <button
             onClick={() => setActiveTab("testimonials")}
             className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === "testimonials" ? "bg-white text-black font-bold shadow" : "text-zinc-400 hover:text-white"
+              activeTab === "testimonials" ? "bg-card text-foreground font-bold shadow-xs border border-border" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             Testimonials ({testimonials.length})
@@ -457,7 +454,7 @@ export function ContentAdministrationHub({
           <button
             onClick={() => setActiveTab("feed")}
             className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === "feed" ? "bg-white text-black font-bold shadow" : "text-zinc-400 hover:text-white"
+              activeTab === "feed" ? "bg-card text-foreground font-bold shadow-xs border border-border" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             Feed Moderation ({posts.length})
@@ -465,7 +462,7 @@ export function ContentAdministrationHub({
           <button
             onClick={() => setActiveTab("broadcast")}
             className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === "broadcast" ? "bg-purple-500 text-white font-bold shadow" : "text-zinc-400 hover:text-white"
+              activeTab === "broadcast" ? "bg-accent text-accent-foreground font-bold shadow-xs" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             Broadcast Bulletin
@@ -496,13 +493,13 @@ export function ContentAdministrationHub({
       {activeTab === "faqs" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <div className="text-xs text-zinc-400">
+            <div className="text-xs text-muted-foreground">
               Showing FAQs currently published or drafted for the main landing page.
             </div>
             {canModerate && (
               <button
                 onClick={openAddFaqModal}
-                className="px-4 py-2 rounded-xl bg-white text-black text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 hover:bg-zinc-200 transition-all shadow cursor-pointer"
+                className="px-4 py-2 rounded-lg bg-accent text-accent-foreground text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 hover:opacity-90 transition-all shadow-xs cursor-pointer"
               >
                 <Plus size={14} />
                 <span>Add Landing FAQ</span>
@@ -514,18 +511,18 @@ export function ContentAdministrationHub({
             {faqs.map((faq) => (
               <div
                 key={faq.id}
-                className="p-5 rounded-2xl bg-zinc-900/60 border border-white/10 flex flex-col justify-between space-y-3"
+                className="p-5 rounded-xl bg-card border border-border flex flex-col justify-between space-y-3 shadow-xs"
               >
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
                         {faq.topic}
                       </span>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-white/10 text-white">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-secondary border border-border text-foreground">
                         {faq.language}
                       </span>
-                      <span className="text-[10px] font-mono text-zinc-500">#{faq.sortOrder}</span>
+                      <span className="text-[10px] font-mono text-muted-foreground">#{faq.sortOrder}</span>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -533,8 +530,8 @@ export function ContentAdministrationHub({
                         onClick={() => handleToggleFaq(faq.id, faq.isActive)}
                         className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
                           faq.isActive
-                            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                            : "bg-zinc-800 text-zinc-400 border border-zinc-700"
+                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+                            : "bg-secondary text-muted-foreground border border-border"
                         }`}
                       >
                         {faq.isActive ? "Active" : "Hidden"}
@@ -542,27 +539,27 @@ export function ContentAdministrationHub({
                     </div>
                   </div>
 
-                  <h3 className="text-sm font-bold text-white mb-2 leading-snug">{faq.question}</h3>
-                  <p className="text-xs text-zinc-400 leading-relaxed line-clamp-3">{faq.answer}</p>
+                  <h3 className="text-sm font-bold text-foreground mb-2 leading-snug">{faq.question}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">{faq.answer}</p>
                   {faq.takeaway && (
-                    <div className="mt-2 text-[11px] font-mono text-zinc-500 italic">
+                    <div className="mt-2 text-[11px] font-mono text-muted-foreground italic">
                       Key Takeaway: {faq.takeaway}
                     </div>
                   )}
                 </div>
 
                 {canModerate && (
-                  <div className="pt-3 border-t border-white/5 flex items-center justify-end gap-2 text-xs">
+                  <div className="pt-3 border-t border-border flex items-center justify-end gap-2 text-xs">
                     <button
                       onClick={() => openEditFaqModal(faq)}
-                      className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 transition-colors flex items-center gap-1 cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg bg-secondary hover:bg-secondary/80 text-foreground border border-border transition-colors flex items-center gap-1 cursor-pointer"
                     >
                       <Edit size={12} />
                       <span>Edit</span>
                     </button>
                     <button
                       onClick={() => handleDeleteFaq(faq.id)}
-                      className="px-3 py-1.5 rounded-lg bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-500/20 transition-colors flex items-center gap-1 cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg bg-destructive/10 hover:bg-destructive/20 text-destructive border border-destructive/20 transition-colors flex items-center gap-1 cursor-pointer"
                     >
                       <Trash2 size={12} />
                       <span>Delete</span>
@@ -574,7 +571,7 @@ export function ContentAdministrationHub({
           </div>
 
           {faqs.length === 0 && (
-            <div className="p-12 text-center text-zinc-500 bg-zinc-900/30 rounded-2xl border border-dashed border-white/10">
+            <div className="p-12 text-center text-muted-foreground bg-card rounded-xl border border-dashed border-border">
               No custom FAQs added yet. The landing page is displaying curated defaults from translation dictionaries.
             </div>
           )}
@@ -585,13 +582,13 @@ export function ContentAdministrationHub({
       {activeTab === "testimonials" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <div className="text-xs text-zinc-400">
+            <div className="text-xs text-muted-foreground">
               Manage client and artisan reviews featured on the landing page sliding track.
             </div>
             {canModerate && (
               <button
                 onClick={openAddTestimonialModal}
-                className="px-4 py-2 rounded-xl bg-white text-black text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 hover:bg-zinc-200 transition-all shadow cursor-pointer"
+                className="px-4 py-2 rounded-lg bg-accent text-accent-foreground text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 hover:opacity-90 transition-all shadow-xs cursor-pointer"
               >
                 <Plus size={14} />
                 <span>Add Testimonial</span>
@@ -603,21 +600,21 @@ export function ContentAdministrationHub({
             {testimonials.map((item) => (
               <div
                 key={item.id}
-                className="p-5 rounded-2xl bg-zinc-900/60 border border-white/10 flex flex-col justify-between space-y-4"
+                className="p-5 rounded-xl bg-card border border-border flex flex-col justify-between space-y-4 shadow-xs"
               >
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2.5">
                       <div
-                        className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shadow ${
+                        className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shadow-xs ${
                           item.avatarBg || "bg-gradient-to-tr from-amber-600 via-amber-400 to-yellow-200 text-white"
                         }`}
                       >
                         {item.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <div className="font-bold text-white text-sm leading-tight">{item.name}</div>
-                        <div className="text-[11px] text-zinc-400">{item.role} · {item.trade}</div>
+                        <div className="font-bold text-foreground text-sm leading-tight">{item.name}</div>
+                        <div className="text-[11px] text-muted-foreground">{item.role} · {item.trade}</div>
                       </div>
                     </div>
 
@@ -625,36 +622,36 @@ export function ContentAdministrationHub({
                       onClick={() => handleToggleTestimonial(item.id, item.isActive)}
                       className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
                         item.isActive
-                          ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                          : "bg-zinc-800 text-zinc-500 border border-zinc-700"
+                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+                          : "bg-secondary text-muted-foreground border border-border"
                       }`}
                     >
                       {item.isActive ? "Live" : "Draft"}
                     </button>
                   </div>
 
-                  <p className="text-xs text-zinc-300 italic font-serif leading-relaxed">
+                  <p className="text-xs text-foreground/90 italic font-serif leading-relaxed">
                     “{item.quote.replace(/^“|”$/g, "")}”
                   </p>
 
-                  <div className="mt-3 flex items-center justify-between text-[10px] font-mono text-zinc-500">
-                    <span className="text-emerald-400">{item.jobs}</span>
+                  <div className="mt-3 flex items-center justify-between text-[10px] font-mono text-muted-foreground">
+                    <span className="text-success font-semibold">{item.jobs}</span>
                     <span>Lang: {item.language}</span>
                   </div>
                 </div>
 
                 {canModerate && (
-                  <div className="pt-3 border-t border-white/5 flex items-center justify-end gap-2 text-xs">
+                  <div className="pt-3 border-t border-border flex items-center justify-end gap-2 text-xs">
                     <button
                       onClick={() => openEditTestimonialModal(item)}
-                      className="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 transition-colors flex items-center gap-1 cursor-pointer"
+                      className="px-2.5 py-1 rounded-md bg-secondary hover:bg-secondary/80 text-foreground border border-border transition-colors flex items-center gap-1 cursor-pointer"
                     >
                       <Edit size={11} />
                       <span>Edit</span>
                     </button>
                     <button
                       onClick={() => handleDeleteTestimonial(item.id)}
-                      className="px-2.5 py-1 rounded bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-500/20 transition-colors flex items-center gap-1 cursor-pointer"
+                      className="px-2.5 py-1 rounded-md bg-destructive/10 hover:bg-destructive/20 text-destructive border border-destructive/20 transition-colors flex items-center gap-1 cursor-pointer"
                     >
                       <Trash2 size={11} />
                       <span>Delete</span>
@@ -666,7 +663,7 @@ export function ContentAdministrationHub({
           </div>
 
           {testimonials.length === 0 && (
-            <div className="p-12 text-center text-zinc-500 bg-zinc-900/30 rounded-2xl border border-dashed border-white/10">
+            <div className="p-12 text-center text-muted-foreground bg-card rounded-xl border border-dashed border-border">
               No custom testimonials added yet. Displaying default curated reviews from Dire Dawa clients and artisans.
             </div>
           )}
@@ -678,37 +675,37 @@ export function ContentAdministrationHub({
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="relative flex-1 max-w-md">
-              <Search size={14} className="absolute left-3 top-3 text-zinc-400" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
                 value={postSearch}
                 onChange={(e) => setPostSearch(e.target.value)}
                 placeholder="Search community posts by title, body, author..."
-                className="w-full bg-zinc-900 border border-white/10 rounded-xl pl-9 pr-3.5 py-2 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                className="w-full bg-secondary border border-border rounded-lg pl-9 pr-3.5 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent"
               />
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setPostFilter("all")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
-                  postFilter === "all" ? "bg-white text-black" : "bg-zinc-900 text-zinc-400 border border-white/10"
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer ${
+                  postFilter === "all" ? "bg-accent text-accent-foreground font-bold shadow-xs" : "bg-secondary text-muted-foreground border border-border"
                 }`}
               >
                 All Posts
               </button>
               <button
                 onClick={() => setPostFilter("active")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
-                  postFilter === "active" ? "bg-white text-black" : "bg-zinc-900 text-zinc-400 border border-white/10"
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer ${
+                  postFilter === "active" ? "bg-accent text-accent-foreground font-bold shadow-xs" : "bg-secondary text-muted-foreground border border-border"
                 }`}
               >
                 Active
               </button>
               <button
                 onClick={() => setPostFilter("hidden")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${
-                  postFilter === "hidden" ? "bg-red-500 text-white" : "bg-zinc-900 text-zinc-400 border border-white/10"
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer ${
+                  postFilter === "hidden" ? "bg-destructive text-destructive-foreground font-bold shadow-xs" : "bg-secondary text-muted-foreground border border-border"
                 }`}
               >
                 Hidden
@@ -787,14 +784,14 @@ export function ContentAdministrationHub({
 
       {/* ── TAB 4: BROADCAST OFFICIAL BULLETIN ─────────────────────────────────── */}
       {activeTab === "broadcast" && (
-        <div className="max-w-2xl mx-auto p-6 rounded-2xl bg-zinc-900/60 border border-white/10 space-y-4">
-          <div className="flex items-center gap-3 pb-4 border-b border-white/10">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center">
+        <div className="w-full p-6 rounded-xl bg-card border border-border space-y-4 shadow-xs">
+          <div className="flex items-center gap-3 pb-4 border-b border-border">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20">
               <Megaphone size={20} />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white">Broadcast Official Community Bulletin</h2>
-              <p className="text-xs text-zinc-400">
+              <h2 className="text-base font-bold text-foreground">Broadcast Official Community Bulletin</h2>
+              <p className="text-xs text-muted-foreground">
                 Publishes an official pinned alert or update to the entire DireSkill worker and client community feed.
               </p>
             </div>
@@ -802,13 +799,13 @@ export function ContentAdministrationHub({
 
           <form onSubmit={handlePublishAnnouncement} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1">
+              <label className="block text-xs font-semibold text-foreground mb-1">
                 Announcement Category
               </label>
               <select
                 value={annCategory}
                 onChange={(e) => setAnnCategory(e.target.value)}
-                className="w-full bg-black border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+                className="w-full bg-secondary border border-border rounded-lg px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:border-accent"
               >
                 <option value="Announcements">Platform Announcements</option>
                 <option value="Safety Notice">Worker & Client Safety Notice</option>
@@ -819,8 +816,8 @@ export function ContentAdministrationHub({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1">
-                Bulletin Headline <span className="text-red-400">*</span>
+              <label className="block text-xs font-semibold text-foreground mb-1">
+                Bulletin Headline <span className="text-destructive">*</span>
               </label>
               <input
                 type="text"
@@ -828,13 +825,13 @@ export function ContentAdministrationHub({
                 onChange={(e) => setAnnTitle(e.target.value)}
                 placeholder="e.g. Mandatory Fayda ID Digital Contract Compliance Update"
                 required
-                className="w-full bg-black border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                className="w-full bg-secondary border border-border rounded-lg px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1">
-                Detailed Content <span className="text-red-400">*</span>
+              <label className="block text-xs font-semibold text-foreground mb-1">
+                Detailed Content <span className="text-destructive">*</span>
               </label>
               <textarea
                 value={annContent}
@@ -842,14 +839,14 @@ export function ContentAdministrationHub({
                 rows={6}
                 placeholder="Write the full announcement message here..."
                 required
-                className="w-full bg-black border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none"
+                className="w-full bg-secondary border border-border rounded-lg px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent resize-none"
               />
             </div>
 
             <button
               type="submit"
               disabled={isPending}
-              className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-lg disabled:opacity-50 cursor-pointer"
+              className="w-full py-2.5 rounded-lg bg-accent text-accent-foreground text-xs font-bold uppercase tracking-wider transition-all shadow-xs disabled:opacity-50 cursor-pointer hover:opacity-90"
             >
               {isPending ? "Broadcasting..." : "Publish Official Announcement to Community Feed"}
             </button>
@@ -860,14 +857,14 @@ export function ContentAdministrationHub({
       {/* ── FAQ MODAL ──────────────────────────────────────────────────────────── */}
       {faqModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
-          <div className="bg-zinc-900 border border-white/20 rounded-2xl w-full max-w-xl p-6 shadow-2xl relative">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
-              <h3 className="text-sm font-bold text-white">
+          <div className="bg-card border border-border rounded-2xl w-full max-w-xl p-6 shadow-2xl relative text-foreground">
+            <div className="flex items-center justify-between pb-3 border-b border-border mb-4">
+              <h3 className="text-sm font-bold text-foreground">
                 {editingFaq ? "Edit Landing FAQ" : "Add Landing Page FAQ"}
               </h3>
               <button
                 onClick={() => setFaqModalOpen(false)}
-                className="text-zinc-400 hover:text-white p-1"
+                className="text-muted-foreground hover:text-foreground p-1 cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -876,22 +873,22 @@ export function ContentAdministrationHub({
             <form onSubmit={handleSaveFaq} className="space-y-3.5 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-zinc-400 mb-1">Topic / Category</label>
+                  <label className="block text-muted-foreground mb-1">Topic / Category</label>
                   <input
                     type="text"
                     value={faqTopic}
                     onChange={(e) => setFaqTopic(e.target.value)}
                     placeholder="e.g. Verification, Payments, Safety"
                     required
-                    className="w-full bg-black border border-white/15 rounded-xl px-3 py-2 text-white"
+                    className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-accent"
                   />
                 </div>
                 <div>
-                  <label className="block text-zinc-400 mb-1">Target Language</label>
+                  <label className="block text-muted-foreground mb-1">Target Language</label>
                   <select
                     value={faqLanguage}
                     onChange={(e) => setFaqLanguage(e.target.value)}
-                    className="w-full bg-black border border-white/15 rounded-xl px-3 py-2 text-white"
+                    className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-accent"
                   >
                     <option value="EN">English (EN)</option>
                     <option value="አማ">Amharic (አማ)</option>
@@ -901,52 +898,52 @@ export function ContentAdministrationHub({
               </div>
 
               <div>
-                <label className="block text-zinc-400 mb-1">Question</label>
+                <label className="block text-muted-foreground mb-1">Question</label>
                 <input
                   type="text"
                   value={faqQuestion}
                   onChange={(e) => setFaqQuestion(e.target.value)}
                   placeholder="e.g. How does Fayda ID verification protect clients?"
                   required
-                  className="w-full bg-black border border-white/15 rounded-xl px-3 py-2 text-white"
+                  className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-accent"
                 />
               </div>
 
               <div>
-                <label className="block text-zinc-400 mb-1">Answer</label>
+                <label className="block text-muted-foreground mb-1">Answer</label>
                 <textarea
                   value={faqAnswer}
                   onChange={(e) => setFaqAnswer(e.target.value)}
                   rows={4}
                   placeholder="Provide a clear, detailed response..."
                   required
-                  className="w-full bg-black border border-white/15 rounded-xl px-3 py-2 text-white resize-none"
+                  className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-accent resize-none"
                 />
               </div>
 
               <div>
-                <label className="block text-zinc-400 mb-1">Key Takeaway (Optional)</label>
+                <label className="block text-muted-foreground mb-1">Key Takeaway (Optional)</label>
                 <input
                   type="text"
                   value={faqTakeaway}
                   onChange={(e) => setFaqTakeaway(e.target.value)}
                   placeholder="Single-sentence summary"
-                  className="w-full bg-black border border-white/15 rounded-xl px-3 py-2 text-white"
+                  className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-accent"
                 />
               </div>
 
-              <div className="pt-3 border-t border-white/10 flex justify-end gap-2">
+              <div className="pt-3 border-t border-border flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setFaqModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                  className="px-4 py-2 rounded-lg bg-secondary text-foreground hover:bg-secondary/80 border border-border cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="px-5 py-2 rounded-xl bg-white text-black font-bold uppercase tracking-wider hover:bg-zinc-200"
+                  className="px-5 py-2 rounded-lg bg-accent text-accent-foreground font-bold uppercase tracking-wider hover:opacity-90 shadow-xs cursor-pointer"
                 >
                   {isPending ? "Saving..." : "Save FAQ"}
                 </button>
@@ -959,14 +956,14 @@ export function ContentAdministrationHub({
       {/* ── TESTIMONIAL MODAL ──────────────────────────────────────────────────── */}
       {testimonialModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
-          <div className="bg-zinc-900 border border-white/20 rounded-2xl w-full max-w-xl p-6 shadow-2xl relative">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
-              <h3 className="text-sm font-bold text-white">
+          <div className="bg-card border border-border rounded-2xl w-full max-w-xl p-6 shadow-2xl relative text-foreground">
+            <div className="flex items-center justify-between pb-3 border-b border-border mb-4">
+              <h3 className="text-sm font-bold text-foreground">
                 {editingTestimonial ? "Edit Testimonial" : "Add Landing Page Testimonial"}
               </h3>
               <button
                 onClick={() => setTestimonialModalOpen(false)}
-                className="text-zinc-400 hover:text-white p-1"
+                className="text-muted-foreground hover:text-foreground p-1 cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -975,56 +972,56 @@ export function ContentAdministrationHub({
             <form onSubmit={handleSaveTestimonial} className="space-y-3.5 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-zinc-400 mb-1">Author Name</label>
+                  <label className="block text-muted-foreground mb-1">Author Name</label>
                   <input
                     type="text"
                     value={testName}
                     onChange={(e) => setTestName(e.target.value)}
                     placeholder="e.g. Muna Ibrahim"
                     required
-                    className="w-full bg-black border border-white/15 rounded-xl px-3 py-2 text-white"
+                    className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-accent"
                   />
                 </div>
                 <div>
-                  <label className="block text-zinc-400 mb-1">Role</label>
+                  <label className="block text-muted-foreground mb-1">Role</label>
                   <input
                     type="text"
                     value={testRole}
                     onChange={(e) => setTestRole(e.target.value)}
                     placeholder="e.g. Homeowner, Store Manager"
                     required
-                    className="w-full bg-black border border-white/15 rounded-xl px-3 py-2 text-white"
+                    className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-accent"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-zinc-400 mb-1">Trade / Service</label>
+                  <label className="block text-muted-foreground mb-1">Trade / Service</label>
                   <input
                     type="text"
                     value={testTrade}
                     onChange={(e) => setTestTrade(e.target.value)}
                     placeholder="e.g. Electrician"
-                    className="w-full bg-black border border-white/15 rounded-xl px-3 py-2 text-white"
+                    className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-accent"
                   />
                 </div>
                 <div>
-                  <label className="block text-zinc-400 mb-1">Jobs Badge</label>
+                  <label className="block text-muted-foreground mb-1">Jobs Badge</label>
                   <input
                     type="text"
                     value={testJobs}
                     onChange={(e) => setTestJobs(e.target.value)}
                     placeholder="e.g. 5 Verified Jobs"
-                    className="w-full bg-black border border-white/15 rounded-xl px-3 py-2 text-white"
+                    className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-accent"
                   />
                 </div>
                 <div>
-                  <label className="block text-zinc-400 mb-1">Language</label>
+                  <label className="block text-muted-foreground mb-1">Language</label>
                   <select
                     value={testLanguage}
                     onChange={(e) => setTestLanguage(e.target.value)}
-                    className="w-full bg-black border border-white/15 rounded-xl px-3 py-2 text-white"
+                    className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-accent"
                   >
                     <option value="EN">English (EN)</option>
                     <option value="አማ">Amharic (አማ)</option>
@@ -1034,23 +1031,23 @@ export function ContentAdministrationHub({
               </div>
 
               <div>
-                <label className="block text-zinc-400 mb-1">Testimonial Quote</label>
+                <label className="block text-muted-foreground mb-1">Testimonial Quote</label>
                 <textarea
                   value={testQuote}
                   onChange={(e) => setTestQuote(e.target.value)}
                   rows={3}
                   placeholder="The user's direct quote or review..."
                   required
-                  className="w-full bg-black border border-white/15 rounded-xl px-3 py-2 text-white resize-none"
+                  className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-accent resize-none"
                 />
               </div>
 
               <div>
-                <label className="block text-zinc-400 mb-1">Avatar Color Theme</label>
+                <label className="block text-muted-foreground mb-1">Avatar Color Theme</label>
                 <select
                   value={testAvatarBg}
                   onChange={(e) => setTestAvatarBg(e.target.value)}
-                  className="w-full bg-black border border-white/15 rounded-xl px-3 py-2 text-white"
+                  className="w-full bg-secondary border border-border rounded-lg px-3 py-2 text-foreground focus:outline-none focus:border-accent"
                 >
                   <option value="bg-gradient-to-tr from-amber-600 via-amber-400 to-yellow-200 text-white">Warm Gold / Amber</option>
                   <option value="bg-gradient-to-tr from-blue-600 via-indigo-400 to-sky-200 text-white">Azure / Sky Blue</option>
@@ -1060,18 +1057,18 @@ export function ContentAdministrationHub({
                 </select>
               </div>
 
-              <div className="pt-3 border-t border-white/10 flex justify-end gap-2">
+              <div className="pt-3 border-t border-border flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setTestimonialModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                  className="px-4 py-2 rounded-lg bg-secondary text-foreground hover:bg-secondary/80 border border-border cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="px-5 py-2 rounded-xl bg-white text-black font-bold uppercase tracking-wider hover:bg-zinc-200"
+                  className="px-5 py-2 rounded-lg bg-accent text-accent-foreground font-bold uppercase tracking-wider hover:opacity-90 shadow-xs cursor-pointer"
                 >
                   {isPending ? "Saving..." : "Save Testimonial"}
                 </button>

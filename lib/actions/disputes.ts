@@ -679,11 +679,13 @@ export async function getDisputes() {
       d.updated_at,
       j.title AS job_title,
       p.status AS payment_status,
+      COALESCE(p.amount, c.payment_amount, 0)::numeric AS amount,
       cp.full_name AS client_name,
       wp.full_name AS worker_name,
       ae.full_name AS assigned_admin_name
     FROM disputes d
     JOIN jobs j ON d.job_id = j.id
+    LEFT JOIN contracts c ON c.id = d.contract_id
     LEFT JOIN payments p ON p.id = d.payment_id
     LEFT JOIN client_profiles cp ON d.client_id = cp.user_id
     LEFT JOIN worker_profiles wp ON d.worker_id = wp.user_id
@@ -1008,4 +1010,30 @@ export async function resolveDispute(disputeId: string, decision: ResolutionDeci
   revalidatePath("/worker/contracts");
   revalidatePath("/client/payments");
   return { success: true, status: 200, financialActionRequired, operationalOutcome: outcomeResult.outcome, nextJobStatus };
+}
+
+export async function updateDisputeCategory(disputeId: string, category: string) {
+  const admin = await requireAdminPermission("disputes.review");
+  const validCategories = ["work_quality", "payment_issue", "work_not_completed", "contract_violation"];
+  if (!validCategories.includes(category)) {
+    return { success: false, error: "Invalid dispute classification category." };
+  }
+
+  await sql`
+    UPDATE disputes
+    SET category = ${category}, updated_at = NOW()
+    WHERE id = ${disputeId}
+  `;
+
+  await recordDisputeEvent({
+    disputeId,
+    actorType: "admin",
+    actorId: admin.id,
+    eventType: "category_classified",
+    metadata: { new_category: category, classified_by: admin.fullName || admin.employeeId },
+  });
+
+  revalidatePath("/admin/disputes");
+  revalidatePath(`/admin/disputes/${disputeId}`);
+  return { success: true };
 }

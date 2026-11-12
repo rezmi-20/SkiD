@@ -5,48 +5,9 @@ import { validateProductionEnvironment } from "@/lib/env";
 
 validateProductionEnvironment();
 
-// Optimize connection on cellular hotspots and networks with unroutable IPv6 (LOCAL DEV ONLY)
-if (!process.env.VERCEL) {
-  if (typeof dns?.setDefaultResultOrder === "function") {
-    dns.setDefaultResultOrder("ipv4first");
-  }
-
-  try {
-    dns.setServers(["8.8.8.8", "1.1.1.1"]);
-  } catch {
-    // Ignore in environments where setServers is unsupported
-  }
-
-  // Configure Undici with 30s connection timeout and clean IPv4 routing for Neon pooler
-  const globalDispatcherKey = Symbol.for("skid.undici.dispatcher");
-  if (!(global as any)[globalDispatcherKey]) {
-    try {
-      const agent = new Agent({
-        connect: {
-          lookup: (hostname, options, callback) => {
-            dns.resolve4(hostname, (err, addresses) => {
-              if (err || !addresses?.length) {
-                return dns.lookup(hostname, options, callback);
-              }
-              // Filter out CGNAT 100.x or Route53 NS 205.x returned by buggy cellular hotspot DNS
-              const valid = addresses.filter((ip) => !ip.startsWith("100.") && !ip.startsWith("205."));
-              const targetIp = valid[0] || addresses[0];
-              if (options && options.all) {
-                callback(null, [{ address: targetIp, family: 4 }]);
-              } else {
-                callback(null, targetIp, 4);
-              }
-            });
-          },
-          timeout: 30000,
-        },
-      });
-      setGlobalDispatcher(agent);
-      (global as any)[globalDispatcherKey] = true;
-    } catch {
-      // Fallback gracefully if custom dispatcher is restricted
-    }
-  }
+// Optimize DNS result order for Node.js
+if (typeof dns?.setDefaultResultOrder === "function") {
+  dns.setDefaultResultOrder("ipv4first");
 }
 
 /**

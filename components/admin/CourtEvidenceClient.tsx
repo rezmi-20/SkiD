@@ -4,10 +4,11 @@ import React, { useState, useTransition } from "react";
 import { 
   FileCheck, ShieldAlert, Lock, Search, Scale, Printer, Download,
   CheckCircle2, AlertTriangle, MessageSquare, DollarSign, UserCheck, 
-  FileText, Clock, ExternalLink, ChevronRight
+  FileText, Clock, ExternalLink, ChevronRight, Loader2, ArrowLeft
 } from "lucide-react";
 import { searchContractsForEvidence, generateCourtEvidenceDossier } from "@/lib/actions/court-evidence";
-import FadeContent from "@/components/ui/fade-content";
+import { useLanguage } from "@/context/LanguageContext";
+import { triggerUnauthorizedNotice } from "@/components/admin/modals/AdminUnauthorizedNoticeModal";
 
 interface Props {
   adminEmployeeId: string;
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export function CourtEvidenceClient({ adminEmployeeId, adminFullName }: Props) {
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [selectedContract, setSelectedContract] = useState<any | null>(null);
@@ -27,6 +29,7 @@ export function CourtEvidenceClient({ adminEmployeeId, adminFullName }: Props) {
 
   const [isSearching, startSearch] = useTransition();
   const [isGenerating, startGenerating] = useTransition();
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dossier, setDossier] = useState<any | null>(null);
 
@@ -82,40 +85,69 @@ export function CourtEvidenceClient({ adminEmployeeId, adminFullName }: Props) {
     });
   };
 
+  const handleDownloadPdf = async () => {
+    if (!dossier?.pdfDownloadUrl) return;
+    setDownloadingPdf(true);
+    try {
+      const res = await fetch(dossier.pdfDownloadUrl, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        let errorMsg = "You do not have administrative clearance to download this certified court dossier.";
+        try {
+          const json = await res.json();
+          if (json.message) errorMsg = json.message;
+          else if (json.error) errorMsg = json.error;
+        } catch {}
+
+        triggerUnauthorizedNotice({
+          title: "Clearance Restricted · 403",
+          message: errorMsg,
+          actionName: "Court Evidence PDF Download",
+        });
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `DireSkill_Court_Evidence_${(dossier.caseNumber || "case").replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      triggerUnauthorizedNotice({
+        title: "Network or Clearance Error",
+        message: err?.message || "Failed to download court evidence file.",
+        actionName: "Court Evidence PDF Download",
+      });
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
+
   const handlePrint = () => {
     window.print();
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-16">
-      {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-red-950/80 via-zinc-900 to-zinc-950 border border-red-500/30 text-white shadow-xl">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center shrink-0 border border-red-500/40">
-            <Scale size={24} />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold font-sans tracking-tight">Judicial & Court Evidentiary Disclosure</h1>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-red-500 text-white uppercase tracking-wider">
-                Super Admin Only
-              </span>
-            </div>
-            <p className="text-xs text-zinc-300 mt-1 max-w-2xl leading-relaxed">
-              Official legal disclosure portal compliant with <strong>Ethiopian Labour Proclamation No. 1156/2019</strong> and <strong>Electronic Transactions Proclamation No. 1205/2020</strong>. Generates tamper-evident legal dossiers with SHA-256 seal.
-            </p>
-          </div>
-        </div>
-
-        <div className="text-right shrink-0 hidden sm:block">
-          <div className="text-[11px] text-zinc-400 font-mono">Authorizing Officer:</div>
-          <div className="text-xs font-bold text-white">{adminFullName}</div>
-          <div className="text-[10px] text-zinc-400 font-mono">ID: {adminEmployeeId}</div>
-        </div>
+    <div className="space-y-6 pb-24 w-full">
+      {/* Header (Clean deals.tsx style: No dots, no uppercase pill badges) */}
+      <div className="pt-1">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+          {t("admin.courtEvidence.title")}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          {t("admin.courtEvidence.desc")}
+        </p>
       </div>
 
       {error && (
-        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2 animate-fade-in">
+        <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive text-xs flex items-center gap-2">
           <AlertTriangle size={16} className="shrink-0" />
           <span>{error}</span>
         </div>
@@ -125,10 +157,10 @@ export function CourtEvidenceClient({ adminEmployeeId, adminFullName }: Props) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column: Search & Selection */}
           <div className="lg:col-span-6 space-y-4">
-            <div className="p-5 rounded-2xl bg-zinc-900/60 border border-white/10 space-y-4">
-              <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                <Search size={16} className="text-zinc-400" />
-                <span>1. Locate Target Contract or Job</span>
+            <div className="p-5 rounded-xl bg-card border border-border shadow-xs space-y-4">
+              <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+                <Search size={16} className="text-muted-foreground" />
+                <span>{t("admin.courtEvidence.step1")}</span>
               </h2>
 
               <form onSubmit={handleSearch} className="flex gap-2">
@@ -136,15 +168,15 @@ export function CourtEvidenceClient({ adminEmployeeId, adminFullName }: Props) {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Contract ID, Job Title, Client/Worker name or phone..."
-                  className="flex-1 bg-black/50 border border-white/15 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  placeholder={t("admin.courtEvidence.searchPlaceholder")}
+                  className="flex-1 bg-secondary border border-border rounded-lg px-3.5 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent"
                 />
                 <button
                   type="submit"
                   disabled={isSearching}
-                  className="px-5 py-2.5 rounded-xl bg-white text-black text-xs font-bold uppercase tracking-wider hover:bg-zinc-200 transition-all disabled:opacity-50 cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-accent text-accent-foreground text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-all disabled:opacity-50 cursor-pointer shadow-xs"
                 >
-                  {isSearching ? "Searching..." : "Search"}
+                  {isSearching ? "..." : "Search"}
                 </button>
               </form>
 
@@ -154,24 +186,24 @@ export function CourtEvidenceClient({ adminEmployeeId, adminFullName }: Props) {
                     <div
                       key={row.contractId}
                       onClick={() => setSelectedContract(row)}
-                      className={`p-3.5 rounded-xl border transition-all cursor-pointer text-xs ${
+                      className={`p-3.5 rounded-lg border transition-all cursor-pointer text-xs ${
                         selectedContract?.contractId === row.contractId
-                          ? "bg-red-500/10 border-red-500 text-white"
-                          : "bg-black/30 border-white/5 hover:border-white/20 text-zinc-300"
+                          ? "bg-accent/10 border-accent text-foreground"
+                          : "bg-secondary/40 border-border hover:border-muted-foreground/30 text-foreground"
                       }`}
                     >
-                      <div className="flex items-center justify-between font-mono text-[10px] text-zinc-400 mb-1">
+                      <div className="flex items-center justify-between font-mono text-[10px] text-muted-foreground mb-1">
                         <span>Contract #{row.contractId.slice(0, 8)}...</span>
-                        <span className="px-2 py-0.5 rounded bg-white/10 uppercase font-bold text-white">
+                        <span className="px-2 py-0.5 rounded-full bg-secondary border border-border uppercase font-semibold text-foreground">
                           {row.contractStatus}
                         </span>
                       </div>
-                      <div className="font-bold text-white text-sm mb-1">{row.jobTitle}</div>
-                      <div className="grid grid-cols-2 gap-2 text-[11px] text-zinc-400">
-                        <div>Client: <strong className="text-zinc-200">{row.clientName}</strong> ({row.clientPhone || "No phone"})</div>
-                        <div>Worker: <strong className="text-zinc-200">{row.workerName}</strong> ({row.workerPhone || "No phone"})</div>
+                      <div className="font-bold text-foreground text-sm mb-1">{row.jobTitle}</div>
+                      <div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground">
+                        <div>Client: <strong className="text-foreground">{row.clientName}</strong></div>
+                        <div>Worker: <strong className="text-foreground">{row.workerName}</strong></div>
                       </div>
-                      <div className="mt-2 text-[10px] text-emerald-400 font-mono flex items-center justify-between">
+                      <div className="mt-2 text-[10px] text-success font-mono flex items-center justify-between">
                         <span>Amount: ETB {Number(row.paymentAmount || 0).toLocaleString()}</span>
                         <span>Date: {new Date(row.createdAt).toLocaleDateString()}</span>
                       </div>
@@ -184,28 +216,28 @@ export function CourtEvidenceClient({ adminEmployeeId, adminFullName }: Props) {
 
           {/* Right Column: Court Order Verification & Authentication Form */}
           <div className="lg:col-span-6 space-y-4">
-            <div className="p-5 rounded-2xl bg-zinc-900/60 border border-white/10 space-y-4">
-              <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                <Lock size={16} className="text-red-400" />
-                <span>2. Official Subpoena Authorization</span>
+            <div className="p-5 rounded-xl bg-card border border-border shadow-xs space-y-4">
+              <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+                <Lock size={16} className="text-rose-500" />
+                <span>{t("admin.courtEvidence.step2")}</span>
               </h2>
 
               {selectedContract ? (
-                <div className="p-3 rounded-xl bg-black/40 border border-red-500/30 text-xs space-y-1">
-                  <div className="text-[10px] font-mono text-zinc-400 uppercase">Selected Contract:</div>
-                  <div className="font-bold text-white text-sm">{selectedContract.jobTitle}</div>
-                  <div className="text-zinc-400 text-[11px] font-mono">UUID: {selectedContract.contractId}</div>
+                <div className="p-3 rounded-lg bg-secondary/50 border border-border text-xs space-y-1">
+                  <div className="text-[10px] font-mono text-muted-foreground uppercase">Selected Target:</div>
+                  <div className="font-bold text-foreground text-sm">{selectedContract.jobTitle}</div>
+                  <div className="text-muted-foreground text-[11px] font-mono">UUID: {selectedContract.contractId}</div>
                 </div>
               ) : (
-                <div className="p-4 rounded-xl bg-black/20 border border-dashed border-white/10 text-center text-xs text-zinc-500">
+                <div className="p-4 rounded-lg bg-secondary/30 border border-dashed border-border text-center text-xs text-muted-foreground">
                   Select a contract from search results on the left
                 </div>
               )}
 
               <form onSubmit={handleGenerate} className="space-y-3.5">
                 <div>
-                  <label className="block text-[11px] font-semibold text-zinc-300 mb-1">
-                    Court Case Number / Subpoena Reference <span className="text-red-400">*</span>
+                  <label className="block text-[11px] font-semibold text-foreground mb-1">
+                    {t("admin.courtEvidence.caseNumber")} <span className="text-destructive">*</span>
                   </label>
                   <input
                     type="text"
@@ -213,13 +245,13 @@ export function CourtEvidenceClient({ adminEmployeeId, adminFullName }: Props) {
                     onChange={(e) => setCaseNumber(e.target.value)}
                     placeholder="e.g. FDRE-FED-CRT-DD-2026/8941"
                     required
-                    className="w-full bg-black/50 border border-white/15 rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-red-500 font-mono"
+                    className="w-full bg-secondary border border-border rounded-lg px-3.5 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent font-mono"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-zinc-300 mb-1">
-                    Requesting Court / Judicial Entity <span className="text-red-400">*</span>
+                  <label className="block text-[11px] font-semibold text-foreground mb-1">
+                    {t("admin.courtEvidence.courtName")} <span className="text-destructive">*</span>
                   </label>
                   <input
                     type="text"
@@ -227,28 +259,28 @@ export function CourtEvidenceClient({ adminEmployeeId, adminFullName }: Props) {
                     onChange={(e) => setCourtName(e.target.value)}
                     placeholder="e.g. Dire Dawa Federal First Instance Court - Commercial Bench"
                     required
-                    className="w-full bg-black/50 border border-white/15 rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-red-500"
+                    className="w-full bg-secondary border border-border rounded-lg px-3.5 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-zinc-300 mb-1">
-                    Evidentiary Scope & Purpose
+                  <label className="block text-[11px] font-semibold text-foreground mb-1">
+                    {t("admin.courtEvidence.purpose")}
                   </label>
                   <textarea
                     value={purpose}
                     onChange={(e) => setPurpose(e.target.value)}
                     rows={2}
-                    placeholder="e.g. Formal evidentiary submission regarding disputed electrical installation scope and completed payment release."
-                    className="w-full bg-black/50 border border-white/15 rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-red-500 resize-none"
+                    placeholder="e.g. Formal evidentiary submission regarding disputed electrical installation scope."
+                    className="w-full bg-secondary border border-border rounded-lg px-3.5 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent resize-none"
                   />
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-red-950/20 border border-red-500/30 space-y-2">
-                  <label className="block text-xs font-bold text-red-200">
-                    Master Super Administrator Password <span className="text-red-400">*</span>
+                <div className="p-3.5 rounded-lg bg-destructive/10 border border-destructive/20 space-y-2">
+                  <label className="block text-xs font-bold text-destructive">
+                    {t("admin.courtEvidence.masterPassword")} <span className="text-destructive">*</span>
                   </label>
-                  <p className="text-[10px] text-zinc-400 leading-relaxed">
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
                     Zero-Trust Re-Authentication: Disclosing private user chat records, contracts, and financial receipts requires elevated credential authorization.
                   </p>
                   <input
@@ -257,16 +289,16 @@ export function CourtEvidenceClient({ adminEmployeeId, adminFullName }: Props) {
                     onChange={(e) => setAdminPassword(e.target.value)}
                     placeholder="Enter your administrator password"
                     required
-                    className="w-full bg-black border border-red-500/40 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-red-500 font-mono"
+                    className="w-full bg-secondary border border-border rounded-lg px-3.5 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-destructive font-mono"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={isGenerating || !selectedContract}
-                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-700 text-white text-xs font-bold uppercase tracking-wider hover:from-red-500 hover:to-rose-600 transition-all shadow-lg disabled:opacity-40 cursor-pointer"
+                  className="w-full py-3 rounded-lg bg-accent text-accent-foreground text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-all shadow-xs disabled:opacity-40 cursor-pointer"
                 >
-                  {isGenerating ? "Verifying Credentials & Compiling Dossier..." : "Verify & Compile Certified Dossier"}
+                  {isGenerating ? "Verifying Credentials & Compiling..." : t("admin.courtEvidence.compileBtn")}
                 </button>
               </form>
             </div>
@@ -278,29 +310,33 @@ export function CourtEvidenceClient({ adminEmployeeId, adminFullName }: Props) {
           <div className="flex items-center justify-between no-print">
             <button
               onClick={() => setDossier(null)}
-              className="px-4 py-2 rounded-xl bg-zinc-800 text-white text-xs font-semibold hover:bg-zinc-700 cursor-pointer"
+              className="px-3.5 py-2 rounded-lg bg-secondary hover:bg-secondary/80 text-foreground text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
             >
-              &larr; Back to Case Search
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>{t("admin.courtEvidence.backSearch")}</span>
             </button>
             <div className="flex items-center gap-3">
               {dossier.pdfDownloadUrl && (
-                <a
-                  href={dossier.pdfDownloadUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  download
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-700 text-white text-xs font-bold uppercase tracking-wider flex items-center gap-2 hover:from-red-500 hover:to-rose-600 shadow-lg cursor-pointer"
+                <button
+                  type="button"
+                  disabled={downloadingPdf}
+                  onClick={handleDownloadPdf}
+                  className="px-4 py-2 rounded-lg bg-accent text-accent-foreground text-xs font-bold uppercase tracking-wider flex items-center gap-2 hover:opacity-90 shadow-xs cursor-pointer disabled:opacity-60"
                 >
-                  <Download size={16} />
-                  <span>Download Certified PDF</span>
-                </a>
+                  {downloadingPdf ? (
+                    <Loader2 size={15} className="animate-spin" />
+                  ) : (
+                    <Download size={15} />
+                  )}
+                  <span>{downloadingPdf ? "Verifying Access..." : t("admin.courtEvidence.downloadPdf")}</span>
+                </button>
               )}
               <button
                 onClick={handlePrint}
-                className="px-6 py-2.5 rounded-xl bg-white text-black text-xs font-bold uppercase tracking-wider flex items-center gap-2 hover:bg-zinc-200 shadow-lg cursor-pointer"
+                className="px-4 py-2 rounded-lg bg-secondary text-foreground text-xs font-bold uppercase tracking-wider flex items-center gap-2 hover:bg-secondary/80 transition cursor-pointer"
               >
-                <Printer size={16} />
-                <span>Print Dossier</span>
+                <Printer size={15} />
+                <span>{t("admin.courtEvidence.print")}</span>
               </button>
             </div>
           </div>
