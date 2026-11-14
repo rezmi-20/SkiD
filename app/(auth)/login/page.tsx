@@ -318,15 +318,15 @@ export default function LoginPage() {
           <span className="text-2xl font-bold tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">Dire<span className="text-green-400">Skill</span></span>
         </div>
 
-        {/* Center Headline with Glassmorphic Emblem */}
-        <div className="relative z-10 flex flex-col items-center text-center max-w-md p-6 rounded-3xl backdrop-blur-md bg-black/40 border border-white/10 shadow-2xl">
-          <div className="w-20 h-20 bg-white/10 border border-white/20 flex items-center justify-center rounded-2xl backdrop-blur-xl mb-6 shadow-xl">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" className="text-green-400 drop-shadow">
+        {/* Center Headline */}
+        <div className="relative z-10 flex flex-col items-center text-center max-w-md">
+          <div className="w-24 h-24 bg-white/5 border border-white/10 flex items-center justify-center rounded-3xl backdrop-blur-xl mb-8 shadow-2xl">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" className="text-green-400">
               <path d="M 11 2 C 3 2 1 10 1 15 L 7 15 C 7 11 9 8 11 8 Z" />
               <path d="M 13 22 C 21 22 23 14 23 9 L 17 9 C 17 13 15 16 13 16 Z" />
             </svg>
           </div>
-          <h2 className="text-4xl xl:text-5xl font-extrabold tracking-tight text-white leading-tight drop-shadow-md">
+          <h2 className="text-5xl font-extrabold tracking-tight text-white leading-tight drop-shadow-[0_4px_20px_rgba(0,0,0,0.9)]">
             {t("auth.marketing.loginTitle")}
           </h2>
         </div>

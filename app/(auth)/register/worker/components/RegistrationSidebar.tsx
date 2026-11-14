@@ -32,14 +32,14 @@ export default function RegistrationSidebar() {
         </span>
       </div>
 
-      <div className="relative z-10 flex flex-col items-center text-center max-w-md p-6 rounded-3xl backdrop-blur-md bg-black/40 border border-white/10 shadow-2xl">
-        <div className="w-20 h-20 bg-white/10 border border-white/20 flex items-center justify-center rounded-2xl backdrop-blur-xl mb-6 shadow-xl">
-           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-green-400 drop-shadow">
+      <div className="relative z-10 flex flex-col items-center text-center max-w-md">
+        <div className="w-24 h-24 bg-white/5 border border-white/10 flex items-center justify-center rounded-3xl backdrop-blur-xl mb-8 shadow-2xl">
+           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-400">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
               <circle cx="12" cy="7" r="4"></circle>
           </svg>
         </div>
-        <h2 className="text-4xl xl:text-5xl font-extrabold tracking-tight text-white leading-tight drop-shadow-md">
+        <h2 className="text-5xl font-extrabold tracking-tight text-white leading-tight drop-shadow-[0_4px_20px_rgba(0,0,0,0.9)]">
           {t("register.worker.title").split(' ')[0]} <br/>
           <span className="text-green-400">{t("register.worker.title").split(' ').slice(1).join(' ')}</span>
         </h2>
