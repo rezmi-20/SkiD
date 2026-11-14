@@ -87,12 +87,13 @@ export default function WorkerCard({
   };
 
   /* ═════════════════════════════════════════════════════════════════════
-     1. MINIMALIST EDITORIAL PROFILE CARD (Direct 1:1 with Alex Clinton Reference Photo)
+     1. MINIMALIST EDITORIAL PROFILE CARD (Alex Clinton Reference Style)
+     - Matches login/register dark mode: bg-[#09090b] ground, bg-zinc-900 card
+     - Increased height on mobile for breathing space
      - Prominent rounded portrait on top
      - Clean Name + Green Verified Checkmark
      - 1-line clean subtitle
      - Bottom row: Stats (Rating, Jobs) + Pill Button [Preview +]
-     - Full data accessible on click via Quick Preview modal
      ═════════════════════════════════════════════════════════════════════ */
   if (variant === "grid") {
     return (
@@ -109,14 +110,14 @@ export default function WorkerCard({
         onTouchStart={primeCache}
         className={cx(
           "group relative flex flex-col justify-between p-3 sm:p-3.5 rounded-2xl sm:rounded-3xl select-none transition-all duration-300 border cursor-pointer min-h-[295px] sm:min-h-[305px]",
-          "bg-background-secondary-default hover:bg-background-tertiary-default/60 border-border-button-default hover:border-[#45BA50]/50 shadow-xs hover:shadow-md",
+          "bg-white dark:bg-zinc-900/90 hover:bg-slate-50 dark:hover:bg-zinc-900 border-slate-200/80 dark:border-zinc-800 hover:border-[#45BA50]/50 shadow-xs hover:shadow-md",
           isSelected && "ring-2 ring-[#45BA50] border-[#45BA50]",
           className
         )}
       >
         <div>
           {/* Top: Large Rounded Portrait Image (Taller on mobile for better breathing space) */}
-          <div className="relative w-full aspect-square sm:aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden bg-background-tertiary-default shrink-0 border border-border-button-default/50">
+          <div className="relative w-full aspect-square sm:aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden bg-slate-100 dark:bg-zinc-800 shrink-0 border border-slate-200/60 dark:border-zinc-800/80">
             <img
               src={displayPhoto}
               alt={worker.name}
@@ -125,7 +126,7 @@ export default function WorkerCard({
               loading="lazy"
             />
             {/* Subtle Trade Badge Overlay */}
-            <div className="absolute top-2 end-2 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-[9px] sm:text-[10px] font-bold flex items-center gap-1 shadow-xs">
+            <div className="absolute top-2 end-2 px-2 py-0.5 rounded-full bg-[#09090b]/75 backdrop-blur-md border border-white/20 text-white text-[9px] sm:text-[10px] font-bold flex items-center gap-1 shadow-xs">
               <TradeIcon className={cx("w-2.5 h-2.5 sm:w-3 sm:h-3", tradeMeta.color)} />
               <span>{tradeMeta.label}</span>
             </div>
@@ -134,7 +135,7 @@ export default function WorkerCard({
           {/* Middle: Name + Green Verified Badge & Clean 1-Line Subtitle */}
           <div className="mt-2.5 sm:mt-3 space-y-0.5">
             <div className="flex items-center gap-1.5 min-w-0">
-              <h3 className="text-xs sm:text-body-medium font-bold text-text-primary truncate group-hover:text-[#45BA50] transition-colors">
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-[#45BA50] transition-colors">
                 {worker.name}
               </h3>
               {worker.isVerified && (
@@ -144,22 +145,22 @@ export default function WorkerCard({
               )}
             </div>
 
-            <p className="text-[10px] sm:text-xs text-text-tertiary line-clamp-1 leading-relaxed">
+            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 line-clamp-1 leading-relaxed">
               {worker.bio || `Certified ${tradeMeta.label.toLowerCase()} pro in ${worker.district || "Dire Dawa"}.`}
             </p>
           </div>
         </div>
 
         {/* Bottom Row: Stats (Left) + Pill Button (Right) matching Reference Photo */}
-        <div className="mt-2.5 sm:mt-3 pt-2 sm:pt-2.5 border-t border-separator-border/60 flex items-center justify-between gap-1.5">
+        <div className="mt-2.5 sm:mt-3 pt-2 sm:pt-2.5 border-t border-slate-200/70 dark:border-zinc-800/80 flex items-center justify-between gap-1.5">
           {/* Left Stats: Rating & Completed Jobs */}
-          <div className="flex items-center gap-2 sm:gap-2.5 text-[10px] sm:text-xs text-text-tertiary">
-            <span className="flex items-center gap-0.5 sm:gap-1 font-bold text-text-primary">
+          <div className="flex items-center gap-2 sm:gap-2.5 text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400">
+            <span className="flex items-center gap-0.5 sm:gap-1 font-bold text-slate-900 dark:text-white">
               <RiStarFill className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-500 fill-amber-500" />
               <span>{worker.rating > 0 ? worker.rating.toFixed(1) : "5.0"}</span>
             </span>
-            <span className="flex items-center gap-0.5 sm:gap-1 font-medium text-text-secondary">
-              <RiBriefcaseLine className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-text-tertiary" />
+            <span className="flex items-center gap-0.5 sm:gap-1 font-medium text-slate-400 dark:text-zinc-500">
+              <RiBriefcaseLine className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               <span>{worker.reviews || 12}</span>
             </span>
           </div>
@@ -172,7 +173,7 @@ export default function WorkerCard({
               primeCache();
               onPreview?.(worker);
             }}
-            className="rounded-full border border-border-button-default bg-background-primary-default hover:bg-[#134e27]/10 hover:border-[#45BA50] hover:text-[#45BA50] text-text-primary text-[10px] sm:text-xs font-bold px-2.5 sm:px-3 py-1 shadow-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1"
+            className="rounded-full border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/80 hover:bg-[#134e27]/15 hover:border-[#45BA50] hover:text-[#45BA50] text-slate-800 dark:text-zinc-200 text-[10px] sm:text-xs font-bold px-2.5 sm:px-3 py-1 shadow-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1"
             title="Preview full profile"
           >
             <span>Preview</span>
@@ -185,7 +186,7 @@ export default function WorkerCard({
 
   /* ═════════════════════════════════════════════════════════════════════
      2. COMPACT ROW (For Ride-Hailing Map View / Bottom Sheet)
-     - Clean compact row with quick action triggers
+     - Zinc-layered palette with smooth dark mode harmony
      ═════════════════════════════════════════════════════════════════════ */
   return (
     <motion.div
@@ -200,12 +201,12 @@ export default function WorkerCard({
         "group relative flex items-center justify-between gap-3 p-3 sm:p-3.5 rounded-2xl cursor-pointer select-none transition-all duration-200 border",
         isSelected
           ? "bg-[#134e27]/10 dark:bg-[#134e27]/25 border-[#45BA50] shadow-[0_0_0_1.5px_#45BA50]"
-          : "bg-background-secondary-default hover:bg-background-tertiary-default border-border-button-default shadow-xs",
+          : "bg-white dark:bg-zinc-900/90 hover:bg-slate-50 dark:hover:bg-zinc-900 border-slate-200/80 dark:border-zinc-800 shadow-xs",
         className
       )}
     >
       {/* Left: Compact Avatar with Trade Badge */}
-      <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden bg-background-tertiary-default shrink-0 border border-border-button-default">
+      <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden bg-slate-100 dark:bg-zinc-800 shrink-0 border border-slate-200/60 dark:border-zinc-800">
         <img
           src={displayPhoto}
           alt={worker.name}
@@ -213,7 +214,7 @@ export default function WorkerCard({
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           loading="lazy"
         />
-        <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-background-primary-default border border-border-button-default flex items-center justify-center shadow-xs">
+        <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 flex items-center justify-center shadow-xs">
           <TradeIcon className={cx("w-3 h-3", tradeMeta.color)} />
         </div>
       </div>
@@ -221,7 +222,7 @@ export default function WorkerCard({
       {/* Center: Artisan Identity, Kebele & Distance */}
       <div className="flex-1 min-w-0 pr-1">
         <div className="flex items-center gap-1.5 min-w-0">
-          <h3 className="text-body-medium font-bold text-text-primary truncate group-hover:text-[#45BA50] transition-colors">
+          <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-[#45BA50] transition-colors">
             {worker.name}
           </h3>
           {worker.isVerified && (
@@ -234,8 +235,8 @@ export default function WorkerCard({
           )}
         </div>
 
-        <div className="flex items-center gap-1.5 text-caption-1-semibold text-text-tertiary mt-0.5 truncate">
-          <span className="flex items-center gap-0.5 text-text-secondary">
+        <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-zinc-400 mt-0.5 truncate">
+          <span className="flex items-center gap-0.5 text-slate-700 dark:text-zinc-300">
             <RiMapPinLine className="w-3 h-3 text-[#45BA50] shrink-0" />
             {worker.district || "Kezira"}
           </span>
@@ -243,7 +244,7 @@ export default function WorkerCard({
           <span>{worker.distance !== "N/A" ? `${worker.distance} km away` : "Dire Dawa"}</span>
         </div>
 
-        <p className="text-[11px] text-text-tertiary truncate mt-0.5">
+        <p className="text-[11px] text-slate-400 dark:text-zinc-500 truncate mt-0.5">
           {tradeMeta.label}
         </p>
       </div>
@@ -251,10 +252,10 @@ export default function WorkerCard({
       {/* Right: Price & Status Pill */}
       <div className="text-end shrink-0 flex flex-col items-end gap-1">
         <div>
-          <p className="text-body-medium font-black text-text-primary leading-tight">
+          <p className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-tight">
             ETB {worker.hourlyRate || "450"}
           </p>
-          <span className="text-[10px] text-text-tertiary font-medium">/hr</span>
+          <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-medium">/hr</span>
         </div>
 
         <div className="flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">

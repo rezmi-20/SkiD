@@ -281,11 +281,11 @@ function SearchPageContent() {
   }, [debouncedQuery, filters.category, filters.neighborhood, filters.minRating, filters.maxDistance, filters.sortBy, filters.verifiedOnly, location]);
 
   return (
-    <div className="w-full h-full flex flex-col flex-1 min-h-0">
+    <div className="w-full h-full flex flex-col flex-1 min-h-0 bg-[#f8fafc] dark:bg-[#09090b] text-slate-900 dark:text-zinc-100 transition-colors">
       
       {/* ── 1. TOP CONTROLS BAR: [Filter] + [Search Bar (~50% width)] ... [List | Map] + [GPS] ── */}
       <header className={cx(
-        "px-4 sm:px-8 md:px-12 lg:px-14 xl:px-18 2xl:px-24 py-3 sm:py-3.5 items-stretch md:items-center justify-between gap-3 shrink-0 bg-background-primary-default/80 backdrop-blur-md border-b border-separator-border/60",
+        "px-4 sm:px-8 md:px-12 lg:px-14 xl:px-18 2xl:px-24 py-3 sm:py-3.5 items-stretch md:items-center justify-between gap-3 shrink-0 bg-white/85 dark:bg-zinc-900/85 backdrop-blur-md border-b border-slate-200/80 dark:border-zinc-800",
         viewMode === "map" ? "hidden lg:flex" : "flex flex-col md:flex-row"
       )}>
         
@@ -300,7 +300,7 @@ function SearchPageContent() {
               "h-11 px-4 rounded-full text-xs font-bold transition-all active:scale-95 shadow-xs shrink-0 flex items-center gap-2 border cursor-pointer",
               activeFilterCount > 0
                 ? "bg-[#45BA50] text-white border-[#45BA50] shadow-[0_2px_10px_rgba(69,186,80,0.35)] font-black"
-                : "bg-background-secondary-default border-border-button-default text-text-primary hover:bg-background-tertiary-default"
+                : "bg-white dark:bg-zinc-900 border-slate-200/80 dark:border-zinc-800 text-slate-800 dark:text-zinc-200 hover:bg-slate-50 dark:hover:bg-zinc-800"
             )}
             title="Toggle Search Filters (Slides from Right)"
           >
@@ -314,19 +314,19 @@ function SearchPageContent() {
           </button>
 
           {/* 2. Search Bar (Takes remaining of the allocated space) */}
-          <div className="flex-1 relative flex items-center h-11 px-3.5 rounded-full bg-background-secondary-default border border-border-button-default shadow-xs focus-within:border-[#45BA50] transition-colors">
-            <RiSearchLine className="w-4 h-4 text-text-tertiary shrink-0" />
+          <div className="flex-1 relative flex items-center h-11 px-3.5 rounded-full bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 shadow-xs focus-within:border-[#45BA50] transition-colors">
+            <RiSearchLine className="w-4 h-4 text-slate-400 dark:text-zinc-500 shrink-0" />
             <input
               type="text"
               value={filters.query}
               onChange={(e) => setFilters(f => ({ ...f, query: e.target.value }))}
               placeholder="Search electricians, plumbers, Kezira, painters..."
-              className="bg-transparent text-xs sm:text-sm font-semibold text-text-primary placeholder:text-text-placeholder outline-none flex-1 min-w-0 ms-2"
+              className="bg-transparent text-xs sm:text-sm font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 outline-none flex-1 min-w-0 ms-2"
             />
             {filters.query && (
               <button
                 onClick={() => setFilters(f => ({ ...f, query: "" }))}
-                className="p-1 text-text-tertiary hover:text-text-primary shrink-0 cursor-pointer"
+                className="p-1 text-slate-400 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white shrink-0 cursor-pointer"
               >
                 <RiCloseLine className="w-4 h-4" />
               </button>
@@ -338,14 +338,14 @@ function SearchPageContent() {
         <div className="flex items-center justify-between md:justify-end gap-2.5 shrink-0">
           
           {/* 3. The Switcher (List | Map) */}
-          <div className="flex items-center bg-background-secondary-default p-1 rounded-full border border-border-button-default shadow-xs shrink-0">
+          <div className="flex items-center bg-slate-100 dark:bg-zinc-900 p-1 rounded-full border border-slate-200/80 dark:border-zinc-800 shadow-xs shrink-0">
             <button 
               onClick={() => setViewMode("list")}
               className={cx(
                 "flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 cursor-pointer touch-manipulation",
                 viewMode === "list"
                   ? "bg-[#45BA50] text-white shadow-xs font-black"
-                  : "text-text-secondary hover:text-text-primary"
+                  : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
               )}
             >
               <RiListCheck2 className="w-3.5 h-3.5" />
@@ -357,7 +357,7 @@ function SearchPageContent() {
                 "flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 cursor-pointer touch-manipulation",
                 viewMode === "map"
                   ? "bg-[#45BA50] text-white shadow-xs font-black"
-                  : "text-text-secondary hover:text-text-primary"
+                  : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
               )}
             >
               <RiMap2Line className="w-3.5 h-3.5" />
@@ -422,7 +422,7 @@ function SearchPageContent() {
                       transition={{ type: "spring", damping: 28, stiffness: 300 }}
                       className="shrink-0 overflow-hidden hidden lg:block"
                     >
-                      <div className="w-[290px] p-5 rounded-3xl bg-background-secondary-default border border-border-button-default shadow-xs sticky top-20">
+                      <div className="w-[290px] p-5 rounded-3xl bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800 shadow-xs sticky top-20">
                         <SearchFilters
                           filters={filters}
                           setFilters={setFilters}
@@ -439,11 +439,11 @@ function SearchPageContent() {
                 <div className="flex-1 min-w-0 space-y-6">
                   
                   {/* ── 1. THE SINGLE LEAFLET MAP CONTAINER (No Dual Collision) ── */}
-                  <div className="w-full h-[calc(100dvh-64px)] lg:h-[500px] xl:h-[540px] lg:rounded-3xl lg:border lg:border-border-button-default overflow-hidden relative shadow-sm bg-background-secondary-default">
+                  <div className="w-full h-[calc(100dvh-64px)] lg:h-[500px] xl:h-[540px] lg:rounded-3xl lg:border lg:border-slate-200/80 dark:lg:border-zinc-800 overflow-hidden relative shadow-sm bg-slate-100 dark:bg-zinc-900">
                     
                     {/* Mobile Floating In-Map Header Controls (Filters, Search, List Switch, GPS) */}
                     <div className="absolute top-2.5 inset-x-2.5 z-[1000] flex flex-col gap-2 pointer-events-auto lg:hidden">
-                      <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-background-primary-default/92 dark:bg-[#12171e]/92 backdrop-blur-md border border-border-button-default shadow-lg">
+                      <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-white/92 dark:bg-zinc-900/92 backdrop-blur-md border border-slate-200/80 dark:border-zinc-800 shadow-lg">
                         {/* Filter Button */}
                         <button
                           type="button"
@@ -452,7 +452,7 @@ function SearchPageContent() {
                             "h-9 px-3 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-xs shrink-0 flex items-center gap-1.5 border cursor-pointer",
                             activeFilterCount > 0
                               ? "bg-[#45BA50] text-white border-[#45BA50] font-black"
-                              : "bg-background-secondary-default border-border-button-default text-text-primary"
+                              : "bg-slate-50 dark:bg-zinc-900 border-slate-200/80 dark:border-zinc-800 text-slate-800 dark:text-zinc-200"
                           )}
                         >
                           <RiEqualizerLine className="w-3.5 h-3.5" />
@@ -465,19 +465,19 @@ function SearchPageContent() {
                         </button>
 
                         {/* Search Input */}
-                        <div className="flex-1 relative flex items-center h-9 px-2.5 rounded-xl bg-background-secondary-default border border-border-button-default shadow-xs focus-within:border-[#45BA50]">
-                          <RiSearchLine className="w-3.5 h-3.5 text-text-tertiary shrink-0" />
+                        <div className="flex-1 relative flex items-center h-9 px-2.5 rounded-xl bg-slate-50 dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 shadow-xs focus-within:border-[#45BA50]">
+                          <RiSearchLine className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500 shrink-0" />
                           <input
                             type="text"
                             value={filters.query}
                             onChange={(e) => setFilters(f => ({ ...f, query: e.target.value }))}
                             placeholder="Search artisan or trade..."
-                            className="bg-transparent text-xs font-semibold text-text-primary placeholder:text-text-placeholder outline-none flex-1 min-w-0 ms-1.5"
+                            className="bg-transparent text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 outline-none flex-1 min-w-0 ms-1.5"
                           />
                           {filters.query && (
                             <button
                               onClick={() => setFilters(f => ({ ...f, query: "" }))}
-                              className="p-1 text-text-tertiary hover:text-text-primary shrink-0"
+                              className="p-1 text-slate-400 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white shrink-0 cursor-pointer"
                             >
                               <RiCloseLine className="w-3.5 h-3.5" />
                             </button>
@@ -487,7 +487,7 @@ function SearchPageContent() {
                         {/* Switch to List */}
                         <button 
                           onClick={() => setViewMode("list")}
-                          className="h-9 px-3 rounded-xl text-xs font-bold bg-background-secondary-default text-text-secondary border border-border-button-default flex items-center gap-1 hover:text-text-primary active:scale-95 transition-all shrink-0"
+                          className="h-9 px-3 rounded-xl text-xs font-bold bg-slate-50 dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 border border-slate-200/80 dark:border-zinc-800 flex items-center gap-1 hover:text-slate-900 dark:hover:text-white active:scale-95 transition-all shrink-0 cursor-pointer"
                         >
                           <RiListCheck2 className="w-3.5 h-3.5" />
                           <span>List</span>
@@ -524,14 +524,14 @@ function SearchPageContent() {
                           transition={{ type: "spring", damping: 28, stiffness: 300 }}
                           className="lg:hidden absolute inset-x-0 bottom-4 z-[1000] px-3 pointer-events-auto"
                         >
-                          <div className="rounded-3xl bg-background-primary-default/98 dark:bg-[#12171e]/98 backdrop-blur-xl border border-border-button-default shadow-2xl p-4 flex flex-col space-y-3">
+                          <div className="rounded-3xl bg-white/98 dark:bg-zinc-900/98 backdrop-blur-xl border border-slate-200/80 dark:border-zinc-800 shadow-2xl p-4 flex flex-col space-y-3">
                             {/* Drag Handle Notch & Close Button */}
                             <div className="flex items-center justify-between pb-1">
-                              <div className="w-10 h-1.5 rounded-full bg-zinc-300 dark:bg-zinc-700 mx-auto" />
+                              <div className="w-10 h-1.5 rounded-full bg-slate-300 dark:bg-zinc-700 mx-auto" />
                               <button
                                 type="button"
                                 onClick={() => setSelectedWorker(null)}
-                                className="p-1 rounded-full hover:bg-background-secondary-default text-text-tertiary hover:text-text-primary transition-colors cursor-pointer"
+                                className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-400 dark:text-zinc-500 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
                                 title="Close artisan card"
                               >
                                 <RiCloseLine className="w-4 h-4" />
@@ -547,13 +547,13 @@ function SearchPageContent() {
                             />
 
                             {/* Action Buttons: Preview, Message, Book */}
-                            <div className="pt-2 border-t border-separator-border/60 flex items-center gap-2">
+                            <div className="pt-2 border-t border-slate-200/80 dark:border-zinc-800 flex items-center gap-2">
                               <button
                                 type="button"
                                 onClick={() => setPreviewWorker(selectedWorker)}
-                                className="h-10 px-3.5 rounded-xl border border-border-button-default bg-background-secondary-default hover:bg-background-tertiary-default text-text-primary text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-xs"
+                                className="h-10 px-3.5 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-800 dark:text-zinc-200 text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-xs cursor-pointer"
                               >
-                                <RiEyeLine className="w-3.5 h-3.5 text-text-secondary" />
+                                <RiEyeLine className="w-3.5 h-3.5 text-slate-500 dark:text-zinc-400" />
                                 <span>Preview</span>
                               </button>
 
@@ -583,8 +583,8 @@ function SearchPageContent() {
                   {/* ── 2. DESKTOP SCROLLABLE ARTISANS FEED BELOW MAP (Web only, Generous Scroll Space) ── */}
                   <div className="hidden lg:block space-y-4">
                     {/* Header Status Row */}
-                    <div className="flex items-center justify-between text-caption-1-semibold text-text-tertiary px-1">
-                      <span>Showing <strong className="text-text-primary">{workers.length}</strong> verified pro{workers.length !== 1 ? "s" : ""} on map</span>
+                    <div className="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-zinc-400 px-1">
+                      <span>Showing <strong className="text-slate-900 dark:text-white">{workers.length}</strong> verified pro{workers.length !== 1 ? "s" : ""} on map</span>
                       <span>Sorted by: <strong className="text-[#45BA50]">{filters.sortBy || "Nearest"}</strong></span>
                     </div>
 
@@ -605,10 +605,10 @@ function SearchPageContent() {
                       </div>
                     ) : (
                       !loading && (
-                        <div className="rounded-3xl border border-dashed border-border-button-default p-12 text-center bg-background-secondary-default space-y-3">
+                        <div className="rounded-3xl border border-dashed border-slate-200/80 dark:border-zinc-800 p-12 text-center bg-white dark:bg-zinc-900/50 space-y-3">
                           <RiSearchEyeLine className="w-8 h-8 mx-auto text-[#45BA50]" />
-                          <p className="text-body-medium font-bold text-text-primary">No matching artisans found</p>
-                          <p className="text-caption-1-semibold text-text-tertiary">Try resetting filters to explore all artisans in Dire Dawa.</p>
+                          <p className="text-sm font-bold text-slate-900 dark:text-white">No matching artisans found</p>
+                          <p className="text-xs text-slate-500 dark:text-zinc-400">Try resetting filters to explore all artisans in Dire Dawa.</p>
                           <button
                             onClick={() => setFilters({ query: "", category: "", neighborhood: "All Dire Dawa", minRating: 0, maxDistance: 50, sortBy: "Nearest", verifiedOnly: false })}
                             className="px-4 py-2 rounded-full text-xs font-bold bg-[#45BA50] text-white cursor-pointer"
@@ -651,7 +651,7 @@ function SearchPageContent() {
                       transition={{ type: "spring", damping: 28, stiffness: 300 }}
                       className="shrink-0 overflow-hidden hidden lg:block"
                     >
-                      <div className="w-[290px] p-5 rounded-3xl bg-background-secondary-default border border-border-button-default shadow-xs sticky top-20">
+                      <div className="w-[290px] p-5 rounded-3xl bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800 shadow-xs sticky top-20">
                         <SearchFilters
                           filters={filters}
                           setFilters={setFilters}
@@ -667,8 +667,8 @@ function SearchPageContent() {
                 {/* Main Results Grid Area (Flex-1, smoothly slides & adjusts beside sidebar) */}
                 <div className="flex-1 min-w-0 space-y-4">
                   {/* Header Status Row */}
-                  <div className="flex items-center justify-between text-caption-1-semibold text-text-tertiary px-1">
-                    <span>Showing <strong className="text-text-primary">{workers.length}</strong> verified pro{workers.length !== 1 ? "s" : ""} in Dire Dawa</span>
+                  <div className="flex items-center justify-between text-xs font-medium text-slate-500 dark:text-zinc-400 px-1">
+                    <span>Showing <strong className="text-slate-900 dark:text-white">{workers.length}</strong> verified pro{workers.length !== 1 ? "s" : ""} in Dire Dawa</span>
                     <span>Sorted by: <strong className="text-[#45BA50]">{filters.sortBy || "Nearest"}</strong></span>
                   </div>
 
@@ -689,10 +689,10 @@ function SearchPageContent() {
                     </div>
                   ) : (
                     !loading && (
-                      <div className="rounded-3xl border border-dashed border-border-button-default p-12 text-center bg-background-secondary-default space-y-3">
+                      <div className="rounded-3xl border border-dashed border-slate-200/80 dark:border-zinc-800 p-12 text-center bg-white dark:bg-zinc-900/50 space-y-3">
                         <RiSearchEyeLine className="w-8 h-8 mx-auto text-[#45BA50]" />
-                        <p className="text-body-medium font-bold text-text-primary">No matching artisans found</p>
-                        <p className="text-caption-1-semibold text-text-tertiary">Try expanding your search criteria or resetting filters.</p>
+                        <p className="text-sm font-bold text-slate-900 dark:text-white">No matching artisans found</p>
+                        <p className="text-xs text-slate-500 dark:text-zinc-400">Try expanding your search criteria or resetting filters.</p>
                         <button
                           onClick={() => setFilters({ query: "", category: "", neighborhood: "All Dire Dawa", minRating: 0, maxDistance: 50, sortBy: "Nearest", verifiedOnly: false })}
                           className="px-4 py-2 rounded-full text-xs font-bold bg-[#45BA50] text-white cursor-pointer"
@@ -706,7 +706,7 @@ function SearchPageContent() {
                   {loading && (
                     <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
                       {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                        <div key={i} className="h-64 sm:h-72 rounded-2xl sm:rounded-3xl bg-background-secondary-default animate-pulse border border-border-button-default" />
+                        <div key={i} className="h-64 sm:h-72 rounded-2xl sm:rounded-3xl bg-slate-100 dark:bg-zinc-900/80 animate-pulse border border-slate-200/60 dark:border-zinc-800" />
                       ))}
                     </div>
                   )}
@@ -741,7 +741,7 @@ function SearchPageContent() {
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
                 transition={{ type: "spring", damping: 28, stiffness: 300 }}
-                className="relative w-[85%] max-w-sm h-full bg-background-primary-default border-r border-border-button-default shadow-2xl p-6 overflow-y-auto z-10 flex flex-col justify-between"
+                className="relative w-[85%] max-w-sm h-full bg-white dark:bg-zinc-900 border-r border-slate-200/80 dark:border-zinc-800 shadow-2xl p-6 overflow-y-auto z-10 flex flex-col justify-between"
               >
                 <SearchFilters
                   filters={filters}
@@ -780,21 +780,21 @@ function SearchPageContent() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="relative w-full max-w-lg bg-background-primary-default rounded-3xl border border-border-button-default shadow-2xl p-5 sm:p-6 z-10 max-h-[90vh] overflow-y-auto space-y-5"
+              className="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200/80 dark:border-zinc-800 shadow-2xl p-5 sm:p-6 z-10 max-h-[90vh] overflow-y-auto space-y-5"
             >
               {/* Header with Close */}
-              <div className="flex items-start justify-between pb-3 border-b border-separator-border/60">
+              <div className="flex items-start justify-between pb-3 border-b border-slate-200/80 dark:border-zinc-800">
                 <div className="flex items-center gap-3">
-                  <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-background-tertiary-default border border-border-button-default shrink-0">
+                  <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 dark:bg-zinc-800 border border-slate-200/80 dark:border-zinc-700 shrink-0">
                     <img
-                      src={previewWorker.photo || "/default-avatar.svg"}
+                      src={previewWorker.photo || "/images/worker_holding_card.png"}
                       alt={previewWorker.name}
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <h2 className="text-title-3-semibold font-black text-text-primary">
+                      <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
                         {previewWorker.name}
                       </h2>
                       {previewWorker.isVerified && (
@@ -803,7 +803,7 @@ function SearchPageContent() {
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-text-tertiary mt-0.5 flex items-center gap-1">
+                    <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5 flex items-center gap-1">
                       <RiMapPinLine className="w-3.5 h-3.5 text-[#45BA50]" />
                       <span>{previewWorker.district || "Kezira"}, Dire Dawa</span>
                       <span>•</span>
@@ -815,37 +815,37 @@ function SearchPageContent() {
                 <button
                   type="button"
                   onClick={() => setPreviewWorker(null)}
-                  className="p-1.5 rounded-full text-text-tertiary hover:text-text-primary hover:bg-background-tertiary-default transition-colors cursor-pointer"
+                  className="p-1.5 rounded-full text-slate-400 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                 >
                   <RiCloseLine className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Rate & Rating Highlights Grid */}
-              <div className="grid grid-cols-3 gap-2.5 p-3 rounded-2xl bg-background-secondary-default border border-border-button-default text-center">
+              <div className="grid grid-cols-3 gap-2.5 p-3 rounded-2xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/80 dark:border-zinc-800 text-center">
                 <div>
-                  <p className="text-[10px] uppercase font-bold text-text-tertiary">Hourly Rate</p>
-                  <p className="text-body-medium font-black text-text-primary mt-0.5">ETB {previewWorker.hourlyRate || "450"}</p>
+                  <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500">Hourly Rate</p>
+                  <p className="text-sm font-black text-slate-900 dark:text-white mt-0.5">ETB {previewWorker.hourlyRate || "450"}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase font-bold text-text-tertiary">Rating</p>
-                  <p className="text-body-medium font-black text-amber-500 mt-0.5 flex items-center justify-center gap-0.5">
+                  <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500">Rating</p>
+                  <p className="text-sm font-black text-amber-500 mt-0.5 flex items-center justify-center gap-0.5">
                     <RiStarFill className="w-3.5 h-3.5 fill-amber-500" />
                     <span>{previewWorker.rating > 0 ? previewWorker.rating.toFixed(1) : "5.0"}</span>
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase font-bold text-text-tertiary">Experience</p>
-                  <p className="text-body-medium font-black text-text-primary mt-0.5">{previewWorker.reviews || 1} jobs</p>
+                  <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500">Experience</p>
+                  <p className="text-sm font-black text-slate-900 dark:text-white mt-0.5">{previewWorker.reviews || 1} jobs</p>
                 </div>
               </div>
 
               {/* Bio & Details */}
               <div className="space-y-1.5">
-                <h4 className="text-caption-1-semibold font-bold uppercase tracking-wider text-text-tertiary text-[11px]">
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
                   About Artisan
                 </h4>
-                <p className="text-xs text-text-secondary leading-relaxed bg-background-secondary-default/50 p-3.5 rounded-2xl border border-separator-border/60">
+                <p className="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed bg-slate-50 dark:bg-zinc-800/40 p-3.5 rounded-2xl border border-slate-200/60 dark:border-zinc-800">
                   {previewWorker.bio || "Certified pro specializing in residential and commercial maintenance, electrical wiring, installation, and on-demand repairs with verified Kebele registration."}
                 </p>
               </div>
@@ -853,7 +853,7 @@ function SearchPageContent() {
               {/* Verified Skills */}
               {previewWorker.skills && previewWorker.skills.length > 0 && (
                 <div className="space-y-1.5">
-                  <h4 className="text-caption-1-semibold font-bold uppercase tracking-wider text-text-tertiary text-[11px]">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
                     Verified Skills & Specialties
                   </h4>
                   <div className="flex flex-wrap gap-1.5">
@@ -870,7 +870,7 @@ function SearchPageContent() {
               )}
 
               {/* Actions Footer */}
-              <div className="pt-3 border-t border-separator-border/60 flex flex-col sm:flex-row items-center gap-2.5">
+              <div className="pt-3 border-t border-slate-200/80 dark:border-zinc-800 flex flex-col sm:flex-row items-center gap-2.5">
                 <button
                   type="button"
                   onClick={() => {
@@ -896,9 +896,9 @@ function SearchPageContent() {
                 <Link
                   href={`/client/worker/${previewWorker.id}`}
                   onClick={() => setPreviewWorker(null)}
-                  className="w-full sm:w-auto h-11 px-4 rounded-xl border border-border-button-default bg-background-secondary-default hover:bg-background-tertiary-default text-text-primary text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                  className="w-full sm:w-auto h-11 px-4 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-900 dark:text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
                 >
-                  <RiUser3Line className="w-4 h-4 text-text-secondary" />
+                  <RiUser3Line className="w-4 h-4 text-slate-400 dark:text-zinc-400" />
                   <span>Full Profile</span>
                 </Link>
               </div>
@@ -915,7 +915,7 @@ function SearchPageContent() {
 export default function SearchPage() {
   return (
     <Suspense fallback={
-      <div className="h-[600px] w-full bg-background-secondary-default/40 animate-pulse rounded-3xl flex items-center justify-center border border-border-button-default">
+      <div className="h-[600px] w-full bg-slate-100 dark:bg-zinc-900 animate-pulse rounded-3xl flex items-center justify-center border border-slate-200 dark:border-zinc-800">
         <RiCompass3Line className="h-8 w-8 animate-spin text-[#45BA50]" />
       </div>
     }>

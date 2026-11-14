@@ -18,9 +18,7 @@ import {
   RiCheckboxCircleFill,
   RiCheckLine,
   RiTimeLine,
-  RiAlertLine,
-  RiFileTextLine,
-  RiUser3Line
+  RiAlertLine
 } from "@remixicon/react";
 import { cx } from "@/utils/cx";
 
@@ -65,7 +63,7 @@ export default function WorkerProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [messaging, setMessaging] = useState<boolean>(false);
   const [imgError, setImgError] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<"about" | "reviews" | "skills">("about");
+  const [activeTab, setActiveTab] = useState<"about" | "reviews">("about");
 
   useEffect(() => {
     if (!id) return;
@@ -125,11 +123,11 @@ export default function WorkerProfilePage() {
   if (loading && !worker) {
     return (
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-6 animate-pulse">
-        <div className="h-48 sm:h-64 rounded-3xl bg-background-secondary-default border border-border-button-default" />
+        <div className="h-48 sm:h-64 rounded-3xl bg-slate-200/60 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800" />
         <div className="flex flex-col items-center -mt-16 space-y-3">
-          <div className="w-28 h-28 rounded-full bg-background-tertiary-default border-4 border-background-primary-default" />
-          <div className="w-48 h-6 rounded-lg bg-background-secondary-default" />
-          <div className="w-32 h-4 rounded-lg bg-background-secondary-default" />
+          <div className="w-28 h-28 rounded-full bg-slate-300 dark:bg-zinc-800 border-4 border-[#f8fafc] dark:border-[#09090b]" />
+          <div className="w-48 h-6 rounded-lg bg-slate-200 dark:bg-zinc-800" />
+          <div className="w-32 h-4 rounded-lg bg-slate-200 dark:bg-zinc-800" />
         </div>
       </div>
     );
@@ -137,17 +135,17 @@ export default function WorkerProfilePage() {
 
   if (error || !worker) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center space-y-4">
-        <div className="w-16 h-16 rounded-3xl bg-background-secondary-default border border-border-button-default flex items-center justify-center text-text-error-primary shadow-xs">
+      <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center space-y-4 bg-[#f8fafc] dark:bg-[#09090b] text-slate-900 dark:text-zinc-100">
+        <div className="w-16 h-16 rounded-3xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 flex items-center justify-center text-red-500 shadow-xs">
           <RiAlertLine className="w-8 h-8" />
         </div>
-        <h1 className="text-title-2-medium text-text-primary">{t("worker.profile.loadFailed") || "Worker Profile Not Found"}</h1>
-        <p className="text-body-regular text-text-tertiary max-w-md">
+        <h1 className="text-xl font-black text-slate-900 dark:text-white">{t("worker.profile.loadFailed") || "Worker Profile Not Found"}</h1>
+        <p className="text-xs text-slate-500 dark:text-zinc-400 max-w-md">
           {error || "The artisan profile could not be loaded or does not exist in Dire Dawa."}
         </p>
         <button
           onClick={() => router.back()}
-          className="px-5 py-2.5 rounded-full text-xs font-bold bg-[#45BA50] text-white hover:bg-[#3ca346] shadow-sm transition-all"
+          className="px-5 py-2.5 rounded-full text-xs font-bold bg-[#45BA50] text-white hover:bg-[#3ca346] shadow-sm transition-all cursor-pointer"
         >
           {t("worker.profile.goBack") || "Back to Search"}
         </button>
@@ -173,47 +171,48 @@ export default function WorkerProfilePage() {
     : systemAvatar;
 
   return (
-    <div className="w-full min-h-screen bg-background-primary-default text-text-primary pb-32">
+    <div className="w-full min-h-screen bg-[#f8fafc] dark:bg-[#09090b] text-slate-900 dark:text-zinc-100 pb-32 transition-colors">
       
       {/* ── DESKTOP BREADCRUMB ROW ── */}
-      <div className="hidden lg:flex items-center justify-between px-8 py-3 max-w-6xl mx-auto text-caption-1-semibold text-text-tertiary">
+      <div className="hidden lg:flex items-center justify-between px-8 py-3 max-w-6xl mx-auto text-xs font-medium text-slate-500 dark:text-zinc-400">
         <div className="flex items-center gap-2">
-          <Link href="/client/search" className="hover:text-text-primary transition-colors">
+          <Link href="/client/search" className="hover:text-slate-900 dark:hover:text-white transition-colors">
             {t("worker.profile.home") || "Search"}
           </Link>
           <span>›</span>
           <span className="capitalize">{primarySkill}</span>
           <span>›</span>
-          <span className="text-text-primary font-bold">{worker.full_name}</span>
+          <span className="text-slate-900 dark:text-white font-bold">{worker.full_name}</span>
         </div>
         <button
           onClick={handleShare}
-          className="flex items-center gap-1.5 text-text-tertiary hover:text-text-primary transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
         >
           <RiShareForwardLine className="w-4 h-4" />
           <span>Share Profile</span>
         </button>
       </div>
 
-      <div className="max-w-5xl mx-auto px-0 sm:px-4 lg:px-6">
+      {/* Wrapper: inset with horizontal padding on both mobile & desktop */}
+      <div className="max-w-5xl mx-auto px-3 sm:px-4 lg:px-6 pt-2 sm:pt-4">
 
         {/* ═════════════════════════════════════════════════════════════════════
-            1. TOP COVER BANNER (1:1 with Attached Reference Photo)
+            1. TOP COVER BANNER (Rounded on both mobile and web!)
             - Wide visual cover with floating back & share buttons
             ═════════════════════════════════════════════════════════════════════ */}
-        <div className="relative w-full h-48 sm:h-56 lg:h-64 sm:rounded-3xl overflow-hidden bg-slate-900 shadow-md">
+        <div className="relative w-full h-48 sm:h-56 lg:h-64 rounded-3xl overflow-hidden bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 shadow-md">
           <img
             src="/images/worker_workbench_hero.jpg"
             alt="Artisan Workbench"
             className="w-full h-full object-cover opacity-85"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#09090b]/90 via-[#09090b]/40 to-transparent" />
 
           {/* Floating Actions on Cover (Top-Left Back & Top-Right Share) */}
           <div className="absolute top-4 inset-x-4 flex items-center justify-between z-20">
             <button
               onClick={() => router.back()}
-              className="w-10 h-10 rounded-full bg-black/50 text-white backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/70 active:scale-95 transition-all shadow-md cursor-pointer"
+              className="w-10 h-10 rounded-full bg-[#09090b]/60 text-white backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-[#09090b]/80 active:scale-95 transition-all shadow-md cursor-pointer"
               title="Go Back"
             >
               <RiArrowLeftLine className="w-5 h-5" />
@@ -221,7 +220,7 @@ export default function WorkerProfilePage() {
 
             <button
               onClick={handleShare}
-              className="w-10 h-10 rounded-full bg-black/50 text-white backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/70 active:scale-95 transition-all shadow-md cursor-pointer"
+              className="w-10 h-10 rounded-full bg-[#09090b]/60 text-white backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-[#09090b]/80 active:scale-95 transition-all shadow-md cursor-pointer"
               title="Share"
             >
               <RiShareForwardLine className="w-5 h-5" />
@@ -231,16 +230,16 @@ export default function WorkerProfilePage() {
 
         {/* ═════════════════════════════════════════════════════════════════════
             2. PROFILE IDENTITY & METRICS CARD (1:1 with Attached Reference Photo)
-            - Overlapping circular avatar
-            - Pill badge (sandow plus style)
-            - Full Name in bold
-            - 3 Key Metrics Row with vertical hairline dividers
+            - Overlapping circular avatar with system avatar fallback
+            - Sandow plus-style badge
+            - Full Name in bold with Fayda verified badge
+            - 3 Key Metrics Row with vertical hairline dividers (Total Jobs | Rating | Hourly Rate)
             - Primary Action Buttons [Book Artisan +] and [Chat 💬]
             ═════════════════════════════════════════════════════════════════════ */}
         <div className="relative px-4 sm:px-6 -mt-14 sm:-mt-16 flex flex-col items-center text-center z-20">
           
           {/* Centered Circular Avatar Straddling Cover */}
-          <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-background-primary-default shadow-2xl overflow-hidden bg-background-secondary-default shrink-0">
+          <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-[#f8fafc] dark:border-[#09090b] shadow-2xl overflow-hidden bg-white dark:bg-zinc-900 shrink-0">
             <img
               src={displayAvatar}
               alt={worker.full_name}
@@ -249,7 +248,7 @@ export default function WorkerProfilePage() {
             />
             {/* Verified Badge on Avatar */}
             {worker.is_verified && (
-              <span className="absolute bottom-1 right-1 w-7 h-7 rounded-full bg-[#134e27] text-[#a4fe47] flex items-center justify-center border-2 border-background-primary-default shadow-md" title="Kebele & Fayda Verified Pro">
+              <span className="absolute bottom-1 right-1 w-7 h-7 rounded-full bg-[#134e27] text-[#a4fe47] flex items-center justify-center border-2 border-[#f8fafc] dark:border-[#09090b] shadow-md" title="Kebele & Fayda Verified Pro">
                 <RiCheckboxCircleFill className="w-5 h-5 fill-[#45BA50]" />
               </span>
             )}
@@ -264,12 +263,12 @@ export default function WorkerProfilePage() {
           </div>
 
           {/* Membership & District Subtitle */}
-          <p className="text-caption-1-semibold text-text-tertiary mt-1.5">
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1.5 font-medium">
             Verified Artisan • Serving Dire Dawa ({worker.district || "Kezira"})
           </p>
 
           {/* Artisan Full Name */}
-          <h1 className="text-2xl sm:text-3xl font-black text-text-primary tracking-tight mt-1 flex items-center justify-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-1 flex items-center justify-center gap-2">
             <span>{worker.full_name}</span>
             {worker.is_verified && (
               <RiShieldCheckFill className="w-6 h-6 text-[#45BA50] shrink-0" />
@@ -277,26 +276,26 @@ export default function WorkerProfilePage() {
           </h1>
 
           {/* ── 3 Key Metrics Row with Vertical Hairlines (1:1 with Reference Photo) ── */}
-          <div className="w-full max-w-md mx-auto my-5 p-4 rounded-3xl bg-background-secondary-default border border-border-button-default shadow-xs grid grid-cols-3 text-center">
+          <div className="w-full max-w-md mx-auto my-5 p-4 rounded-3xl bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800 shadow-xs grid grid-cols-3 text-center">
             {/* Metric 1: Total Jobs */}
             <div className="space-y-0.5">
-              <RiBriefcaseLine className="w-4 h-4 text-text-tertiary mx-auto mb-1" />
-              <p className="text-base sm:text-lg font-black text-text-primary">{totalJobs}</p>
-              <p className="text-[10px] sm:text-xs text-text-tertiary font-bold uppercase tracking-wider">Total Jobs</p>
+              <RiBriefcaseLine className="w-4 h-4 text-slate-400 dark:text-zinc-500 mx-auto mb-1" />
+              <p className="text-base sm:text-lg font-black text-slate-900 dark:text-white">{totalJobs}</p>
+              <p className="text-[10px] sm:text-xs text-slate-400 dark:text-zinc-500 font-bold uppercase tracking-wider">Total Jobs</p>
             </div>
 
             {/* Metric 2: Client Rating (Bordered by hairlines) */}
-            <div className="space-y-0.5 border-x border-separator-border/60 px-1">
+            <div className="space-y-0.5 border-x border-slate-200/80 dark:border-zinc-800 px-1">
               <RiStarFill className="w-4 h-4 text-amber-500 fill-amber-500 mx-auto mb-1" />
               <p className="text-base sm:text-lg font-black text-amber-500">{rating.toFixed(1)}</p>
-              <p className="text-[10px] sm:text-xs text-text-tertiary font-bold uppercase tracking-wider">Rating ({worker.total_ratings || 0})</p>
+              <p className="text-[10px] sm:text-xs text-slate-400 dark:text-zinc-500 font-bold uppercase tracking-wider">Rating ({worker.total_ratings || 0})</p>
             </div>
 
             {/* Metric 3: Hourly Rate */}
             <div className="space-y-0.5">
               <RiCoinsLine className="w-4 h-4 text-[#45BA50] mx-auto mb-1" />
-              <p className="text-base sm:text-lg font-black text-text-primary">ETB {worker.hourly_rate || "450"}</p>
-              <p className="text-[10px] sm:text-xs text-text-tertiary font-bold uppercase tracking-wider">Hourly Rate</p>
+              <p className="text-base sm:text-lg font-black text-slate-900 dark:text-white">ETB {worker.hourly_rate || "450"}</p>
+              <p className="text-[10px] sm:text-xs text-slate-400 dark:text-zinc-500 font-bold uppercase tracking-wider">Hourly Rate</p>
             </div>
           </div>
 
@@ -315,14 +314,14 @@ export default function WorkerProfilePage() {
             <button
               onClick={handleMessage}
               disabled={messaging}
-              className="flex-1 h-12 rounded-2xl border border-border-button-default bg-background-secondary-default hover:bg-background-tertiary-default text-text-primary font-bold text-xs sm:text-sm shadow-xs flex items-center justify-center gap-2 active:scale-98 transition-all cursor-pointer"
+              className="flex-1 h-12 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-800 dark:text-zinc-200 font-bold text-xs sm:text-sm shadow-xs flex items-center justify-center gap-2 active:scale-98 transition-all cursor-pointer"
             >
               {messaging ? (
                 <div className="w-4 h-4 border-2 border-[#45BA50] border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   <span>Chat</span>
-                  <RiChat1Line className="w-4 h-4 text-text-secondary" />
+                  <RiChat1Line className="w-4 h-4 text-slate-400 dark:text-zinc-400" />
                 </>
               )}
             </button>
@@ -333,19 +332,19 @@ export default function WorkerProfilePage() {
         {/* ═════════════════════════════════════════════════════════════════════
             3. CONTENT BODY: REDESIGNED RESPONSIVE DESKTOP & MOBILE LAYOUT
             - Desktop: Spacious 2-Column Bento (About/Skills on Left, Reviews on Right)
-            - Mobile: Sleek Section Tabs ("All Posts" style)
+            - Mobile: Section Tabs ("All Posts" style)
             ═════════════════════════════════════════════════════════════════════ */}
         <div className="mt-8 px-4 sm:px-6">
           
           {/* Mobile Tabs Header */}
-          <div className="lg:hidden flex items-center justify-center gap-2 pb-4 mb-2 border-b border-separator-border/60">
+          <div className="lg:hidden flex items-center justify-center gap-2 pb-4 mb-2 border-b border-slate-200/80 dark:border-zinc-800">
             <button
               onClick={() => setActiveTab("about")}
               className={cx(
                 "px-4 py-2 rounded-full text-xs font-bold transition-all",
                 activeTab === "about"
                   ? "bg-[#45BA50] text-white shadow-xs"
-                  : "bg-background-secondary-default text-text-tertiary border border-border-button-default"
+                  : "bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-zinc-800"
               )}
             >
               About & Skills
@@ -356,7 +355,7 @@ export default function WorkerProfilePage() {
                 "px-4 py-2 rounded-full text-xs font-bold transition-all",
                 activeTab === "reviews"
                   ? "bg-[#45BA50] text-white shadow-xs"
-                  : "bg-background-secondary-default text-text-tertiary border border-border-button-default"
+                  : "bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-zinc-800"
               )}
             >
               Reviews ({reviews.length})
@@ -370,27 +369,27 @@ export default function WorkerProfilePage() {
             <div className={cx("space-y-6 lg:col-span-7", activeTab !== "about" && "hidden lg:block")}>
               
               {/* About Artisan Card */}
-              <div className="p-6 rounded-3xl bg-background-secondary-default border border-border-button-default shadow-xs space-y-4">
-                <div className="flex items-center justify-between pb-2 border-b border-separator-border/60">
-                  <h3 className="text-body-medium font-black text-text-primary flex items-center gap-2">
+              <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800 shadow-xs space-y-4">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200/80 dark:border-zinc-800">
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                     <RiSparklingFill className="w-4 h-4 text-[#45BA50]" />
                     <span>About Artisan</span>
                   </h3>
-                  <span className="text-caption-1-semibold text-[#45BA50] font-bold">Fayda Verified</span>
+                  <span className="text-xs text-[#45BA50] font-bold">Fayda Verified</span>
                 </div>
 
-                <p className="text-body-regular text-text-secondary leading-relaxed">
+                <p className="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed">
                   {worker.bio || `Certified and experienced ${primarySkill.toLowerCase()} artisan serving residential and commercial clients across Dire Dawa. Committed to precision, fair pricing, and reliable service.`}
                 </p>
 
                 <div className="grid grid-cols-2 gap-4 pt-2">
-                  <div className="p-3.5 rounded-2xl bg-background-primary-default border border-border-button-default space-y-0.5">
-                    <p className="text-[10px] uppercase font-bold text-text-tertiary">Experience</p>
-                    <p className="text-xs font-black text-text-primary">5+ Years in Dire Dawa</p>
+                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-zinc-800/80 space-y-0.5">
+                    <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500">Experience</p>
+                    <p className="text-xs font-black text-slate-900 dark:text-white">5+ Years in Dire Dawa</p>
                   </div>
 
-                  <div className="p-3.5 rounded-2xl bg-background-primary-default border border-border-button-default space-y-0.5">
-                    <p className="text-[10px] uppercase font-bold text-text-tertiary">Response Time</p>
+                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-zinc-800/80 space-y-0.5">
+                    <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500">Response Time</p>
                     <p className="text-xs font-black text-[#45BA50] flex items-center gap-1">
                       <RiTimeLine className="w-3.5 h-3.5" />
                       <span>Within 1 hour</span>
@@ -400,20 +399,20 @@ export default function WorkerProfilePage() {
               </div>
 
               {/* Verified Skills & Specialties */}
-              <div className="p-6 rounded-3xl bg-background-secondary-default border border-border-button-default shadow-xs space-y-4">
-                <div className="flex items-center justify-between pb-2 border-b border-separator-border/60">
-                  <h3 className="text-body-medium font-black text-text-primary flex items-center gap-2">
+              <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800 shadow-xs space-y-4">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200/80 dark:border-zinc-800">
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                     <RiCheckLine className="w-4 h-4 text-[#45BA50]" />
                     <span>Verified Skills & Specialties</span>
                   </h3>
-                  <span className="text-[11px] text-text-tertiary">{skillsList.length} specialties</span>
+                  <span className="text-xs text-slate-400 dark:text-zinc-500 font-semibold">{skillsList.length} specialties</span>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
                   {(skillsList.length > 0 ? skillsList : ["Troubleshooting", "Installation", "Emergency Repairs", "Maintenance"]).map((skill, idx) => (
                     <span
                       key={idx}
-                      className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-background-primary-default text-text-primary border border-border-button-default shadow-xs inline-flex items-center gap-1.5"
+                      className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-50 dark:bg-zinc-800/60 text-slate-800 dark:text-zinc-200 border border-slate-200 dark:border-zinc-800 shadow-xs inline-flex items-center gap-1.5"
                     >
                       <span className="text-[#45BA50] font-black">✓</span>
                       <span>{skill}</span>
@@ -423,13 +422,13 @@ export default function WorkerProfilePage() {
               </div>
 
               {/* Location & Coverage Card */}
-              <div className="p-6 rounded-3xl bg-background-secondary-default border border-border-button-default shadow-xs space-y-3">
-                <h3 className="text-body-medium font-black text-text-primary flex items-center gap-2">
+              <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800 shadow-xs space-y-3">
+                <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                   <RiMapPinLine className="w-4 h-4 text-[#45BA50]" />
                   <span>Coverage & Location</span>
                 </h3>
-                <p className="text-caption-1-semibold text-text-secondary">
-                  Based in <strong className="text-text-primary">{worker.district || "Kezira"}</strong>, serving all kebeles across Dire Dawa with on-site dispatched service.
+                <p className="text-xs text-slate-600 dark:text-zinc-400 font-medium leading-relaxed">
+                  Based in <strong className="text-slate-900 dark:text-white">{worker.district || "Kezira"}</strong>, serving all kebeles across Dire Dawa with on-site dispatched service.
                 </p>
               </div>
 
@@ -438,31 +437,31 @@ export default function WorkerProfilePage() {
             {/* Right Column (Desktop 5 cols): Reviews & Ratings */}
             <div className={cx("space-y-6 lg:col-span-5", activeTab !== "reviews" && "hidden lg:block")}>
               
-              <div className="p-6 rounded-3xl bg-background-secondary-default border border-border-button-default shadow-xs space-y-5">
-                <div className="flex items-center justify-between pb-2 border-b border-separator-border/60">
-                  <h3 className="text-body-medium font-black text-text-primary">
+              <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800 shadow-xs space-y-5">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200/80 dark:border-zinc-800">
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white">
                     Client Reviews
                   </h3>
-                  <span className="text-[11px] text-text-tertiary">{reviews.length} reviews</span>
+                  <span className="text-xs text-slate-400 dark:text-zinc-500 font-semibold">{reviews.length} reviews</span>
                 </div>
 
                 {/* Score Summary Box */}
-                <div className="flex items-center gap-5 p-4 rounded-2xl bg-background-primary-default border border-border-button-default">
+                <div className="flex items-center gap-5 p-4 rounded-2xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-zinc-800">
                   <div className="text-center shrink-0">
-                    <p className="text-3xl font-black text-text-primary">{rating.toFixed(1)}</p>
+                    <p className="text-3xl font-black text-slate-900 dark:text-white">{rating.toFixed(1)}</p>
                     <div className="flex items-center justify-center gap-0.5 text-amber-500 my-1">
                       {[...Array(5)].map((_, i) => (
                         <RiStarFill key={i} className="w-3 h-3 fill-amber-500" />
                       ))}
                     </div>
-                    <p className="text-[10px] text-text-tertiary font-bold uppercase">Overall</p>
+                    <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-bold uppercase">Overall</p>
                   </div>
 
                   <div className="flex-1 space-y-1">
                     {[5, 4, 3, 2, 1].map((star) => (
-                      <div key={star} className="flex items-center gap-2 text-[10px] text-text-tertiary font-bold">
+                      <div key={star} className="flex items-center gap-2 text-[10px] text-slate-400 dark:text-zinc-500 font-bold">
                         <span className="w-2">{star}</span>
-                        <div className="flex-1 h-1.5 rounded-full bg-background-tertiary-default overflow-hidden">
+                        <div className="flex-1 h-1.5 rounded-full bg-slate-200 dark:bg-zinc-700 overflow-hidden">
                           <div 
                             className="h-full bg-amber-500 rounded-full" 
                             style={{ width: star === 5 ? "85%" : star === 4 ? "15%" : "0%" }} 
@@ -474,7 +473,7 @@ export default function WorkerProfilePage() {
                 </div>
 
                 {/* Individual Reviews List */}
-                <div className="space-y-3.5 divide-y divide-separator-border/50">
+                <div className="space-y-3.5 divide-y divide-slate-200/80 dark:divide-zinc-800">
                   {reviews.length > 0 ? (
                     reviews.map((rev, i) => {
                       const reviewerName = rev.reviewer_name || (rev.rater_email ? rev.rater_email.split("@")[0] : "Dire Dawa Client");
@@ -485,21 +484,21 @@ export default function WorkerProfilePage() {
                               <div className="w-7 h-7 rounded-full bg-[#134e27]/20 text-[#45BA50] font-black text-xs flex items-center justify-center border border-[#45BA50]/30">
                                 {reviewerName.charAt(0).toUpperCase()}
                               </div>
-                              <span className="text-xs font-bold text-text-primary">{reviewerName}</span>
+                              <span className="text-xs font-bold text-slate-900 dark:text-white">{reviewerName}</span>
                             </div>
                             <div className="flex items-center gap-0.5 text-amber-500 text-xs">
                               <RiStarFill className="w-3 h-3 fill-amber-500" />
                               <span className="font-bold">{rev.score}</span>
                             </div>
                           </div>
-                          <p className="text-caption-1-semibold text-text-secondary leading-relaxed pl-9">
+                          <p className="text-xs text-slate-600 dark:text-zinc-400 leading-relaxed pl-9">
                             {rev.comment}
                           </p>
                         </div>
                       );
                     })
                   ) : (
-                    <div className="py-8 text-center text-text-tertiary text-xs">
+                    <div className="py-8 text-center text-slate-400 dark:text-zinc-500 text-xs">
                       <p>No written reviews yet. Be the first client to book and review {worker.full_name}!</p>
                     </div>
                   )}
@@ -518,14 +517,14 @@ export default function WorkerProfilePage() {
       {/* ═════════════════════════════════════════════════════════════════════
           4. STICKY MOBILE ACTION DOCK (Always Accessible on Scroll)
           ═════════════════════════════════════════════════════════════════════ */}
-      <div className="fixed bottom-0 inset-x-0 z-40 lg:hidden p-3 bg-background-primary-default/95 backdrop-blur-xl border-t border-separator-border/60 shadow-2xl">
+      <div className="fixed bottom-0 inset-x-0 z-40 lg:hidden p-3 bg-white/95 dark:bg-[#09090b]/95 backdrop-blur-xl border-t border-slate-200/80 dark:border-zinc-800 shadow-2xl">
         <div className="flex items-center gap-2.5 max-w-md mx-auto">
           <button
             onClick={handleMessage}
             disabled={messaging}
-            className="h-11 px-4 rounded-xl border border-border-button-default bg-background-secondary-default text-text-primary text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs shrink-0 active:scale-95 transition-all"
+            className="h-11 px-4 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 text-slate-900 dark:text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs shrink-0 active:scale-95 transition-all"
           >
-            <RiChat1Line className="w-4 h-4 text-text-secondary" />
+            <RiChat1Line className="w-4 h-4 text-slate-400 dark:text-zinc-400" />
             <span>Chat</span>
           </button>
 
