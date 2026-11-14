@@ -294,53 +294,45 @@ export default function LoginPage() {
 
       {/* Desktop Art / Branding Side (Left) */}
       <div className="hidden lg:flex w-1/2 relative bg-[#09090b] border-r border-zinc-800/50 overflow-hidden items-center justify-center p-12 select-none">
-        {/* Background Image Layer: Standing Artisan Mascot on Atmospheric Workshop Ground */}
+        {/* Background Image Layer: Highly Visible 3D Artisan in Workshop */}
         <div className="absolute inset-0 z-0 overflow-hidden">
           <img
-            src="/images/worker_workbench_hero.jpg"
+            src="/images/artisan-login-hero.jpg"
             alt="Artisan Background"
-            className="w-full h-full object-cover opacity-30 filter blur-[2px] scale-105"
+            className="w-full h-full object-cover object-top opacity-90 scale-100 transition-transform duration-1000"
           />
-          {/* Standing Artisan Hero in Background */}
-          <div className="absolute inset-0 flex items-end justify-center pointer-events-none">
-            <img
-              src="/images/worker_holding_card.png"
-              alt="Artisan Mascot Standing"
-              className="h-[85%] max-h-[680px] w-auto object-contain opacity-75 filter drop-shadow-[0_25px_60px_rgba(0,0,0,0.95)] transform translate-y-8"
-            />
-          </div>
-          {/* Gradient & Glow Overlays */}
-          <div className="absolute inset-0 bg-[#09090b]/40" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#09090b] via-[#09090b]/50 to-[#09090b]/75" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-green-500/15 blur-[130px] pointer-events-none rounded-full mix-blend-screen" />
+          {/* Subtle gradient vignette to keep the artisan vivid while ensuring text contrast */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#09090b] via-[#09090b]/30 to-[#09090b]/40" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#09090b]/30 via-transparent to-[#09090b]/40" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-green-500/10 blur-[140px] pointer-events-none rounded-full mix-blend-screen" />
         </div>
 
         {/* Top-Left Monogram Logo */}
         <div className="absolute top-12 left-12 flex items-center gap-3 z-20">
-          <div className="w-12 h-12 bg-white flex items-center justify-center rounded-2xl shadow-lg shadow-white/5">
+          <div className="w-12 h-12 bg-white/95 backdrop-blur-md flex items-center justify-center rounded-2xl shadow-xl shadow-black/40">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-[#09090b]">
               <path d="M 11 2 C 3 2 1 10 1 15 L 7 15 C 7 11 9 8 11 8 Z" />
               <path d="M 13 22 C 21 22 23 14 23 9 L 17 9 C 17 13 15 16 13 16 Z" />
             </svg>
           </div>
-          <span className="text-2xl font-bold tracking-tight text-white">Dire<span className="text-green-400">Skill</span></span>
+          <span className="text-2xl font-bold tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">Dire<span className="text-green-400">Skill</span></span>
         </div>
 
         {/* Center Headline with Glassmorphic Emblem */}
-        <div className="relative z-10 flex flex-col items-center text-center max-w-md">
-          <div className="w-24 h-24 bg-white/5 border border-white/10 flex items-center justify-center rounded-3xl backdrop-blur-xl mb-8 shadow-2xl">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" className="text-green-400">
+        <div className="relative z-10 flex flex-col items-center text-center max-w-md p-6 rounded-3xl backdrop-blur-md bg-black/40 border border-white/10 shadow-2xl">
+          <div className="w-20 h-20 bg-white/10 border border-white/20 flex items-center justify-center rounded-2xl backdrop-blur-xl mb-6 shadow-xl">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" className="text-green-400 drop-shadow">
               <path d="M 11 2 C 3 2 1 10 1 15 L 7 15 C 7 11 9 8 11 8 Z" />
               <path d="M 13 22 C 21 22 23 14 23 9 L 17 9 C 17 13 15 16 13 16 Z" />
             </svg>
           </div>
-          <h2 className="text-5xl font-bold tracking-tight text-white leading-tight">
+          <h2 className="text-4xl xl:text-5xl font-extrabold tracking-tight text-white leading-tight drop-shadow-md">
             {t("auth.marketing.loginTitle")}
           </h2>
         </div>
 
         {/* Bottom Legal Links */}
-        <div className="absolute bottom-12 left-12 flex items-center gap-4 text-sm font-medium text-zinc-500 z-20">
+        <div className="absolute bottom-12 left-12 flex items-center gap-4 text-sm font-medium text-zinc-300 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)] z-20">
           <Link href="/privacy" className="hover:text-green-400 transition-colors">{t("auth.privacy")}</Link>
           <span>&bull;</span>
           <Link href="/terms" className="hover:text-green-400 transition-colors">{t("auth.terms")}</Link>
