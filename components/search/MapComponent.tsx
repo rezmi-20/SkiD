@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Worker } from "./types";
 import { useTheme } from "next-themes";
 import { useLocation, DEFAULT_CENTER } from "@/context/LocationContext";
-import { Crosshair, LocateFixed, Compass } from "lucide-react";
+import { Crosshair } from "lucide-react";
 
 // Fix for default Leaflet icons in Next.js
 const fixLeafletIcons = () => {
@@ -26,6 +26,12 @@ interface MapComponentProps {
   onSelectWorker?: (worker: Worker | null) => void;
   className?: string;
 }
+
+const isValidCoord = (c: any): boolean => {
+  if (c == null) return false;
+  const num = Number(c);
+  return !isNaN(num) && isFinite(num) && num !== 0;
+};
 
 const createWorkerIcon = (rating: number, isSelected = false) => {
   const isTopRated = rating >= 4.5;
@@ -76,18 +82,27 @@ const MapController = ({
   const workersHash = workers.map(w => w.id).join(',');
 
   useEffect(() => {
-    if (selectedWorker && selectedWorker.lat && selectedWorker.lng) {
-      map.flyTo([selectedWorker.lat, selectedWorker.lng], 15, { duration: 0.8 });
-      return;
-    }
+    try {
+      if (!map) return;
+      map.invalidateSize();
 
-    const validWorkers = workers.filter(w => w.lat !== 0 && w.lng !== 0);
-    if (validWorkers.length > 0) {
-      const bounds = L.latLngBounds([center]);
-      validWorkers.forEach(w => bounds.extend([w.lat, w.lng]));
-      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 15 });
-    } else {
-      map.setView(center, 13);
+      if (selectedWorker && isValidCoord(selectedWorker.lat) && isValidCoord(selectedWorker.lng)) {
+        map.flyTo([Number(selectedWorker.lat), Number(selectedWorker.lng)], 15, { duration: 0.8 });
+        return;
+      }
+
+      const validWorkers = workers.filter(w => isValidCoord(w.lat) && isValidCoord(w.lng));
+      if (validWorkers.length > 0) {
+        const bounds = L.latLngBounds([center]);
+        validWorkers.forEach(w => bounds.extend([Number(w.lat), Number(w.lng)]));
+        if (bounds.isValid()) {
+          map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+        }
+      } else {
+        map.setView(center, 13);
+      }
+    } catch (err) {
+      console.warn("[MapController] caught non-fatal map animation warning:", err);
     }
   }, [workersHash, center[0], center[1], selectedWorker?.id, map]);
   
@@ -101,30 +116,55 @@ const LocateMeControl = ({ center, onLocate }: { center: [number, number]; onLoc
   const handleLocate = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     onLocate();
-    map.flyTo(center, 15, { duration: 1 });
+    try {
+      map.flyTo(center, 15, { duration: 0.8 });
+    } catch {}
   }, [center, map, onLocate]);
 
   return (
-    <div className="leaflet-bottom leaflet-right" style={{ marginBottom: "80px", marginRight: "12px", zIndex: 1000 }}>
+    <div className="leaflet-bottom leaflet-right" style={{ marginBottom: "20px", marginRight: "12px", zIndex: 1000 }}>
       <div className="leaflet-control">
         <button
           type="button"
           onClick={handleLocate}
-          className="h-11 w-11 rounded-full bg-card/95 backdrop-blur-md border border-outline-variant/80 text-foreground shadow-2xl flex items-center justify-center hover:bg-surface-container active:scale-95 transition-all group"
+          className="h-10 w-10 rounded-full bg-background-primary-default/95 backdrop-blur-md border border-border-button-default text-text-primary shadow-xl flex items-center justify-center hover:bg-background-tertiary-default active:scale-95 transition-all group"
           title="Center on My Real-Time Location"
         >
-          <Crosshair className="h-5 w-5 text-foreground group-hover:text-[#a3e635] transition-colors" />
+          <Crosshair className="h-4 w-4 text-[#45BA50]" />
         </button>
       </div>
     </div>
   );
 };
 
+export class MapErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: any) {
+    console.error("[MapErrorBoundary caught Leaflet error]:", error);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="h-full w-full bg-background-secondary-default flex items-center justify-center p-6 text-center text-text-tertiary">
+          <p className="text-xs font-bold">Interactive map unavailable. Artisans are listed below.</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function MapComponent({
   workers,
   selectedWorkerId,
   onSelectWorker,
-  className = "h-full w-full",
+  className = "",
 }: MapComponentProps) {
   const [isMounted, setIsMounted] = useState(false);
   const { theme } = useTheme();
@@ -135,118 +175,119 @@ export default function MapComponent({
     setIsMounted(true);
   }, []);
 
-  if (!isMounted) return <div className="h-full w-full bg-muted/40 animate-pulse rounded-3xl" />;
+  if (!isMounted) return <div className="h-full w-full bg-background-secondary-default animate-pulse" />;
 
-  const center: [number, number] = location 
-    ? [location.lat, location.lng] 
-    : [DEFAULT_CENTER.lat, DEFAULT_CENTER.lng];
+  const centerLat = isValidCoord(location?.lat) ? Number(location!.lat) : DEFAULT_CENTER.lat;
+  const centerLng = isValidCoord(location?.lng) ? Number(location!.lng) : DEFAULT_CENTER.lng;
+  const center: [number, number] = [centerLat, centerLng];
   
   const selectedWorker = workers.find(w => w.id === selectedWorkerId) || null;
   const isLight = theme === 'light';
   const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 
   return (
-    <div className={`relative overflow-hidden z-0 ${className}`}>
-      <MapContainer
-        center={center}
-        zoom={13}
-        scrollWheelZoom={true}
-        style={{ height: "100%", width: "100%", background: isLight ? "#f8f9fa" : "#1a1a1a" }}
-      >
-        <MapController workers={workers} center={center} selectedWorker={selectedWorker} />
-        
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url={tileUrl}
-        />
-        
-        {/* Real-time GPS accuracy circle */}
-        {location && (
-          <Circle
-            center={center}
-            radius={Math.max(accuracy || 150, 100)}
-            pathOptions={{
-              color: "#a3e635",
-              fillColor: "#a3e635",
-              fillOpacity: 0.12,
-              weight: 1.5,
-              dashArray: isLive ? undefined : "4, 4",
-            }}
+    <MapErrorBoundary>
+      <div className={`relative overflow-hidden z-0 h-full w-full ${className}`}>
+        <MapContainer
+          center={center}
+          zoom={13}
+          scrollWheelZoom={true}
+          style={{ height: "100%", width: "100%", background: isLight ? "#f8f9fa" : "#1a1a1a" }}
+        >
+          <MapController workers={workers} center={center} selectedWorker={selectedWorker} />
+          
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url={tileUrl}
           />
-        )}
-
-        {/* User Location Pulse Marker */}
-        <Marker position={center} icon={userLocationIcon()}>
-          <Popup className="compact-popup">
-            <div className="p-1 font-sans text-center">
-              <p className="font-black text-xs text-white">Your Real-Time Location</p>
-              <p className="text-[10px] text-[#a3e635] font-bold">
-                {isLive ? `Live GPS (±${accuracy || 20}m)` : "Dire Dawa (Cached)"}
-              </p>
-            </div>
-          </Popup>
-        </Marker>
-
-        {/* Workers Pins with Rating Bubbles */}
-        {workers.filter(w => w.lat !== 0 && w.lng !== 0).map((worker) => {
-          const isSelected = selectedWorkerId === worker.id;
-          return (
-            <Marker
-              key={worker.id}
-              position={[worker.lat, worker.lng]}
-              icon={createWorkerIcon(worker.rating, isSelected)}
-              eventHandlers={{
-                click: () => {
-                  onSelectWorker?.(worker);
-                },
+          
+          {/* Real-time GPS accuracy circle */}
+          {isValidCoord(location?.lat) && isValidCoord(location?.lng) && (
+            <Circle
+              center={center}
+              radius={Math.max(accuracy || 150, 100)}
+              pathOptions={{
+                color: "#45BA50",
+                fillColor: "#45BA50",
+                fillOpacity: 0.12,
+                weight: 1.5,
+                dashArray: isLive ? undefined : "4, 4",
               }}
-            >
-              <Popup className="compact-popup">
-                <div className="p-1 font-sans min-w-[140px]">
-                  <p className="font-black text-xs mb-0.5 truncate text-white">{worker.name}</p>
-                  <p className="text-[10px] text-[#a4fe47] uppercase font-bold mb-1.5 truncate">{worker.skill}</p>
-                  
-                  <div className="flex items-center justify-between text-[10px] mb-2 text-white/80">
-                    <span className="text-amber-400 font-bold">★ {worker.rating > 0 ? worker.rating.toFixed(1) : "5.0"}</span>
-                    <span>{worker.distance !== "N/A" ? `${worker.distance} km` : "Dire Dawa"}</span>
+            />
+          )}
+
+          {/* User Location Pulse Marker */}
+          <Marker position={center} icon={userLocationIcon()}>
+            <Popup className="compact-popup">
+              <div className="p-1 font-sans text-center">
+                <p className="font-black text-xs text-white">Your Location</p>
+                <p className="text-[10px] text-[#a4fe47] font-bold">
+                  {isLive ? `Live GPS (±${accuracy || 20}m)` : "Dire Dawa"}
+                </p>
+              </div>
+            </Popup>
+          </Marker>
+
+          {/* Workers Pins with Rating Bubbles */}
+          {workers.filter(w => isValidCoord(w.lat) && isValidCoord(w.lng)).map((worker) => {
+            const isSelected = selectedWorkerId === worker.id;
+            return (
+              <Marker
+                key={worker.id}
+                position={[Number(worker.lat), Number(worker.lng)]}
+                icon={createWorkerIcon(worker.rating, isSelected)}
+                eventHandlers={{
+                  click: () => {
+                    onSelectWorker?.(worker);
+                  },
+                }}
+              >
+                <Popup className="compact-popup">
+                  <div className="p-1 font-sans min-w-[140px]">
+                    <p className="font-black text-xs mb-0.5 truncate text-white">{worker.name}</p>
+                    <p className="text-[10px] text-[#a4fe47] uppercase font-bold mb-1.5 truncate">{worker.skill}</p>
+                    
+                    <div className="flex items-center justify-between text-[10px] mb-2 text-white/80">
+                      <span className="text-amber-400 font-bold">★ {worker.rating > 0 ? worker.rating.toFixed(1) : "5.0"}</span>
+                      <span>{worker.distance !== "N/A" ? `${worker.distance} km` : "Dire Dawa"}</span>
+                    </div>
+                    
+                    <a 
+                      href={`/client/worker/${worker.id}`} 
+                      className="block text-center py-1.5 bg-[#45BA50] hover:bg-[#3ca346] text-white text-[10px] font-black uppercase tracking-wider rounded-full no-underline transition-colors shadow-xs"
+                    >
+                      View Profile
+                    </a>
                   </div>
-                  
-                  <a 
-                    href={`/client/worker/${worker.id}`} 
-                    className="block text-center py-1.5 bg-[#45BA50] hover:bg-[#3ca346] text-white text-[10px] font-black uppercase tracking-wider rounded-full no-underline transition-colors shadow-xs"
-                  >
-                    View Profile
-                  </a>
-                </div>
-              </Popup>
-            </Marker>
-          );
-        })}
+                </Popup>
+              </Marker>
+            );
+          })}
 
-        {/* Google Maps style "Locate Me" Button */}
-        <LocateMeControl center={center} onLocate={refreshLocation} />
-      </MapContainer>
+          <LocateMeControl center={center} onLocate={refreshLocation} />
+        </MapContainer>
 
-      <style jsx global>{`
-        .leaflet-container {
-          background: var(--bg-page) !important;
-        }
-        .leaflet-popup-content-wrapper {
-          background: #134e27 !important;
-          color: #ffffff !important;
-          border-radius: 1rem !important;
-          border: 1px solid rgba(69, 186, 80, 0.4);
-          box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-        }
-        .leaflet-popup-tip {
-          background: #134e27 !important;
-        }
-        .leaflet-bar a {
-           background-color: var(--surface-glass) !important;
-           color: var(--text-high) !important;
-           border-bottom: 1px solid var(--border-glass) !important;
-        }
-      `}</style>
-    </div>
+        <style jsx global>{`
+          .leaflet-container {
+            background: var(--bg-page) !important;
+          }
+          .leaflet-popup-content-wrapper {
+            background: #134e27 !important;
+            color: #ffffff !important;
+            border-radius: 1rem !important;
+            border: 1px solid rgba(69, 186, 80, 0.4);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+          }
+          .leaflet-popup-tip {
+            background: #134e27 !important;
+          }
+          .leaflet-bar a {
+             background-color: var(--surface-glass) !important;
+             color: var(--text-high) !important;
+             border-bottom: 1px solid var(--border-glass) !important;
+          }
+        `}</style>
+      </div>
+    </MapErrorBoundary>
   );
 }

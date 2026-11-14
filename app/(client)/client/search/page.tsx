@@ -53,6 +53,19 @@ function SearchPageContent() {
   const searchParams = useSearchParams();
   const { location, loading: locLoading, accuracy, isLive, refreshLocation } = useLocation();
 
+  const [mounted, setMounted] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const initialCategory = searchParams.get("category") || "";
   const initialQuery = searchParams.get("q") || searchParams.get("query") || "";
 
@@ -108,7 +121,7 @@ function SearchPageContent() {
           maxDistance: filters.maxDistance.toString(),
         });
 
-        if (location) {
+        if (location && location.lat && location.lng) {
           params.append("lat", location.lat.toString());
           params.append("lng", location.lng.toString());
         }
@@ -189,8 +202,8 @@ function SearchPageContent() {
           }
 
           setWorkers(mapped);
-          if (mapped.length > 0 && !selectedWorker) {
-            setSelectedWorker(mapped[0]);
+          if (mapped.length > 0) {
+            setSelectedWorker((prev) => prev ? mapped.find(m => m.id === prev.id) || mapped[0] : mapped[0]);
           }
           setError(null);
         }
@@ -216,202 +229,47 @@ function SearchPageContent() {
   return (
     <FadeContent blur duration={0.25} className="w-full max-w-full pb-20 lg:pb-6">
       
-      {/* ═════════════════════════════════════════════════════════════════════
-          1. MOBILE VIEW (< lg): RIDE-HAILING APPS EXPERIENCE (Like Image 2)
-          - Top: Live interactive Map with floating search & location button
-          - Bottom: Clean sliding bottom sheet with compact artisan list & CTA
-          ═════════════════════════════════════════════════════════════════════ */}
-      <div className="block lg:hidden w-full relative min-h-[calc(100vh-140px)] flex flex-col">
-        
-        {/* Top Half: Live Interactive Map of Dire Dawa */}
-        <div className="h-[42vh] min-h-[270px] w-full relative rounded-b-3xl overflow-hidden border-b border-border-button-default shadow-md">
-          {/* Floating Top Search & Filter Bar on Map */}
-          <div className="absolute top-3 inset-x-3 z-[1000] flex items-center gap-2 pointer-events-auto">
-            <div className="flex-1 flex items-center gap-2 h-11 px-3.5 rounded-full bg-background-primary-default/95 backdrop-blur-xl border border-border-button-default shadow-xl">
-              <RiSearchLine className="w-4 h-4 text-text-tertiary shrink-0" />
-              <input
-                type="text"
-                value={filters.query}
-                onChange={(e) => setFilters(f => ({ ...f, query: e.target.value }))}
-                placeholder="Search Kezira, painters, electricians..."
-                className="bg-transparent text-xs font-semibold text-text-primary placeholder:text-text-placeholder outline-none flex-1 min-w-0"
-              />
-              {filters.query && (
-                <button
-                  onClick={() => setFilters(f => ({ ...f, query: "" }))}
-                  className="p-1 text-text-tertiary hover:text-text-primary shrink-0"
-                >
-                  <RiCloseLine className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-
-            {/* Dedicated Slide-in Filters Button */}
-            <button
-              type="button"
-              onClick={() => setFilterDrawerOpen(true)}
-              className={cx(
-                "h-11 px-3.5 rounded-full text-xs font-bold transition-all active:scale-95 shadow-xl shrink-0 flex items-center gap-1.5 border",
-                activeFilterCount > 0
-                  ? "bg-[#45BA50] text-white border-[#45BA50] shadow-[0_2px_10px_rgba(69,186,80,0.35)]"
-                  : "bg-background-primary-default/95 backdrop-blur-xl border-border-button-default text-text-primary"
-              )}
-            >
-              <RiEqualizerLine className="w-4 h-4" />
-              <span>Filters</span>
-              {activeFilterCount > 0 && (
-                <span className="h-4 w-4 rounded-full bg-black text-white text-[9px] font-black flex items-center justify-center">
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
-          </div>
-
-          {/* Leaflet Map */}
-          <MapComponent 
-            workers={workers} 
-            selectedWorkerId={selectedWorker?.id}
-            onSelectWorker={(w) => setSelectedWorker(w)}
-            className="h-full w-full"
-          />
-        </div>
-
-        {/* Bottom Half: Clean Bottom Sheet (Direct Uber / Sky Style) */}
-        <div className="flex-1 bg-background-primary-default -mt-5 rounded-t-[32px] border-t border-border-button-default shadow-2xl relative z-10 px-4 pt-3 pb-24 flex flex-col justify-between">
-          <div>
-            {/* Grab Notch Handle */}
-            <div 
-              onClick={() => setFilterDrawerOpen(true)}
-              className="w-10 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700 mx-auto mb-3 cursor-pointer" 
-            />
-
-            {/* Sheet Title Row */}
-            <div className="flex items-center justify-between pb-2 mb-2 border-b border-separator-border">
-              <div>
-                <h2 className="text-body-medium font-black text-text-primary tracking-tight">
-                  Choose an Artisan
-                </h2>
-                <p className="text-[11px] text-text-tertiary">
-                  {workers.length} verified pros nearby in Dire Dawa
-                </p>
-              </div>
-
-              {/* Live GPS Proximity Button */}
-              <button
-                type="button"
-                onClick={refreshLocation}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#134e27]/20 text-[#45BA50] border border-[#45BA50]/30 active:scale-95 transition-transform"
-                title="Refresh GPS"
-              >
-                <span className={cx(
-                  "w-1.5 h-1.5 rounded-full",
-                  locLoading ? "bg-amber-400 animate-pulse" : isLive ? "bg-[#45BA50] animate-ping" : "bg-[#45BA50]"
-                )} />
-                <span>±{accuracy || 20}m GPS</span>
-                <RiRestartLine className={cx("w-2.5 h-2.5 ms-0.5", locLoading ? "animate-spin" : "")} />
-              </button>
-            </div>
-
-            {/* Compact Artisan Cards List (Image 2 Sky Comfort/Sky Premium Style) */}
-            <div className="space-y-2 max-h-[38vh] overflow-y-auto no-scrollbar">
-              {workers.length > 0 ? (
-                workers.map((worker) => (
-                  <WorkerCard
-                    key={worker.id}
-                    worker={worker}
-                    isSelected={selectedWorker?.id === worker.id}
-                    onSelect={(w) => setSelectedWorker(w)}
-                  />
-                ))
-              ) : (
-                !loading && (
-                  <div className="p-6 text-center rounded-2xl bg-background-secondary-default border border-dashed border-border-button-default space-y-2">
-                    <p className="text-xs font-bold text-text-primary">No matching artisans found</p>
-                    <p className="text-[10px] text-text-tertiary">Try resetting filters to show all verified pros in Dire Dawa.</p>
-                    <button
-                      onClick={() => setFilters({ query: "", category: "", neighborhood: "All Dire Dawa", minRating: 0, maxDistance: 50, sortBy: "Nearest", verifiedOnly: false })}
-                      className="px-3 py-1 rounded-lg text-xs font-bold bg-[#45BA50] text-white"
-                    >
-                      Reset Filters
-                    </button>
-                  </div>
-                )
-              )}
-
-              {loading && (
-                <div className="space-y-2">
-                  {[1, 2].map((i) => (
-                    <div key={i} className="h-16 rounded-2xl bg-background-secondary-default animate-pulse border border-border-button-default" />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Sticky Bottom Full-Width Booking Pill Button (Like Image 2 "Choose Sky Economy") */}
-          {selectedWorker && (
-            <div className="pt-3 border-t border-separator-border flex items-center gap-2 mt-2">
-              <Link
-                href={`/client/contract/new?workerId=${selectedWorker.id}`}
-                className="flex-1 h-12 rounded-full bg-[#134e27] hover:bg-[#134e27]/90 text-[#a4fe47] font-black text-xs inline-flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(19,78,39,0.4)] active:scale-[0.98] transition-all border border-[#45BA50]/40"
-              >
-                <span>Book {selectedWorker.name}</span>
-                <span className="text-[10px] text-white/80">• ETB {selectedWorker.hourlyRate || "450"}/hr</span>
-                <RiArrowRightLine className="w-4 h-4 text-[#a4fe47]" />
-              </Link>
-
-              <Link
-                href={`/client/worker/${selectedWorker.id}`}
-                className="h-12 w-12 rounded-full bg-background-secondary-default border border-border-button-default hover:bg-background-tertiary-default flex items-center justify-center text-text-primary shadow-xs shrink-0 active:scale-95 transition-transform"
-                title="View Full Profile"
-              >
-                <RiUser3Line className="w-5 h-5 text-text-secondary" />
-              </Link>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ═════════════════════════════════════════════════════════════════════
-          2. DESKTOP VIEW (lg:): ELEGANT SPLIT-SCREEN LAYOUT
-          - Left Column (42%): Search bar, filter drawer trigger, artisan list
-          - Right Column (58%): Full-height sticky interactive map of Dire Dawa
-          ═════════════════════════════════════════════════════════════════════ */}
-      <div className="hidden lg:grid grid-cols-12 gap-6 items-start w-full">
-        
-        {/* Left Column (5 cols / ~42%): Clean Artisan Selection Panel */}
-        <div className="col-span-5 flex flex-col h-[calc(100vh-100px)] justify-between bg-background-primary-default p-1">
-          <div className="space-y-3">
-            {/* Clean Top Search & Controls Row */}
-            <div className="flex items-center gap-2">
-              <div className="flex-1 flex items-center gap-2 h-11 px-3.5 rounded-full bg-background-secondary-default border border-border-button-default shadow-xs focus-within:border-[#45BA50] transition-colors">
+      {/* ── Client Render Switch: Only ONE MapComponent is ever mounted in DOM ── */}
+      {mounted && !isDesktop && (
+        /* ═════════════════════════════════════════════════════════════════════
+            MOBILE VIEW (< lg): RIDE-HAILING APPS EXPERIENCE (Like Image 2)
+            - Top: Live interactive Map with floating search & location button
+            - Bottom: Clean sliding bottom sheet with compact artisan list & CTA
+            ═════════════════════════════════════════════════════════════════════ */
+        <div className="w-full relative min-h-[calc(100vh-140px)] flex flex-col">
+          
+          {/* Top Half: Live Interactive Map of Dire Dawa */}
+          <div className="h-[42vh] min-h-[270px] w-full relative rounded-b-3xl overflow-hidden border-b border-border-button-default shadow-md">
+            {/* Floating Top Search & Filter Bar on Map */}
+            <div className="absolute top-3 inset-x-3 z-[1000] flex items-center gap-2 pointer-events-auto">
+              <div className="flex-1 flex items-center gap-2 h-11 px-3.5 rounded-full bg-background-primary-default/95 backdrop-blur-xl border border-border-button-default shadow-xl">
                 <RiSearchLine className="w-4 h-4 text-text-tertiary shrink-0" />
                 <input
                   type="text"
                   value={filters.query}
                   onChange={(e) => setFilters(f => ({ ...f, query: e.target.value }))}
-                  placeholder="Search electricians, plumbers, Kezira..."
+                  placeholder="Search Kezira, painters, electricians..."
                   className="bg-transparent text-xs font-semibold text-text-primary placeholder:text-text-placeholder outline-none flex-1 min-w-0"
                 />
                 {filters.query && (
                   <button
                     onClick={() => setFilters(f => ({ ...f, query: "" }))}
-                    className="p-1 text-text-tertiary hover:text-text-primary"
+                    className="p-1 text-text-tertiary hover:text-text-primary shrink-0"
                   >
                     <RiCloseLine className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
 
-              {/* Dedicated Slide-in Filters Trigger Button */}
+              {/* Dedicated Slide-in Filters Button */}
               <button
                 type="button"
                 onClick={() => setFilterDrawerOpen(true)}
                 className={cx(
-                  "h-11 px-4 rounded-full text-xs font-bold transition-all active:scale-95 shadow-xs shrink-0 flex items-center gap-1.5 border",
+                  "h-11 px-3.5 rounded-full text-xs font-bold transition-all active:scale-95 shadow-xl shrink-0 flex items-center gap-1.5 border",
                   activeFilterCount > 0
                     ? "bg-[#45BA50] text-white border-[#45BA50] shadow-[0_2px_10px_rgba(69,186,80,0.35)]"
-                    : "bg-background-secondary-default border-border-button-default text-text-primary hover:bg-background-tertiary-default"
+                    : "bg-background-primary-default/95 backdrop-blur-xl border-border-button-default text-text-primary"
                 )}
               >
                 <RiEqualizerLine className="w-4 h-4" />
@@ -424,100 +282,265 @@ function SearchPageContent() {
               </button>
             </div>
 
-            {/* Results Status Header */}
-            <div className="flex items-center justify-between text-caption-1-semibold text-text-tertiary px-1">
-              <span>{workers.length} verified artisans in Dire Dawa</span>
-              <button
-                type="button"
-                onClick={refreshLocation}
-                className="inline-flex items-center gap-1 text-[11px] font-bold text-[#45BA50] hover:underline"
-              >
-                <span>Live GPS (±{accuracy || 18}m)</span>
-                <RiRestartLine className={cx("w-3 h-3", locLoading ? "animate-spin" : "")} />
-              </button>
-            </div>
-
-            {/* Scrollable Compact Artisan Cards List */}
-            <div className="space-y-2.5 overflow-y-auto no-scrollbar max-h-[calc(100vh-270px)] pr-1">
-              {workers.length > 0 ? (
-                workers.map((worker) => (
-                  <WorkerCard
-                    key={worker.id}
-                    worker={worker}
-                    isSelected={selectedWorker?.id === worker.id}
-                    onSelect={(w) => setSelectedWorker(w)}
-                  />
-                ))
-              ) : (
-                !loading && (
-                  <div className="rounded-3xl border border-dashed border-border-button-default p-10 text-center bg-background-secondary-default space-y-3">
-                    <RiSearchEyeLine className="w-8 h-8 mx-auto text-[#45BA50]" />
-                    <p className="text-body-medium font-bold text-text-primary">No matching artisans found</p>
-                    <p className="text-caption-1-semibold text-text-tertiary">Try expanding your search criteria or resetting filters.</p>
-                    <button
-                      onClick={() => setFilters({ query: "", category: "", neighborhood: "All Dire Dawa", minRating: 0, maxDistance: 50, sortBy: "Nearest", verifiedOnly: false })}
-                      className="px-4 py-1.5 rounded-full text-xs font-bold bg-[#45BA50] text-white"
-                    >
-                      Reset All Filters
-                    </button>
-                  </div>
-                )
-              )}
-
-              {loading && (
-                <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-16 rounded-2xl bg-background-secondary-default animate-pulse border border-border-button-default" />
-                  ))}
-                </div>
-              )}
-            </div>
+            {/* Single Mobile Leaflet Map */}
+            <MapComponent 
+              workers={workers} 
+              selectedWorkerId={selectedWorker?.id}
+              onSelectWorker={(w) => setSelectedWorker(w)}
+              className="h-full w-full"
+            />
           </div>
 
-          {/* Bottom Desktop Selected Artisan CTA Banner */}
-          {selectedWorker && (
-            <div className="p-3.5 rounded-2xl bg-background-secondary-default border border-border-button-default shadow-xs flex items-center justify-between gap-3 mt-3">
-              <div className="min-w-0">
-                <p className="text-[10px] text-text-tertiary uppercase font-bold tracking-wider">Selected Pro</p>
-                <p className="text-body-medium font-black text-text-primary truncate">{selectedWorker.name}</p>
-                <p className="text-caption-1-semibold text-[#45BA50] font-bold">ETB {selectedWorker.hourlyRate || "450"}/hr</p>
+          {/* Bottom Half: Clean Bottom Sheet (Direct Uber / Sky Style) */}
+          <div className="flex-1 bg-background-primary-default -mt-5 rounded-t-[32px] border-t border-border-button-default shadow-2xl relative z-10 px-4 pt-3 pb-24 flex flex-col justify-between">
+            <div>
+              {/* Grab Notch Handle */}
+              <div 
+                onClick={() => setFilterDrawerOpen(true)}
+                className="w-10 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700 mx-auto mb-3 cursor-pointer" 
+              />
+
+              {/* Sheet Title Row */}
+              <div className="flex items-center justify-between pb-2 mb-2 border-b border-separator-border">
+                <div>
+                  <h2 className="text-body-medium font-black text-text-primary tracking-tight">
+                    Choose an Artisan
+                  </h2>
+                  <p className="text-[11px] text-text-tertiary">
+                    {workers.length} verified pros nearby in Dire Dawa
+                  </p>
+                </div>
+
+                {/* Live GPS Proximity Button */}
+                <button
+                  type="button"
+                  onClick={refreshLocation}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#134e27]/20 text-[#45BA50] border border-[#45BA50]/30 active:scale-95 transition-transform"
+                  title="Refresh GPS Location"
+                >
+                  <span className={cx(
+                    "w-1.5 h-1.5 rounded-full",
+                    locLoading ? "bg-amber-400 animate-pulse" : isLive ? "bg-[#45BA50] animate-ping" : "bg-[#45BA50]"
+                  )} />
+                  <span>±{accuracy || 20}m GPS</span>
+                  <RiRestartLine className={cx("w-2.5 h-2.5 ms-0.5", locLoading ? "animate-spin" : "")} />
+                </button>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
-                <Link
-                  href={`/client/worker/${selectedWorker.id}`}
-                  className="h-10 px-3 rounded-xl border border-border-button-default bg-background-primary-default hover:bg-background-tertiary-default text-text-primary text-xs font-bold inline-flex items-center justify-center transition-colors"
-                >
-                  Profile
-                </Link>
-                <Link
-                  href={`/client/contract/new?workerId=${selectedWorker.id}`}
-                  className="h-10 px-4 rounded-xl bg-[#45BA50] hover:bg-[#3ca346] text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-[0_4px_14px_rgba(69,186,80,0.3)] active:scale-95 transition-all"
-                >
-                  <span>Book Artisan</span>
-                  <RiArrowRightLine className="w-4 h-4" />
-                </Link>
+              {/* Compact Artisan Cards List (Image 2 Sky Comfort/Sky Premium Style) */}
+              <div className="space-y-2 max-h-[38vh] overflow-y-auto no-scrollbar">
+                {workers.length > 0 ? (
+                  workers.map((worker) => (
+                    <WorkerCard
+                      key={worker.id}
+                      worker={worker}
+                      isSelected={selectedWorker?.id === worker.id}
+                      onSelect={(w) => setSelectedWorker(w)}
+                    />
+                  ))
+                ) : (
+                  !loading && (
+                    <div className="p-6 text-center rounded-2xl bg-background-secondary-default border border-dashed border-border-button-default space-y-2">
+                      <p className="text-xs font-bold text-text-primary">No matching artisans found</p>
+                      <p className="text-[10px] text-text-tertiary">Try resetting filters to show all verified pros in Dire Dawa.</p>
+                      <button
+                        onClick={() => setFilters({ query: "", category: "", neighborhood: "All Dire Dawa", minRating: 0, maxDistance: 50, sortBy: "Nearest", verifiedOnly: false })}
+                        className="px-3 py-1 rounded-lg text-xs font-bold bg-[#45BA50] text-white"
+                      >
+                        Reset Filters
+                      </button>
+                    </div>
+                  )
+                )}
+
+                {loading && (
+                  <div className="space-y-2">
+                    {[1, 2].map((i) => (
+                      <div key={i} className="h-16 rounded-2xl bg-background-secondary-default animate-pulse border border-border-button-default" />
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Right Column (7 cols / ~58%): Sticky Full-Height Interactive Map */}
-        <div className="col-span-7 h-[calc(100vh-100px)] sticky top-20 rounded-3xl overflow-hidden border border-border-button-default shadow-xl">
-          <MapComponent 
-            workers={workers} 
-            selectedWorkerId={selectedWorker?.id}
-            onSelectWorker={(w) => setSelectedWorker(w)}
-            className="h-full w-full"
-          />
-        </div>
+            {/* Sticky Bottom Full-Width Booking Pill Button */}
+            {selectedWorker && (
+              <div className="pt-3 border-t border-separator-border flex items-center gap-2 mt-2">
+                <Link
+                  href={`/client/contract/new?workerId=${selectedWorker.id}`}
+                  className="flex-1 h-12 rounded-full bg-[#134e27] hover:bg-[#134e27]/90 text-[#a4fe47] font-black text-xs inline-flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(19,78,39,0.4)] active:scale-[0.98] transition-all border border-[#45BA50]/40"
+                >
+                  <span>Book {selectedWorker.name}</span>
+                  <span className="text-[10px] text-white/80">• ETB {selectedWorker.hourlyRate || "450"}/hr</span>
+                  <RiArrowRightLine className="w-4 h-4 text-[#a4fe47]" />
+                </Link>
 
-      </div>
+                <Link
+                  href={`/client/worker/${selectedWorker.id}`}
+                  className="h-12 w-12 rounded-full bg-background-secondary-default border border-border-button-default hover:bg-background-tertiary-default flex items-center justify-center text-text-primary shadow-xs shrink-0 active:scale-95 transition-transform"
+                  title="View Full Profile"
+                >
+                  <RiUser3Line className="w-5 h-5 text-text-secondary" />
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ═════════════════════════════════════════════════════════════════════
-          3. DEDICATED SLIDE-OVER FILTER DRAWER (Mobile + Desktop)
-          - Contains Kebele Neighborhoods, Active Trades, Verified Toggle, Sliders
-          - Keeps the main discovery screen completely clean and unstacked!
+          DESKTOP VIEW (lg:): ELEGANT SPLIT-SCREEN LAYOUT
+          - Left Column (42%): Search bar, filter drawer trigger, artisan list
+          - Right Column (58%): Full-height sticky interactive map of Dire Dawa
+          ═════════════════════════════════════════════════════════════════════ */}
+      {mounted && isDesktop && (
+        <div className="grid grid-cols-12 gap-6 items-start w-full">
+          
+          {/* Left Column (5 cols / ~42%): Clean Artisan Selection Panel */}
+          <div className="col-span-5 flex flex-col h-[calc(100vh-100px)] justify-between bg-background-primary-default p-1">
+            <div className="space-y-3">
+              {/* Clean Top Search & Controls Row */}
+              <div className="flex items-center gap-2">
+                <div className="flex-1 flex items-center gap-2 h-11 px-3.5 rounded-full bg-background-secondary-default border border-border-button-default shadow-xs focus-within:border-[#45BA50] transition-colors">
+                  <RiSearchLine className="w-4 h-4 text-text-tertiary shrink-0" />
+                  <input
+                    type="text"
+                    value={filters.query}
+                    onChange={(e) => setFilters(f => ({ ...f, query: e.target.value }))}
+                    placeholder="Search electricians, plumbers, Kezira..."
+                    className="bg-transparent text-xs font-semibold text-text-primary placeholder:text-text-placeholder outline-none flex-1 min-w-0"
+                  />
+                  {filters.query && (
+                    <button
+                      onClick={() => setFilters(f => ({ ...f, query: "" }))}
+                      className="p-1 text-text-tertiary hover:text-text-primary"
+                    >
+                      <RiCloseLine className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Dedicated Slide-in Filters Trigger Button */}
+                <button
+                  type="button"
+                  onClick={() => setFilterDrawerOpen(true)}
+                  className={cx(
+                    "h-11 px-4 rounded-full text-xs font-bold transition-all active:scale-95 shadow-xs shrink-0 flex items-center gap-1.5 border",
+                    activeFilterCount > 0
+                      ? "bg-[#45BA50] text-white border-[#45BA50] shadow-[0_2px_10px_rgba(69,186,80,0.35)]"
+                      : "bg-background-secondary-default border-border-button-default text-text-primary hover:bg-background-tertiary-default"
+                  )}
+                >
+                  <RiEqualizerLine className="w-4 h-4" />
+                  <span>Filters</span>
+                  {activeFilterCount > 0 && (
+                    <span className="h-4 w-4 rounded-full bg-black text-white text-[9px] font-black flex items-center justify-center">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {/* Results Status Header */}
+              <div className="flex items-center justify-between text-caption-1-semibold text-text-tertiary px-1">
+                <span>{workers.length} verified artisans in Dire Dawa</span>
+                <button
+                  type="button"
+                  onClick={refreshLocation}
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[#45BA50] hover:underline"
+                >
+                  <span>Live GPS (±{accuracy || 18}m)</span>
+                  <RiRestartLine className={cx("w-3 h-3", locLoading ? "animate-spin" : "")} />
+                </button>
+              </div>
+
+              {/* Scrollable Compact Artisan Cards List */}
+              <div className="space-y-2.5 overflow-y-auto no-scrollbar max-h-[calc(100vh-270px)] pr-1">
+                {workers.length > 0 ? (
+                  workers.map((worker) => (
+                    <WorkerCard
+                      key={worker.id}
+                      worker={worker}
+                      isSelected={selectedWorker?.id === worker.id}
+                      onSelect={(w) => setSelectedWorker(w)}
+                    />
+                  ))
+                ) : (
+                  !loading && (
+                    <div className="rounded-3xl border border-dashed border-border-button-default p-10 text-center bg-background-secondary-default space-y-3">
+                      <RiSearchEyeLine className="w-8 h-8 mx-auto text-[#45BA50]" />
+                      <p className="text-body-medium font-bold text-text-primary">No matching artisans found</p>
+                      <p className="text-caption-1-semibold text-text-tertiary">Try expanding your search criteria or resetting filters.</p>
+                      <button
+                        onClick={() => setFilters({ query: "", category: "", neighborhood: "All Dire Dawa", minRating: 0, maxDistance: 50, sortBy: "Nearest", verifiedOnly: false })}
+                        className="px-4 py-1.5 rounded-full text-xs font-bold bg-[#45BA50] text-white"
+                      >
+                        Reset All Filters
+                      </button>
+                    </div>
+                  )
+                )}
+
+                {loading && (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="h-16 rounded-2xl bg-background-secondary-default animate-pulse border border-border-button-default" />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Bottom Desktop Selected Artisan CTA Banner */}
+            {selectedWorker && (
+              <div className="p-3.5 rounded-2xl bg-background-secondary-default border border-border-button-default shadow-xs flex items-center justify-between gap-3 mt-3">
+                <div className="min-w-0">
+                  <p className="text-[10px] text-text-tertiary uppercase font-bold tracking-wider">Selected Pro</p>
+                  <p className="text-body-medium font-black text-text-primary truncate">{selectedWorker.name}</p>
+                  <p className="text-caption-1-semibold text-[#45BA50] font-bold">ETB {selectedWorker.hourlyRate || "450"}/hr</p>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <Link
+                    href={`/client/worker/${selectedWorker.id}`}
+                    className="h-10 px-3 rounded-xl border border-border-button-default bg-background-primary-default hover:bg-background-tertiary-default text-text-primary text-xs font-bold inline-flex items-center justify-center transition-colors"
+                  >
+                    Profile
+                  </Link>
+                  <Link
+                    href={`/client/contract/new?workerId=${selectedWorker.id}`}
+                    className="h-10 px-4 rounded-xl bg-[#45BA50] hover:bg-[#3ca346] text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-[0_4px_14px_rgba(69,186,80,0.3)] active:scale-95 transition-all"
+                  >
+                    <span>Book Artisan</span>
+                    <RiArrowRightLine className="w-4 h-4" />
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column (7 cols / ~58%): Sticky Full-Height Interactive Map */}
+          <div className="col-span-7 h-[calc(100vh-100px)] sticky top-20 rounded-3xl overflow-hidden border border-border-button-default shadow-xl">
+            <MapComponent 
+              workers={workers} 
+              selectedWorkerId={selectedWorker?.id}
+              onSelectWorker={(w) => setSelectedWorker(w)}
+              className="h-full w-full"
+            />
+          </div>
+
+        </div>
+      )}
+
+      {/* ── Initial Loading Fallback before Mount ── */}
+      {!mounted && (
+        <div className="h-[500px] w-full rounded-3xl bg-background-secondary-default/50 animate-pulse border border-border-button-default flex items-center justify-center">
+          <RiCompass3Line className="h-8 w-8 animate-spin text-[#45BA50]" />
+        </div>
+      )}
+
+      {/* ═════════════════════════════════════════════════════════════════════
+          DEDICATED SLIDE-OVER FILTER DRAWER (Mobile + Desktop)
           ═════════════════════════════════════════════════════════════════════ */}
       <AnimatePresence>
         {filterDrawerOpen && (
