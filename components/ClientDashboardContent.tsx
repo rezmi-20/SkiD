@@ -205,12 +205,12 @@ export default function ClientDashboardContent({
   return (
     <div className="w-full max-w-lg mx-auto lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl space-y-6 pb-20 select-none">
       
-      {/* ── 1. TOTAL BALANCE / SPENT SECTION (Exact Sixpay Mobile Visual Match) ── */}
+      {/* ── 1. TOTAL SPEND SECTION (Exact Sixpay Mobile Visual Match) ── */}
       <section className="px-1 sm:px-2 pt-1">
-        {/* Total Balance Label + Currency Switch Pill */}
+        {/* Total Spend Label + Currency Switch Pill */}
         <div className="flex items-center gap-2 mb-1.5">
-          <span className="text-caption-1-semibold text-text-tertiary font-medium">
-            Total Balance
+          <span className="text-caption-1-semibold text-zinc-600 dark:text-zinc-300 font-bold uppercase tracking-wide text-[11px]">
+            Total Spend
           </span>
           <button
             type="button"
@@ -221,11 +221,11 @@ export default function ClientDashboardContent({
           </button>
         </div>
 
-        {/* Big Bold Balance + Eye Toggle + Circular Plus Action Button */}
+        {/* Big Bold Spend + High-Contrast ETB + Eye Toggle + Circular Plus Action Button */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <h1 className="text-title-1-medium sm:text-headline-medium text-text-primary font-black tracking-tight flex items-baseline">
-              <span className="text-title-3-semibold sm:text-title-1-medium text-text-secondary mr-2">
+              <span className="text-title-3-semibold sm:text-title-1-medium text-zinc-900 dark:text-white font-black mr-2 tracking-tight">
                 ETB
               </span>
               {showBalance ? (
@@ -273,7 +273,7 @@ export default function ClientDashboardContent({
           </h2>
           <Link
             href="/client/contracts"
-            className="text-body-medium text-text-tertiary hover:text-text-primary font-medium flex items-center transition-colors"
+            className="text-xs sm:text-sm font-bold text-[#45BA50] dark:text-[#a4fe47] hover:underline transition-colors flex items-center"
           >
             <span>View Details</span>
             <RiArrowRightSLine className="w-4 h-4 ml-0.5" />
@@ -335,8 +335,9 @@ export default function ClientDashboardContent({
 
                 {/* Card Middle: Value + Status Tag (ZERO ESCROW) */}
                 <div className="relative z-10 mt-1">
-                  <p className="text-title-2-medium font-black text-text-primary tracking-tight">
-                    ETB {budgetVal}
+                  <p className="text-title-2-medium font-black text-text-primary dark:text-white tracking-tight flex items-baseline">
+                    <span className="text-xs font-bold text-zinc-700 dark:text-zinc-200 mr-1.5">ETB</span>
+                    {budgetVal}
                   </p>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <span
@@ -392,7 +393,7 @@ export default function ClientDashboardContent({
           </h2>
           <Link
             href="/client/search"
-            className="text-body-medium font-bold text-text-primary hover:underline transition-colors"
+            className="text-xs sm:text-sm font-bold text-[#45BA50] dark:text-[#a4fe47] hover:underline transition-colors"
           >
             See All
           </Link>
@@ -470,9 +471,10 @@ export default function ClientDashboardContent({
             </h2>
             <Link
               href="/client/contracts"
-              className="text-body-medium text-text-tertiary hover:text-text-primary font-medium"
+              className="text-xs sm:text-sm font-bold text-[#45BA50] dark:text-[#a4fe47] hover:underline transition-colors flex items-center gap-0.5"
             >
-              History
+              <span>History</span>
+              <RiArrowRightSLine className="w-4 h-4" />
             </Link>
           </div>
 
