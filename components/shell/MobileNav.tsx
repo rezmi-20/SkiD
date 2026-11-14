@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
 import { Home, Search, Users, MessageSquare, User, Briefcase } from "lucide-react";
 
@@ -108,11 +109,15 @@ export default function MobileNav({ role }: MobileNavProps) {
               href={item.href}
               title={item.label}
               aria-label={item.label}
-              className="relative flex items-center justify-center transition-all duration-200 touch-manipulation focus:outline-none"
+              className="relative flex items-center justify-center transition-all duration-200 touch-manipulation focus:outline-none active:scale-95"
             >
               {isActive ? (
-                /* Active Tab: Vibrant Lime Pill Button using palette rgba(164, 254, 71) */
-                <div className="flex items-center gap-1.5 bg-[#a4fe47] text-[#0d1406] font-black text-xs px-3 sm:px-3.5 py-2 rounded-full shadow-[0_4px_16px_rgba(164,254,71,0.35)] animate-in zoom-in-95 duration-200 shrink-0 relative">
+                /* Active Tab: Vibrant Lime Pill Button with smooth sliding layout spring */
+                <motion.div
+                  layoutId="mobileNavActivePill"
+                  transition={{ type: "spring", stiffness: 400, damping: 32 }}
+                  className="flex items-center gap-1.5 bg-[#a4fe47] text-[#0d1406] font-black text-xs px-3 sm:px-3.5 py-2 rounded-full shadow-[0_4px_16px_rgba(164,254,71,0.35)] shrink-0 relative"
+                >
                   {item.activeIcon}
                   <span className="tracking-tight text-[11px] sm:text-xs">{item.label}</span>
                   {item.id === "chat" && unreadCount > 0 && (
@@ -120,7 +125,7 @@ export default function MobileNav({ role }: MobileNavProps) {
                       {unreadCount > 99 ? "99+" : unreadCount}
                     </span>
                   )}
-                </div>
+                </motion.div>
               ) : (
                 /* Inactive Tab: Minimal Icon with thumb-friendly hit target */
                 <div className="relative flex items-center justify-center h-11 w-11 rounded-full text-[#8a929e] hover:text-white active:scale-90 transition-all">
