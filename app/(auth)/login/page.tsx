@@ -293,46 +293,57 @@ export default function LoginPage() {
     <div className="min-h-[100dvh] w-full flex bg-[#09090b] text-white font-inter overflow-x-hidden selection:bg-green-400/30">
 
       {/* Desktop Art / Branding Side (Left) */}
-      <div className="hidden lg:flex w-1/2 relative bg-[#09090b] border-r border-zinc-800/60 overflow-hidden flex-col justify-between p-10 xl:p-14 select-none">
-        {/* Subtle Ambient Radial Glow & Grid Pattern */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#45BA50]/15 via-transparent to-transparent pointer-events-none" />
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-[#45BA50]/10 blur-[130px] pointer-events-none rounded-full" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-emerald-600/10 blur-[120px] pointer-events-none rounded-full" />
-
-        {/* Top Brand Monogram & Network Pill */}
-        <div className="relative z-20 flex items-center justify-between">
-          <DireSkillLogo variant="light" iconSize={38} showWordmark={true} />
-          <div className="px-3.5 py-1.5 rounded-full bg-zinc-900/90 border border-zinc-800 text-xs font-semibold text-zinc-300 flex items-center gap-2 shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-[#45BA50] animate-pulse" />
-            <span>Fayda KYC Verified Network</span>
-          </div>
-        </div>
-
-        {/* Centerpiece 3D Hero Artisan Avatar & Headline (Clutter-free, Stage-framed) */}
-        <div className="relative z-10 flex flex-col items-center text-center my-auto py-8">
-          {/* Avatar Container with glowing backdrop & high-res transparent mascot */}
-          <div className="relative mb-8 max-w-[340px] xl:max-w-[380px]">
-            <div className="absolute -inset-6 bg-gradient-to-tr from-[#45BA50]/35 via-emerald-500/20 to-transparent rounded-full blur-2xl opacity-75" />
+      <div className="hidden lg:flex w-1/2 relative bg-[#09090b] border-r border-zinc-800/50 overflow-hidden items-center justify-center p-12 select-none">
+        {/* Background Image Layer: Standing Artisan Mascot on Atmospheric Workshop Ground */}
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          <img
+            src="/images/worker_workbench_hero.jpg"
+            alt="Artisan Background"
+            className="w-full h-full object-cover opacity-30 filter blur-[2px] scale-105"
+          />
+          {/* Standing Artisan Hero in Background */}
+          <div className="absolute inset-0 flex items-end justify-center pointer-events-none">
             <img
               src="/images/worker_holding_card.png"
-              alt="DireSkill Verified Artisan"
-              className="relative w-full h-auto object-contain drop-shadow-[0_25px_45px_rgba(0,0,0,0.9)] transform hover:scale-[1.02] transition-transform duration-300 ease-out"
+              alt="Artisan Mascot Standing"
+              className="h-[85%] max-h-[680px] w-auto object-contain opacity-75 filter drop-shadow-[0_25px_60px_rgba(0,0,0,0.95)] transform translate-y-8"
             />
           </div>
+          {/* Gradient & Glow Overlays */}
+          <div className="absolute inset-0 bg-[#09090b]/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#09090b] via-[#09090b]/50 to-[#09090b]/75" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-green-500/15 blur-[130px] pointer-events-none rounded-full mix-blend-screen" />
+        </div>
 
-          <h2 className="text-3xl xl:text-4xl font-extrabold tracking-tight text-white max-w-md leading-tight">
+        {/* Top-Left Monogram Logo */}
+        <div className="absolute top-12 left-12 flex items-center gap-3 z-20">
+          <div className="w-12 h-12 bg-white flex items-center justify-center rounded-2xl shadow-lg shadow-white/5">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-[#09090b]">
+              <path d="M 11 2 C 3 2 1 10 1 15 L 7 15 C 7 11 9 8 11 8 Z" />
+              <path d="M 13 22 C 21 22 23 14 23 9 L 17 9 C 17 13 15 16 13 16 Z" />
+            </svg>
+          </div>
+          <span className="text-2xl font-bold tracking-tight text-white">Dire<span className="text-green-400">Skill</span></span>
+        </div>
+
+        {/* Center Headline with Glassmorphic Emblem */}
+        <div className="relative z-10 flex flex-col items-center text-center max-w-md">
+          <div className="w-24 h-24 bg-white/5 border border-white/10 flex items-center justify-center rounded-3xl backdrop-blur-xl mb-8 shadow-2xl">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" className="text-green-400">
+              <path d="M 11 2 C 3 2 1 10 1 15 L 7 15 C 7 11 9 8 11 8 Z" />
+              <path d="M 13 22 C 21 22 23 14 23 9 L 17 9 C 17 13 15 16 13 16 Z" />
+            </svg>
+          </div>
+          <h2 className="text-5xl font-bold tracking-tight text-white leading-tight">
             {t("auth.marketing.loginTitle")}
           </h2>
         </div>
 
-        {/* Bottom Metadata & Legal Links */}
-        <div className="relative z-20 flex items-center justify-between text-xs font-medium text-zinc-500 pt-6 border-t border-zinc-800/60">
-          <div className="flex items-center gap-4">
-            <Link href="/privacy" className="hover:text-white transition-colors">{t("auth.privacy")}</Link>
-            <span>&bull;</span>
-            <Link href="/terms" className="hover:text-white transition-colors">{t("auth.terms")}</Link>
-          </div>
-          <span className="text-zinc-600">Dire Dawa, Ethiopia</span>
+        {/* Bottom Legal Links */}
+        <div className="absolute bottom-12 left-12 flex items-center gap-4 text-sm font-medium text-zinc-500 z-20">
+          <Link href="/privacy" className="hover:text-green-400 transition-colors">{t("auth.privacy")}</Link>
+          <span>&bull;</span>
+          <Link href="/terms" className="hover:text-green-400 transition-colors">{t("auth.terms")}</Link>
         </div>
       </div>
 
@@ -340,11 +351,11 @@ export default function LoginPage() {
       <div className="w-full lg:w-1/2 flex items-center justify-center relative min-h-[100dvh] py-8 sm:py-12">
 
         {/* Language Switcher Float (Top Right) */}
-        <div className="absolute top-6 right-6 z-30 flex items-center bg-zinc-900/90 border border-zinc-800 rounded-lg p-1 text-xs backdrop-blur-sm shadow-sm">
+        <div className="absolute top-6 right-6 z-30 flex items-center bg-zinc-900/90 border border-zinc-700/80 rounded-full p-1 text-xs backdrop-blur-sm shadow-sm">
           <button
             type="button"
             onClick={() => setLanguage("en")}
-            className={`px-2.5 py-1 rounded-md font-semibold transition cursor-pointer ${
+            className={`px-2.5 py-1 rounded-full font-semibold transition cursor-pointer ${
               language === "en" ? "bg-zinc-800 text-white shadow-xs" : "text-zinc-400 hover:text-white"
             }`}
           >
@@ -353,7 +364,7 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={() => setLanguage("am")}
-            className={`px-2.5 py-1 rounded-md font-semibold transition cursor-pointer ${
+            className={`px-2.5 py-1 rounded-full font-semibold transition cursor-pointer ${
               language === "am" ? "bg-zinc-800 text-white shadow-xs" : "text-zinc-400 hover:text-white"
             }`}
           >
@@ -362,7 +373,7 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={() => setLanguage("om")}
-            className={`px-2.5 py-1 rounded-md font-semibold transition cursor-pointer ${
+            className={`px-2.5 py-1 rounded-full font-semibold transition cursor-pointer ${
               language === "om" ? "bg-zinc-800 text-white shadow-xs" : "text-zinc-400 hover:text-white"
             }`}
           >
@@ -370,15 +381,15 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {/* Ambient Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#45BA50]/10 blur-[150px] pointer-events-none rounded-full" />
+        {/* Mobile Ambient Glow */}
+        <div className="lg:hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-green-500/10 blur-[150px] pointer-events-none rounded-full" />
 
-        <div className="w-full max-w-[430px] px-4 sm:px-6 z-10 flex flex-col items-center justify-center relative">
+        <div className="w-full max-w-[420px] px-6 py-8 sm:py-12 z-10 flex flex-col items-center justify-center relative">
 
           {/* Mobile Oversized Cutout Avatar Overlapping Headline (lg:hidden) */}
           <div className="lg:hidden w-full relative flex justify-center -mb-8 sm:-mb-9 z-20 pointer-events-none select-none">
             <div className="relative w-48 sm:w-56">
-              <div className="absolute inset-x-4 top-2 bottom-4 bg-[#45BA50]/30 blur-xl rounded-full" />
+              <div className="absolute inset-x-4 top-2 bottom-4 bg-green-500/30 blur-xl rounded-full" />
               <img
                 src="/images/worker_holding_card.png"
                 alt="DireSkill Verified Artisan"
@@ -387,216 +398,223 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Main Card Container */}
-          <div className="w-full bg-zinc-900/90 border border-zinc-800/90 rounded-2xl sm:rounded-3xl p-6 sm:p-8 backdrop-blur-md shadow-2xl relative z-10">
+          {/* Mobile Card wrapper (on mobile gives the ledge for mascot hands, on desktop stays clean and seamless) */}
+          <div className="w-full lg:bg-transparent bg-zinc-900/90 lg:border-0 border border-zinc-800/90 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-0 backdrop-blur-md lg:backdrop-blur-none shadow-2xl lg:shadow-none relative z-10">
 
             {/* Header Section */}
-            <div className="flex flex-col items-center mb-6 w-full">
-              <div className="flex items-center gap-3 mb-3">
-                <DireSkillLogo variant="light" iconSize={38} showWordmark={true} />
+            <div className="flex flex-col items-center mb-8 space-y-4 w-full">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-14 h-14 bg-white flex items-center justify-center rounded-2xl shadow-lg shadow-white/5">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" className="text-[#09090b]">
+                    <path d="M 11 2 C 3 2 1 10 1 15 L 7 15 C 7 11 9 8 11 8 Z" />
+                    <path d="M 13 22 C 21 22 23 14 23 9 L 17 9 C 17 13 15 16 13 16 Z" />
+                  </svg>
+                </div>
+                <span className="text-[28px] font-bold tracking-tight text-white">Dire<span className="text-green-400">Skill</span></span>
               </div>
 
               <div className="text-center">
-                <h1 className="text-2xl sm:text-[26px] font-bold tracking-tight text-white flex items-center justify-center gap-2">
+                <h1 className="text-[28px] font-bold tracking-tight text-white flex items-center justify-center gap-2">
                   {t("auth.login.title")} <span>👋</span>
                 </h1>
               </div>
             </div>
 
-          <AnimatePresence mode="wait">
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl text-sm font-semibold flex items-center gap-3 mb-6 w-full shadow-[0_0_20px_rgba(239,68,68,0.1)]"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                  <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
-                {error}
-              </motion.div>
-            )}
-
-            {(isRegistered || resetSuccess) && !error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-green-500/10 border border-green-500/20 text-green-400 p-4 rounded-2xl text-sm font-semibold flex flex-col gap-2 mb-6 w-full shadow-[0_0_20px_rgba(34,197,94,0.1)]"
-              >
-                <div className="flex items-center gap-3">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                  </svg>
-                  <span>{resetSuccess ? t("auth.login.resetSuccess") : t("auth.login.created")}</span>
-                </div>
-                {needsVerification && (
-                  <p className="text-[12px] text-zinc-400 font-medium ml-8 leading-relaxed">
-                    {t("auth.login.verifyEmailNotice")}
-                  </p>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <form onSubmit={handleSubmit} className="space-y-4 w-full">
-
-            {/* Unified Email / Phone Input */}
-            <div className="space-y-1.5">
-              <label className="text-[13px] font-medium text-zinc-300 ml-1">
-                {t("auth.login.identifier")}
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <AnimatePresence mode="wait">
-                    {isEmail ? (
-                      <motion.svg key="email-icon" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-400">
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                        <polyline points="22,6 12,13 2,6"></polyline>
-                      </motion.svg>
-                    ) : isPhone ? (
-                      <motion.svg key="phone-icon" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-400">
-                        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.09 1.18 2 2 0 012 .05h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"></path>
-                      </motion.svg>
-                    ) : (
-                      <motion.svg key="default-icon" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500">
-                        <circle cx="12" cy="8" r="4"></circle>
-                        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path>
-                      </motion.svg>
-                    )}
-                  </AnimatePresence>
-                </div>
-                <input
-                  type="text"
-                  required
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  onBlur={() => {
-                    // Phone blur formatting: strip leading 0 if 10 digits
-                    if (!isEmail && identifier.length === 10 && identifier.startsWith("0")) {
-                      setIdentifier(identifier.slice(1));
-                    }
-                  }}
-                  className="w-full h-[50px] pl-[44px] pr-4 bg-zinc-900/90 border border-zinc-800 rounded-xl focus:border-[#45BA50] focus:ring-1 focus:ring-[#45BA50] outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white shadow-xs"
-                  placeholder={t("auth.login.identifierPlaceholder")}
-                />
-              </div>
-              {/* Subtle hint showing detected mode */}
-              <AnimatePresence>
-                {identifier.length > 0 && (
-                  <motion.p
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="text-[11px] ml-1 font-bold uppercase tracking-widest"
-                    style={{ color: isEmail || isPhone ? "#45BA50" : "#71717a" }}
-                  >
-                    {isEmail ? `✓ ${t("auth.login.withEmail")}` : isPhone ? `✓ ${t("auth.login.withPhone")}` : t("auth.login.enterIdentifier")}
-                  </motion.p>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Password Input */}
-            <div className="space-y-1.5">
-              <label className="text-[13px] font-medium text-zinc-300 ml-1">{t("admin.common.password")}</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500">
-                    <rect x="3" y="11" width="18" height="11" rx="2" />
-                    <path d="M7 11V7a5 5 0 0110 0v4" />
-                  </svg>
-                </div>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full h-[50px] pl-[44px] pr-12 bg-zinc-900/90 border border-zinc-800 rounded-xl focus:border-[#45BA50] focus:ring-1 focus:ring-[#45BA50] outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white shadow-xs"
-                  placeholder={t("auth.login.passwordPlaceholder")}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center transition-colors cursor-pointer"
+            <AnimatePresence mode="wait">
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl text-sm font-semibold flex items-center gap-3 mb-6 w-full shadow-[0_0_20px_rgba(239,68,68,0.1)]"
                 >
-                  {showPassword ? (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 hover:text-white">
-                      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
-                      <line x1="1" y1="1" x2="23" y2="23" />
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                    <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
+                  {error}
+                </motion.div>
+              )}
+
+              {(isRegistered || resetSuccess) && !error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-green-500/10 border border-green-500/20 text-green-400 p-4 rounded-2xl text-sm font-semibold flex flex-col gap-2 mb-6 w-full shadow-[0_0_20px_rgba(34,197,94,0.1)]"
+                >
+                  <div className="flex items-center gap-3">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                      <polyline points="22 4 12 14.01 9 11.01"></polyline>
                     </svg>
+                    <span>{resetSuccess ? t("auth.login.resetSuccess") : t("auth.login.created")}</span>
+                  </div>
+                  {needsVerification && (
+                    <p className="text-[12px] text-zinc-400 font-medium ml-8 leading-relaxed">
+                      {t("auth.login.verifyEmailNotice")}
+                    </p>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <form onSubmit={handleSubmit} className="space-y-4 w-full">
+
+              {/* Unified Email / Phone Input */}
+              <div className="space-y-1.5">
+                <label className="text-[13px] font-medium text-zinc-300 ml-1">
+                  {t("auth.login.identifier")}
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <AnimatePresence mode="wait">
+                      {isEmail ? (
+                        <motion.svg key="email-icon" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-400">
+                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                          <polyline points="22,6 12,13 2,6"></polyline>
+                        </motion.svg>
+                      ) : isPhone ? (
+                        <motion.svg key="phone-icon" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-400">
+                          <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.09 1.18 2 2 0 012 .05h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"></path>
+                        </motion.svg>
+                      ) : (
+                        <motion.svg key="default-icon" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500">
+                          <circle cx="12" cy="8" r="4"></circle>
+                          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path>
+                        </motion.svg>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    onBlur={() => {
+                      if (!isEmail && identifier.length === 10 && identifier.startsWith("0")) {
+                        setIdentifier(identifier.slice(1));
+                      }
+                    }}
+                    className="w-full h-[52px] pl-[44px] pr-4 bg-zinc-900 border border-zinc-700 rounded-2xl focus:border-green-400/80 focus:ring-1 focus:ring-green-400/80 outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white shadow-sm"
+                    placeholder={t("auth.login.identifierPlaceholder")}
+                  />
+                </div>
+                <AnimatePresence>
+                  {identifier.length > 0 && (
+                    <motion.p
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="text-[11px] ml-1 font-bold uppercase tracking-widest"
+                      style={{ color: isEmail || isPhone ? "#4ade80" : "#71717a" }}
+                    >
+                      {isEmail ? `✓ ${t("auth.login.withEmail")}` : isPhone ? `✓ ${t("auth.login.withPhone")}` : t("auth.login.enterIdentifier")}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Password Input */}
+              <div className="space-y-1.5">
+                <label className="text-[13px] font-medium text-zinc-300 ml-1">{t("admin.common.password")}</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500">
+                      <rect x="3" y="11" width="18" height="11" rx="2" />
+                      <path d="M7 11V7a5 5 0 0110 0v4" />
+                    </svg>
+                  </div>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full h-[52px] pl-[44px] pr-12 bg-zinc-900 border border-zinc-700 rounded-2xl focus:border-green-400/80 focus:ring-1 focus:ring-green-400/80 outline-none transition-all placeholder:text-zinc-500 font-medium text-[14px] text-white shadow-sm"
+                    placeholder={t("auth.login.passwordPlaceholder")}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center transition-colors cursor-pointer"
+                  >
+                    {showPassword ? (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 hover:text-white">
+                        <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+                        <line x1="1" y1="1" x2="23" y2="23" />
+                      </svg>
+                    ) : (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 hover:text-white">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Forgot Password */}
+              <div className="flex justify-end pt-1 pb-1">
+                <Link href="/forgot-password" className="text-[13px] font-bold text-green-400 hover:text-green-300 transition-colors tracking-wide">
+                  {t("auth.login.forgot")}
+                </Link>
+              </div>
+
+              {/* Primary Login Button (Emil Kowalski / Charles UX active scale) */}
+              <div className="pt-1">
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full h-[52px] bg-green-400 hover:bg-green-500 text-black rounded-full font-bold text-[15px] active:scale-[0.96] transition-all disabled:opacity-70 shadow-[0_0_20px_-5px_rgba(74,222,128,0.4)] flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {isLoading ? (
+                    <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                   ) : (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500 hover:text-white">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
+                    t("auth.login.submit")
                   )}
                 </button>
               </div>
+            </form>
+
+            {/* Divider */}
+            <div className="relative flex items-center py-7 w-full">
+              <div className="flex-grow border-t border-zinc-800/80"></div>
+              <span className="flex-shrink-0 mx-4 text-[11px] font-bold text-zinc-500 uppercase tracking-wider">{t("auth.login.divider")}</span>
+              <div className="flex-grow border-t border-zinc-800/80"></div>
             </div>
 
-            {/* Forgot Password */}
-            <div className="flex justify-end pt-1 pb-1">
-              <Link href="/forgot-password" className="text-[13px] font-semibold text-[#45BA50] hover:text-emerald-400 transition-colors tracking-wide">
-                {t("auth.login.forgot")}
-              </Link>
-            </div>
-
-            {/* Primary Login Button */}
-            <div className="pt-1">
+            {/* Social Buttons */}
+            <div className="flex flex-col gap-3.5 w-full">
               <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full h-[50px] bg-[#45BA50] hover:bg-[#3ca545] text-white rounded-xl font-bold text-[15px] active:scale-[0.98] transition-all disabled:opacity-70 shadow-lg shadow-[#45BA50]/20 flex items-center justify-center gap-2 cursor-pointer"
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={isGoogleLoading}
+                className="w-full h-[52px] flex items-center justify-center gap-3 bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 rounded-full font-medium text-[14px] text-white transition-all active:scale-[0.96] shadow-sm disabled:opacity-70 cursor-pointer"
               >
-                {isLoading ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  t("auth.login.submit")
-                )}
+                <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                </svg>
+                {isGoogleLoading ? t("auth.login.redirecting") : t("auth.login.google")}
+              </button>
+              <button
+                type="button"
+                className="w-full h-[52px] flex items-center justify-center gap-3 bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 rounded-full font-medium text-[14px] text-white transition-all active:scale-[0.96] shadow-sm cursor-pointer"
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M17.05 13.92c-.02-2.31 1.89-3.42 1.98-3.48-1.08-1.58-2.76-1.79-3.36-1.82-1.42-.14-2.78.84-3.51.84-.73 0-1.85-.82-3.03-.8-1.53.02-2.95.89-3.74 2.26-1.6 2.78-.41 6.89 1.16 9.16.76 1.1 1.66 2.33 2.85 2.29 1.14-.04 1.58-.74 2.96-.74 1.38 0 1.78.74 2.98.71 1.23-.02 2.01-1.12 2.76-2.22.87-1.27 1.23-2.5 1.25-2.56-.03-.01-2.28-.88-2.3-3.64zM14.94 4.54c.63-.76 1.05-1.82.93-2.88-1.02.04-2.21.68-2.85 1.44-.57.67-1.07 1.75-.93 2.79 1.14.09 2.22-.59 2.85-1.35z" />
+                </svg>
+                {t("auth.login.apple")}
               </button>
             </div>
-          </form>
 
-          {/* Divider */}
-          <div className="relative flex items-center py-6 w-full">
-            <div className="flex-grow border-t border-zinc-800/80"></div>
-            <span className="flex-shrink-0 mx-4 text-[11px] font-bold text-zinc-500 uppercase tracking-wider">{t("auth.login.divider")}</span>
-            <div className="flex-grow border-t border-zinc-800/80"></div>
-          </div>
-
-          {/* Social Buttons */}
-          <div className="flex flex-col gap-3 w-full">
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={isGoogleLoading}
-              className="w-full h-[50px] flex items-center justify-center gap-3 bg-zinc-900/80 border border-zinc-800 hover:bg-zinc-800/80 rounded-xl font-medium text-[14px] text-white transition-colors active:scale-[0.98] shadow-xs disabled:opacity-70 cursor-pointer"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-              </svg>
-              {isGoogleLoading ? t("auth.login.redirecting") : t("auth.login.google")}
-            </button>
-            <button type="button" className="w-full h-[50px] flex items-center justify-center gap-3 bg-zinc-900/80 border border-zinc-800 hover:bg-zinc-800/80 rounded-xl font-medium text-[14px] text-white transition-colors active:scale-[0.98] shadow-xs cursor-pointer">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-                <path d="M17.05 13.92c-.02-2.31 1.89-3.42 1.98-3.48-1.08-1.58-2.76-1.79-3.36-1.82-1.42-.14-2.78.84-3.51.84-.73 0-1.85-.82-3.03-.8-1.53.02-2.95.89-3.74 2.26-1.6 2.78-.41 6.89 1.16 9.16.76 1.1 1.66 2.33 2.85 2.29 1.14-.04 1.58-.74 2.96-.74 1.38 0 1.78.74 2.98.71 1.23-.02 2.01-1.12 2.76-2.22.87-1.27 1.23-2.5 1.25-2.56-.03-.01-2.28-.88-2.3-3.64zM14.94 4.54c.63-.76 1.05-1.82.93-2.88-1.02.04-2.21.68-2.85 1.44-.57.67-1.07 1.75-.93 2.79 1.14.09 2.22-.59 2.85-1.35z" />
-              </svg>
-              {t("auth.login.apple")}
-            </button>
-          </div>
-
-          {/* Footer */}
-          <p className="text-center text-[13px] text-zinc-400 font-medium pt-6 w-full">
-            {t("auth.login.noAccount")}{" "}
-            <Link href="/register/client" className="text-[#45BA50] font-bold hover:text-emerald-400 transition-colors">
-              {t("auth.login.register")}
-            </Link>
-          </p>
+            {/* Footer */}
+            <p className="text-center text-[13px] text-zinc-400 font-medium pt-8 pb-4 w-full">
+              {t("auth.login.noAccount")}{" "}
+              <Link href="/register/client" className="text-green-400 font-bold hover:text-green-300 transition-colors">
+                {t("auth.login.register")}
+              </Link>
+            </p>
 
           </div>
         </div>
