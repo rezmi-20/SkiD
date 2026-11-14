@@ -1,363 +1,689 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Search, 
-  Calendar, 
-  ArrowRight, 
-  Download, 
-  Star, 
-  CreditCard, 
-  AlertTriangle,
-  FolderOpen,
-  ArrowUpRight,
-  User,
-  Hash,
-  Plus
-} from "lucide-react";
-import { Separator } from "@/components/ui/separator";
-import FadeContent from "@/components/ui/fade-content";
+import { cx } from "@/utils/cx";
+import {
+  RiFileTextLine,
+  RiFlashlightFill,
+  RiDropFill,
+  RiPaintBrushFill,
+  RiHomeGearFill,
+  RiBroadcastFill,
+  RiTimeLine,
+  RiCheckDoubleLine,
+  RiAlertLine,
+  RiCoinsLine,
+  RiArrowRightLine,
+  RiDownloadLine,
+  RiStarFill,
+  RiBankCardLine,
+  RiSearchLine,
+  RiCloseLine,
+  RiCalendarLine,
+  RiShieldCheckFill,
+  RiFolderOpenLine,
+  RiAddLine,
+  RiArrowRightUpLine,
+  RiCheckboxCircleFill
+} from "@remixicon/react";
 
 interface Props {
   contracts: any[];
   role: "client" | "worker";
 }
 
+/* ── Trade category mapping with authentic visuals ───────────────────── */
+function getTradeMeta(title?: string) {
+  const text = (title || "").toLowerCase();
+  if (text.includes("electr") || text.includes("wir") || text.includes("light")) {
+    return {
+      icon: RiFlashlightFill,
+      color: "text-amber-500",
+      bg: "bg-amber-500/10",
+      image: "/images/artisan-register-hero.jpg",
+      label: "Electrical",
+      curveColor: "#45BA50"
+    };
+  }
+  if (text.includes("plumb") || text.includes("pipe") || text.includes("water") || text.includes("leak")) {
+    return {
+      icon: RiDropFill,
+      color: "text-blue-500",
+      bg: "bg-blue-500/10",
+      image: "/images/worker_workbench_hero.jpg",
+      label: "Plumbing",
+      curveColor: "#3B82F6"
+    };
+  }
+  if (text.includes("paint") || text.includes("color") || text.includes("wall")) {
+    return {
+      icon: RiPaintBrushFill,
+      color: "text-pink-500",
+      bg: "bg-pink-500/10",
+      image: "/images/client_project_hero.jpg",
+      label: "Painting",
+      curveColor: "#EC4899"
+    };
+  }
+  if (text.includes("finish") || text.includes("gypsum") || text.includes("decor") || text.includes("tile")) {
+    return {
+      icon: RiHomeGearFill,
+      color: "text-emerald-500",
+      bg: "bg-emerald-500/10",
+      image: "/images/client_project_hero.jpg",
+      label: "House Finishing",
+      curveColor: "#10B981"
+    };
+  }
+  if (text.includes("dish") || text.includes("satellite") || text.includes("antenna") || text.includes("tv")) {
+    return {
+      icon: RiBroadcastFill,
+      color: "text-cyan-500",
+      bg: "bg-cyan-500/10",
+      image: "/images/artisan-register-hero.jpg",
+      label: "Satellite Dish",
+      curveColor: "#06B6D4"
+    };
+  }
+  return {
+    icon: RiFileTextLine,
+    color: "text-[#45BA50]",
+    bg: "bg-[#45BA50]/10",
+    image: "/images/client_project_hero.jpg",
+    label: "Artisan Work",
+    curveColor: "#45BA50"
+  };
+}
+
+/* ── Status badge resolver ───────────────────────────────────────────── */
+function getStatusChip(contract: any) {
+  const status = contract.contract_status || contract.job_status;
+  const isPending = !contract.signed_at;
+
+  if (contract.job_status === "disputed") {
+    return {
+      label: "⚠ In Dispute",
+      className: "bg-rose-500/10 text-rose-500 dark:text-rose-400 border-rose-500/20"
+    };
+  }
+
+  if (["paid", "closed"].includes(contract.job_status)) {
+    return {
+      label: "✓ Completed & Paid",
+      className: "bg-[#134e27]/25 text-[#a4fe47] border-[#45BA50]/30"
+    };
+  }
+
+  if (contract.job_status === "completed" || contract.job_status === "payment_pending") {
+    return {
+      label: "● Payment Pending",
+      className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+    };
+  }
+
+  if (status === "ACTIVE" || contract.job_status === "active" || contract.job_status === "in_progress") {
+    return {
+      label: "● Active Direct Work",
+      className: "bg-[#45BA50]/15 text-[#45BA50] border-[#45BA50]/30 font-black"
+    };
+  }
+
+  if (status === "DRAFT") {
+    return {
+      label: "Draft Agreement",
+      className: "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-zinc-700"
+    };
+  }
+
+  if (isPending || ["READY_FOR_SIGNATURE", "CLIENT_SIGNED", "WORKER_SIGNED"].includes(status)) {
+    return {
+      label: "⏳ Awaiting Signature",
+      className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 font-bold"
+    };
+  }
+
+  return {
+    label: status || "Pending",
+    className: "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-zinc-700"
+  };
+}
+
 export default function ContractsPageContent({ contracts = [], role }: Props) {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState<"all" | "active" | "pending" | "completed" | "disputed">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   const downloadContractPdf = async (pdfUrl: string, contractId: string) => {
-    const response = await fetch(pdfUrl, {
-      credentials: "include",
-      cache: "no-store",
-    });
+    try {
+      const response = await fetch(pdfUrl, {
+        credentials: "include",
+        cache: "no-store",
+      });
 
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      alert(data?.error || "Contract PDF is not available yet.");
-      return;
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        alert(data?.error || "Contract PDF is not available yet.");
+        return;
+      }
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = `direskill-contract-${contractId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      alert("Failed to download agreement PDF. Please retry in a moment.");
     }
-
-    const blob = await response.blob();
-    const objectUrl = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = objectUrl;
-    link.download = `direskill-contract-${contractId}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(objectUrl);
   };
 
+  /* ── Dynamic KPI Stats for Dashboard Harmony ─────────────────────────── */
+  const stats = useMemo(() => {
+    const total = contracts.length;
+    const active = contracts.filter((c) => c.contract_status === "ACTIVE" || c.job_status === "active" || c.job_status === "in_progress").length;
+    const pending = contracts.filter((c) => ["DRAFT", "READY_FOR_SIGNATURE", "CLIENT_SIGNED", "WORKER_SIGNED"].includes(c.contract_status)).length;
+    const completed = contracts.filter((c) => ["completed", "payment_pending", "paid", "closed"].includes(c.job_status)).length;
+    const disputed = contracts.filter((c) => c.job_status === "disputed").length;
+
+    const totalBudget = contracts.reduce((sum, c) => {
+      const val = parseFloat(String(c.budget || "0").replace(/[^0-9.]/g, ""));
+      return sum + (isNaN(val) ? 0 : val);
+    }, 0);
+
+    return { total, active, pending, completed, disputed, totalBudget };
+  }, [contracts]);
+
+  /* ── Tab Filtering ──────────────────────────────────────────────────── */
   const tabs = [
-    { id: "all", label: t("contracts.all") },
-    { id: "active", label: t("contracts.active") },
-    { id: "pending", label: t("contracts.pending") },
-    { id: "completed", label: t("contracts.completed") },
-    { id: "disputed", label: t("contracts.disputed") },
+    { id: "all" as const, label: t("contracts.all") || "All", count: stats.total },
+    { id: "active" as const, label: t("contracts.active") || "Active", count: stats.active },
+    { id: "pending" as const, label: t("contracts.pending") || "Pending Signature", count: stats.pending },
+    { id: "completed" as const, label: t("contracts.completed") || "Completed", count: stats.completed },
+    { id: "disputed" as const, label: t("contracts.disputed") || "Disputed", count: stats.disputed },
   ];
 
-  const filteredContracts = contracts.filter((c) => {
-    const matchesTab = 
-      activeTab === "all" ||
-      (activeTab === "active" && (c.contract_status === "ACTIVE" || c.job_status === "active")) ||
-      (activeTab === "pending" && ["DRAFT", "READY_FOR_SIGNATURE", "CLIENT_SIGNED", "WORKER_SIGNED"].includes(c.contract_status)) ||
-      (activeTab === "completed" && ["completed", "payment_pending", "paid", "closed"].includes(c.job_status)) ||
-      (activeTab === "disputed" && c.job_status === "disputed");
+  const filteredContracts = useMemo(() => {
+    return contracts.filter((c) => {
+      const matchesTab =
+        activeTab === "all" ||
+        (activeTab === "active" && (c.contract_status === "ACTIVE" || c.job_status === "active" || c.job_status === "in_progress")) ||
+        (activeTab === "pending" && ["DRAFT", "READY_FOR_SIGNATURE", "CLIENT_SIGNED", "WORKER_SIGNED"].includes(c.contract_status)) ||
+        (activeTab === "completed" && ["completed", "payment_pending", "paid", "closed"].includes(c.job_status)) ||
+        (activeTab === "disputed" && c.job_status === "disputed");
 
-    const matchesSearch = 
-      c.job_title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.partner_name?.toLowerCase().includes(searchQuery.toLowerCase());
+      const query = searchQuery.trim().toLowerCase();
+      const matchesSearch =
+        !query ||
+        c.job_title?.toLowerCase().includes(query) ||
+        c.partner_name?.toLowerCase().includes(query);
 
-    return matchesTab && matchesSearch;
-  });
+      return matchesTab && matchesSearch;
+    });
+  }, [contracts, activeTab, searchQuery]);
 
   return (
-    <FadeContent blur duration={0.4} className="space-y-6 pb-24 max-w-full">
+    <div className="w-full min-h-screen bg-[#f8fafc] dark:bg-[#09090b] text-slate-900 dark:text-zinc-100 pb-24 transition-colors">
       
-      {/* ── Page Header ── */}
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary">
-            {t("contracts.repository")}
-          </p>
-          <h1 className="hidden sm:block text-2xl sm:text-3xl font-extrabold tracking-tight mt-0.5">
-            {t("contracts.title")}
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-            {t("contracts.desc")}
-          </p>
-        </div>
+      {/* ── Page Header & Top CTA ── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 space-y-6">
         
-        {role === "client" && (
-          <Button asChild className="rounded-full font-black text-xs uppercase tracking-wider bg-[#a3e635] text-black hover:opacity-90 shadow-[0_4px_14px_rgba(163,230,53,0.3)] shrink-0 h-11 px-5">
-            <Link href="/client/search">
-              <Plus className="mr-1.5 h-4 w-4 stroke-[2.5]" /> {t("contracts.new")}
-            </Link>
-          </Button>
-        )}
-      </header>
-
-      {/* ── Tabs Navigation & Search ── */}
-      <div className="flex flex-col lg:flex-row lg:items-center gap-4 justify-between bg-surface-container/60 p-3 sm:p-4 rounded-3xl border border-outline-variant/60 shadow-sm">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full lg:w-auto">
-          <TabsList className="bg-surface-container-low p-1 rounded-full h-11 border border-outline-variant/40 w-full lg:w-auto flex overflow-x-auto no-scrollbar gap-1">
-            {tabs.map((tab) => (
-              <TabsTrigger
-                key={tab.id}
-                value={tab.id}
-                className="rounded-full text-xs font-black px-4 py-2 uppercase tracking-wider h-9 flex-1 lg:flex-none text-center data-[state=active]:bg-[#a3e635] data-[state=active]:text-black transition-all"
-              >
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-
-        <div className="relative flex-grow max-w-md group w-full">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant opacity-60" size={16} />
-          <Input 
-            type="text"
-            placeholder={t("contracts.search_detailed")}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-11 h-11 rounded-full bg-surface-container-low border-outline-variant/60 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:border-[#a3e635]/60 focus:ring-1 focus:ring-[#a3e635]/20 transition-all"
-          />
-        </div>
-      </div>
-
-      {/* ── Contracts List/Grid ── */}
-      {filteredContracts.length > 0 ? (
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          <AnimatePresence mode="popLayout">
-            {filteredContracts.map((contract, index) => {
-              const status = contract.contract_status || contract.job_status;
-              const isCompleted = ["paid", "closed"].includes(contract.job_status);
-              const canRatePartner = isCompleted && !contract.user_has_rated;
-              const isDisputed = contract.job_status === 'disputed';
-              const canOpenDispute = ["accepted", "active", "in_progress", "completion_requested", "completed", "payment_pending", "paid"].includes(contract.job_status);
-              const isDraft = status === "DRAFT";
-              const isPending = !contract.signed_at;
-              const partnerInitials = (contract.partner_name || "P").slice(0, 2).toUpperCase();
-              const displayId = contract.contract_id ? `#${contract.contract_id.slice(0, 8).toUpperCase()}` : "N/A";
-
-              return (
-                <motion.div 
-                  key={contract.contract_id}
-                  layout
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: Math.min(index * 0.05, 0.3) }}
-                  className="w-full flex"
-                >
-                  {/* Premium Shopnest card */}
-                  <Card className="border border-outline-variant/60 bg-[#0e141d] shadow-sm hover:shadow-md hover:border-[#a3e635]/40 hover:scale-[1.01] transition-all duration-200 rounded-3xl overflow-hidden flex flex-col justify-between w-full group">
-                    <div className="p-5 flex flex-col gap-4 flex-1">
-                      
-                      {/* Header block with avatar */}
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-11 w-11 rounded-2xl border border-outline-variant/60 shrink-0 ring-2 ring-[#a3e635]/15">
-                          {contract.partner_avatar && <AvatarImage src={contract.partner_avatar} />}
-                          <AvatarFallback className="text-xs font-bold bg-surface-container text-on-surface-variant rounded-2xl">
-                            {partnerInitials}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0 flex-1">
-                          <h3 className="text-sm font-bold text-on-surface truncate group-hover:text-[#a3e635] transition-colors">
-                            {contract.partner_name}
-                          </h3>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60 mt-0.5">
-                            {role === "client" ? t("contracts.partner.verifiedContractor") : t("contracts.partner.clientAccount")}
-                          </p>
-                        </div>
-                        <Badge 
-                          variant="outline" 
-                          className={`rounded-full text-[9px] uppercase font-bold tracking-wider px-2.5 py-0.5 border ${getStatusStyles(status)}`}
-                        >
-                          {getStatusLabel(status, contract.signed_at, t)}
-                        </Badge>
-                      </div>
-
-                      <Separator className="bg-outline-variant/30" />
-
-                      {/* Detail row key-value pairs */}
-                      <div className="space-y-2 text-xs">
-                        {/* Service Title */}
-                        <div className="flex justify-between items-start py-1 gap-4">
-                          <span className="text-on-surface-variant opacity-60 font-semibold shrink-0">{t("contracts.serviceJob")}</span>
-                          <span className="font-bold text-on-surface text-right truncate max-w-[180px]">{contract.job_title}</span>
-                        </div>
-
-                        {/* Contract ID */}
-                        <div className="flex justify-between items-center py-1">
-                          <span className="text-on-surface-variant opacity-60 font-semibold flex items-center gap-1"><Hash size={12} /> {t("contracts.contractId")}</span>
-                          <span className="font-mono font-bold text-[10px] text-on-surface">{displayId}</span>
-                        </div>
-
-                        {/* Date Created */}
-                        <div className="flex justify-between items-center py-1">
-                          <span className="text-on-surface-variant opacity-60 font-semibold flex items-center gap-1"><Calendar size={12} /> {t("contracts.dateCreated")}</span>
-                          <span className="font-bold text-on-surface">
-                            {new Date(contract.contract_created_at).toLocaleDateString(undefined, { 
-                              month: 'short', 
-                              day: 'numeric',
-                              year: 'numeric' 
-                            })}
-                          </span>
-                        </div>
-
-                        {/* Agreed Budget */}
-                        <div className="flex justify-between items-center py-1">
-                          <span className="text-on-surface-variant opacity-60 font-semibold flex items-center gap-1"><CreditCard size={12} /> {t("contracts.budgetLabel")}</span>
-                          <span className="font-extrabold text-[#a3e635]">
-                            {contract.budget ? `${contract.budget.toLocaleString()} ETB` : "—"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Bottom Action buttons */}
-                    <div className="p-5 pt-0 border-t border-outline-variant/30 flex flex-col gap-2">
-                      <div className="flex gap-2 w-full pt-4">
-                        <Button asChild className="flex-1 rounded-full text-xs font-black uppercase tracking-wider h-11 bg-[#a3e635] text-black hover:opacity-90 shadow-[0_4px_14px_rgba(163,230,53,0.25)] active:scale-95 duration-150">
-                          <Link href={`/contracts/${contract.contract_id}`}>
-                            <span>{isDraft ? (role === "client" ? t("contracts.openDraft") : t("contracts.reviewDraft")) : isPending ? t("contracts.reviewSign") : t("contracts.manage")}</span>
-                            <ArrowRight size={13} className="ml-1.5 stroke-[2.5]" />
-                          </Link>
-                        </Button>
-                        
-                        {contract.pdf_url && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            onClick={() => downloadContractPdf(contract.pdf_url, contract.contract_id)}
-                            className="rounded-full h-11 w-11 shrink-0 border-outline-variant/60 hover:text-[#a3e635] hover:border-[#a3e635] active:scale-95 duration-150"
-                            title={t("contracts.downloadAgreement")}
-                            aria-label={t("contracts.downloadAgreement")}
-                          >
-                            <Download size={14} />
-                          </Button>
-                        )}
-                      </div>
-
-                      {canRatePartner && (
-                        <Button variant="outline" size="sm" className="w-full rounded-full text-xs font-bold uppercase tracking-wider h-10 text-[#a3e635] border-[#a3e635]/30 hover:bg-[#a3e635]/10 active:scale-95 duration-150" asChild>
-                          <Link href={role === 'client' ? `/client/rate/${contract.job_id}` : `/worker/rate/${contract.job_id}`}>
-                            <Star size={12} className="mr-1.5 fill-[#a3e635] stroke-none" />
-                            {t("contracts.ratePartner")}
-                          </Link>
-                        </Button>
-                      )}
-
-                      {role === 'client' && ["completed", "payment_pending"].includes(contract.job_status) && (
-                        <Button size="sm" className="w-full rounded-full text-xs font-black uppercase tracking-wider h-10 bg-[#a3e635] text-black hover:opacity-90 shadow-[0_4px_14px_rgba(163,230,53,0.25)] active:scale-95 duration-150" asChild>
-                          <Link href={`/client/pay/${contract.job_id}`}>
-                            <CreditCard size={12} className="mr-1.5 stroke-[2.5]" />
-                            {t("contracts.completePayment")}
-                          </Link>
-                        </Button>
-                      )}
-
-                      {canOpenDispute && !isDisputed && (
-                        <Button variant="outline" size="sm" className="w-full rounded-full text-xs font-bold uppercase tracking-wider h-10 text-rose-500 border-rose-500/30 hover:bg-rose-500/10 active:scale-95 duration-150" asChild>
-                          <Link href={`/${role}/disputes/new`}>
-                            <AlertTriangle size={12} className="mr-1.5" />
-                            Open Dispute
-                          </Link>
-                        </Button>
-                      )}
-
-                      {isDisputed && (
-                        <Button variant="outline" size="sm" className="w-full rounded-full text-xs font-bold uppercase tracking-wider h-10 text-rose-500 border-rose-500/30 hover:bg-rose-500/10 active:scale-95 duration-150" asChild>
-                          <Link href={`/${role}/disputes`}>
-                            <AlertTriangle size={12} className="mr-1.5" />
-                            {t("contracts.openResolution")}
-                          </Link>
-                        </Button>
-                      )}
-                    </div>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
-        </section>
-      ) : (
-        /* Empty State */
-        <Card className="border border-dashed border-outline-variant p-16 text-center bg-surface-container-lowest shadow-sm rounded-2xl">
-          <CardContent className="space-y-4 pt-6">
-            <div className="w-14 h-14 rounded-2xl bg-surface-container flex items-center justify-center mx-auto text-on-surface-variant/60">
-              <FolderOpen size={24} />
+        {/* Breadcrumb & Actions Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#134e27]/25 text-[#a4fe47] border border-[#45BA50]/30 inline-flex items-center gap-1">
+                <RiShieldCheckFill className="w-3.5 h-3.5 text-[#a4fe47]" />
+                <span>Dire Dawa Legal Repository</span>
+              </span>
+              <span className="text-xs text-slate-400 dark:text-zinc-500">•</span>
+              <span className="text-xs text-slate-500 dark:text-zinc-400 font-medium">Digital Service Agreements</span>
             </div>
-            <div className="max-w-xs mx-auto space-y-1">
-              <p className="font-black text-sm uppercase tracking-wide text-on-surface">{t("contracts.emptyRepository")}</p>
-              <p className="text-xs text-on-surface-variant opacity-60 leading-relaxed">
-                {t("contracts.emptyFilteredDesc")}
+            
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mt-1.5">
+              {t("contracts.title") || "Contracts & Agreements"}
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1 max-w-2xl">
+              {t("contracts.desc") || "Legally-binding scope of work documents, verifiable milestone commitments, and direct settlement agreements in Dire Dawa."}
+            </p>
+          </div>
+
+          {role === "client" && (
+            <Link
+              href="/client/search"
+              className="inline-flex items-center justify-center gap-2 px-5 h-11 rounded-full text-xs font-bold bg-[#45BA50] hover:bg-[#3ca346] text-white shadow-[0_2px_12px_rgba(69,186,80,0.35)] active:scale-95 transition-all self-start sm:self-auto cursor-pointer"
+            >
+              <RiAddLine className="w-4 h-4 stroke-[2]" />
+              <span>{t("contracts.new") || "Find New Artisan"}</span>
+            </Link>
+          )}
+        </div>
+
+        {/* ── Dashboard Vibe KPI Summary Row ── */}
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          
+          {/* KPI 1: Total Contracts */}
+          <div className="p-4 rounded-3xl bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800 shadow-xs flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0 border border-blue-500/20">
+              <RiFileTextLine className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white leading-tight">
+                {stats.total}
+              </p>
+              <p className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider truncate">
+                Total Agreements
               </p>
             </div>
-            <Button size="sm" variant="outline" className="rounded-xl border-outline-variant font-bold uppercase tracking-wider text-xs px-4" asChild>
-              <Link href={role === "client" ? "/client/search" : "/worker/dashboard"}>
-                {role === "client" ? t("contracts.exploreProfessionals") : t("contracts.visitDashboard")}
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-    </FadeContent>
+          </div>
+
+          {/* KPI 2: Active Work */}
+          <div className="p-4 rounded-3xl bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800 shadow-xs flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-[#134e27]/25 text-[#a4fe47] flex items-center justify-center shrink-0 border border-[#45BA50]/30">
+              <RiFlashlightFill className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <p className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white leading-tight">
+                  {stats.active}
+                </p>
+                {stats.active > 0 && (
+                  <span className="w-2 h-2 rounded-full bg-[#45BA50] animate-ping" />
+                )}
+              </div>
+              <p className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider truncate">
+                Active Direct Work
+              </p>
+            </div>
+          </div>
+
+          {/* KPI 3: Pending Signatures */}
+          <div className="p-4 rounded-3xl bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800 shadow-xs flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 border border-amber-500/20">
+              <RiTimeLine className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-lg sm:text-2xl font-black text-amber-500 leading-tight">
+                {stats.pending}
+              </p>
+              <p className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider truncate">
+                Awaiting Signatures
+              </p>
+            </div>
+          </div>
+
+          {/* KPI 4: Total Value */}
+          <div className="p-4 rounded-3xl bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800 shadow-xs flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-emerald-500/10 text-[#45BA50] flex items-center justify-center shrink-0 border border-[#45BA50]/30">
+              <RiCoinsLine className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white leading-tight truncate">
+                ETB {stats.totalBudget.toLocaleString()}
+              </p>
+              <p className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider truncate">
+                Committed Value
+              </p>
+            </div>
+          </div>
+
+        </section>
+
+        {/* ── Filter Tabs & Search Controls Bar ── */}
+        <section className="p-2 sm:p-2.5 rounded-3xl bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          
+          {/* Filter Pills */}
+          <div className="flex items-center overflow-x-auto no-scrollbar gap-1.5 p-1 bg-slate-100 dark:bg-zinc-800/60 rounded-2xl border border-slate-200/60 dark:border-zinc-700/60">
+            {tabs.map((tab) => {
+              const isSelected = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cx(
+                    "flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer select-none",
+                    isSelected
+                      ? "bg-[#45BA50] text-white shadow-xs font-black"
+                      : "text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+                  )}
+                >
+                  <span>{tab.label}</span>
+                  <span
+                    className={cx(
+                      "px-1.5 py-0.2 rounded-full text-[10px] font-black",
+                      isSelected
+                        ? "bg-black/25 text-white"
+                        : "bg-slate-200 dark:bg-zinc-700 text-slate-600 dark:text-zinc-400"
+                    )}
+                  >
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Search Input */}
+          <div className="relative flex items-center h-10 px-3 rounded-2xl bg-slate-100 dark:bg-zinc-800/60 border border-slate-200/60 dark:border-zinc-700/60 focus-within:border-[#45BA50] transition-colors w-full lg:max-w-xs">
+            <RiSearchLine className="w-4 h-4 text-slate-400 dark:text-zinc-500 shrink-0" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t("contracts.search_detailed") || "Search artisan or service..."}
+              className="bg-transparent text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 outline-none flex-1 min-w-0 ms-2"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="p-1 text-slate-400 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white shrink-0 cursor-pointer"
+                title="Clear Search"
+              >
+                <RiCloseLine className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+        </section>
+
+        {/* ── Contracts Grid Section (Dashboard Vibe with Sparkline Curves) ── */}
+        {filteredContracts.length > 0 ? (
+          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+            <AnimatePresence mode="popLayout">
+              {filteredContracts.map((contract, index) => {
+                const status = contract.contract_status || contract.job_status;
+                const isCompleted = ["paid", "closed"].includes(contract.job_status);
+                const canRatePartner = isCompleted && !contract.user_has_rated;
+                const isDisputed = contract.job_status === "disputed";
+                const canOpenDispute = ["accepted", "active", "in_progress", "completion_requested", "completed", "payment_pending", "paid"].includes(contract.job_status);
+                const isDraft = status === "DRAFT";
+                const isPending = !contract.signed_at;
+                const displayId = contract.contract_id ? `#${contract.contract_id.slice(0, 8).toUpperCase()}` : "N/A";
+                const tradeMeta = getTradeMeta(contract.job_title);
+                const TradeIcon = tradeMeta.icon;
+                const statusChip = getStatusChip(contract);
+                const isElectric = index % 2 === 0;
+                const curveColor = tradeMeta.curveColor;
+                const budgetNum = contract.budget ? Number(contract.budget).toLocaleString() : "1,000";
+
+                return (
+                  <motion.div
+                    key={contract.contract_id || index}
+                    layout
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.96 }}
+                    transition={{ duration: 0.25, delay: Math.min(index * 0.04, 0.2) }}
+                    className="w-full flex"
+                  >
+                    <div className="w-full rounded-3xl p-5 bg-white dark:bg-zinc-900/90 border border-slate-200/80 dark:border-zinc-800 shadow-xs hover:border-[#45BA50]/50 hover:shadow-md transition-all duration-300 flex flex-col justify-between group relative overflow-hidden">
+                      
+                      {/* Subtle authentic trade background photo overlay on hover */}
+                      <div
+                        className="absolute inset-0 bg-cover bg-center opacity-0 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none"
+                        style={{ backgroundImage: `url('${tradeMeta.image}')` }}
+                      />
+
+                      <div className="relative z-10 space-y-4">
+                        
+                        {/* 1. Header: Partner Avatar, Identity & Status Chip */}
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            {/* Circular Partner Avatar with System Fallback */}
+                            <div className="relative w-11 h-11 rounded-2xl overflow-hidden bg-slate-100 dark:bg-zinc-800 border border-slate-200/80 dark:border-zinc-700 shrink-0">
+                              <img
+                                src={contract.partner_avatar || "/images/worker_holding_card.png"}
+                                alt={contract.partner_name || "Artisan"}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLImageElement).src = "/images/worker_holding_card.png";
+                                }}
+                              />
+                            </div>
+
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1 min-w-0">
+                                <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-[#45BA50] transition-colors">
+                                  {contract.partner_name || "Verified Artisan"}
+                                </h3>
+                                {contract.partner_verified && (
+                                  <span title="Fayda Verified Pro">
+                                    <RiShieldCheckFill className="w-4 h-4 text-[#45BA50] shrink-0" />
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[11px] text-slate-400 dark:text-zinc-500 font-medium truncate mt-0.5">
+                                {role === "client" ? `${tradeMeta.label} Pro` : "Client Account"}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Status Chip */}
+                          <span className={cx(
+                            "px-2.5 py-1 rounded-full text-[10px] font-bold border shrink-0 tracking-wide",
+                            statusChip.className
+                          )}>
+                            {statusChip.label}
+                          </span>
+                        </div>
+
+                        {/* 2. Middle Content Box: Service Job Title & Trade Badge */}
+                        <div className="p-3 rounded-2xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/60 dark:border-zinc-800/80 space-y-1">
+                          <div className="flex items-center gap-2">
+                            <div className={cx(
+                              "w-6 h-6 rounded-lg flex items-center justify-center shrink-0",
+                              tradeMeta.bg,
+                              tradeMeta.color
+                            )}>
+                              <TradeIcon className="w-3.5 h-3.5" />
+                            </div>
+                            <h4 className="text-xs font-bold text-slate-800 dark:text-zinc-200 truncate">
+                              {contract.job_title || "Contract Agreement"}
+                            </h4>
+                          </div>
+
+                          <div className="flex items-baseline justify-between pt-1">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                              Agreed Direct Budget
+                            </span>
+                            <p className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                              <span className="text-xs font-bold text-[#45BA50] mr-1">ETB</span>
+                              {budgetNum}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* 3. Metadata Row: Contract ID & Creation Date */}
+                        <div className="flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400 pt-0.5 px-0.5">
+                          <span className="font-mono text-[10px] text-slate-400 dark:text-zinc-500 font-bold">
+                            {displayId}
+                          </span>
+                          <span className="flex items-center gap-1 text-[11px] font-medium">
+                            <RiCalendarLine className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500" />
+                            <span>
+                              {contract.contract_created_at
+                                ? new Date(contract.contract_created_at).toLocaleDateString(undefined, {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric"
+                                  })
+                                : "Recent"}
+                            </span>
+                          </span>
+                        </div>
+
+                      </div>
+
+                      {/* 4. Elegant Sixpay-Inspired Sparkline Curve (Dashboard Vibe) */}
+                      <div className="relative w-full h-12 pointer-events-none my-1 opacity-40 group-hover:opacity-80 transition-opacity duration-300">
+                        <svg
+                          viewBox="0 0 240 40"
+                          preserveAspectRatio="none"
+                          className="w-full h-full"
+                        >
+                          <defs>
+                            <linearGradient
+                              id={`contract-spark-${index}`}
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop offset="0%" stopColor={curveColor} stopOpacity="0.25" />
+                              <stop offset="100%" stopColor={curveColor} stopOpacity="0.0" />
+                            </linearGradient>
+                          </defs>
+                          <path
+                            d={isElectric ? "M0,26 Q30,10 60,20 T120,8 T180,24 T240,14 L240,40 L0,40 Z" : "M0,22 Q40,30 80,14 T140,20 T200,6 T240,16 L240,40 L0,40 Z"}
+                            fill={`url(#contract-spark-${index})`}
+                          />
+                          <path
+                            d={isElectric ? "M0,26 Q30,10 60,20 T120,8 T180,24 T240,14" : "M0,22 Q40,30 80,14 T140,20 T200,6 T240,16"}
+                            fill="none"
+                            stroke={curveColor}
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      </div>
+
+                      {/* 5. Bottom Actions Area */}
+                      <div className="relative z-10 pt-2 border-t border-slate-200/80 dark:border-zinc-800 space-y-2">
+                        
+                        {/* Primary Action Button Row */}
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/contracts/${contract.contract_id}`}
+                            className={cx(
+                              "flex-1 h-10 px-4 rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-xs",
+                              isPending
+                                ? "bg-[#45BA50] hover:bg-[#3ca346] text-white font-black shadow-[0_2px_10px_rgba(69,186,80,0.3)]"
+                                : "bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-900 dark:text-white border border-slate-200 dark:border-zinc-700"
+                            )}
+                          >
+                            <span>
+                              {isDraft
+                                ? (role === "client" ? "Open Draft" : "Review Draft")
+                                : isPending
+                                ? "Review & Sign Agreement"
+                                : "Manage Contract"}
+                            </span>
+                            <RiArrowRightLine className="w-3.5 h-3.5" />
+                          </Link>
+
+                          {/* Direct PDF Agreement Download Button */}
+                          {contract.pdf_url && (
+                            <button
+                              type="button"
+                              onClick={() => downloadContractPdf(contract.pdf_url, contract.contract_id)}
+                              className="h-10 w-10 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800/80 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 flex items-center justify-center active:scale-95 transition-all shrink-0 cursor-pointer shadow-xs"
+                              title="Download Signed PDF Agreement"
+                            >
+                              <RiDownloadLine className="w-4 h-4 text-[#45BA50]" />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Contextual Action: Complete Direct Payment */}
+                        {role === "client" && ["completed", "payment_pending"].includes(contract.job_status) && (
+                          <Link
+                            href={`/client/pay/${contract.job_id}`}
+                            className="w-full h-9 rounded-xl bg-[#45BA50] hover:bg-[#3ca346] text-white text-xs font-black inline-flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all"
+                          >
+                            <RiBankCardLine className="w-3.5 h-3.5" />
+                            <span>Complete Direct Payment</span>
+                          </Link>
+                        )}
+
+                        {/* Contextual Action: Rate Artisan */}
+                        {canRatePartner && (
+                          <Link
+                            href={role === "client" ? `/client/rate/${contract.job_id}` : `/worker/rate/${contract.job_id}`}
+                            className="w-full h-9 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-all"
+                          >
+                            <RiStarFill className="w-3.5 h-3.5 fill-amber-500" />
+                            <span>{t("contracts.ratePartner") || "Rate Verified Artisan"}</span>
+                          </Link>
+                        )}
+
+                        {/* Contextual Action: Open Dispute Resolution */}
+                        {canOpenDispute && !isDisputed && (
+                          <Link
+                            href={`/${role}/disputes/new`}
+                            className="w-full h-8 rounded-lg border border-rose-500/20 hover:bg-rose-500/10 text-rose-500 dark:text-rose-400 text-[11px] font-bold inline-flex items-center justify-center gap-1 transition-all"
+                          >
+                            <RiAlertLine className="w-3.5 h-3.5" />
+                            <span>Report Issue / Open Dispute</span>
+                          </Link>
+                        )}
+
+                        {/* Contextual Action: Active Dispute Notice */}
+                        {isDisputed && (
+                          <Link
+                            href={`/${role}/disputes`}
+                            className="w-full h-8 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-500 dark:text-rose-400 text-[11px] font-bold inline-flex items-center justify-center gap-1 transition-all"
+                          >
+                            <RiAlertLine className="w-3.5 h-3.5" />
+                            <span>{t("contracts.openResolution") || "View Dispute Resolution"}</span>
+                          </Link>
+                        )}
+
+                      </div>
+
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </section>
+        ) : (
+          /* Clean Empty State */
+          <div className="rounded-3xl border border-dashed border-slate-200/80 dark:border-zinc-800 p-12 text-center bg-white dark:bg-zinc-900/50 space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-zinc-800 flex items-center justify-center mx-auto text-slate-400 dark:text-zinc-500 border border-slate-200/60 dark:border-zinc-700">
+              <RiFolderOpenLine className="w-7 h-7 text-[#45BA50]" />
+            </div>
+            
+            <div className="max-w-md mx-auto space-y-1">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                {t("contracts.emptyRepository") || "No Contracts Found"}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed">
+                {searchQuery
+                  ? `No agreements match your search "${searchQuery}". Try resetting filters.`
+                  : "You do not have any agreements under this status tab in Dire Dawa."}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-center gap-2 pt-1">
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="px-4 py-2 rounded-full text-xs font-bold border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-800 dark:text-zinc-200 cursor-pointer"
+                >
+                  Clear Search
+                </button>
+              )}
+
+              {role === "client" && (
+                <Link
+                  href="/client/search"
+                  className="px-4 py-2 rounded-full text-xs font-bold bg-[#45BA50] hover:bg-[#3ca346] text-white shadow-xs inline-flex items-center gap-1.5 cursor-pointer"
+                >
+                  <RiSearchLine className="w-3.5 h-3.5" />
+                  <span>Discover Verified Artisans</span>
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
   );
-}
-
-function getStatusLabel(status: string, signedAt: string | null, t: (key: any) => string) {
-  switch (status) {
-    case "DRAFT": return t("contracts.status.draft");
-    case "READY_FOR_SIGNATURE": return t("contracts.status.readyToSign");
-    case "CLIENT_SIGNED": return t("contracts.status.clientSigned");
-    case "WORKER_SIGNED": return t("contracts.status.workerSigned");
-    case "FULLY_SIGNED": return t("contracts.status.fullySigned");
-    case "ACTIVE": return t("contracts.active");
-  }
-  if (!signedAt) return t("contracts.status.pending_signature");
-  switch (status) {
-    case "active": return t("contracts.status.inProgress");
-    case "completion_requested": return t("contracts.status.completionReview");
-    case "completed": return t("contracts.status.finalized");
-    case "payment_pending": return t("contracts.status.paymentPending");
-    case "paid": return t("contracts.status.paid");
-    case "closed": return t("contracts.status.closed");
-    case "disputed": return t("contracts.status.inDispute");
-    case "cancelled": return t("contracts.status.terminated");
-    default: return status;
-  }
-}
-
-function getStatusStyles(status: string) {
-  switch (status) {
-    case "DRAFT": return "bg-surface-container text-on-surface-variant border-outline-variant/40";
-    case "READY_FOR_SIGNATURE": return "bg-primary/10 text-primary border-primary/20";
-    case "CLIENT_SIGNED":
-    case "WORKER_SIGNED":
-    case "FULLY_SIGNED":
-    case "ACTIVE":
-    case "active": return "bg-primary/10 text-primary border-primary/20";
-    case "completion_requested":
-    case "completed":
-    case "payment_pending":
-    case "paid":
-    case "closed": return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
-    case "disputed": return "bg-rose-500/10 text-rose-500 border-rose-500/20";
-    case "cancelled": return "bg-surface-container text-on-surface-variant border-outline-variant/40";
-    default: return "bg-surface-container text-on-surface-variant border-outline-variant/40";
-  }
 }

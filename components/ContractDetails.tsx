@@ -44,7 +44,7 @@ import ParticipantEvidenceExportButton from "@/components/contract/ParticipantEv
 const JobSiteMap = dynamic(() => import("@/components/contract/JobSiteMap"), {
   ssr: false,
   loading: () => (
-    <div className="h-48 w-full rounded-xl bg-slate-100 dark:bg-[#0a0f18] animate-pulse flex items-center justify-center text-xs text-slate-400">
+    <div className="h-48 w-full rounded-xl bg-slate-100 dark:bg-zinc-800/60 animate-pulse flex items-center justify-center text-xs text-slate-400">
       Loading OpenStreetMap...
     </div>
   ),
@@ -123,19 +123,19 @@ function SignatureRow({ label, name, signedAt }: { label: string; name: string |
   const signed = !!signedAt;
 
   return (
-    <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0e141d] p-3.5 shadow-sm">
+    <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3.5 shadow-sm">
       <div className="min-w-0">
         <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{label}</p>
         <p className="mt-0.5 truncate text-sm font-bold text-slate-900 dark:text-white">{name || "Unknown"}</p>
       </div>
       <div className="flex shrink-0 items-center gap-2">
         {signed ? (
-          <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-[#a3e635]" />
+          <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-[#45BA50]" />
         ) : (
           <Clock className="h-4 w-4 text-slate-400 dark:text-slate-500" />
         )}
         <div className="text-right">
-          <p className={`text-xs font-bold ${signed ? "text-emerald-600 dark:text-[#a3e635]" : "text-slate-500 dark:text-slate-400"}`}>
+          <p className={`text-xs font-bold ${signed ? "text-emerald-600 dark:text-[#45BA50]" : "text-slate-500 dark:text-slate-400"}`}>
             {signed ? "Signed" : "Pending"}
           </p>
           <p className="text-[10px] text-slate-400 dark:text-slate-500">{formatDateTime(signedAt)}</p>
@@ -147,14 +147,14 @@ function SignatureRow({ label, name, signedAt }: { label: string; name: string |
 
 function VerificationStatusRow({ label, verified, maskedFin }: { label: string; verified: boolean; maskedFin?: string | null }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3">
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-white/5 p-3">
       <div>
         <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">{label}</span>
         <p className="mt-0.5 font-mono text-[11px] font-semibold text-slate-500 dark:text-slate-400">
           FIN: {maskedFin || "Not recorded"}
         </p>
       </div>
-      <span className={`inline-flex items-center gap-1.5 text-xs font-bold ${verified && maskedFin ? "text-emerald-600 dark:text-[#a3e635]" : "text-rose-600 dark:text-rose-400"}`}>
+      <span className={`inline-flex items-center gap-1.5 text-xs font-bold ${verified && maskedFin ? "text-emerald-600 dark:text-[#45BA50]" : "text-rose-600 dark:text-rose-400"}`}>
         {verified && maskedFin ? (
           <CheckCircle2 className="h-4 w-4" />
         ) : (
@@ -180,13 +180,13 @@ function DocumentEvidenceCard({
   if (!pdfUrl && !documentHash && !qrCodeDataUrl) return null;
 
   return (
-    <div className="rounded-2xl border border-emerald-500/30 dark:border-[#a3e635]/30 bg-white dark:bg-[#0e141d] p-5 shadow-sm space-y-4">
+    <div className="rounded-2xl border border-emerald-500/30 dark:border-[#45BA50]/30 bg-white dark:bg-zinc-900 p-5 shadow-sm space-y-4">
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 dark:bg-[#a3e635]/15 text-emerald-600 dark:text-[#a3e635] border border-emerald-500/20 dark:border-[#a3e635]/30">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 dark:bg-[#45BA50]/15 text-emerald-600 dark:text-[#45BA50] border border-emerald-500/20 dark:border-[#45BA50]/30">
           <ShieldCheck className="h-5 w-5" />
         </div>
         <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-[#a3e635]">Activated Evidence</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-[#45BA50]">Activated Evidence</p>
           <h3 className="text-sm font-bold text-slate-900 dark:text-white">DireSkill Verified Agreement</h3>
           <p className="text-xs text-slate-500 dark:text-slate-400">
             Activated {formatDateTime(activatedAt)}
@@ -195,13 +195,13 @@ function DocumentEvidenceCard({
       </div>
 
       {qrCodeDataUrl && (
-        <div className="flex justify-center rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-4">
+        <div className="flex justify-center rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-white/5 p-4">
           <img src={qrCodeDataUrl} alt="Contract verification QR code" className="h-24 w-24" />
         </div>
       )}
 
       {documentHash && (
-        <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3">
+        <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-white/5 p-3">
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">SHA-256 Hash</p>
           <p className="mt-1 break-all font-mono text-[10px] leading-4 text-slate-700 dark:text-slate-300">{documentHash}</p>
         </div>
@@ -210,7 +210,7 @@ function DocumentEvidenceCard({
       {pdfUrl && (
         <a
           href={pdfUrl}
-          className="inline-flex min-h-[44px] py-2.5 px-4 h-auto w-full items-center justify-center gap-2 rounded-xl bg-primary text-white dark:bg-[#a3e635] dark:text-black text-xs sm:text-sm font-bold hover:opacity-95 shadow-sm transition active:scale-[0.98] text-center"
+          className="inline-flex min-h-[44px] py-2.5 px-4 h-auto w-full items-center justify-center gap-2 rounded-xl bg-primary text-white dark:bg-[#45BA50] dark:text-black text-xs sm:text-sm font-bold hover:opacity-95 shadow-sm transition active:scale-[0.98] text-center"
         >
           <Download className="h-4 w-4" />
           <span>Download PDF</span>
@@ -251,7 +251,7 @@ function DraftField({
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
         <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-          {Icon && <Icon className="h-3.5 w-3.5 text-primary dark:text-[#a3e635]" />}
+          {Icon && <Icon className="h-3.5 w-3.5 text-primary dark:text-[#45BA50]" />}
           <span>{label}</span>
           {required && !readOnly && <span className="text-rose-500">*</span>}
         </label>
@@ -263,11 +263,11 @@ function DraftField({
       </div>
 
       {readOnly ? (
-        <div className="min-h-[42px] rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100/75 dark:bg-white/5 px-3.5 py-2.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-slate-100 transition">
+        <div className="min-h-[42px] rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-100/75 dark:bg-white/5 px-3.5 py-2.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-slate-100 transition">
           {value ? (
             <span className={multiline ? "whitespace-pre-wrap leading-relaxed font-normal" : ""}>
               {type === "datetime-local" ? formatDateTime(value) : value}{" "}
-              {unitBadge && <span className="font-bold text-emerald-600 dark:text-[#a3e635] ml-1">{unitBadge}</span>}
+              {unitBadge && <span className="font-bold text-emerald-600 dark:text-[#45BA50] ml-1">{unitBadge}</span>}
             </span>
           ) : (
             <span className="italic text-slate-400 dark:text-slate-500 font-normal">Not provided</span>
@@ -279,7 +279,7 @@ function DraftField({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           placeholder={placeholder}
-          className="w-full resize-y rounded-xl border border-slate-300 dark:border-white/15 bg-white dark:bg-[#0a0f18] px-3.5 py-2.5 text-xs sm:text-sm font-medium leading-relaxed text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none transition focus:border-primary dark:focus:border-[#a3e635] focus:ring-2 focus:ring-primary/20 dark:focus:ring-[#a3e635]/20 focus:bg-white dark:focus:bg-[#0c1320]"
+          className="w-full resize-y rounded-xl border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800/60 px-3.5 py-2.5 text-xs sm:text-sm font-medium leading-relaxed text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none transition focus:border-primary dark:focus:border-[#45BA50] focus:ring-2 focus:ring-primary/20 dark:focus:ring-[#45BA50]/20 focus:bg-white dark:focus:bg-zinc-800"
         />
       ) : (
         <div className="relative">
@@ -290,13 +290,13 @@ function DraftField({
             min={min}
             onChange={(event) => onChange(event.target.value)}
             placeholder={placeholder}
-            className={`w-full rounded-xl border border-slate-300 dark:border-white/15 bg-white dark:bg-[#0a0f18] py-2.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none transition focus:border-primary dark:focus:border-[#a3e635] focus:ring-2 focus:ring-primary/20 dark:focus:ring-[#a3e635]/20 focus:bg-white dark:focus:bg-[#0c1320] [color-scheme:light] dark:[color-scheme:dark] ${
+            className={`w-full rounded-xl border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800/60 py-2.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none transition focus:border-primary dark:focus:border-[#45BA50] focus:ring-2 focus:ring-primary/20 dark:focus:ring-[#45BA50]/20 focus:bg-white dark:focus:bg-zinc-800 [color-scheme:light] dark:[color-scheme:dark] ${
               unitBadge ? "pl-3.5 pr-14 text-base font-bold text-slate-900 dark:text-white" : "px-3.5"
             }`}
           />
           {unitBadge && (
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-              <span className="rounded-md border border-slate-300 dark:border-[#a3e635]/30 bg-slate-100 dark:bg-[#a3e635]/15 px-2 py-0.5 text-xs font-bold text-slate-700 dark:text-[#a3e635]">
+              <span className="rounded-md border border-slate-300 dark:border-[#45BA50]/30 bg-slate-100 dark:bg-[#45BA50]/15 px-2 py-0.5 text-xs font-bold text-slate-700 dark:text-[#45BA50]">
                 {unitBadge}
               </span>
             </div>
@@ -331,19 +331,19 @@ function ContractReadOnlySummary({
   additionalNotes: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0e141d] p-6 shadow-sm divide-y divide-slate-200 dark:divide-white/10 space-y-6">
+    <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm divide-y divide-slate-200 dark:divide-white/10 space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-4">
         <div>
           <div className="flex items-center gap-1.5">
-            <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-[#a3e635]" />
-            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-[#a3e635]">Finalized Agreement</p>
+            <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-[#45BA50]" />
+            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-[#45BA50]">Finalized Agreement</p>
           </div>
           <h2 className="mt-1 text-xl font-black text-slate-900 dark:text-white">Binding Service Contract</h2>
           <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
             This agreement is permanently locked and ready for electronic signatures.
           </p>
         </div>
-        <div className="inline-flex items-center gap-1.5 self-start rounded-full border border-slate-300 dark:border-[#a3e635]/40 bg-slate-100 dark:bg-[#a3e635]/10 px-3 py-1 text-xs font-bold text-slate-700 dark:text-[#a3e635]">
+        <div className="inline-flex items-center gap-1.5 self-start rounded-full border border-slate-300 dark:border-[#45BA50]/40 bg-slate-100 dark:bg-[#45BA50]/10 px-3 py-1 text-xs font-bold text-slate-700 dark:text-[#45BA50]">
           <Lock className="h-3.5 w-3.5" />
           <span>Locked for Signatures</span>
         </div>
@@ -351,11 +351,11 @@ function ContractReadOnlySummary({
 
       {/* Section 1: Scope */}
       <div className="pt-5 space-y-3">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary dark:text-[#a3e635]">
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary dark:text-[#45BA50]">
           <Briefcase className="h-4 w-4" />
           <span>1. Scope of Work & Deliverables</span>
         </div>
-        <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-4 space-y-3">
+        <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-white/5 p-4 space-y-3">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Project Title</p>
             <p className="mt-0.5 text-base font-bold text-slate-900 dark:text-white">{title || "Not provided"}</p>
@@ -371,25 +371,25 @@ function ContractReadOnlySummary({
 
       {/* Section 2: Financial Terms & Timeline */}
       <div className="pt-5 space-y-3">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary dark:text-[#a3e635]">
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary dark:text-[#45BA50]">
           <Banknote className="h-4 w-4" />
           <span>2. Financial Terms & Delivery Schedule</span>
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3.5">
+          <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-white/5 p-3.5">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Agreed Payment</p>
-            <p className="mt-1 text-lg font-black text-emerald-600 dark:text-[#a3e635]">
+            <p className="mt-1 text-lg font-black text-emerald-600 dark:text-[#45BA50]">
               {paymentAmount ? `${Number(paymentAmount).toLocaleString()} ETB` : "Not provided"}
             </p>
             <p className="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">Escrow Protected</p>
           </div>
-          <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3.5">
+          <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-white/5 p-3.5">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Completion Date & Time</p>
             <p className="mt-1 text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
               {estimatedCompletionDate ? formatDateTime(estimatedCompletionDate) : "Not provided"}
             </p>
           </div>
-          <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3.5">
+          <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-white/5 p-3.5">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Work Location</p>
             <p className="mt-1 text-sm font-bold text-slate-900 dark:text-white">{workLocation || "Dire Dawa"}</p>
           </div>
@@ -398,18 +398,18 @@ function ContractReadOnlySummary({
 
       {/* Section 3: Responsibilities */}
       <div className="pt-5 space-y-3">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary dark:text-[#a3e635]">
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary dark:text-[#45BA50]">
           <ShieldCheck className="h-4 w-4" />
           <span>3. Legal Responsibilities & Materials</span>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3.5">
+          <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-white/5 p-3.5">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Materials & Equipment</p>
             <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-slate-800 dark:text-slate-200 font-medium">
               {materialsResponsibility || "Standard agreement terms apply."}
             </p>
           </div>
-          <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3.5">
+          <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-white/5 p-3.5">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Additional Site Notes</p>
             <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-slate-800 dark:text-slate-200 font-medium">
               {additionalNotes || "Standard agreement terms apply."}
@@ -444,7 +444,7 @@ function ContractWorkflowStepper({
   currentStep: number;
 }) {
   return (
-    <section className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0e141d] px-4 py-3.5 shadow-sm">
+    <section className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3.5 shadow-sm">
       <div className="overflow-x-auto no-scrollbar">
         <ol className="flex min-w-[580px] items-center">
           {WORKFLOW_STEPS.map((step, index) => {
@@ -457,8 +457,8 @@ function ContractWorkflowStepper({
                   <div
                     className={`flex h-6 w-6 items-center justify-center rounded-full border text-[10px] font-bold transition-colors ${
                       isComplete || isActive
-                        ? "border-primary bg-primary text-white dark:border-[#a3e635] dark:bg-[#a3e635] dark:text-black"
-                        : "border-slate-300 dark:border-white/10 bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400"
+                        ? "border-primary bg-primary text-white dark:border-[#45BA50] dark:bg-[#45BA50] dark:text-black"
+                        : "border-slate-300 dark:border-zinc-800 bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400"
                     }`}
                     aria-current={isActive ? "step" : undefined}
                   >
@@ -471,7 +471,7 @@ function ContractWorkflowStepper({
                   <span
                     className={`whitespace-nowrap text-[10px] font-bold ${
                       isActive
-                        ? "text-primary dark:text-[#a3e635]"
+                        ? "text-primary dark:text-[#45BA50]"
                         : isComplete
                         ? "text-slate-900 dark:text-white"
                         : "text-slate-400 dark:text-slate-500"
@@ -484,7 +484,7 @@ function ContractWorkflowStepper({
                 {index < WORKFLOW_STEPS.length - 1 && (
                   <div
                     className={`mx-2 h-0.5 flex-1 rounded-full ${
-                      index < currentStep ? "bg-primary dark:bg-[#a3e635]" : "bg-slate-200 dark:bg-white/10"
+                      index < currentStep ? "bg-primary dark:bg-[#45BA50]" : "bg-slate-200 dark:bg-white/10"
                     }`}
                   />
                 )}
@@ -830,16 +830,16 @@ export default function ContractDetails({ contract, userId }: Props) {
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-5 px-4 sm:px-6 pb-28">
       {/* Top Header */}
-      <header className="flex flex-col gap-3 border-b border-slate-200 dark:border-white/10 pb-4 md:flex-row md:items-end md:justify-between">
+      <header className="flex flex-col gap-3 border-b border-slate-200 dark:border-zinc-800 pb-4 md:flex-row md:items-end md:justify-between">
         <div>
           <Link
             href={backHref}
-            className="mb-3 inline-flex h-8 items-center gap-1.5 rounded-full border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0e141d] px-3 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition active:scale-95"
+            className="mb-3 inline-flex h-8 items-center gap-1.5 rounded-full border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition active:scale-95"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             <span>Back</span>
           </Link>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-primary dark:text-[#a3e635]">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-primary dark:text-[#45BA50]">
             {t("contract.agreement")}
           </p>
           <h1 className="mt-0.5 text-2xl font-black tracking-tight text-slate-900 dark:text-white sm:text-3xl">
@@ -856,10 +856,10 @@ export default function ContractDetails({ contract, userId }: Props) {
       <ContractWorkflowStepper currentStep={workflowStep} />
 
       {/* Compact Top Metrics Bar */}
-      <section className="grid grid-cols-3 divide-x divide-slate-200 dark:divide-white/10 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0e141d] py-3.5 shadow-sm text-center">
+      <section className="grid grid-cols-3 divide-x divide-slate-200 dark:divide-white/10 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 py-3.5 shadow-sm text-center">
         <div className="px-2">
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Payment</p>
-          <p className="mt-0.5 text-base sm:text-xl font-black text-emerald-600 dark:text-[#a3e635]">{formatMoney(displayPayment)}</p>
+          <p className="mt-0.5 text-base sm:text-xl font-black text-emerald-600 dark:text-[#45BA50]">{formatMoney(displayPayment)}</p>
         </div>
         <div className="px-2">
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Job Status</p>
@@ -877,13 +877,13 @@ export default function ContractDetails({ contract, userId }: Props) {
 
       {/* Active Contract Unlocked Site & Direct Contact Banner */}
       {contractStatus === "ACTIVE" && (
-        <div className="rounded-xl border border-emerald-500/30 dark:border-[#a3e635]/30 bg-emerald-50/70 dark:bg-[#a3e635]/10 p-4 shadow-sm space-y-3">
+        <div className="rounded-xl border border-emerald-500/30 dark:border-[#45BA50]/30 bg-emerald-50/70 dark:bg-[#45BA50]/10 p-4 shadow-sm space-y-3">
           <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-[#a3e635] border border-emerald-500/20">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-[#45BA50] border border-emerald-500/20">
               <MapPin className="h-4 w-4" />
             </div>
             <div className="min-w-0 flex-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-[#a3e635]">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-[#45BA50]">
                 Contract Active • Site Location & Direct Contact Unlocked
               </span>
               <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-300">
@@ -893,12 +893,12 @@ export default function ContractDetails({ contract, userId }: Props) {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 pt-1">
-            <div className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0a0f18] p-3 space-y-1">
+            <div className="rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/60 p-3 space-y-1">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Job Site Location
               </p>
               <p className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                <MapPin className="h-4 w-4 text-emerald-600 dark:text-[#a3e635] shrink-0" />
+                <MapPin className="h-4 w-4 text-emerald-600 dark:text-[#45BA50] shrink-0" />
                 <span>{contract.work_location || "Dire Dawa, Ethiopia"}</span>
               </p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -906,7 +906,7 @@ export default function ContractDetails({ contract, userId }: Props) {
               </p>
             </div>
 
-            <div className="rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0a0f18] p-3 space-y-1">
+            <div className="rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/60 p-3 space-y-1">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 {isClient ? "Worker Direct Phone" : "Client Direct Phone"}
               </p>
@@ -931,9 +931,9 @@ export default function ContractDetails({ contract, userId }: Props) {
           </div>
 
           {/* Interactive OpenStreetMap Site Location */}
-          <div className="pt-2 border-t border-emerald-500/20 dark:border-white/10">
+          <div className="pt-2 border-t border-emerald-500/20 dark:border-zinc-800">
             <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5 text-emerald-600 dark:text-[#a3e635]" />
+              <MapPin className="h-3.5 w-3.5 text-emerald-600 dark:text-[#45BA50]" />
               <span>Interactive OpenStreetMap • Travel Navigation</span>
             </p>
             <JobSiteMap
@@ -948,10 +948,10 @@ export default function ContractDetails({ contract, userId }: Props) {
       )}
 
       {/* Compact Agreement Parties Bar */}
-      <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0e141d] p-4 shadow-sm">
+      <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-2.5 mb-3">
           <div className="flex items-center gap-1.5">
-            <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-[#a3e635]" />
+            <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-[#45BA50]" />
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
               {t("contract.parties")}
             </span>
@@ -993,7 +993,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                 </p>
               )}
               {contractStatus === "ACTIVE" && contract.client_phone ? (
-                <p className="text-[10px] font-mono text-emerald-600 dark:text-[#a3e635]">
+                <p className="text-[10px] font-mono text-emerald-600 dark:text-[#45BA50]">
                   Phone: {contract.client_phone}
                 </p>
               ) : (
@@ -1006,14 +1006,14 @@ export default function ContractDetails({ contract, userId }: Props) {
 
           {/* Center Divider / Handshake */}
           <div className="hidden lg:flex flex-col items-center justify-center px-1">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 dark:border-zinc-800 bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400">
               <ArrowRightLeft className="h-3.5 w-3.5" />
             </div>
           </div>
 
           {/* Worker Party */}
           <div className="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/5 p-2.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 dark:bg-[#a3e635]/15 font-bold text-emerald-600 dark:text-[#a3e635] text-sm">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 dark:bg-[#45BA50]/15 font-bold text-emerald-600 dark:text-[#45BA50] text-sm">
               {contract.worker_avatar ? (
                 <img src={contract.worker_avatar} alt="" className="h-9 w-9 rounded-lg object-cover" />
               ) : (
@@ -1022,7 +1022,7 @@ export default function ContractDetails({ contract, userId }: Props) {
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-[#a3e635]">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-[#45BA50]">
                   {t("contract.worker")}
                 </span>
                 {workerVerified ? (
@@ -1043,7 +1043,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                 </p>
               )}
               {contractStatus === "ACTIVE" && contract.worker_phone ? (
-                <p className="text-[10px] font-mono text-emerald-600 dark:text-[#a3e635]">
+                <p className="text-[10px] font-mono text-emerald-600 dark:text-[#45BA50]">
                   Phone: {contract.worker_phone}
                 </p>
               ) : (
@@ -1087,7 +1087,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                 </div>
 
                 {parsedRejection && (
-                  <div className="rounded-xl border border-rose-200 dark:border-rose-500/20 bg-white/80 dark:bg-[#0a0f18]/80 p-3.5 space-y-2.5">
+                  <div className="rounded-xl border border-rose-200 dark:border-rose-500/20 bg-white/80 dark:bg-zinc-800/60/80 p-3.5 space-y-2.5">
                     <div className="flex items-center justify-between">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">
                         {t("contract.counterTermsTitle")}
@@ -1201,11 +1201,11 @@ export default function ContractDetails({ contract, userId }: Props) {
             )}
 
             {/* UNIFIED CONTRACT DOCUMENT SHEET */}
-            <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0e141d] shadow-sm divide-y divide-slate-200 dark:divide-white/10 overflow-hidden">
+            <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm divide-y divide-slate-200 dark:divide-white/10 overflow-hidden">
               {/* Section 1: Scope of Work */}
               <div className="p-5 sm:p-6 space-y-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 dark:bg-[#a3e635]/15 text-primary dark:text-[#a3e635]">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 dark:bg-[#45BA50]/15 text-primary dark:text-[#45BA50]">
                     <Briefcase className="h-4 w-4" />
                   </div>
                   <div>
@@ -1246,7 +1246,7 @@ export default function ContractDetails({ contract, userId }: Props) {
               {/* Section 2: Financial Terms & Timeline */}
               <div className="p-5 sm:p-6 space-y-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 dark:bg-[#a3e635]/15 text-primary dark:text-[#a3e635]">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 dark:bg-[#45BA50]/15 text-primary dark:text-[#45BA50]">
                     <Banknote className="h-4 w-4" />
                   </div>
                   <div>
@@ -1301,7 +1301,7 @@ export default function ContractDetails({ contract, userId }: Props) {
               {/* Section 3: Legal Responsibilities & Materials */}
               <div className="p-5 sm:p-6 space-y-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 dark:bg-[#a3e635]/15 text-primary dark:text-[#a3e635]">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 dark:bg-[#45BA50]/15 text-primary dark:text-[#45BA50]">
                     <ShieldCheck className="h-4 w-4" />
                   </div>
                   <div>
@@ -1348,7 +1348,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                     </div>
                   )}
                   {draftMessage && (
-                    <div className="rounded-xl border border-emerald-300 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 p-3 text-xs sm:text-sm font-bold text-emerald-600 dark:text-[#a3e635]">
+                    <div className="rounded-xl border border-emerald-300 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 p-3 text-xs sm:text-sm font-bold text-emerald-600 dark:text-[#45BA50]">
                       {draftMessage}
                     </div>
                   )}
@@ -1357,13 +1357,13 @@ export default function ContractDetails({ contract, userId }: Props) {
 
               {/* Client Draft Action Bar with flexible mobile sizing */}
               {canEditDraft && (
-                <div className="p-4 sm:p-5 bg-slate-50/80 dark:bg-white/[0.02] border-t border-slate-200 dark:border-white/10 space-y-3">
+                <div className="p-4 sm:p-5 bg-slate-50/80 dark:bg-white/[0.02] border-t border-slate-200 dark:border-zinc-800 space-y-3">
                   <div className="flex flex-col gap-2.5 sm:flex-row">
                     <button
                       type="button"
                       onClick={handleSaveDraft}
                       disabled={isSavingDraft || isFinalizingDraft}
-                      className="inline-flex min-h-[48px] py-3 px-4 h-auto flex-1 items-center justify-center gap-2 rounded-xl border border-slate-300 dark:border-white/10 bg-white dark:bg-[#0a0f18] hover:bg-slate-50 dark:hover:bg-white/5 text-xs sm:text-sm font-bold text-slate-900 dark:text-white disabled:cursor-not-allowed disabled:opacity-60 transition active:scale-[0.98] shadow-sm cursor-pointer text-center leading-snug"
+                      className="inline-flex min-h-[48px] py-3 px-4 h-auto flex-1 items-center justify-center gap-2 rounded-xl border border-slate-300 dark:border-zinc-800 bg-white dark:bg-zinc-800/60 hover:bg-slate-50 dark:hover:bg-white/5 text-xs sm:text-sm font-bold text-slate-900 dark:text-white disabled:cursor-not-allowed disabled:opacity-60 transition active:scale-[0.98] shadow-sm cursor-pointer text-center leading-snug"
                     >
                       {isSavingDraft ? (
                         <span className="h-4 w-4 rounded-full border-2 border-primary border-t-transparent animate-spin shrink-0" />
@@ -1387,7 +1387,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                       title={!canFinalizeDraft ? "Worker acceptance is required before finalization" : "Finalize accepted terms"}
                       className={`inline-flex min-h-[48px] py-3 px-4 h-auto flex-1 items-center justify-center gap-2 rounded-xl text-xs sm:text-sm font-bold transition active:scale-[0.98] text-center leading-snug ${
                         canFinalizeDraft
-                          ? "bg-primary text-white dark:bg-[#a3e635] dark:text-black shadow-sm hover:opacity-95 cursor-pointer"
+                          ? "bg-primary text-white dark:bg-[#45BA50] dark:text-black shadow-sm hover:opacity-95 cursor-pointer"
                           : "border border-slate-200 dark:border-white/5 bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-600 cursor-not-allowed"
                       }`}
                     >
@@ -1410,16 +1410,16 @@ export default function ContractDetails({ contract, userId }: Props) {
 
             {/* Worker Terms Review Action Card with responsive buttons */}
             {canWorkerReviewTerms && (
-              <div className="rounded-2xl border border-emerald-500/30 dark:border-[#a3e635]/40 bg-white dark:bg-[#0e141d] p-5 shadow-sm space-y-4">
+              <div className="rounded-2xl border border-emerald-500/30 dark:border-[#45BA50]/40 bg-white dark:bg-zinc-900 p-5 shadow-sm space-y-4">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 dark:bg-[#a3e635]/15 text-emerald-600 dark:text-[#a3e635] border border-emerald-500/20 dark:border-[#a3e635]/30">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 dark:bg-[#45BA50]/15 text-emerald-600 dark:text-[#45BA50] border border-emerald-500/20 dark:border-[#45BA50]/30">
                     <FileCheck className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-[#a3e635]">Worker Action Required</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-[#45BA50]">Worker Action Required</p>
                     <h3 className="text-base font-bold text-slate-900 dark:text-white">Review Proposed Contract Terms</h3>
                     <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                      Please review the scope, compensation of <span className="font-bold text-emerald-600 dark:text-[#a3e635]">{formatMoney(displayPayment)}</span>, and completion timeline above. Accept to allow the client to finalize, or request changes with a counter-proposal.
+                      Please review the scope, compensation of <span className="font-bold text-emerald-600 dark:text-[#45BA50]">{formatMoney(displayPayment)}</span>, and completion timeline above. Accept to allow the client to finalize, or request changes with a counter-proposal.
                     </p>
                   </div>
                 </div>
@@ -1430,7 +1430,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                       type="button"
                       onClick={handleAcceptTerms}
                       disabled={isTermsActionLoading}
-                      className="inline-flex min-h-[48px] py-3 px-4 h-auto flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-white dark:bg-[#a3e635] dark:text-black text-xs sm:text-sm font-bold hover:opacity-95 shadow-sm disabled:cursor-not-allowed disabled:opacity-60 transition active:scale-[0.98] cursor-pointer text-center leading-snug"
+                      className="inline-flex min-h-[48px] py-3 px-4 h-auto flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-white dark:bg-[#45BA50] dark:text-black text-xs sm:text-sm font-bold hover:opacity-95 shadow-sm disabled:cursor-not-allowed disabled:opacity-60 transition active:scale-[0.98] cursor-pointer text-center leading-snug"
                     >
                       {isTermsActionLoading ? (
                         <span className="h-4 w-4 rounded-full border-2 border-white dark:border-black border-t-transparent animate-spin shrink-0" />
@@ -1474,7 +1474,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                           value={counterBudget}
                           onChange={(e) => setCounterBudget(e.target.value)}
                           placeholder={String(contract.payment_amount || contract.budget || "1000")}
-                          className="w-full rounded-xl border border-slate-300 dark:border-white/15 bg-white dark:bg-[#0a0f18] px-3.5 py-2.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-white outline-none focus:border-rose-500 [color-scheme:light] dark:[color-scheme:dark]"
+                          className="w-full rounded-xl border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800/60 px-3.5 py-2.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-white outline-none focus:border-rose-500 [color-scheme:light] dark:[color-scheme:dark]"
                         />
                       </div>
                       <div>
@@ -1487,7 +1487,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                           value={counterDate}
                           min={new Date().toISOString().slice(0, 19)}
                           onChange={(e) => setCounterDate(e.target.value)}
-                          className="w-full rounded-xl border border-slate-300 dark:border-white/15 bg-white dark:bg-[#0a0f18] px-3.5 py-2.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-white outline-none focus:border-rose-500 [color-scheme:light] dark:[color-scheme:dark]"
+                          className="w-full rounded-xl border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800/60 px-3.5 py-2.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-white outline-none focus:border-rose-500 [color-scheme:light] dark:[color-scheme:dark]"
                         />
                       </div>
                     </div>
@@ -1501,7 +1501,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                         onChange={(event) => setTermsRejectReason(event.target.value)}
                         rows={3}
                         placeholder="Explain what needs to change, why the budget or timeline needs adjusting, or materials needed..."
-                        className="w-full resize-none rounded-xl border border-rose-300 dark:border-rose-500/40 bg-white dark:bg-[#0a0f18] px-3.5 py-2.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-white outline-none focus:border-rose-500"
+                        className="w-full resize-none rounded-xl border border-rose-300 dark:border-rose-500/40 bg-white dark:bg-zinc-800/60 px-3.5 py-2.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-white outline-none focus:border-rose-500"
                       />
                     </div>
 
@@ -1518,7 +1518,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                         type="button"
                         onClick={() => setShowRejectForm(false)}
                         disabled={isTermsActionLoading}
-                        className="inline-flex min-h-[44px] py-2.5 px-4 h-auto items-center justify-center rounded-xl border border-slate-300 dark:border-white/10 bg-white dark:bg-white/5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition"
+                        className="inline-flex min-h-[44px] py-2.5 px-4 h-auto items-center justify-center rounded-xl border border-slate-300 dark:border-zinc-800 bg-white dark:bg-white/5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition"
                       >
                         {t("contract.cancel")}
                       </button>
@@ -1545,8 +1545,8 @@ export default function ContractDetails({ contract, userId }: Props) {
           <SignatureRow label="Client" name={contract.client_name} signedAt={contract.client_signed_at} />
           <SignatureRow label="Worker" name={contract.worker_name} signedAt={contract.worker_signed_at} />
 
-          <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0e141d] p-5 shadow-sm space-y-4">
-            <div className="space-y-3 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3.5">
+          <div className="rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-sm space-y-4">
+            <div className="space-y-3 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-white/5 p-3.5">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Identity Verification</p>
               <VerificationStatusRow label="Client" verified={clientVerified} maskedFin={contract.client_masked_fin} />
               <VerificationStatusRow label="Worker" verified={workerVerified} maskedFin={contract.worker_masked_fin} />
@@ -1558,8 +1558,8 @@ export default function ContractDetails({ contract, userId }: Props) {
             </div>
 
             {canClientReviewCompletion && (
-              <div className="space-y-3 rounded-xl border border-emerald-300 dark:border-[#a3e635]/30 bg-emerald-50 dark:bg-[#a3e635]/10 p-3.5">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-[#a3e635]">Completion Review</p>
+              <div className="space-y-3 rounded-xl border border-emerald-300 dark:border-[#45BA50]/30 bg-emerald-50 dark:bg-[#45BA50]/10 p-3.5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-[#45BA50]">Completion Review</p>
                 <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
                   The worker marked this job complete. Confirm only after checking the delivered work.
                 </p>
@@ -1567,14 +1567,14 @@ export default function ContractDetails({ contract, userId }: Props) {
                   value={completionRejectReason}
                   onChange={(event) => setCompletionRejectReason(event.target.value)}
                   placeholder="Reason if rejecting completion"
-                  className="min-h-16 w-full rounded-xl border border-slate-300 dark:border-white/15 bg-white dark:bg-[#0a0f18] p-2.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-white outline-none focus:border-primary"
+                  className="min-h-16 w-full rounded-xl border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800/60 p-2.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-white outline-none focus:border-primary"
                 />
                 <div className="flex flex-col gap-2.5 sm:flex-row">
                   <button
                     type="button"
                     onClick={handleConfirmCompletion}
                     disabled={isCompletionActionLoading}
-                    className="inline-flex min-h-[44px] py-2.5 px-4 h-auto flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary text-white dark:bg-[#a3e635] dark:text-black text-xs sm:text-sm font-bold hover:opacity-95 shadow-sm disabled:cursor-not-allowed disabled:opacity-60 transition active:scale-[0.98] text-center"
+                    className="inline-flex min-h-[44px] py-2.5 px-4 h-auto flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary text-white dark:bg-[#45BA50] dark:text-black text-xs sm:text-sm font-bold hover:opacity-95 shadow-sm disabled:cursor-not-allowed disabled:opacity-60 transition active:scale-[0.98] text-center"
                   >
                     Confirm Completion
                   </button>
@@ -1591,15 +1591,15 @@ export default function ContractDetails({ contract, userId }: Props) {
             )}
 
             {contractStatus === "ACTIVE" ? (
-              <div className="rounded-xl border border-emerald-300 dark:border-[#a3e635]/30 bg-emerald-50 dark:bg-[#a3e635]/10 p-3.5 text-xs sm:text-sm font-bold text-emerald-700 dark:text-[#a3e635]">
+              <div className="rounded-xl border border-emerald-300 dark:border-[#45BA50]/30 bg-emerald-50 dark:bg-[#45BA50]/10 p-3.5 text-xs sm:text-sm font-bold text-emerald-700 dark:text-[#45BA50]">
                 Contract activated. Work is now in progress and the final PDF evidence is available below.
               </div>
             ) : contractStatus === "DRAFT" ? (
-              <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3.5 text-xs font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
+              <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-white/5 p-3.5 text-xs font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
                 This contract is currently in draft. Once both parties agree on terms and the draft is finalized, digital signing will be unlocked.
               </div>
             ) : isFullySigned || contractStatus === "FULLY_SIGNED" ? (
-              <div className="rounded-xl border border-emerald-300 dark:border-[#a3e635]/30 bg-emerald-50 dark:bg-[#a3e635]/10 p-3.5 text-xs sm:text-sm font-bold text-emerald-700 dark:text-[#a3e635]">
+              <div className="rounded-xl border border-emerald-300 dark:border-[#45BA50]/30 bg-emerald-50 dark:bg-[#45BA50]/10 p-3.5 text-xs sm:text-sm font-bold text-emerald-700 dark:text-[#45BA50]">
                 Contract fully signed. Final activation will generate the PDF, hash, QR code, and job start state.
               </div>
             ) : !bothPartiesVerified && canSign && !userHasSigned ? (
@@ -1607,7 +1607,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                 Both client and worker must complete identity verification before signing this contract.
               </div>
             ) : !canSign ? (
-              <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3.5 text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-400">
+              <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-white/5 p-3.5 text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-400">
                 {userHasSigned ? "Waiting for the other party to sign." : "This contract is not ready for your signature yet."}
               </div>
             ) : !userHasSigned ? (
@@ -1619,7 +1619,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                     ["voluntarilyAgrees", "I voluntarily agree to this contract."],
                     ["pinIsSignature", "I understand that my Contract PIN acts as my electronic signature."],
                   ].map(([key, label]) => (
-                    <label key={key} className="flex items-start gap-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3 cursor-pointer">
+                    <label key={key} className="flex items-start gap-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-white/5 p-3 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={signatureConsent[key as keyof typeof signatureConsent]}
@@ -1629,7 +1629,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                             [key]: event.target.checked,
                           }))
                         }
-                        className="mt-0.5 h-4 w-4 accent-primary dark:accent-[#a3e635]"
+                        className="mt-0.5 h-4 w-4 accent-primary dark:accent-[#45BA50]"
                       />
                       <span className="text-xs font-bold leading-5 text-slate-800 dark:text-slate-200">{label}</span>
                     </label>
@@ -1640,18 +1640,18 @@ export default function ContractDetails({ contract, userId }: Props) {
                   type="button"
                   onClick={() => setIsPinModalOpen(true)}
                   disabled={isSigning || !hasAllSignatureConsent || !bothPartiesVerified}
-                  className="inline-flex min-h-[48px] py-3 px-5 h-auto w-full items-center justify-center gap-2 rounded-xl bg-primary text-white dark:bg-[#a3e635] dark:text-black text-xs sm:text-sm font-bold hover:opacity-95 shadow-sm disabled:cursor-not-allowed disabled:opacity-60 transition active:scale-[0.98] cursor-pointer text-center leading-snug"
+                  className="inline-flex min-h-[48px] py-3 px-5 h-auto w-full items-center justify-center gap-2 rounded-xl bg-primary text-white dark:bg-[#45BA50] dark:text-black text-xs sm:text-sm font-bold hover:opacity-95 shadow-sm disabled:cursor-not-allowed disabled:opacity-60 transition active:scale-[0.98] cursor-pointer text-center leading-snug"
                 >
                   <PenTool className="h-4 w-4 stroke-[2.5]" />
                   <span>{isSigning ? "Signing..." : "Sign Contract"}</span>
                 </button>
               </div>
             ) : isFullySigned ? (
-              <div className="rounded-xl border border-emerald-300 dark:border-[#a3e635]/30 bg-emerald-50 dark:bg-[#a3e635]/10 p-3.5 text-xs sm:text-sm font-bold text-emerald-700 dark:text-[#a3e635]">
+              <div className="rounded-xl border border-emerald-300 dark:border-[#45BA50]/30 bg-emerald-50 dark:bg-[#45BA50]/10 p-3.5 text-xs sm:text-sm font-bold text-emerald-700 dark:text-[#45BA50]">
                 Contract fully signed. Final activation will generate the PDF, hash, QR code, and job start state.
               </div>
             ) : (
-              <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3.5 text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-400">
+              <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-white/5 p-3.5 text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-400">
                 Waiting for the other party to sign.
               </div>
             )}
@@ -1661,7 +1661,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                 type="button"
                 onClick={handleDownloadPdf}
                 disabled={isDownloadingPdf}
-                className="mt-2 inline-flex min-h-[44px] py-2.5 px-4 h-auto w-full items-center justify-center gap-2 rounded-xl border border-slate-300 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-xs font-bold text-slate-800 dark:text-white transition active:scale-[0.98] text-center"
+                className="mt-2 inline-flex min-h-[44px] py-2.5 px-4 h-auto w-full items-center justify-center gap-2 rounded-xl border border-slate-300 dark:border-zinc-800 bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-xs font-bold text-slate-800 dark:text-white transition active:scale-[0.98] text-center"
               >
                 <Download className="h-4 w-4" />
                 <span>{isDownloadingPdf ? "Downloading..." : "Download PDF"}</span>
@@ -1690,9 +1690,9 @@ export default function ContractDetails({ contract, userId }: Props) {
 
       {showFinalizeModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0e141d] p-6 shadow-2xl space-y-4">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-2xl space-y-4">
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 dark:bg-[#a3e635]/15 text-primary dark:text-[#a3e635] border border-primary/20 dark:border-[#a3e635]/30">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 dark:bg-[#45BA50]/15 text-primary dark:text-[#45BA50] border border-primary/20 dark:border-[#45BA50]/30">
                 <Lock className="h-5 w-5" />
               </div>
               <div>
@@ -1708,7 +1708,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                 type="button"
                 onClick={() => setShowFinalizeModal(false)}
                 disabled={isFinalizingDraft}
-                className="inline-flex min-h-[44px] py-2.5 px-4 h-auto flex-1 items-center justify-center rounded-xl border border-slate-300 dark:border-white/10 bg-white dark:bg-white/5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition"
+                className="inline-flex min-h-[44px] py-2.5 px-4 h-auto flex-1 items-center justify-center rounded-xl border border-slate-300 dark:border-zinc-800 bg-white dark:bg-white/5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition"
               >
                 Cancel
               </button>
@@ -1716,7 +1716,7 @@ export default function ContractDetails({ contract, userId }: Props) {
                 type="button"
                 onClick={handleFinalizeDraft}
                 disabled={isFinalizingDraft}
-                className="inline-flex min-h-[44px] py-2.5 px-4 h-auto flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-white dark:bg-[#a3e635] dark:text-black text-xs font-bold hover:opacity-95 shadow-sm transition"
+                className="inline-flex min-h-[44px] py-2.5 px-4 h-auto flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-white dark:bg-[#45BA50] dark:text-black text-xs font-bold hover:opacity-95 shadow-sm transition"
               >
                 {isFinalizingDraft ? (
                   <span className="h-4 w-4 rounded-full border-2 border-white dark:border-black border-t-transparent animate-spin shrink-0" />
