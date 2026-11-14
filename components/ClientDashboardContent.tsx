@@ -618,7 +618,7 @@ export default function ClientDashboardContent({
                     <div className="min-w-0">
                       <p className="text-caption-1-semibold font-bold text-text-primary truncate">{job.title}</p>
                       <p className="text-[10px] text-text-tertiary">
-                        {new Date(job.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                        {job.created_at ? new Date(job.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "Recent"}
                       </p>
                     </div>
                     <Chip variant="caption" color={job.status === "completed" ? "lime" : "blue"}>

@@ -52,53 +52,61 @@ export default async function WorkerDashboardPage() {
     redirect(workerRoute);
   }
 
-  // Fetch real jobs, real earnings, and real active contracts in parallel
-  const [
-    pendingJobs,
-    recentJobs,
-    totalEarnedRes,
-    activeContractsRes,
-    completedCountRes,
-  ] = await Promise.all([
-    getPendingJobs(),
-    getWorkerJobs(),
-    sql`
-      SELECT COALESCE(SUM(p.net_amount), 0)::numeric AS total_earned
-      FROM payments p
-      JOIN jobs j ON p.job_id = j.id
-      WHERE j.worker_id = ${session.user.id} AND p.status IN ('released', 'successful', 'completed', 'paid')
-    `,
-    sql`
-      SELECT 
-        c.id as contract_id,
-        COALESCE(c.job_title, j.title) as job_title,
-        COALESCE(c.payment_amount, j.budget, 0)::numeric as budget,
-        cp.full_name as client_name,
-        cp.avatar_url as client_avatar,
-        j.category,
-        j.status as job_status,
-        c.status as contract_status,
-        c.created_at as contract_created_at
-      FROM contracts c
-      JOIN jobs j ON c.job_id = j.id
-      LEFT JOIN client_profiles cp ON j.client_id = cp.user_id
-      WHERE j.worker_id = ${session.user.id} AND j.status IN ('accepted', 'in_progress', 'signed')
-      ORDER BY c.created_at DESC
-    `,
-    sql`
-      SELECT COUNT(*)::int as completed_count
-      FROM jobs
-      WHERE worker_id = ${session.user.id} AND status IN ('completed', 'paid')
-    `,
-  ]);
+  let pendingJobs: any[] = [];
+  let recentJobs: any[] = [];
+  let totalEarned = 0;
+  let activeContracts: any[] = [];
+  let completedJobsCount = 0;
+
+  try {
+    const results = await Promise.allSettled([
+      getPendingJobs(),
+      getWorkerJobs(),
+      sql`
+        SELECT COALESCE(SUM(p.net_amount), 0)::numeric AS total_earned
+        FROM payments p
+        JOIN jobs j ON p.job_id = j.id
+        WHERE j.worker_id = ${session.user.id} AND p.status::text IN ('released', 'paid', 'completed')
+      `,
+      sql`
+        SELECT 
+          c.id as contract_id,
+          j.title as job_title,
+          COALESCE(j.budget, 0)::numeric as budget,
+          cp.full_name as client_name,
+          cp.avatar_url as client_avatar,
+          j.status as job_status,
+          c.status as contract_status,
+          c.created_at as contract_created_at
+        FROM contracts c
+        JOIN jobs j ON c.job_id = j.id
+        LEFT JOIN client_profiles cp ON j.client_id = cp.user_id
+        WHERE j.worker_id = ${session.user.id} AND j.status::text IN ('accepted', 'in_progress', 'active')
+        ORDER BY c.created_at DESC
+      `,
+      sql`
+        SELECT COUNT(*)::int as completed_count
+        FROM jobs
+        WHERE worker_id = ${session.user.id} AND status::text IN ('completed', 'paid')
+      `,
+    ]);
+
+    if (results[0].status === "fulfilled") pendingJobs = results[0].value as any[];
+    if (results[1].status === "fulfilled") recentJobs = results[1].value as any[];
+    if (results[2].status === "fulfilled") totalEarned = Number((results[2].value as any[])[0]?.total_earned || 0);
+    if (results[3].status === "fulfilled") activeContracts = results[3].value as any[];
+    if (results[4].status === "fulfilled") completedJobsCount = Number((results[4].value as any[])[0]?.completed_count || 0);
+  } catch (err) {
+    console.error("[WORKER-DASHBOARD] Data load error:", err);
+  }
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   const workerData = {
-    fullName: worker?.full_name || "Professional",
-    firstName: (worker?.full_name || "Professional").split(" ")[0],
-    avatarUrl: worker?.avatar_url || null,
+    fullName: worker?.full_name || session.user.name || "Professional",
+    firstName: (worker?.full_name || session.user.name || "Professional").split(" ")[0],
+    avatarUrl: worker?.avatar_url || session.user.image || null,
     isVerified: Boolean(worker?.is_verified && worker?.identity_complete),
     district: worker?.district || "Dire Dawa",
     skills: worker?.skills || [],
@@ -106,8 +114,6 @@ export default async function WorkerDashboardPage() {
     availability: worker?.availability || "available",
   };
 
-  const totalEarned = Number(totalEarnedRes[0]?.total_earned || 0);
-  const completedJobsCount = Number(completedCountRes[0]?.completed_count || 0);
   const activeJobs = recentJobs.filter((job: any) => ["accepted", "active", "in_progress"].includes(job.status));
 
   const stats = {
@@ -123,7 +129,7 @@ export default async function WorkerDashboardPage() {
       stats={stats}
       pendingJobs={pendingJobs}
       recentJobs={recentJobs.slice(0, 8)}
-      activeContracts={activeContractsRes || []}
+      activeContracts={activeContracts}
       greeting={greeting}
     />
   );

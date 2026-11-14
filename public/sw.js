@@ -55,7 +55,16 @@ self.addEventListener('fetch', (event) => {
   if (event.request.mode === 'navigate' || url.pathname === '/') {
     event.respondWith(
       fetch(event.request)
-        .catch(() => caches.match(event.request))
+        .catch(async () => {
+          const cached = await caches.match(event.request);
+          if (cached) return cached;
+          const offlinePage = await caches.match('/offline.html');
+          if (offlinePage) return offlinePage;
+          return new Response('Network unavailable. Please check your connection and refresh.', {
+            status: 503,
+            headers: { 'Content-Type': 'text/plain' }
+          });
+        })
     );
     return;
   }
@@ -74,7 +83,7 @@ self.addEventListener('fetch', (event) => {
         return networkResponse;
       }).catch((err) => {
         console.log('[SW] Fetch failed, using cache if available', err);
-        return cachedResponse;
+        return cachedResponse || new Response(null, { status: 408 });
       });
       return cachedResponse || fetchPromise;
     })

@@ -714,7 +714,7 @@ export default function WorkerDashboardContent({
                       <div className="min-w-0">
                         <p className="text-sm font-bold text-white truncate">{job.title}</p>
                         <p className="text-xs text-zinc-400 truncate mt-0.5">
-                          {job.client_name || "Client"} · {job.district || "Dire Dawa"} · {new Date(job.created_at).toLocaleDateString()}
+                          {job.client_name || "Client"} · {job.district || "Dire Dawa"} · {job.created_at ? new Date(job.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "Recent"}
                         </p>
                       </div>
                     </div>
