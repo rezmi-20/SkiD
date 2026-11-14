@@ -29,11 +29,11 @@ interface MapComponentProps {
 
 const createWorkerIcon = (rating: number, isSelected = false) => {
   const isTopRated = rating >= 4.5;
-  const bg = isSelected ? '#a3e635' : '#181d24';
-  const text = isSelected ? '#000000' : '#ffffff';
-  const border = isSelected ? '#000000' : '#a3e635';
-  const star = isSelected ? '#000000' : isTopRated ? '#f59e0b' : '#a3e635';
-  const shadow = isSelected ? '0 0 16px rgba(163,230,53,0.7)' : '0 4px 12px rgba(0,0,0,0.45)';
+  const bg = isSelected ? '#45BA50' : '#134e27';
+  const text = isSelected ? '#ffffff' : '#a4fe47';
+  const border = isSelected ? '#ffffff' : '#45BA50';
+  const star = isSelected ? '#ffffff' : isTopRated ? '#f59e0b' : '#a4fe47';
+  const shadow = isSelected ? '0 0 16px rgba(69,186,80,0.7)' : '0 4px 12px rgba(0,0,0,0.45)';
   const scale = isSelected ? 'scale(1.15)' : 'scale(1)';
 
   return L.divIcon({
@@ -54,8 +54,8 @@ const createWorkerIcon = (rating: number, isSelected = false) => {
 
 const userLocationIcon = () => L.divIcon({
   html: `<div class="relative w-6 h-6 flex items-center justify-center">
-           <div class="absolute inset-0 bg-[#a3e635] rounded-full animate-ping opacity-75"></div>
-           <div class="relative w-4 h-4 bg-[#a3e635] rounded-full border-2 border-black shadow-[0_0_12px_rgba(163,230,53,0.9)]"></div>
+           <div class="absolute inset-0 bg-[#45BA50] rounded-full animate-ping opacity-75"></div>
+           <div class="relative w-4 h-4 bg-[#45BA50] rounded-full border-2 border-white shadow-[0_0_12px_rgba(69,186,80,0.9)]"></div>
          </div>`,
   className: 'custom-leaflet-icon',
   iconSize: [24, 24],
@@ -204,7 +204,7 @@ export default function MapComponent({
               <Popup className="compact-popup">
                 <div className="p-1 font-sans min-w-[140px]">
                   <p className="font-black text-xs mb-0.5 truncate text-white">{worker.name}</p>
-                  <p className="text-[10px] text-[#a3e635] uppercase font-bold mb-1.5 truncate">{worker.skill}</p>
+                  <p className="text-[10px] text-[#a4fe47] uppercase font-bold mb-1.5 truncate">{worker.skill}</p>
                   
                   <div className="flex items-center justify-between text-[10px] mb-2 text-white/80">
                     <span className="text-amber-400 font-bold">★ {worker.rating > 0 ? worker.rating.toFixed(1) : "5.0"}</span>
@@ -213,7 +213,7 @@ export default function MapComponent({
                   
                   <a 
                     href={`/client/worker/${worker.id}`} 
-                    className="block text-center py-1.5 bg-[#a3e635] hover:opacity-90 text-black text-[10px] font-black uppercase tracking-wider rounded-full no-underline transition-opacity"
+                    className="block text-center py-1.5 bg-[#45BA50] hover:bg-[#3ca346] text-white text-[10px] font-black uppercase tracking-wider rounded-full no-underline transition-colors shadow-xs"
                   >
                     View Profile
                   </a>
@@ -232,14 +232,14 @@ export default function MapComponent({
           background: var(--bg-page) !important;
         }
         .leaflet-popup-content-wrapper {
-          background: #181d24 !important;
+          background: #134e27 !important;
           color: #ffffff !important;
           border-radius: 1rem !important;
-          border: 1px solid rgba(163, 230, 53, 0.25);
+          border: 1px solid rgba(69, 186, 80, 0.4);
           box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
         .leaflet-popup-tip {
-          background: #181d24 !important;
+          background: #134e27 !important;
         }
         .leaflet-bar a {
            background-color: var(--surface-glass) !important;

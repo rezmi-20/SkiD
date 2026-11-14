@@ -123,7 +123,6 @@ export default function MobileNav({ role }: MobileNavProps) {
                   <span className="text-[10px] font-black text-zinc-950 dark:text-white mt-0.5 tracking-tight">
                     {item.label}
                   </span>
-                  <span className="w-1 h-1 rounded-full bg-zinc-950 dark:bg-white mt-0.5" />
                 </div>
               </Link>
             );

@@ -92,9 +92,17 @@ export async function GET(req: NextRequest) {
       )`;
     }
 
-    // Category filtering (Skill specific)
+    // Category filtering (Skill specific with flexible trade matching)
     if (category && category.trim() !== "" && category !== "All") {
-      params.push(`%${category.toLowerCase()}%`);
+      const cleanCat = category.toLowerCase().replace(/_/g, " ").trim();
+      let term = cleanCat;
+      if (cleanCat.includes("electr")) term = "electr";
+      else if (cleanCat.includes("plumb")) term = "plumb";
+      else if (cleanCat.includes("paint")) term = "paint";
+      else if (cleanCat.includes("dish") || cleanCat.includes("satellite")) term = "dish";
+      else if (cleanCat.includes("finish")) term = "finish";
+
+      params.push(`%${term}%`);
       query += ` AND EXISTS (
         SELECT 1 FROM unnest(wp.skills) s 
         WHERE LOWER(s) LIKE $${params.length}

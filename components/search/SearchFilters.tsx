@@ -2,14 +2,11 @@
 
 import { ViewMode, SearchFilters as FilterType } from "./types";
 import { useLanguage } from "@/context/LanguageContext";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { 
   SlidersHorizontal, 
-  Map, 
-  List, 
   Star, 
   Compass, 
   RotateCcw,
@@ -20,10 +17,10 @@ import {
   Zap,
   Droplets,
   Paintbrush,
-  Wrench,
   Tv,
-  Check
+  MapPin
 } from "lucide-react";
+import { cx } from "@/utils/cx";
 
 interface SearchFiltersProps {
   filters: FilterType;
@@ -37,14 +34,14 @@ interface SearchFiltersProps {
   isDrawer?: boolean;
 }
 
+// Active Trades Only (Strictly 5 active trades - no coming soon trades)
 const CATEGORIES = [
   { label: "All Trades", value: "", icon: Layers },
-  { label: "Electrician", value: "Electrician", icon: Zap },
-  { label: "Plumber", value: "Plumber", icon: Droplets },
-  { label: "Painter", value: "Painter", icon: Paintbrush },
-  { label: "Carpentry", value: "Carpentry", icon: Wrench },
-  { label: "Satellite Dish", value: "Satellite Dish", icon: Tv },
-  { label: "House Finishing", value: "House Finishing", icon: Sparkles },
+  { label: "Electrical", value: "electrical", icon: Zap },
+  { label: "Plumber", value: "plumbing", icon: Droplets },
+  { label: "Painter", value: "painting", icon: Paintbrush },
+  { label: "House Finishing", value: "house_finishing", icon: Sparkles },
+  { label: "Satellite Dish", value: "satellite_dish", icon: Tv },
 ];
 
 const RATING_PRESETS = [
@@ -89,33 +86,33 @@ export default function SearchFilters({
   ].filter(Boolean).length;
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={cx("space-y-4", className)}>
       {/* ── Header Title Block ── */}
       <div className="flex items-center justify-between pb-1">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-[#181d24] text-[#a3e635] flex items-center justify-center shrink-0 shadow-sm">
+          <div className="h-8 w-8 rounded-full bg-[#134e27] text-[#a4fe47] flex items-center justify-center shrink-0 shadow-xs border border-[#45BA50]/30">
             <SlidersHorizontal size={14} className="stroke-[2.5]" />
           </div>
           <div>
-            <h3 className="font-black text-sm text-foreground">
-              {t("search.refine")}
+            <h3 className="font-black text-sm text-text-primary">
+              {t("search.refine") || "Refine Results"}
             </h3>
-            <p className="text-[10px] text-muted-foreground">
-              {resultsCount} {t("search.found")} in Dire Dawa
+            <p className="text-[10px] text-text-tertiary">
+              {resultsCount} {t("search.found") || "professionals"} in Dire Dawa
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           {activeCount > 0 && (
-            <Badge variant="outline" className="rounded-full text-[10px] font-bold border-[#a3e635]/40 bg-[#a3e635]/10 text-emerald-600 dark:text-[#a3e635] px-2.5 py-0.5">
+            <Badge variant="outline" className="rounded-full text-[10px] font-bold border-[#45BA50]/40 bg-[#45BA50]/10 text-[#45BA50] px-2.5 py-0.5">
               {activeCount} active
             </Badge>
           )}
           {onClose && (
             <button
               onClick={onClose}
-              className="h-8 w-8 rounded-full bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors shrink-0"
+              className="h-8 w-8 rounded-full bg-background-tertiary-default text-text-secondary hover:text-text-primary flex items-center justify-center transition-colors shrink-0"
               title="Close Filters"
             >
               <X size={16} />
@@ -124,43 +121,46 @@ export default function SearchFilters({
         </div>
       </div>
 
-      <Separator className="bg-outline-variant/40" />
+      <Separator className="bg-separator-border" />
 
       {/* ── Verified Pros Only Toggle ── */}
       <div
         onClick={() => setFilters(f => ({ ...f, verifiedOnly: !f.verifiedOnly }))}
-        className="flex items-center justify-between p-3 rounded-2xl border border-outline-variant/60 bg-muted/30 dark:bg-muted/10 hover:border-[#a3e635]/40 transition-all cursor-pointer active:scale-[0.99] touch-manipulation group"
+        className="flex items-center justify-between p-3 rounded-2xl border border-border-button-default bg-background-primary-default hover:border-[#45BA50]/40 transition-all cursor-pointer active:scale-[0.99] touch-manipulation group"
       >
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${
-            filters.verifiedOnly ? "bg-[#a3e635] text-black" : "bg-[#181d24] text-muted-foreground"
-          }`}>
+          <div className={cx(
+            "h-8 w-8 rounded-full flex items-center justify-center shrink-0 transition-colors",
+            filters.verifiedOnly ? "bg-[#45BA50] text-white shadow-xs" : "bg-background-tertiary-default text-text-tertiary"
+          )}>
             <ShieldCheck size={16} className="stroke-[2.5]" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-bold text-foreground">Verified Pros Only</p>
-            <p className="text-[10px] text-muted-foreground truncate">Kebele / Fayda verified ID</p>
+            <p className="text-xs font-bold text-text-primary">Verified Pros Only</p>
+            <p className="text-[10px] text-text-tertiary truncate">Kebele & Fayda ID verified</p>
           </div>
         </div>
-        <div className={`w-10 h-6 rounded-full p-0.5 transition-colors shrink-0 ${
-          filters.verifiedOnly ? "bg-[#a3e635]" : "bg-muted dark:bg-zinc-700"
-        }`}>
-          <div className={`h-5 w-5 rounded-full bg-white shadow-md transition-transform ${
+        <div className={cx(
+          "w-10 h-6 rounded-full p-0.5 transition-colors shrink-0",
+          filters.verifiedOnly ? "bg-[#45BA50]" : "bg-zinc-300 dark:bg-zinc-700"
+        )}>
+          <div className={cx(
+            "h-5 w-5 rounded-full bg-white shadow-md transition-transform",
             filters.verifiedOnly ? "translate-x-4" : "translate-x-0"
-          }`} />
+          )} />
         </div>
       </div>
 
-      {/* ── Service Categories ── */}
+      {/* ── Service Categories (5 Active Trades Only) ── */}
       <div className="space-y-2.5">
-        <div className="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
+        <div className="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-text-tertiary">
           <span className="flex items-center gap-1.5">
-            <Layers size={13} className="text-[#84cc16] dark:text-[#a3e635]" /> Trade Category
+            <Layers size={13} className="text-[#45BA50]" /> Active Trade
           </span>
           {filters.category && (
             <button
               onClick={() => setFilters(f => ({ ...f, category: "" }))}
-              className="text-[10px] text-primary hover:underline font-bold"
+              className="text-[10px] text-[#45BA50] hover:underline font-bold"
             >
               Clear
             </button>
@@ -175,13 +175,14 @@ export default function SearchFilters({
                 key={cat.label}
                 type="button"
                 onClick={() => setFilters(f => ({ ...f, category: cat.value }))}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-left transition-all touch-manipulation active:scale-95 border ${
+                className={cx(
+                  "flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-left transition-all touch-manipulation active:scale-95 border",
                   isSelected
-                    ? "bg-[#a3e635] text-black border-[#a3e635] shadow-sm font-black"
-                    : "bg-card border-outline-variant/60 text-foreground hover:bg-muted/50"
-                }`}
+                    ? "bg-[#45BA50] text-white border-[#45BA50] shadow-sm font-black"
+                    : "bg-background-primary-default border-border-button-default text-text-primary hover:bg-background-tertiary-default"
+                )}
               >
-                <Icon size={14} className={isSelected ? "text-black" : "text-muted-foreground"} />
+                <Icon size={14} className={isSelected ? "text-white" : "text-text-tertiary"} />
                 <span className="truncate">{cat.label}</span>
               </button>
             );
@@ -189,11 +190,11 @@ export default function SearchFilters({
         </div>
       </div>
 
-      <Separator className="bg-outline-variant/40" />
+      <Separator className="bg-separator-border" />
 
       {/* ── Rating Filter ── */}
       <div className="space-y-2.5">
-        <div className="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
+        <div className="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-text-tertiary">
           <span className="flex items-center gap-1.5">
             <Star size={13} className="text-amber-500 fill-amber-500" /> Minimum Rating
           </span>
@@ -209,11 +210,12 @@ export default function SearchFilters({
                 key={preset.label}
                 type="button"
                 onClick={() => setFilters(f => ({ ...f, minRating: preset.value }))}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all touch-manipulation active:scale-95 border text-center ${
+                className={cx(
+                  "px-3 py-1.5 rounded-full text-xs font-bold transition-all touch-manipulation active:scale-95 border text-center",
                   isSelected
-                    ? "bg-amber-500 text-black border-amber-500 font-black shadow-sm"
-                    : "bg-card border-outline-variant/60 text-foreground hover:bg-muted/50"
-                }`}
+                    ? "bg-amber-500 text-black border-amber-500 font-black shadow-xs"
+                    : "bg-background-primary-default border-border-button-default text-text-primary hover:bg-background-tertiary-default"
+                )}
               >
                 {preset.label}
               </button>
@@ -222,15 +224,15 @@ export default function SearchFilters({
         </div>
       </div>
 
-      <Separator className="bg-outline-variant/40" />
+      <Separator className="bg-separator-border" />
 
       {/* ── Distance Slider & Presets ── */}
       <div className="space-y-2.5">
-        <div className="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
+        <div className="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-text-tertiary">
           <span className="flex items-center gap-1.5">
-            <Compass size={13} className="text-emerald-500" /> Max Radius
+            <Compass size={13} className="text-[#45BA50]" /> Max Distance
           </span>
-          <Badge variant="outline" className="font-black text-xs border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 rounded-full px-2 py-0.5">
+          <Badge variant="outline" className="font-black text-xs border-[#45BA50]/30 text-[#45BA50] bg-[#45BA50]/10 rounded-full px-2 py-0.5">
             {filters.maxDistance || 50} km
           </Badge>
         </div>
@@ -239,7 +241,7 @@ export default function SearchFilters({
           type="range" min="1" max="50" step="1"
           value={filters.maxDistance || 50}
           onChange={(e) => setFilters(f => ({ ...f, maxDistance: parseInt(e.target.value) }))}
-          className="w-full h-1.5 bg-muted rounded-full appearance-none cursor-pointer accent-[#a3e635] border border-outline-variant/40"
+          className="w-full h-1.5 bg-background-tertiary-default rounded-full appearance-none cursor-pointer accent-[#45BA50] border border-border-button-default"
         />
 
         <div className="flex items-center justify-between gap-1 pt-1">
@@ -248,11 +250,12 @@ export default function SearchFilters({
               key={dist}
               type="button"
               onClick={() => setFilters(f => ({ ...f, maxDistance: dist }))}
-              className={`flex-1 py-1 rounded-full text-[10px] font-bold border transition-all active:scale-95 ${
+              className={cx(
+                "flex-1 py-1 rounded-full text-[10px] font-bold border transition-all active:scale-95",
                 filters.maxDistance === dist
-                  ? "bg-[#181d24] text-[#a3e635] border-[#a3e635]"
-                  : "bg-card border-outline-variant/60 text-muted-foreground hover:bg-muted"
-              }`}
+                  ? "bg-[#134e27] text-[#a4fe47] border-[#45BA50]"
+                  : "bg-background-primary-default border-border-button-default text-text-tertiary hover:bg-background-tertiary-default"
+              )}
             >
               {dist} km
             </button>
@@ -260,11 +263,11 @@ export default function SearchFilters({
         </div>
       </div>
 
-      <Separator className="bg-outline-variant/40" />
+      <Separator className="bg-separator-border" />
 
       {/* ── Sort By Selection ── */}
       <div className="space-y-2">
-        <p className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">Sort Results</p>
+        <p className="text-[11px] font-extrabold uppercase tracking-wider text-text-tertiary">Sort Results</p>
         <div className="grid grid-cols-3 gap-1.5">
           {(["Nearest", "Highest Rated", "Most Reviewed"] as const).map((opt) => {
             const isSelected = (filters.sortBy || "Nearest") === opt;
@@ -273,11 +276,12 @@ export default function SearchFilters({
                 key={opt}
                 type="button"
                 onClick={() => setFilters(f => ({ ...f, sortBy: opt }))}
-                className={`py-1.5 px-2 rounded-xl text-[10px] font-bold border text-center transition-all active:scale-95 truncate ${
+                className={cx(
+                  "py-1.5 px-2 rounded-xl text-[10px] font-bold border text-center transition-all active:scale-95 truncate",
                   isSelected
-                    ? "bg-[#181d24] text-[#a3e635] border-[#a3e635] font-black"
-                    : "bg-card border-outline-variant/60 text-muted-foreground hover:bg-muted"
-                }`}
+                    ? "bg-[#134e27] text-[#a4fe47] border-[#45BA50] font-black"
+                    : "bg-background-primary-default border-border-button-default text-text-secondary hover:bg-background-tertiary-default"
+                )}
               >
                 {opt}
               </button>
@@ -292,7 +296,7 @@ export default function SearchFilters({
           onClick={handleReset}
           variant="outline"
           size="default"
-          className="rounded-full text-xs font-bold h-11 px-4 border-outline-variant/60 hover:bg-muted"
+          className="rounded-full text-xs font-bold h-11 px-4 border-border-button-default hover:bg-background-tertiary-default text-text-primary"
         >
           <RotateCcw size={13} className="mr-1" />
           Reset
@@ -302,12 +306,12 @@ export default function SearchFilters({
           <Button
             onClick={onApply}
             size="default"
-            className="flex-1 rounded-full bg-[#a3e635] hover:opacity-90 text-black font-black text-xs h-11 shadow-[0_4px_14px_rgba(163,230,53,0.3)] touch-manipulation active:scale-95"
+            className="flex-1 rounded-full bg-[#45BA50] hover:bg-[#3ca346] text-white font-black text-xs h-11 shadow-[0_4px_14px_rgba(69,186,80,0.3)] touch-manipulation active:scale-95"
           >
             Apply ({resultsCount} Pros)
           </Button>
         ) : (
-          <div className="flex-1 text-right text-xs font-bold text-muted-foreground">
+          <div className="flex-1 text-right text-xs font-bold text-text-tertiary">
             {resultsCount} match{resultsCount !== 1 ? "es" : ""}
           </div>
         )}
