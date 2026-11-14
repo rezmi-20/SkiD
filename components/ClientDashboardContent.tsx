@@ -3,7 +3,6 @@
 import { useLanguage } from "@/context/LanguageContext";
 import Link from "next/link";
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import CountUp from "@/components/ui/count-up";
 import { cx } from "@/utils/cx";
 import { Chip } from "@/components/base/badges/chip";
@@ -23,9 +22,6 @@ import {
   RiArrowRightSLine,
   RiShieldCheckFill,
   RiFileTextLine,
-  RiChat1Line,
-  RiPhoneLine,
-  RiCloseLine,
   RiBriefcaseFill,
   RiBankCardLine,
   RiCheckDoubleLine,
@@ -152,16 +148,14 @@ function getContractBgImage(title?: string, skills?: string[]) {
   return "/images/client_project_hero.jpg";
 }
 
-/* ── Subcomponent: Contract Card with Sixpay Sparkline Curve ── */
+/* ── Subcomponent: Contract Card with Sixpay Sparkline Curve (Direct Routing) ── */
 function ContractCard({
   contract,
   index,
-  onClick,
   isDesktop = false,
 }: {
   contract: any;
   index: number;
-  onClick: () => void;
   isDesktop?: boolean;
 }) {
   const isElectric = index % 2 === 0;
@@ -170,16 +164,16 @@ function ContractCard({
   const jobTitle = contract.job_title || contract.trade || "Contract Agreement";
   const budgetVal = contract.budgetVal || (contract.budget ? Number(contract.budget).toLocaleString() : "1,000");
   const bgImage = getContractBgImage(jobTitle, contract.worker_skills);
+  const contractId = contract.contract_id || contract.id || "1";
 
   return (
-    <motion.div
-      onClick={onClick}
-      whileHover={isDesktop ? { y: -2, transition: { duration: 0.15 } } : undefined}
-      whileTap={{ scale: 0.98 }}
+    <Link
+      href={`/contracts/${contractId}`}
       className={cx(
         "rounded-3xl p-5 bg-background-secondary-default border border-border-button-default shadow-xs",
-        "flex flex-col justify-between h-[185px] cursor-pointer relative overflow-hidden select-none group transition-shadow",
-        isDesktop ? "w-full hover:shadow-md" : "snap-start shrink-0 w-[240px] sm:w-[260px]"
+        "flex flex-col justify-between h-[185px] cursor-pointer relative overflow-hidden select-none group transition-all",
+        "hover:border-[#45BA50]/50 hover:shadow-md active:scale-[0.98]",
+        isDesktop ? "w-full" : "snap-start shrink-0 w-[240px] sm:w-[260px]"
       )}
     >
       {/* Subtle authentic trade background photo overlay */}
@@ -191,7 +185,7 @@ function ContractCard({
       {/* Card Top: Worker Name + Round Trade Icon Badge */}
       <div className="flex items-start justify-between relative z-10">
         <div className="min-w-0 pr-2">
-          <h3 className="text-body-medium font-bold text-text-primary leading-tight truncate">
+          <h3 className="text-body-medium font-bold text-text-primary leading-tight truncate group-hover:text-[#45BA50] transition-colors">
             {proName}
           </h3>
           <p className="text-caption-1-semibold text-text-tertiary truncate mt-0.5">
@@ -264,7 +258,7 @@ function ContractCard({
           />
         </svg>
       </div>
-    </motion.div>
+    </Link>
   );
 }
 
@@ -335,7 +329,6 @@ export default function ClientDashboardContent({
 }: ClientDashboardContentProps) {
   const { t } = useLanguage();
   const [showBalance, setShowBalance] = useState(true);
-  const [selectedContract, setSelectedContract] = useState<any | null>(null);
 
   // Time Range Filter State: "all", "month", "quarter" (3 months)
   const [timeFilter, setTimeFilter] = useState<"all" | "month" | "quarter">("all");
@@ -723,7 +716,6 @@ export default function ClientDashboardContent({
                   key={contract.id || i}
                   contract={contract}
                   index={i}
-                  onClick={() => setSelectedContract(contract)}
                   isDesktop={false}
                 />
               ))}
@@ -846,7 +838,6 @@ export default function ClientDashboardContent({
                     key={contract.id || i}
                     contract={contract}
                     index={i}
-                    onClick={() => setSelectedContract(contract)}
                     isDesktop={true}
                   />
                 ))}
@@ -1058,115 +1049,6 @@ export default function ClientDashboardContent({
         </div>
       </div>
 
-      {/* ── 4. GESTURE-DRIVEN DETAIL BOTTOM SHEET (Charles UX Spring Physics) ── */}
-      <AnimatePresence>
-        {selectedContract && (
-          <>
-            {/* Scrim Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedContract(null)}
-              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs"
-            />
-
-            {/* Bottom Sheet Drawer with Drag to Dismiss */}
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={SPRINGS.sheet}
-              drag="y"
-              dragConstraints={{ top: 0 }}
-              onDragEnd={(_, info) => {
-                if (info.offset.y > 100) setSelectedContract(null);
-              }}
-              className="fixed inset-x-0 bottom-0 z-50 max-w-lg mx-auto bg-background-primary-default border-t border-border-button-default rounded-t-[36px] p-6 shadow-2xl pb-10"
-            >
-              {/* Drag Handle */}
-              <div className="w-12 h-1.5 bg-background-tertiary-default rounded-full mx-auto mb-5" />
-
-              <div className="flex items-start justify-between gap-3 mb-4">
-                <div className="min-w-0">
-                  <span className="text-caption-1-semibold font-black text-[#45BA50] uppercase tracking-wider">
-                    Contract Agreement
-                  </span>
-                  <h3 className="text-title-2-medium font-bold text-text-primary leading-tight truncate">
-                    {selectedContract.job_title || selectedContract.trade}
-                  </h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedContract(null)}
-                  className="p-1.5 rounded-full bg-background-secondary-default text-text-secondary hover:text-text-primary active:scale-90 transition-transform shrink-0"
-                >
-                  <RiCloseLine className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Worker Detail inside Sheet */}
-              <div className="p-4 rounded-2xl bg-background-secondary-default border border-border-button-default flex items-center justify-between gap-3 mb-4">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-11 h-11 rounded-full bg-[#18261b] text-[#45BA50] flex items-center justify-center font-bold text-sm shrink-0">
-                    <RiBriefcaseFill className="w-5 h-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-body-medium font-bold text-text-primary truncate">
-                      {selectedContract.worker_name || selectedContract.proName || "Assigned Artisan"}
-                    </p>
-                    <p className="text-caption-1-semibold text-text-tertiary flex items-center gap-1">
-                      <RiShieldCheckFill className="w-3.5 h-3.5 text-[#45BA50]" />
-                      <span>Fayda ID Verified</span>
-                    </p>
-                  </div>
-                </div>
-
-                <Chip variant="caption" color="lime">
-                  In Progress
-                </Chip>
-              </div>
-
-              {/* Agreed Contract Amount (ZERO ESCROW) */}
-              <div className="flex items-center justify-between text-body-medium py-3 px-1 mb-5 border-b border-border-separator-border">
-                <span className="text-text-tertiary">Agreed Contract Payment:</span>
-                <span className="text-title-3-semibold font-black text-text-primary">
-                  ETB {selectedContract.budgetVal || (selectedContract.budget ? Number(selectedContract.budget).toLocaleString() : "1,000")}
-                </span>
-              </div>
-
-              {/* Quick Communication Actions (Thumb Zone) */}
-              <div className="grid grid-cols-2 gap-2 mb-3">
-                <button
-                  type="button"
-                  onClick={() => alert("Calling artisan...")}
-                  className="h-11 rounded-2xl bg-background-secondary-default hover:bg-background-secondary-hover border border-border-button-default text-text-primary font-bold text-caption-1-semibold flex items-center justify-center gap-2 active:scale-95 transition-transform cursor-pointer"
-                >
-                  <RiPhoneLine className="w-4 h-4 text-[#45BA50]" />
-                  <span>Call Artisan</span>
-                </button>
-
-                <Link
-                  href="/client/messages"
-                  className="h-11 rounded-2xl bg-background-secondary-default hover:bg-background-secondary-hover border border-border-button-default text-text-primary font-bold text-caption-1-semibold flex items-center justify-center gap-2 active:scale-95 transition-transform"
-                >
-                  <RiChat1Line className="w-4 h-4 text-blue-500" />
-                  <span>Message</span>
-                </Link>
-              </div>
-
-              {/* Primary Contract Action */}
-              <Link
-                href={`/contracts/${selectedContract.contract_id || selectedContract.id || "1"}`}
-                className="w-full h-12 rounded-2xl bg-[#45BA50] hover:bg-[#3ea848] text-white font-bold text-body-medium flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] transition-transform"
-              >
-                <RiFileTextLine className="w-5 h-5" />
-                <span>Open Full Legal Contract & QR</span>
-              </Link>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
