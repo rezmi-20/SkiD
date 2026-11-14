@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { createPortal } from "react-dom";
@@ -23,7 +23,11 @@ import {
   RiUser3Line,
   RiSearchEyeLine,
   RiListCheck2,
-  RiMap2Line
+  RiMap2Line,
+  RiStarFill,
+  RiShieldCheckFill,
+  RiChat1Line,
+  RiEyeLine
 } from "@remixicon/react";
 import { cx } from "@/utils/cx";
 
@@ -52,6 +56,7 @@ function getHaversineDistanceKm(lat1: number, lon1: number, lat2: number, lon2: 
 
 function SearchPageContent() {
   const { t } = useLanguage();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { location, loading: locLoading, accuracy, isLive, refreshLocation } = useLocation();
 
@@ -66,17 +71,22 @@ function SearchPageContent() {
   const [error, setError] = useState<string | null>(null);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null);
+  const [previewWorker, setPreviewWorker] = useState<Worker | null>(null);
+  const [messagingWorkerId, setMessagingWorkerId] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Lock body scroll and handle Escape key when filter drawer is open
+  // Lock body scroll and handle Escape key when filter drawer or preview modal is open
   useEffect(() => {
-    if (filterDrawerOpen) {
+    if (filterDrawerOpen || previewWorker) {
       document.body.style.overflow = "hidden";
       const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === "Escape") setFilterDrawerOpen(false);
+        if (e.key === "Escape") {
+          setFilterDrawerOpen(false);
+          setPreviewWorker(null);
+        }
       };
       window.addEventListener("keydown", handleKeyDown);
       return () => {
@@ -86,7 +96,28 @@ function SearchPageContent() {
     } else {
       document.body.style.overflow = "unset";
     }
-  }, [filterDrawerOpen]);
+  }, [filterDrawerOpen, previewWorker]);
+
+  const handleStartMessage = async (worker: Worker) => {
+    setMessagingWorkerId(String(worker.id));
+    try {
+      const res = await fetch("/api/conversations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workerId: worker.id }),
+      });
+      const data = await res.json();
+      if (res.ok && data.conversationId) {
+        router.push(`/client/messages/${data.conversationId}`);
+        return;
+      }
+    } catch (err) {
+      console.error("Failed to start message conversation:", err);
+    } finally {
+      setMessagingWorkerId(null);
+    }
+    router.push(`/client/messages?workerId=${worker.id}`);
+  };
 
   // Smoothly scroll selected artisan into view in ride-hailing bottom sheet
   useEffect(() => {
@@ -252,38 +283,63 @@ function SearchPageContent() {
   return (
     <div className="w-full h-full flex flex-col flex-1 min-h-0">
       
-      {/* ── 1. CLEAN TOP SEARCH & CONTROLS BAR (Full Width, Zero Clutter) ── */}
-      <header className="p-3 sm:p-4 lg:p-6 pb-2.5 sm:pb-3.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-4 shrink-0 bg-background-primary-default/70 backdrop-blur-md border-b border-separator-border/60">
+      {/* ── 1. TOP CONTROLS BAR: [Filter] + [Search Bar (~50% width)] ... [List | Map] + [GPS] ── */}
+      <header className="px-4 sm:px-6 lg:px-8 py-3 sm:py-3.5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 shrink-0 bg-background-primary-default/80 backdrop-blur-md border-b border-separator-border/60">
         
-        {/* Search Input Box */}
-        <div className="flex-1 relative flex items-center h-11 px-3.5 rounded-full bg-background-secondary-default border border-border-button-default shadow-xs focus-within:border-[#45BA50] transition-colors">
-          <RiSearchLine className="w-4 h-4 text-text-tertiary shrink-0" />
-          <input
-            type="text"
-            value={filters.query}
-            onChange={(e) => setFilters(f => ({ ...f, query: e.target.value }))}
-            placeholder="Search electricians, plumbers, Kezira, painters..."
-            className="bg-transparent text-xs sm:text-sm font-semibold text-text-primary placeholder:text-text-placeholder outline-none flex-1 min-w-0 ms-2"
-          />
-          {filters.query && (
-            <button
-              onClick={() => setFilters(f => ({ ...f, query: "" }))}
-              className="p-1 text-text-tertiary hover:text-text-primary shrink-0"
-            >
-              <RiCloseLine className="w-4 h-4" />
-            </button>
-          )}
+        {/* Left Side (~50% width allocated): 1. Filter Button + 2. Search Bar */}
+        <div className="flex items-center gap-2.5 flex-1 md:max-w-[50%]">
+          
+          {/* 1. Filter Button (First) */}
+          <button
+            type="button"
+            onClick={() => setFilterDrawerOpen(prev => !prev)}
+            className={cx(
+              "h-11 px-4 rounded-full text-xs font-bold transition-all active:scale-95 shadow-xs shrink-0 flex items-center gap-2 border cursor-pointer",
+              activeFilterCount > 0
+                ? "bg-[#45BA50] text-white border-[#45BA50] shadow-[0_2px_10px_rgba(69,186,80,0.35)] font-black"
+                : "bg-background-secondary-default border-border-button-default text-text-primary hover:bg-background-tertiary-default"
+            )}
+            title="Toggle Search Filters (Slides from Right)"
+          >
+            <RiEqualizerLine className="w-4 h-4" />
+            <span>Filters</span>
+            {activeFilterCount > 0 && (
+              <span className="h-4 w-4 rounded-full bg-black text-white text-[9px] font-black flex items-center justify-center">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+
+          {/* 2. Search Bar (Takes remaining of the allocated space) */}
+          <div className="flex-1 relative flex items-center h-11 px-3.5 rounded-full bg-background-secondary-default border border-border-button-default shadow-xs focus-within:border-[#45BA50] transition-colors">
+            <RiSearchLine className="w-4 h-4 text-text-tertiary shrink-0" />
+            <input
+              type="text"
+              value={filters.query}
+              onChange={(e) => setFilters(f => ({ ...f, query: e.target.value }))}
+              placeholder="Search electricians, plumbers, Kezira, painters..."
+              className="bg-transparent text-xs sm:text-sm font-semibold text-text-primary placeholder:text-text-placeholder outline-none flex-1 min-w-0 ms-2"
+            />
+            {filters.query && (
+              <button
+                onClick={() => setFilters(f => ({ ...f, query: "" }))}
+                className="p-1 text-text-tertiary hover:text-text-primary shrink-0 cursor-pointer"
+              >
+                <RiCloseLine className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Right Controls: View Mode Switcher + Live GPS + Filters Button */}
-        <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+        {/* Right Side: 3. The Switcher (List | Map) + 4. GPS Button */}
+        <div className="flex items-center justify-between md:justify-end gap-2.5 shrink-0">
           
-          {/* ── THE CLEAN VIEW MODE SWITCHER (Either Map or List) ── */}
+          {/* 3. The Switcher (List | Map) */}
           <div className="flex items-center bg-background-secondary-default p-1 rounded-full border border-border-button-default shadow-xs shrink-0">
             <button 
               onClick={() => setViewMode("list")}
               className={cx(
-                "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 touch-manipulation",
+                "flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 cursor-pointer touch-manipulation",
                 viewMode === "list"
                   ? "bg-[#45BA50] text-white shadow-xs font-black"
                   : "text-text-secondary hover:text-text-primary"
@@ -295,7 +351,7 @@ function SearchPageContent() {
             <button 
               onClick={() => setViewMode("map")}
               className={cx(
-                "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 touch-manipulation",
+                "flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 cursor-pointer touch-manipulation",
                 viewMode === "map"
                   ? "bg-[#45BA50] text-white shadow-xs font-black"
                   : "text-text-secondary hover:text-text-primary"
@@ -306,11 +362,11 @@ function SearchPageContent() {
             </button>
           </div>
 
-          {/* Live GPS Button */}
+          {/* 4. Live GPS Button */}
           <button
             type="button"
             onClick={refreshLocation}
-            className="inline-flex items-center gap-1.5 px-3 h-10 rounded-full text-xs font-bold bg-[#134e27]/20 text-[#45BA50] border border-[#45BA50]/35 hover:bg-[#134e27]/30 active:scale-95 transition-all cursor-pointer shadow-xs"
+            className="inline-flex items-center gap-1.5 px-3.5 h-11 rounded-full text-xs font-bold bg-[#134e27]/20 text-[#45BA50] border border-[#45BA50]/35 hover:bg-[#134e27]/30 active:scale-95 transition-all cursor-pointer shadow-xs"
             title="Refresh Real-Time GPS Location in Dire Dawa"
           >
             <span className={cx(
@@ -318,27 +374,7 @@ function SearchPageContent() {
               locLoading ? "bg-amber-400 animate-pulse" : isLive ? "bg-[#45BA50] animate-ping" : "bg-[#45BA50]"
             )} />
             <span className="hidden sm:inline">GPS (±{accuracy || 18}m)</span>
-            <RiRestartLine className={cx("w-3 h-3", locLoading ? "animate-spin" : "")} />
-          </button>
-
-          {/* Slide-in Filters Button (Holds Kebele & Active Trades) */}
-          <button
-            type="button"
-            onClick={() => setFilterDrawerOpen(true)}
-            className={cx(
-              "h-10 px-4 rounded-full text-xs font-bold transition-all active:scale-95 shadow-xs shrink-0 flex items-center gap-1.5 border",
-              activeFilterCount > 0
-                ? "bg-[#45BA50] text-white border-[#45BA50] shadow-[0_2px_10px_rgba(69,186,80,0.35)] font-black"
-                : "bg-background-secondary-default border-border-button-default text-text-primary hover:bg-background-tertiary-default"
-            )}
-          >
-            <RiEqualizerLine className="w-4 h-4" />
-            <span>Filters</span>
-            {activeFilterCount > 0 && (
-              <span className="h-4 w-4 rounded-full bg-black text-white text-[9px] font-black flex items-center justify-center">
-                {activeFilterCount}
-              </span>
-            )}
+            <RiRestartLine className={cx("w-3.5 h-3.5", locLoading ? "animate-spin" : "")} />
           </button>
         </div>
       </header>
@@ -413,6 +449,7 @@ function SearchPageContent() {
                         <div key={worker.id} id={`artisan-sheet-row-${worker.id}`}>
                           <WorkerCard
                             worker={worker}
+                            variant="compact"
                             isSelected={selectedWorker?.id === worker.id}
                             onSelect={(w) => setSelectedWorker(w)}
                           />
@@ -468,9 +505,10 @@ function SearchPageContent() {
             </motion.div>
           ) : (
             /* ═════════════════════════════════════════════════════════════════
-               LIST VIEW: CLEAN, SPACIOUS FULL-BLEED DISCOVERY FEED
-               - Zero clutter (Categories & Kebeles live inside the Filter Drawer)
-               - Responsive grid of compact artisan cards
+               LIST VIEW: CLEAN, SPACIOUS FULL-WIDTH DISCOVERY FEED
+               - Little space on left and right without container trapping
+               - 4 columns per row on desktop
+               - Taller profile cards with direct Preview and Message options
                ═════════════════════════════════════════════════════════════════ */
             <motion.div
               key="list-mode"
@@ -478,23 +516,26 @@ function SearchPageContent() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
-              className="w-full max-w-7xl mx-auto p-3 sm:p-5 lg:p-6 space-y-4 pb-24 lg:pb-8"
+              className="w-full px-4 sm:px-6 lg:px-8 py-4 space-y-4 pb-28 lg:pb-12"
             >
               {/* Header Status Row */}
               <div className="flex items-center justify-between text-caption-1-semibold text-text-tertiary px-1">
-                <span>Showing {workers.length} verified pro{workers.length !== 1 ? "s" : ""} in Dire Dawa</span>
-                <span>Sorted by: <strong className="text-text-primary">{filters.sortBy || "Nearest"}</strong></span>
+                <span>Showing <strong className="text-text-primary">{workers.length}</strong> verified pro{workers.length !== 1 ? "s" : ""} in Dire Dawa</span>
+                <span>Sorted by: <strong className="text-[#45BA50]">{filters.sortBy || "Nearest"}</strong></span>
               </div>
 
-              {/* Clean Grid of Compact Artisan Cards */}
+              {/* 4-Column Grid of Taller Profile Cards with Preview & Message Options */}
               {workers.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-4 sm:gap-5">
                   {workers.map((worker) => (
                     <WorkerCard
                       key={worker.id}
                       worker={worker}
+                      variant="grid"
                       isSelected={selectedWorker?.id === worker.id}
                       onSelect={(w) => setSelectedWorker(w)}
+                      onPreview={(w) => setPreviewWorker(w)}
+                      onMessage={(w) => handleStartMessage(w)}
                     />
                   ))}
                 </div>
@@ -506,7 +547,7 @@ function SearchPageContent() {
                     <p className="text-caption-1-semibold text-text-tertiary">Try expanding your search criteria or resetting filters.</p>
                     <button
                       onClick={() => setFilters({ query: "", category: "", neighborhood: "All Dire Dawa", minRating: 0, maxDistance: 50, sortBy: "Nearest", verifiedOnly: false })}
-                      className="px-4 py-2 rounded-full text-xs font-bold bg-[#45BA50] text-white"
+                      className="px-4 py-2 rounded-full text-xs font-bold bg-[#45BA50] text-white cursor-pointer"
                     >
                       Reset All Filters
                     </button>
@@ -515,9 +556,9 @@ function SearchPageContent() {
               )}
 
               {loading && (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="h-20 rounded-2xl bg-background-secondary-default animate-pulse border border-border-button-default" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-4 sm:gap-5">
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                    <div key={i} className="h-80 rounded-3xl bg-background-secondary-default animate-pulse border border-border-button-default" />
                   ))}
                 </div>
               )}
@@ -527,7 +568,7 @@ function SearchPageContent() {
       </div>
 
       {/* ═════════════════════════════════════════════════════════════════════
-          3. FULL-SCREEN SLIDE-OVER FILTER DRAWER (Unclipped by any container)
+          3. FULL-SCREEN SLIDE-OVER FILTER DRAWER (Collapsible to the Right)
           - Mounted directly in document.body via createPortal
           - Contains Kebele Neighborhoods, Active Trades, Verified Toggle, Sliders
           ═════════════════════════════════════════════════════════════════════ */}
@@ -561,6 +602,157 @@ function SearchPageContent() {
               </motion.div>
             </div>
           )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* ═════════════════════════════════════════════════════════════════════
+          4. ARTISAN QUICK PREVIEW MODAL (Option Preview)
+          - Full pro details, Fayda verification check, bio, skills, rating
+          - Direct buttons to Message, Book, or view full profile
+          ═════════════════════════════════════════════════════════════════════ */}
+      {mounted && typeof document !== "undefined" && previewWorker && createPortal(
+        <AnimatePresence>
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 sm:p-6">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setPreviewWorker(null)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            />
+
+            {/* Modal Dialog */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="relative w-full max-w-lg bg-background-primary-default rounded-3xl border border-border-button-default shadow-2xl p-5 sm:p-6 z-10 max-h-[90vh] overflow-y-auto space-y-5"
+            >
+              {/* Header with Close */}
+              <div className="flex items-start justify-between pb-3 border-b border-separator-border/60">
+                <div className="flex items-center gap-3">
+                  <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-background-tertiary-default border border-border-button-default shrink-0">
+                    <img
+                      src={previewWorker.photo || "/default-avatar.svg"}
+                      alt={previewWorker.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <h2 className="text-title-3-semibold font-black text-text-primary">
+                        {previewWorker.name}
+                      </h2>
+                      {previewWorker.isVerified && (
+                        <span title="Kebele & Fayda Verified">
+                          <RiShieldCheckFill className="w-5 h-5 text-[#45BA50]" />
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-text-tertiary mt-0.5 flex items-center gap-1">
+                      <RiMapPinLine className="w-3.5 h-3.5 text-[#45BA50]" />
+                      <span>{previewWorker.district || "Kezira"}, Dire Dawa</span>
+                      <span>•</span>
+                      <span>{previewWorker.distance !== "N/A" ? `${previewWorker.distance} km away` : "Dire Dawa"}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setPreviewWorker(null)}
+                  className="p-1.5 rounded-full text-text-tertiary hover:text-text-primary hover:bg-background-tertiary-default transition-colors cursor-pointer"
+                >
+                  <RiCloseLine className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Rate & Rating Highlights Grid */}
+              <div className="grid grid-cols-3 gap-2.5 p-3 rounded-2xl bg-background-secondary-default border border-border-button-default text-center">
+                <div>
+                  <p className="text-[10px] uppercase font-bold text-text-tertiary">Hourly Rate</p>
+                  <p className="text-body-medium font-black text-text-primary mt-0.5">ETB {previewWorker.hourlyRate || "450"}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase font-bold text-text-tertiary">Rating</p>
+                  <p className="text-body-medium font-black text-amber-500 mt-0.5 flex items-center justify-center gap-0.5">
+                    <RiStarFill className="w-3.5 h-3.5 fill-amber-500" />
+                    <span>{previewWorker.rating > 0 ? previewWorker.rating.toFixed(1) : "5.0"}</span>
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase font-bold text-text-tertiary">Experience</p>
+                  <p className="text-body-medium font-black text-text-primary mt-0.5">{previewWorker.reviews || 1} jobs</p>
+                </div>
+              </div>
+
+              {/* Bio & Details */}
+              <div className="space-y-1.5">
+                <h4 className="text-caption-1-semibold font-bold uppercase tracking-wider text-text-tertiary text-[11px]">
+                  About Artisan
+                </h4>
+                <p className="text-xs text-text-secondary leading-relaxed bg-background-secondary-default/50 p-3.5 rounded-2xl border border-separator-border/60">
+                  {previewWorker.bio || "Certified pro specializing in residential and commercial maintenance, electrical wiring, installation, and on-demand repairs with verified Kebele registration."}
+                </p>
+              </div>
+
+              {/* Verified Skills */}
+              {previewWorker.skills && previewWorker.skills.length > 0 && (
+                <div className="space-y-1.5">
+                  <h4 className="text-caption-1-semibold font-bold uppercase tracking-wider text-text-tertiary text-[11px]">
+                    Verified Skills & Specialties
+                  </h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {previewWorker.skills.map((skill, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#134e27]/15 text-[#45BA50] border border-[#45BA50]/30"
+                      >
+                        ✓ {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Actions Footer */}
+              <div className="pt-3 border-t border-separator-border/60 flex flex-col sm:flex-row items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const w = previewWorker;
+                    setPreviewWorker(null);
+                    handleStartMessage(w);
+                  }}
+                  className="w-full sm:flex-1 h-11 rounded-xl border border-[#45BA50]/40 bg-[#134e27]/20 hover:bg-[#134e27]/30 text-[#45BA50] text-xs font-bold inline-flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-95"
+                >
+                  <RiChat1Line className="w-4 h-4" />
+                  <span>Message Pro</span>
+                </button>
+
+                <Link
+                  href={`/client/contract/new?workerId=${previewWorker.id}`}
+                  onClick={() => setPreviewWorker(null)}
+                  className="w-full sm:flex-1 h-11 rounded-xl bg-[#45BA50] hover:bg-[#3ca346] text-white text-xs font-black inline-flex items-center justify-center gap-2 shadow-[0_2px_12px_rgba(69,186,80,0.35)] transition-all cursor-pointer active:scale-95"
+                >
+                  <span>Book Artisan</span>
+                  <RiArrowRightLine className="w-4 h-4" />
+                </Link>
+
+                <Link
+                  href={`/client/worker/${previewWorker.id}`}
+                  onClick={() => setPreviewWorker(null)}
+                  className="w-full sm:w-auto h-11 px-4 rounded-xl border border-border-button-default bg-background-secondary-default hover:bg-background-tertiary-default text-text-primary text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                >
+                  <RiUser3Line className="w-4 h-4 text-text-secondary" />
+                  <span>Full Profile</span>
+                </Link>
+              </div>
+            </motion.div>
+          </div>
         </AnimatePresence>,
         document.body
       )}
