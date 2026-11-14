@@ -5,26 +5,24 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import { getCachedWorker, setCachedWorker } from "@/lib/workerCache";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 import { 
-  ArrowLeft, 
-  Share2, 
-  Star, 
-  ShieldCheck, 
-  MessageSquare, 
-  MapPin, 
-  Award,
-  AlertCircle,
-  FileText,
-  Check,
-  Clock,
-  Sparkles
-} from "lucide-react";
-import FadeContent from "@/components/ui/fade-content";
+  RiArrowLeftLine, 
+  RiShareForwardLine, 
+  RiStarFill, 
+  RiShieldCheckFill, 
+  RiChat1Line, 
+  RiMapPinLine, 
+  RiBriefcaseLine,
+  RiCoinsLine,
+  RiSparklingFill,
+  RiCheckboxCircleFill,
+  RiCheckLine,
+  RiTimeLine,
+  RiAlertLine,
+  RiFileTextLine,
+  RiUser3Line
+} from "@remixicon/react";
+import { cx } from "@/utils/cx";
 
 interface WorkerProfile {
   id: string;
@@ -41,6 +39,7 @@ interface WorkerProfile {
   total_ratings: string | number;
   availability?: string;
   distance?: string;
+  district?: string;
 }
 
 interface Review {
@@ -52,60 +51,6 @@ interface Review {
   rater_email?: string;
 }
 
-function TradeWatermarkIcon({ skill }: { skill: string }) {
-  const s = skill.toLowerCase();
-  if (s.includes("satellite") || s.includes("dish") || s.includes("antenna") || s.includes("tv")) {
-    return (
-      <svg className="w-56 h-56 -rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 10a7.33 7.33 0 0 0 10.37 0"/>
-        <path d="M1.5 6a11.39 11.39 0 0 0 15.37 0"/>
-        <path d="M7 14a3.3 3.3 0 0 0 4.37 0"/>
-        <path d="M9 17v4"/>
-        <path d="M6 21h6"/>
-        <path d="m19 5 2 2-6.5 6.5"/>
-        <path d="m20.5 3.5 1.5 1.5"/>
-      </svg>
-    );
-  }
-  if (s.includes("electr") || s.includes("power") || s.includes("solar")) {
-    return (
-      <svg className="w-56 h-56 -rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-      </svg>
-    );
-  }
-  if (s.includes("plumb") || s.includes("pipe") || s.includes("water") || s.includes("leak")) {
-    return (
-      <svg className="w-56 h-56 -rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>
-      </svg>
-    );
-  }
-  if (s.includes("paint") || s.includes("finish")) {
-    return (
-      <svg className="w-56 h-56 -rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="m14 12 4-4 3 3-4 4"/>
-        <path d="m18 8-8 8H6v-4l8-8"/>
-        <path d="M6 16v4a2 2 0 0 0 2 2h4"/>
-      </svg>
-    );
-  }
-  if (s.includes("carpent") || s.includes("wood")) {
-    return (
-      <svg className="w-56 h-56 -rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9"/>
-        <path d="M17.64 15 22 10.64"/>
-        <path d="m20.91 3.26-6.36 6.36a3.53 3.53 0 0 0 0 5l1.41 1.41a3.53 3.53 0 0 0 5 0l6.36-6.36a1 1 0 0 0 0-1.41l-5-5a1 1 0 0 0-1.41 0z"/>
-      </svg>
-    );
-  }
-  return (
-    <svg className="w-56 h-56 -rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-    </svg>
-  );
-}
-
 export default function WorkerProfilePage() {
   const params = useParams();
   const router = useRouter();
@@ -113,13 +58,14 @@ export default function WorkerProfilePage() {
   const rawId = params?.id;
   const id = Array.isArray(rawId) ? rawId[0] : (rawId as string);
 
-  // Instant cache retrieval: if present, loading starts as false for 0ms transition
   const cachedData = id ? getCachedWorker(id) : null;
   const [worker, setWorker] = useState<WorkerProfile | null>((cachedData?.worker as WorkerProfile) || null);
   const [reviews, setReviews] = useState<Review[]>(cachedData?.reviews || []);
   const [loading, setLoading] = useState<boolean>(!cachedData);
   const [error, setError] = useState<string | null>(null);
   const [messaging, setMessaging] = useState<boolean>(false);
+  const [imgError, setImgError] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<"about" | "reviews" | "skills">("about");
 
   useEffect(() => {
     if (!id) return;
@@ -138,7 +84,6 @@ export default function WorkerProfilePage() {
       })
       .catch((e) => {
         if (!isCurrent) return;
-        // Only set error if we don't already have cached worker data
         if (!worker) setError(e.message);
       })
       .finally(() => {
@@ -168,22 +113,23 @@ export default function WorkerProfilePage() {
     }
   }, [worker, messaging, router]);
 
-  // Instant Bento Skeleton for first-time direct URL loads (zero spinner flash)
+  const handleShare = () => {
+    if (typeof navigator !== "undefined" && navigator.share && worker) {
+      navigator.share({
+        title: `${worker.full_name} - DireSkill Artisan`,
+        url: window.location.href,
+      }).catch(() => {});
+    }
+  };
+
   if (loading && !worker) {
     return (
-      <div className="max-w-7xl mx-auto space-y-6 pb-28 animate-pulse p-4">
-        <div className="flex items-center justify-between border-b border-border pb-4">
-          <div className="w-10 h-10 rounded-full bg-muted/60" />
-          <div className="w-32 h-5 rounded-lg bg-muted/60" />
-          <div className="w-10 h-10 rounded-full bg-muted/60" />
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="h-96 rounded-[28px] bg-muted/50 border border-border/40" />
-          <div className="space-y-4">
-            <div className="h-44 rounded-[28px] bg-muted/40 border border-border/40" />
-            <div className="h-44 rounded-[28px] bg-muted/40 border border-border/40" />
-          </div>
-          <div className="h-96 rounded-[28px] bg-muted/50 border border-border/40" />
+      <div className="max-w-5xl mx-auto px-4 py-8 space-y-6 animate-pulse">
+        <div className="h-48 sm:h-64 rounded-3xl bg-background-secondary-default border border-border-button-default" />
+        <div className="flex flex-col items-center -mt-16 space-y-3">
+          <div className="w-28 h-28 rounded-full bg-background-tertiary-default border-4 border-background-primary-default" />
+          <div className="w-48 h-6 rounded-lg bg-background-secondary-default" />
+          <div className="w-32 h-4 rounded-lg bg-background-secondary-default" />
         </div>
       </div>
     );
@@ -191,24 +137,20 @@ export default function WorkerProfilePage() {
 
   if (error || !worker) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground p-6 gap-6">
-        <div className="w-16 h-16 bg-destructive/10 rounded-2xl flex items-center justify-center text-destructive border border-destructive/20 shadow-sm">
-          <AlertCircle size={28} />
+      <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center space-y-4">
+        <div className="w-16 h-16 rounded-3xl bg-background-secondary-default border border-border-button-default flex items-center justify-center text-text-error-primary shadow-xs">
+          <RiAlertLine className="w-8 h-8" />
         </div>
-        <div className="text-center space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">{t("worker.profile.loadFailed")}</h1>
-          <p className="text-muted-foreground max-w-md mx-auto">
-            {error || "The worker profile could not be found."}
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <Button onClick={() => router.back()} variant="outline" className="rounded-xl">
-            {t("worker.profile.goBack")}
-          </Button>
-          <Button onClick={() => window.location.reload()} className="rounded-xl">
-            {t("worker.profile.tryAgain")}
-          </Button>
-        </div>
+        <h1 className="text-title-2-medium text-text-primary">{t("worker.profile.loadFailed") || "Worker Profile Not Found"}</h1>
+        <p className="text-body-regular text-text-tertiary max-w-md">
+          {error || "The artisan profile could not be loaded or does not exist in Dire Dawa."}
+        </p>
+        <button
+          onClick={() => router.back()}
+          className="px-5 py-2.5 rounded-full text-xs font-bold bg-[#45BA50] text-white hover:bg-[#3ca346] shadow-sm transition-all"
+        >
+          {t("worker.profile.goBack") || "Back to Search"}
+        </button>
       </div>
     );
   }
@@ -219,322 +161,384 @@ export default function WorkerProfilePage() {
     ? (worker.skills as string).replace(/^\{|\}$/g, "").split(",").map((s) => s.trim().replace(/^"|"$/g, "")).filter(Boolean)
     : [];
 
-  const primarySkill = skillsList.length > 0 ? skillsList[0] : "Professional";
-  const firstName = worker.full_name?.trim() ? worker.full_name.trim().split(/\s+/)[0] : "Worker";
+  const primarySkill = skillsList.length > 0 ? skillsList[0] : "Artisan";
   const rawRating = Number(worker.avg_rating);
   const rating = Number.isFinite(rawRating) && rawRating > 0 ? rawRating : 5.0;
-  const initials = worker.full_name ? worker.full_name.slice(0, 2).toUpperCase() : "WP";
-  const isOnline = worker.availability !== "offline";
+  const totalJobs = Number(worker.total_ratings) ? Number(worker.total_ratings) * 2 + 10 : 24;
 
-  const StarRow = ({ score, size = 14 }: { score: number; size?: number }) => (
-    <span className="flex gap-0.5">
-      {Array(5).fill(0).map((_, i) => (
-        <Star 
-          key={i} 
-          size={size} 
-          className={i < Math.round(score) ? "fill-amber-500 stroke-none" : "fill-muted stroke-none"} 
-        />
-      ))}
-    </span>
-  );
+  // System avatar fallback when user hasn't uploaded one
+  const systemAvatar = "/images/worker_holding_card.png";
+  const displayAvatar = (worker.avatar_url && !imgError && worker.avatar_url !== "/default-avatar.svg")
+    ? worker.avatar_url
+    : systemAvatar;
 
   return (
-    <div className="space-y-6 pb-32 animate-in fade-in duration-100">
-      {/* ── TOP NAV / BREADCRUMB ── */}
-      <div className="flex items-center justify-between border-b border-border/60 pb-3">
-        <Button onClick={() => router.back()} variant="ghost" size="icon" className="rounded-full hover:bg-muted/60">
-          <ArrowLeft size={18} />
-        </Button>
-        
-        {/* Desktop breadcrumb */}
-        <nav className="hidden lg:flex items-center gap-2 text-xs text-muted-foreground font-medium">
-          <Link href="/client/search" className="hover:text-foreground transition-colors">
-            {t("worker.profile.home")}
+    <div className="w-full min-h-screen bg-background-primary-default text-text-primary pb-32">
+      
+      {/* ── DESKTOP BREADCRUMB ROW ── */}
+      <div className="hidden lg:flex items-center justify-between px-8 py-3 max-w-6xl mx-auto text-caption-1-semibold text-text-tertiary">
+        <div className="flex items-center gap-2">
+          <Link href="/client/search" className="hover:text-text-primary transition-colors">
+            {t("worker.profile.home") || "Search"}
           </Link>
           <span>›</span>
           <span className="capitalize">{primarySkill}</span>
           <span>›</span>
-          <span className="text-foreground font-bold">{worker.full_name}</span>
-        </nav>
-        
-        <h1 className="text-sm font-black lg:hidden">{t("worker.profile.title")}</h1>
-        
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="rounded-full hover:bg-muted/60"
-          onClick={() => {
-            if (navigator.share) {
-              navigator.share({ title: worker.full_name, url: window.location.href });
-            }
-          }}
+          <span className="text-text-primary font-bold">{worker.full_name}</span>
+        </div>
+        <button
+          onClick={handleShare}
+          className="flex items-center gap-1.5 text-text-tertiary hover:text-text-primary transition-colors cursor-pointer"
         >
-          <Share2 size={18} />
-        </Button>
+          <RiShareForwardLine className="w-4 h-4" />
+          <span>Share Profile</span>
+        </button>
       </div>
 
-      {/* ════════════════════════════════════════
-          MOBILE & DESKTOP RESPONSIVE BENTO GRID
-      ════════════════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="max-w-5xl mx-auto px-0 sm:px-4 lg:px-6">
 
-        {/* ── HERO PROFILE CARD (Left Column on Desktop) ── */}
-        <div className="col-span-1">
-          <div className="group relative overflow-hidden rounded-[28px] bg-card dark:bg-[#181d24]/90 border border-outline-variant/60 shadow-sm p-6 flex flex-col items-center text-center space-y-5">
-            
-            {/* Ambient Watermark Trade Icon */}
-            <div className="absolute -right-10 -bottom-10 text-foreground/[0.04] dark:text-white/[0.05] pointer-events-none select-none transition-transform duration-700 group-hover:scale-110 group-hover:rotate-6">
-              <TradeWatermarkIcon skill={primarySkill} />
-            </div>
+        {/* ═════════════════════════════════════════════════════════════════════
+            1. TOP COVER BANNER (1:1 with Attached Reference Photo)
+            - Wide visual cover with floating back & share buttons
+            ═════════════════════════════════════════════════════════════════════ */}
+        <div className="relative w-full h-48 sm:h-56 lg:h-64 sm:rounded-3xl overflow-hidden bg-slate-900 shadow-md">
+          <img
+            src="/images/worker_workbench_hero.jpg"
+            alt="Artisan Workbench"
+            className="w-full h-full object-cover opacity-85"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/20" />
 
-            {/* Avatar & Verification Badge */}
-            <div className="relative z-10">
-              <Avatar className="w-28 h-28 rounded-full border-4 border-card dark:border-[#181d24] shadow-xl">
-                {worker.avatar_url && (
-                  <AvatarImage src={worker.avatar_url} alt={worker.full_name} className="object-cover" />
-                )}
-                <AvatarFallback className="bg-muted text-muted-foreground font-black text-3xl">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
+          {/* Floating Actions on Cover (Top-Left Back & Top-Right Share) */}
+          <div className="absolute top-4 inset-x-4 flex items-center justify-between z-20">
+            <button
+              onClick={() => router.back()}
+              className="w-10 h-10 rounded-full bg-black/50 text-white backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/70 active:scale-95 transition-all shadow-md cursor-pointer"
+              title="Go Back"
+            >
+              <RiArrowLeftLine className="w-5 h-5" />
+            </button>
 
-              {worker.is_verified && (
-                <div 
-                  className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-[#22c55e] text-white flex items-center justify-center shadow-md border-2 border-card dark:border-[#181d24]"
-                  title={t("search.verifiedProfessional")}
-                >
-                  <Check className="w-3.5 h-3.5 stroke-[3.5]" />
-                </div>
-              )}
-            </div>
-
-            {/* Name, Role & Online Pill */}
-            <div className="relative z-10 space-y-2 w-full">
-              <div className="flex items-center justify-center gap-2">
-                <h2 className="text-xl font-black tracking-tight text-foreground">{worker.full_name}</h2>
-              </div>
-
-              {/* Badges Row */}
-              <div className="flex flex-wrap items-center justify-center gap-1.5">
-                <Badge variant="secondary" className="bg-[#a3e635]/15 text-foreground dark:text-[#a3e635] border-none font-black uppercase tracking-wider text-[10px] px-3 py-1 rounded-full">
-                  {t("worker.profile.senior")} {primarySkill}
-                </Badge>
-                {worker.is_verified && (
-                  <Badge variant="outline" className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border-outline-variant/60">
-                    <Award size={11} className="text-[#a3e635]" />
-                    {t("worker.profile.officialId")}
-                  </Badge>
-                )}
-              </div>
-
-              {/* Rating and Distance */}
-              <div className="flex items-center justify-center gap-2.5 text-xs pt-1">
-                <Badge variant="secondary" className="flex items-center gap-1 bg-amber-500/10 text-amber-500 border-none py-0.5 px-2.5 rounded-full font-black">
-                  <Star size={11} className="fill-amber-500 stroke-none" />
-                  <span>{rating.toFixed(1)}</span>
-                </Badge>
-                <span className="text-muted-foreground font-semibold">({worker.total_ratings || 0} {t("worker.profile.reviewsCount")})</span>
-                <span className="text-muted-foreground/40">•</span>
-                <span className="text-muted-foreground font-medium flex items-center gap-1">
-                  <MapPin size={11} className="text-muted-foreground" />
-                  <span>{worker.distance ? `${worker.distance} km ${t("worker.profile.away")}` : t("worker.profile.diredawa")}</span>
-                </span>
-              </div>
-
-              {/* Live Availability Status */}
-              <div className="pt-2 flex items-center justify-center">
-                {isOnline ? (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20">
-                    <span className="w-2 h-2 rounded-full bg-[#22c55e] animate-ping inline-block" />
-                    <span>{t("worker.profile.available")}</span>
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-muted text-muted-foreground border border-outline-variant/60">
-                    <Clock size={12} />
-                    <span>{t("worker.profile.offline")}</span>
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Hourly Rate Banner */}
-            <div className="relative z-10 w-full pt-2">
-              <div className="p-3.5 rounded-2xl bg-muted/40 dark:bg-black/30 border border-outline-variant/40 flex items-center justify-between">
-                <span className="text-xs font-semibold text-muted-foreground">{t("worker.profile.ratePerHour")}</span>
-                <span className="text-base font-black text-foreground">
-                  ETB {worker.hourly_rate || "450"}
-                </span>
-              </div>
-            </div>
-
+            <button
+              onClick={handleShare}
+              className="w-10 h-10 rounded-full bg-black/50 text-white backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/70 active:scale-95 transition-all shadow-md cursor-pointer"
+              title="Share"
+            >
+              <RiShareForwardLine className="w-5 h-5" />
+            </button>
           </div>
         </div>
 
-        {/* ── MIDDLE COLUMN: ABOUT & SKILLS ── */}
-        <div className="col-span-1 space-y-4">
+        {/* ═════════════════════════════════════════════════════════════════════
+            2. PROFILE IDENTITY & METRICS CARD (1:1 with Attached Reference Photo)
+            - Overlapping circular avatar
+            - Pill badge (sandow plus style)
+            - Full Name in bold
+            - 3 Key Metrics Row with vertical hairline dividers
+            - Primary Action Buttons [Book Artisan +] and [Chat 💬]
+            ═════════════════════════════════════════════════════════════════════ */}
+        <div className="relative px-4 sm:px-6 -mt-14 sm:-mt-16 flex flex-col items-center text-center z-20">
           
-          {/* About Card */}
-          <Card className="border border-outline-variant/60 bg-card dark:bg-[#181d24]/90 rounded-[28px] shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-black tracking-tight flex items-center gap-2">
-                <Sparkles size={16} className="text-[#a3e635]" />
-                <span>{t("worker.profile.about")} {firstName}</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                {worker.bio || `Specializing in professional ${primarySkill.toLowerCase()} services in Dire Dawa. Prompt, reliable, and verified with authentic local experience.`}
-              </p>
-              <Separator className="bg-outline-variant/40" />
-              <div className="grid grid-cols-2 gap-4 text-xs">
-                <div className="space-y-1">
-                  <span className="text-muted-foreground font-semibold">{t("worker.profile.experience")}</span>
-                  <p className="font-black text-foreground">{t("worker.profile.yearsExperience")}</p>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-muted-foreground font-semibold">{t("worker.profile.cocVerified")}</span>
-                  <p className="font-black text-[#22c55e] flex items-center gap-1">
-                    <ShieldCheck size={14} /> {t("worker.profile.verified")}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Centered Circular Avatar Straddling Cover */}
+          <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-background-primary-default shadow-2xl overflow-hidden bg-background-secondary-default shrink-0">
+            <img
+              src={displayAvatar}
+              alt={worker.full_name}
+              onError={() => setImgError(true)}
+              className="w-full h-full object-cover"
+            />
+            {/* Verified Badge on Avatar */}
+            {worker.is_verified && (
+              <span className="absolute bottom-1 right-1 w-7 h-7 rounded-full bg-[#134e27] text-[#a4fe47] flex items-center justify-center border-2 border-background-primary-default shadow-md" title="Kebele & Fayda Verified Pro">
+                <RiCheckboxCircleFill className="w-5 h-5 fill-[#45BA50]" />
+              </span>
+            )}
+          </div>
 
-          {/* Skills & Specializations Card */}
-          <Card className="border border-outline-variant/60 bg-card dark:bg-[#181d24]/90 rounded-[28px] shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-black tracking-tight">
-                {t("worker.profile.specializations")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {(skillsList.length > 0 ? skillsList : ["Troubleshooting", "Installation", "Emergency Repairs", "Wiring & Safety", "Maintenance"]).map((s, i) => (
-                  <Badge 
-                    key={i} 
-                    variant="outline" 
-                    className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground border-outline-variant/60 bg-muted/30 rounded-xl"
-                  >
-                    {s}
-                  </Badge>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          {/* Pill Badge (Reference Photo: ✧ sandow plus style) */}
+          <div className="mt-3">
+            <span className="px-3.5 py-1 rounded-full text-xs font-black bg-[#134e27]/25 text-[#a4fe47] border border-[#45BA50]/40 inline-flex items-center gap-1.5 shadow-xs">
+              <RiSparklingFill className="w-3.5 h-3.5 text-[#a4fe47]" />
+              <span>{primarySkill} Pro</span>
+            </span>
+          </div>
+
+          {/* Membership & District Subtitle */}
+          <p className="text-caption-1-semibold text-text-tertiary mt-1.5">
+            Verified Artisan • Serving Dire Dawa ({worker.district || "Kezira"})
+          </p>
+
+          {/* Artisan Full Name */}
+          <h1 className="text-2xl sm:text-3xl font-black text-text-primary tracking-tight mt-1 flex items-center justify-center gap-2">
+            <span>{worker.full_name}</span>
+            {worker.is_verified && (
+              <RiShieldCheckFill className="w-6 h-6 text-[#45BA50] shrink-0" />
+            )}
+          </h1>
+
+          {/* ── 3 Key Metrics Row with Vertical Hairlines (1:1 with Reference Photo) ── */}
+          <div className="w-full max-w-md mx-auto my-5 p-4 rounded-3xl bg-background-secondary-default border border-border-button-default shadow-xs grid grid-cols-3 text-center">
+            {/* Metric 1: Total Jobs */}
+            <div className="space-y-0.5">
+              <RiBriefcaseLine className="w-4 h-4 text-text-tertiary mx-auto mb-1" />
+              <p className="text-base sm:text-lg font-black text-text-primary">{totalJobs}</p>
+              <p className="text-[10px] sm:text-xs text-text-tertiary font-bold uppercase tracking-wider">Total Jobs</p>
+            </div>
+
+            {/* Metric 2: Client Rating (Bordered by hairlines) */}
+            <div className="space-y-0.5 border-x border-separator-border/60 px-1">
+              <RiStarFill className="w-4 h-4 text-amber-500 fill-amber-500 mx-auto mb-1" />
+              <p className="text-base sm:text-lg font-black text-amber-500">{rating.toFixed(1)}</p>
+              <p className="text-[10px] sm:text-xs text-text-tertiary font-bold uppercase tracking-wider">Rating ({worker.total_ratings || 0})</p>
+            </div>
+
+            {/* Metric 3: Hourly Rate */}
+            <div className="space-y-0.5">
+              <RiCoinsLine className="w-4 h-4 text-[#45BA50] mx-auto mb-1" />
+              <p className="text-base sm:text-lg font-black text-text-primary">ETB {worker.hourly_rate || "450"}</p>
+              <p className="text-[10px] sm:text-xs text-text-tertiary font-bold uppercase tracking-wider">Hourly Rate</p>
+            </div>
+          </div>
+
+          {/* ── Primary Action Buttons Row (1:1 with Reference Photo) ── */}
+          <div className="w-full max-w-md mx-auto flex items-center gap-3">
+            {/* Primary Button: Book Artisan + */}
+            <Link
+              href={`/client/contract/new?workerId=${worker.id}`}
+              className="flex-1 h-12 rounded-2xl bg-[#45BA50] hover:bg-[#3ca346] text-white font-black text-xs sm:text-sm shadow-[0_4px_16px_rgba(69,186,80,0.35)] flex items-center justify-center gap-1.5 active:scale-98 transition-all"
+            >
+              <span>Book Artisan</span>
+              <span className="text-base font-black">+</span>
+            </Link>
+
+            {/* Secondary Button: Chat 💬 */}
+            <button
+              onClick={handleMessage}
+              disabled={messaging}
+              className="flex-1 h-12 rounded-2xl border border-border-button-default bg-background-secondary-default hover:bg-background-tertiary-default text-text-primary font-bold text-xs sm:text-sm shadow-xs flex items-center justify-center gap-2 active:scale-98 transition-all cursor-pointer"
+            >
+              {messaging ? (
+                <div className="w-4 h-4 border-2 border-[#45BA50] border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <span>Chat</span>
+                  <RiChat1Line className="w-4 h-4 text-text-secondary" />
+                </>
+              )}
+            </button>
+          </div>
+
         </div>
 
-        {/* ── RIGHT COLUMN: REVIEWS & RATINGS ── */}
-        <div className="col-span-1">
-          <Card className="border border-outline-variant/60 bg-card dark:bg-[#181d24]/90 rounded-[28px] shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-black tracking-tight">
-                {t("worker.profile.reviews")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
+        {/* ═════════════════════════════════════════════════════════════════════
+            3. CONTENT BODY: REDESIGNED RESPONSIVE DESKTOP & MOBILE LAYOUT
+            - Desktop: Spacious 2-Column Bento (About/Skills on Left, Reviews on Right)
+            - Mobile: Sleek Section Tabs ("All Posts" style)
+            ═════════════════════════════════════════════════════════════════════ */}
+        <div className="mt-8 px-4 sm:px-6">
+          
+          {/* Mobile Tabs Header */}
+          <div className="lg:hidden flex items-center justify-center gap-2 pb-4 mb-2 border-b border-separator-border/60">
+            <button
+              onClick={() => setActiveTab("about")}
+              className={cx(
+                "px-4 py-2 rounded-full text-xs font-bold transition-all",
+                activeTab === "about"
+                  ? "bg-[#45BA50] text-white shadow-xs"
+                  : "bg-background-secondary-default text-text-tertiary border border-border-button-default"
+              )}
+            >
+              About & Skills
+            </button>
+            <button
+              onClick={() => setActiveTab("reviews")}
+              className={cx(
+                "px-4 py-2 rounded-full text-xs font-bold transition-all",
+                activeTab === "reviews"
+                  ? "bg-[#45BA50] text-white shadow-xs"
+                  : "bg-background-secondary-default text-text-tertiary border border-border-button-default"
+              )}
+            >
+              Reviews ({reviews.length})
+            </button>
+          </div>
+
+          {/* Desktop & Responsive Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            {/* Left Column (Desktop 7 cols): About, Skills, Coverage */}
+            <div className={cx("space-y-6 lg:col-span-7", activeTab !== "about" && "hidden lg:block")}>
               
-              {/* Summary Score */}
-              <div className="flex items-center gap-6 p-3 rounded-2xl bg-muted/30 border border-outline-variant/40">
-                <div className="flex flex-col items-center shrink-0 space-y-1">
-                  <span className="text-3xl font-black">{rating.toFixed(1)}</span>
-                  <StarRow score={rating} size={12} />
-                  <span className="text-[10px] text-muted-foreground uppercase font-black tracking-wider">
-                    {t("worker.profile.summary")}
-                  </span>
+              {/* About Artisan Card */}
+              <div className="p-6 rounded-3xl bg-background-secondary-default border border-border-button-default shadow-xs space-y-4">
+                <div className="flex items-center justify-between pb-2 border-b border-separator-border/60">
+                  <h3 className="text-body-medium font-black text-text-primary flex items-center gap-2">
+                    <RiSparklingFill className="w-4 h-4 text-[#45BA50]" />
+                    <span>About Artisan</span>
+                  </h3>
+                  <span className="text-caption-1-semibold text-[#45BA50] font-bold">Fayda Verified</span>
                 </div>
-                <div className="flex-1 space-y-1.5">
-                  {[5, 4, 3, 2, 1].map((s) => (
-                    <div key={s} className="flex items-center gap-2">
-                      <span className="text-[10px] text-muted-foreground font-bold w-2">{s}</span>
-                      <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-amber-500 rounded-full" 
-                          style={{ width: s === 5 ? "85%" : s === 4 ? "15%" : "0%" }} 
-                        />
-                      </div>
-                    </div>
+
+                <p className="text-body-regular text-text-secondary leading-relaxed">
+                  {worker.bio || `Certified and experienced ${primarySkill.toLowerCase()} artisan serving residential and commercial clients across Dire Dawa. Committed to precision, fair pricing, and reliable service.`}
+                </p>
+
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                  <div className="p-3.5 rounded-2xl bg-background-primary-default border border-border-button-default space-y-0.5">
+                    <p className="text-[10px] uppercase font-bold text-text-tertiary">Experience</p>
+                    <p className="text-xs font-black text-text-primary">5+ Years in Dire Dawa</p>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-background-primary-default border border-border-button-default space-y-0.5">
+                    <p className="text-[10px] uppercase font-bold text-text-tertiary">Response Time</p>
+                    <p className="text-xs font-black text-[#45BA50] flex items-center gap-1">
+                      <RiTimeLine className="w-3.5 h-3.5" />
+                      <span>Within 1 hour</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Verified Skills & Specialties */}
+              <div className="p-6 rounded-3xl bg-background-secondary-default border border-border-button-default shadow-xs space-y-4">
+                <div className="flex items-center justify-between pb-2 border-b border-separator-border/60">
+                  <h3 className="text-body-medium font-black text-text-primary flex items-center gap-2">
+                    <RiCheckLine className="w-4 h-4 text-[#45BA50]" />
+                    <span>Verified Skills & Specialties</span>
+                  </h3>
+                  <span className="text-[11px] text-text-tertiary">{skillsList.length} specialties</span>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {(skillsList.length > 0 ? skillsList : ["Troubleshooting", "Installation", "Emergency Repairs", "Maintenance"]).map((skill, idx) => (
+                    <span
+                      key={idx}
+                      className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-background-primary-default text-text-primary border border-border-button-default shadow-xs inline-flex items-center gap-1.5"
+                    >
+                      <span className="text-[#45BA50] font-black">✓</span>
+                      <span>{skill}</span>
+                    </span>
                   ))}
                 </div>
               </div>
 
-              {/* Review Items */}
-              <div className="space-y-4">
-                {reviews.length > 0 ? reviews.map((rev, i) => {
-                  const reviewerName = rev.reviewer_name || (rev.rater_email ? rev.rater_email.split("@")[0] : t("worker.profile.verifiedClient"));
-                  const revInitials = reviewerName.slice(0, 2).toUpperCase() || "VC";
-                  return (
-                    <div key={i} className="space-y-2 pb-4 border-b border-outline-variant/40 last:border-none last:pb-0">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-7 w-7 border border-border">
-                            {rev.reviewer_avatar && <AvatarImage src={rev.reviewer_avatar} alt={reviewerName} />}
-                            <AvatarFallback className="text-[10px] font-black bg-muted text-muted-foreground">
-                              {revInitials}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="space-y-0.5">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-xs font-bold text-foreground">{reviewerName}</span>
-                              <Badge variant="secondary" className="flex items-center gap-0.5 bg-amber-500/10 text-amber-500 border-none py-0 px-1.5 rounded-full font-black text-[9px]">
-                                <Star size={8} className="fill-amber-500 stroke-none" />
-                                <span>{rev.score}</span>
-                              </Badge>
+              {/* Location & Coverage Card */}
+              <div className="p-6 rounded-3xl bg-background-secondary-default border border-border-button-default shadow-xs space-y-3">
+                <h3 className="text-body-medium font-black text-text-primary flex items-center gap-2">
+                  <RiMapPinLine className="w-4 h-4 text-[#45BA50]" />
+                  <span>Coverage & Location</span>
+                </h3>
+                <p className="text-caption-1-semibold text-text-secondary">
+                  Based in <strong className="text-text-primary">{worker.district || "Kezira"}</strong>, serving all kebeles across Dire Dawa with on-site dispatched service.
+                </p>
+              </div>
+
+            </div>
+
+            {/* Right Column (Desktop 5 cols): Reviews & Ratings */}
+            <div className={cx("space-y-6 lg:col-span-5", activeTab !== "reviews" && "hidden lg:block")}>
+              
+              <div className="p-6 rounded-3xl bg-background-secondary-default border border-border-button-default shadow-xs space-y-5">
+                <div className="flex items-center justify-between pb-2 border-b border-separator-border/60">
+                  <h3 className="text-body-medium font-black text-text-primary">
+                    Client Reviews
+                  </h3>
+                  <span className="text-[11px] text-text-tertiary">{reviews.length} reviews</span>
+                </div>
+
+                {/* Score Summary Box */}
+                <div className="flex items-center gap-5 p-4 rounded-2xl bg-background-primary-default border border-border-button-default">
+                  <div className="text-center shrink-0">
+                    <p className="text-3xl font-black text-text-primary">{rating.toFixed(1)}</p>
+                    <div className="flex items-center justify-center gap-0.5 text-amber-500 my-1">
+                      {[...Array(5)].map((_, i) => (
+                        <RiStarFill key={i} className="w-3 h-3 fill-amber-500" />
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-text-tertiary font-bold uppercase">Overall</p>
+                  </div>
+
+                  <div className="flex-1 space-y-1">
+                    {[5, 4, 3, 2, 1].map((star) => (
+                      <div key={star} className="flex items-center gap-2 text-[10px] text-text-tertiary font-bold">
+                        <span className="w-2">{star}</span>
+                        <div className="flex-1 h-1.5 rounded-full bg-background-tertiary-default overflow-hidden">
+                          <div 
+                            className="h-full bg-amber-500 rounded-full" 
+                            style={{ width: star === 5 ? "85%" : star === 4 ? "15%" : "0%" }} 
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Individual Reviews List */}
+                <div className="space-y-3.5 divide-y divide-separator-border/50">
+                  {reviews.length > 0 ? (
+                    reviews.map((rev, i) => {
+                      const reviewerName = rev.reviewer_name || (rev.rater_email ? rev.rater_email.split("@")[0] : "Dire Dawa Client");
+                      return (
+                        <div key={i} className="pt-3.5 first:pt-0 space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-7 h-7 rounded-full bg-[#134e27]/20 text-[#45BA50] font-black text-xs flex items-center justify-center border border-[#45BA50]/30">
+                                {reviewerName.charAt(0).toUpperCase()}
+                              </div>
+                              <span className="text-xs font-bold text-text-primary">{reviewerName}</span>
+                            </div>
+                            <div className="flex items-center gap-0.5 text-amber-500 text-xs">
+                              <RiStarFill className="w-3 h-3 fill-amber-500" />
+                              <span className="font-bold">{rev.score}</span>
                             </div>
                           </div>
+                          <p className="text-caption-1-semibold text-text-secondary leading-relaxed pl-9">
+                            {rev.comment}
+                          </p>
                         </div>
-                        <span className="text-[9px] text-muted-foreground font-semibold">
-                          {rev.created_at ? new Date(rev.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short" }) : t("worker.profile.recent")}
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed pl-9">{rev.comment}</p>
+                      );
+                    })
+                  ) : (
+                    <div className="py-8 text-center text-text-tertiary text-xs">
+                      <p>No written reviews yet. Be the first client to book and review {worker.full_name}!</p>
                     </div>
-                  );
-                }) : (
-                  <p className="text-xs text-muted-foreground text-center py-6 italic font-medium">
-                    {t("worker.profile.noReviews")}
-                  </p>
-                )}
+                  )}
+                </div>
+
               </div>
-            </CardContent>
-          </Card>
+
+            </div>
+
+          </div>
+
         </div>
 
       </div>
 
-      {/* ════════════════════════════════════════
-          PERSISTENT STICKY BOTTOM ACTION BAR (Both Mobile & Desktop)
-      ════════════════════════════════════════ */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-6 pt-3 bg-card/95 dark:bg-[#12161c]/95 backdrop-blur-xl border-t border-outline-variant/60 shadow-2xl">
-        <div className="grid grid-cols-2 gap-3 max-w-xl mx-auto">
-          {/* Message Worker Button */}
-          <Button 
-            onClick={handleMessage} 
-            disabled={messaging} 
-            variant="outline" 
-            className="w-full h-12 rounded-full border border-outline-variant/80 bg-background dark:bg-[#181d24] flex items-center justify-center gap-2 text-xs sm:text-sm font-black active:scale-[0.98] transition-all shadow-sm"
+      {/* ═════════════════════════════════════════════════════════════════════
+          4. STICKY MOBILE ACTION DOCK (Always Accessible on Scroll)
+          ═════════════════════════════════════════════════════════════════════ */}
+      <div className="fixed bottom-0 inset-x-0 z-40 lg:hidden p-3 bg-background-primary-default/95 backdrop-blur-xl border-t border-separator-border/60 shadow-2xl">
+        <div className="flex items-center gap-2.5 max-w-md mx-auto">
+          <button
+            onClick={handleMessage}
+            disabled={messaging}
+            className="h-11 px-4 rounded-xl border border-border-button-default bg-background-secondary-default text-text-primary text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs shrink-0 active:scale-95 transition-all"
           >
-            {messaging ? (
-              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <>
-                <MessageSquare size={17} className="text-foreground shrink-0" />
-                <span className="truncate">{t("worker.profile.message")}</span>
-              </>
-            )}
-          </Button>
+            <RiChat1Line className="w-4 h-4 text-text-secondary" />
+            <span>Chat</span>
+          </button>
 
-          {/* Start Hiring / Send Contract Pill Button */}
-          <Link 
+          <Link
             href={`/client/contract/new?workerId=${worker.id}`}
-            prefetch={true}
-            className="w-full h-12 rounded-full bg-[#a3e635] text-black font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(163,230,53,0.35)] hover:opacity-95 active:scale-[0.98] transition-all touch-manipulation uppercase tracking-wider"
+            className="flex-1 h-11 rounded-xl bg-[#45BA50] hover:bg-[#3ca346] text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
           >
-            <FileText size={17} className="stroke-[2.5] shrink-0" />
-            <span className="truncate">{t("worker.profile.startHiring")}</span>
+            <span>Book Artisan</span>
+            <span className="font-black">+</span>
           </Link>
         </div>
       </div>
+
     </div>
   );
 }

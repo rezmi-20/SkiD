@@ -108,15 +108,15 @@ export default function WorkerCard({
         onMouseEnter={primeCache}
         onTouchStart={primeCache}
         className={cx(
-          "group relative flex flex-col justify-between p-2.5 sm:p-3 rounded-2xl sm:rounded-3xl select-none transition-all duration-300 border cursor-pointer",
+          "group relative flex flex-col justify-between p-3 sm:p-3.5 rounded-2xl sm:rounded-3xl select-none transition-all duration-300 border cursor-pointer min-h-[295px] sm:min-h-[305px]",
           "bg-background-secondary-default hover:bg-background-tertiary-default/60 border-border-button-default hover:border-[#45BA50]/50 shadow-xs hover:shadow-md",
           isSelected && "ring-2 ring-[#45BA50] border-[#45BA50]",
           className
         )}
       >
         <div>
-          {/* Top: Large Rounded Portrait Image (1:1 with Reference Photo) */}
-          <div className="relative w-full aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden bg-background-tertiary-default shrink-0 border border-border-button-default/50">
+          {/* Top: Large Rounded Portrait Image (Taller on mobile for better breathing space) */}
+          <div className="relative w-full aspect-square sm:aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden bg-background-tertiary-default shrink-0 border border-border-button-default/50">
             <img
               src={displayPhoto}
               alt={worker.name}
