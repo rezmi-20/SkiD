@@ -13,6 +13,7 @@ export default async function ClientDashboardPage() {
   let totalSpent = 0;
   let activeContractRows: any[] = [];
   let jobRows: any[] = [];
+  let paymentRows: any[] = [];
   let completedProjects = 0;
 
   try {
@@ -33,13 +34,13 @@ export default async function ClientDashboardPage() {
         JOIN jobs j ON p.job_id = j.id
         WHERE j.client_id = ${session.user.id} AND p.status::text IN ('released', 'paid', 'completed')
       `,
-      // 4. Active contracts
+      // 4. Real contracts (all contracts for this client)
       sql`
         SELECT 
           c.id as contract_id,
-          j.title as job_title,
-          COALESCE(j.budget, 0)::numeric as budget,
-          wp.full_name as worker_name,
+          COALESCE(c.job_title, j.title, 'Contract Agreement') as job_title,
+          COALESCE(c.payment_amount, j.budget, 0)::numeric as budget,
+          COALESCE(wp.full_name, 'Verified Artisan') as worker_name,
           wp.avatar_url as worker_avatar,
           wp.skills as worker_skills,
           wp.district as worker_district,
@@ -49,22 +50,38 @@ export default async function ClientDashboardPage() {
         FROM contracts c
         JOIN jobs j ON c.job_id = j.id
         LEFT JOIN worker_profiles wp ON j.worker_id = wp.user_id
-        WHERE j.client_id = ${session.user.id} AND j.status::text IN ('accepted', 'in_progress', 'active')
+        WHERE j.client_id = ${session.user.id}
         ORDER BY c.created_at DESC
       `,
       // 5. Recent jobs
       sql`
-        SELECT id, title, budget, status, created_at
+        SELECT id, title, budget, status, created_at, description
         FROM jobs
         WHERE client_id = ${session.user.id}
         ORDER BY created_at DESC
-        LIMIT 6
+        LIMIT 10
       `,
       // 6. Completed count
       sql`
         SELECT COUNT(*)::int as completed_count
         FROM jobs
-        WHERE client_id = ${session.user.id} AND status::text IN ('completed', 'paid')
+        WHERE client_id = ${session.user.id} AND status::text IN ('completed', 'paid', 'closed')
+      `,
+      // 7. Real payments with timestamps for date filtering
+      sql`
+        SELECT 
+          p.id,
+          p.amount::numeric as amount,
+          p.status as payment_status,
+          p.created_at as payment_created_at,
+          j.title as job_title,
+          j.id as job_id,
+          wp.full_name as worker_name
+        FROM payments p
+        JOIN jobs j ON p.job_id = j.id
+        LEFT JOIN worker_profiles wp ON j.worker_id = wp.user_id
+        WHERE j.client_id = ${session.user.id} AND p.status::text IN ('released', 'paid', 'completed')
+        ORDER BY p.created_at DESC
       `,
     ]);
 
@@ -74,6 +91,7 @@ export default async function ClientDashboardPage() {
     if (results[3].status === "fulfilled") activeContractRows = results[3].value as any[];
     if (results[4].status === "fulfilled") jobRows = results[4].value as any[];
     if (results[5].status === "fulfilled") completedProjects = Number((results[5].value as any[])[0]?.completed_count || 0);
+    if (results[6].status === "fulfilled") paymentRows = results[6].value as any[];
   } catch (error) {
     console.error("[CLIENT-DASHBOARD] Data load error:", error);
   }
@@ -101,6 +119,7 @@ export default async function ClientDashboardPage() {
       userData={userData}
       activeContracts={activeContractRows}
       recentJobs={jobRows}
+      payments={paymentRows}
     />
   );
 }

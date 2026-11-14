@@ -2,7 +2,7 @@
 
 import { useLanguage } from "@/context/LanguageContext";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CountUp from "@/components/ui/count-up";
 import { cx } from "@/utils/cx";
@@ -55,6 +55,7 @@ interface ClientDashboardContentProps {
   };
   activeContracts: any[];
   recentJobs: any[];
+  payments?: any[];
 }
 
 /* ── Top Trades Grid Data (5 Active + 3 Coming Soon in 2x4 Layout) ─── */
@@ -167,9 +168,7 @@ function ContractCard({
   const curveColor = contract.curveColor || (isElectric ? "#45BA50" : "#3B82F6");
   const proName = contract.worker_name || contract.proName || "Artisan Pro";
   const jobTitle = contract.job_title || contract.trade || "Contract Agreement";
-  const budgetVal = contract.budget
-    ? Number(contract.budget).toLocaleString()
-    : contract.budgetVal || "3,500";
+  const budgetVal = contract.budgetVal || (contract.budget ? Number(contract.budget).toLocaleString() : "1,000");
   const bgImage = getContractBgImage(jobTitle, contract.worker_skills);
 
   return (
@@ -228,7 +227,7 @@ function ContractCard({
               isElectric ? "text-[#45BA50]" : "text-blue-500"
             )}
           >
-            {contract.progress || (isElectric ? "↑ 65% In Progress" : "● Active Direct Payment")}
+            {contract.progress || "● Active Direct Payment"}
           </span>
         </div>
       </div>
@@ -332,86 +331,171 @@ export default function ClientDashboardContent({
   userData,
   activeContracts = [],
   recentJobs = [],
+  payments = [],
 }: ClientDashboardContentProps) {
   const { t } = useLanguage();
   const [showBalance, setShowBalance] = useState(true);
   const [selectedContract, setSelectedContract] = useState<any | null>(null);
 
-  const activeCount = activeContracts.length;
+  // Time Range Filter State: "all", "month", "quarter" (3 months)
+  const [timeFilter, setTimeFilter] = useState<"all" | "month" | "quarter">("all");
+
+  const filterCutoff = useMemo(() => {
+    const now = new Date();
+    if (timeFilter === "month") {
+      return new Date(now.getFullYear(), now.getMonth(), 1);
+    }
+    if (timeFilter === "quarter") {
+      const d = new Date();
+      d.setDate(d.getDate() - 90);
+      return d;
+    }
+    return null;
+  }, [timeFilter]);
+
+  // Contracts list mapped directly from REAL database contracts
+  const displayContracts = useMemo(() => {
+    return activeContracts.map((c, i) => {
+      const isElectric = (c.worker_skills || []).some(
+        (s: string) =>
+          s.toLowerCase().includes("electric") ||
+          s.toLowerCase().includes("dish") ||
+          s.toLowerCase().includes("satellite")
+      );
+      const curveColor = i % 2 === 0 ? "#45BA50" : "#3B82F6";
+      const proName = c.worker_name || "Verified Artisan";
+      const jobTitle = c.job_title || "Contract Agreement";
+      const budgetVal = c.budget ? Number(c.budget).toLocaleString() : "1,000";
+      const progressText =
+        c.job_status === "paid" || c.job_status === "closed"
+          ? "✓ Completed & Paid"
+          : c.job_status === "disputed"
+          ? "⚠ Disputed Settlement"
+          : "● Active Direct Payment";
+
+      return {
+        ...c,
+        id: c.contract_id || c.id || `contract-${i}`,
+        trade: jobTitle,
+        proName,
+        job_title: jobTitle,
+        worker_name: proName,
+        budgetVal,
+        progress: progressText,
+        curveColor,
+        path:
+          i % 2 === 0
+            ? "M0,32 Q30,12 60,24 T120,10 T180,28 T240,16"
+            : "M0,28 Q40,36 80,18 T140,24 T200,8 T240,20",
+      };
+    });
+  }, [activeContracts]);
+
+  // Filtered Contracts according to Time Window
+  const filteredContracts = useMemo(() => {
+    if (!filterCutoff) return displayContracts;
+    return displayContracts.filter((c) => {
+      const d = c.contract_created_at ? new Date(c.contract_created_at) : null;
+      return d && d >= filterCutoff;
+    });
+  }, [displayContracts, filterCutoff]);
+
+  // Filtered Jobs / Recent Requests according to Time Window
+  const filteredJobs = useMemo(() => {
+    if (!filterCutoff) return recentJobs;
+    return recentJobs.filter((j) => {
+      const d = j.created_at ? new Date(j.created_at) : null;
+      return d && d >= filterCutoff;
+    });
+  }, [recentJobs, filterCutoff]);
+
+  // Dynamic Spend Calculation based on Time Filter
   const totalBudget = activeContracts.reduce((sum, c) => {
     const v = parseFloat(String(c.budget || "0").replace(/[^0-9.]/g, ""));
     return sum + (isNaN(v) ? 0 : v);
   }, 0);
 
-  // Real spending from PostgreSQL or calculated budget fallback
-  const displayTotal =
-    userData.totalSpent && userData.totalSpent > 0
-      ? userData.totalSpent
-      : totalBudget > 0
-      ? totalBudget
-      : 14250;
+  const displayTotal = useMemo(() => {
+    if (timeFilter === "all") {
+      if (userData.totalSpent && userData.totalSpent > 0) return userData.totalSpent;
+      const paymentSum = (payments || []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+      if (paymentSum > 0) return paymentSum;
+      return totalBudget;
+    }
 
-  // Contracts list with Sixpay sparkline curves
-  const displayContracts =
-    activeContracts.length > 0
-      ? activeContracts.map((c, i) => ({
-          ...c,
-          id: c.contract_id || c.id || `contract-${i}`,
-          trade: c.job_title || "Contract Agreement",
-          proName: c.worker_name || "Verified Pro",
-          budgetVal: c.budget ? Number(c.budget).toLocaleString() : "3,500",
-          progress: "Active Direct Payment",
-          curveColor: i % 2 === 0 ? "#45BA50" : "#3B82F6",
-          path:
-            i % 2 === 0
-              ? "M0,32 Q30,12 60,24 T120,10 T180,28 T240,16"
-              : "M0,28 Q40,36 80,18 T140,24 T200,8 T240,20",
-        }))
-      : [
-          {
-            id: "demo-1",
-            job_title: "Electrical Rewiring",
-            trade: "Electrical",
-            worker_name: "Kassahun B.",
-            worker_avatar: null,
-            budget: 3500,
-            status: "in_progress",
-            progress: "↑ 65% In Progress",
-            curveColor: "#45BA50",
-            path: "M0,32 Q30,12 60,24 T120,10 T180,28 T240,16",
-          },
-          {
-            id: "demo-2",
-            job_title: "Pipe Leak Inspection",
-            trade: "Plumbing",
-            worker_name: "Tadesse M.",
-            worker_avatar: null,
-            budget: 1800,
-            status: "accepted",
-            progress: "● Active Direct Payment",
-            curveColor: "#3B82F6",
-            path: "M0,28 Q40,36 80,18 T140,24 T200,8 T240,20",
-          },
-        ];
+    // Filter payments inside the date window
+    const windowPayments = (payments || []).filter((p) => {
+      const d = p.payment_created_at ? new Date(p.payment_created_at) : null;
+      return d && filterCutoff && d >= filterCutoff;
+    });
+
+    const sum = windowPayments.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+    if (sum > 0) return sum;
+
+    // Fallback to contracts created in that window
+    return filteredContracts.reduce((s, c) => s + (Number(c.budget) || 0), 0);
+  }, [timeFilter, userData.totalSpent, payments, filterCutoff, filteredContracts, totalBudget]);
 
   return (
     <div className="w-full max-w-lg mx-auto lg:max-w-none lg:mx-0 space-y-6 lg:space-y-8 pb-20 select-none">
       
       {/* ── 1. TOTAL SPEND HEADER ── */}
-      {/* 1A. Mobile View: Exact Sixpay Visual Match (< lg) */}
+      {/* 1A. Mobile View: Exact Sixpay Visual Match with Dynamic Time Filter (< lg) */}
       <section className="lg:hidden px-1 sm:px-2 pt-1">
         {/* Total Spend Label + Currency Switch Pill */}
-        <div className="flex items-center gap-2 mb-1.5">
-          <span className="text-caption-1-semibold text-zinc-600 dark:text-zinc-300 font-bold uppercase tracking-wide text-[11px]">
-            Total Spend
-          </span>
-          <button
-            type="button"
-            className="w-5 h-5 rounded-full bg-background-tertiary-default flex items-center justify-center text-text-secondary hover:text-text-primary active:scale-90 transition-transform"
-            title="Currency: ETB"
-          >
-            <RiArrowLeftRightLine className="w-3 h-3" />
-          </button>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-caption-1-semibold text-zinc-600 dark:text-zinc-300 font-bold uppercase tracking-wide text-[11px]">
+              {timeFilter === "all" ? "Total Spend" : timeFilter === "month" ? "Spend This Month" : "Spend Last 3 Mo"}
+            </span>
+            <button
+              type="button"
+              className="w-5 h-5 rounded-full bg-background-tertiary-default flex items-center justify-center text-text-secondary hover:text-text-primary active:scale-90 transition-transform"
+              title="Currency: ETB"
+            >
+              <RiArrowLeftRightLine className="w-3 h-3" />
+            </button>
+          </div>
+
+          {/* Time Filter Pills */}
+          <div className="flex items-center gap-1 p-0.5 rounded-xl bg-background-tertiary-default border border-border-button-default">
+            <button
+              type="button"
+              onClick={() => setTimeFilter("all")}
+              className={cx(
+                "px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer",
+                timeFilter === "all"
+                  ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-xs"
+                  : "text-text-tertiary"
+              )}
+            >
+              Total
+            </button>
+            <button
+              type="button"
+              onClick={() => setTimeFilter("month")}
+              className={cx(
+                "px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer",
+                timeFilter === "month"
+                  ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-xs"
+                  : "text-text-tertiary"
+              )}
+            >
+              Month
+            </button>
+            <button
+              type="button"
+              onClick={() => setTimeFilter("quarter")}
+              className={cx(
+                "px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer",
+                timeFilter === "quarter"
+                  ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-xs"
+                  : "text-text-tertiary"
+              )}
+            >
+              3 Mo
+            </button>
+          </div>
         </div>
 
         {/* Big Bold Spend + High-Contrast ETB + Eye Toggle + Circular Plus Action Button */}
@@ -458,7 +542,7 @@ export default function ClientDashboardContent({
         </div>
       </section>
 
-      {/* 1B. Desktop View: Edge-to-Edge Widescreen Bento Banner (lg and up) */}
+      {/* 1B. Desktop View: Edge-to-Edge Widescreen Bento Banner with Date Filter (lg and up) */}
       <section className="hidden lg:grid lg:grid-cols-12 gap-6 items-stretch">
         {/* Left: Total Spend & Widescreen Stats Card (spans 8 cols) */}
         <div className="lg:col-span-8 rounded-3xl bg-background-secondary-default border border-border-button-default p-6 xl:p-8 shadow-xs flex flex-col justify-between relative overflow-hidden">
@@ -467,14 +551,56 @@ export default function ClientDashboardContent({
 
           <div className="flex items-start justify-between relative z-10">
             <div>
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-3 mb-2">
                 <span className="text-caption-1-semibold text-zinc-600 dark:text-zinc-300 font-bold uppercase tracking-wider text-xs">
-                  Total Spend
+                  {timeFilter === "all" ? "Total Spend" : timeFilter === "month" ? "Spend This Month" : "Spend Last 3 Months"}
                 </span>
+
+                {/* Desktop Time Filter Segmented Control */}
+                <div className="flex items-center gap-1 p-0.5 rounded-xl bg-background-tertiary-default/80 border border-border-button-default text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setTimeFilter("all")}
+                    className={cx(
+                      "px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer",
+                      timeFilter === "all"
+                        ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-xs"
+                        : "text-text-tertiary hover:text-text-primary"
+                    )}
+                  >
+                    All Time
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTimeFilter("month")}
+                    className={cx(
+                      "px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer",
+                      timeFilter === "month"
+                        ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-xs"
+                        : "text-text-tertiary hover:text-text-primary"
+                    )}
+                  >
+                    This Month
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTimeFilter("quarter")}
+                    className={cx(
+                      "px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer",
+                      timeFilter === "quarter"
+                        ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-xs"
+                        : "text-text-tertiary hover:text-text-primary"
+                    )}
+                  >
+                    Last 3 Months
+                  </button>
+                </div>
+
                 <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#45BA50]/15 text-[#45BA50] border border-[#45BA50]/30">
                   Direct Payments
                 </span>
               </div>
+
               <div className="flex items-baseline gap-3">
                 <h1 className="text-4xl xl:text-5xl font-black text-text-primary tracking-tight flex items-baseline">
                   <span className="text-2xl xl:text-3xl text-zinc-900 dark:text-white font-black mr-2.5 tracking-tight">
@@ -504,7 +630,7 @@ export default function ClientDashboardContent({
                 </button>
               </div>
               <p className="text-caption-1-semibold text-text-tertiary mt-2">
-                Total lifetime payments disbursed to verified Dire Dawa artisan agreements.
+                Real direct disbursements to verified artisans across Dire Dawa.
               </p>
             </div>
 
@@ -523,7 +649,7 @@ export default function ClientDashboardContent({
             <div className="space-y-0.5">
               <p className="text-xs font-medium text-text-tertiary">Active Contracts</p>
               <p className="text-xl font-black text-text-primary">
-                {activeContracts.length} <span className="text-xs font-semibold text-[#45BA50]">In Progress</span>
+                {filteredContracts.length} <span className="text-xs font-semibold text-[#45BA50]">In Progress</span>
               </p>
             </div>
             <div className="space-y-0.5">
@@ -564,10 +690,10 @@ export default function ClientDashboardContent({
               <span>Find & Hire Workers</span>
             </Link>
             <Link
-              href="/client/contracts"
+              href="/client/history"
               className="w-full h-10 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-semibold text-xs flex items-center justify-center transition-colors"
             >
-              <span>Manage Existing Contracts</span>
+              <span>View Full History & Receipts</span>
             </Link>
           </div>
         </div>
@@ -579,7 +705,7 @@ export default function ClientDashboardContent({
         <section className="space-y-3">
           <div className="flex items-center justify-between px-1 sm:px-2">
             <h2 className="text-headline-medium font-bold text-text-primary">
-              My Contracts
+              My Contracts ({filteredContracts.length})
             </h2>
             <Link
               href="/client/contracts"
@@ -590,17 +716,35 @@ export default function ClientDashboardContent({
             </Link>
           </div>
 
-          <div className="flex gap-3.5 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 py-1 snap-x">
-            {displayContracts.map((contract, i) => (
-              <ContractCard
-                key={contract.id || i}
-                contract={contract}
-                index={i}
-                onClick={() => setSelectedContract(contract)}
-                isDesktop={false}
-              />
-            ))}
-          </div>
+          {filteredContracts.length > 0 ? (
+            <div className="flex gap-3.5 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 py-1 snap-x">
+              {filteredContracts.map((contract, i) => (
+                <ContractCard
+                  key={contract.id || i}
+                  contract={contract}
+                  index={i}
+                  onClick={() => setSelectedContract(contract)}
+                  isDesktop={false}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-3xl bg-background-secondary-default border border-border-button-default p-6 text-center space-y-2">
+              <p className="text-body-medium font-bold text-text-primary">No contracts found</p>
+              <p className="text-caption-1-semibold text-text-tertiary text-xs">
+                {timeFilter === "all"
+                  ? "You don't have any active contracts. Find a verified artisan to get started."
+                  : "No contracts were created in this time period."}
+              </p>
+              <Link
+                href="/client/search"
+                className="inline-flex items-center gap-1.5 mt-2 px-4 py-2 rounded-xl bg-[#45BA50] text-zinc-950 font-bold text-xs"
+              >
+                <RiAddLine className="w-4 h-4 stroke-[2]" />
+                <span>Hire an Artisan</span>
+              </Link>
+            </div>
+          )}
         </section>
 
         {/* Mobile "Today Top Movers" */}
@@ -623,14 +767,14 @@ export default function ClientDashboardContent({
         </section>
 
         {/* Mobile "Recent Requests" */}
-        {recentJobs.length > 0 && (
+        {filteredJobs.length > 0 && (
           <section className="space-y-3">
             <div className="flex items-center justify-between px-1 sm:px-2">
               <h2 className="text-headline-medium font-bold text-text-primary">
-                Recent Requests
+                Recent Requests ({filteredJobs.length})
               </h2>
               <Link
-                href="/client/contracts"
+                href="/client/history"
                 className="text-xs sm:text-sm font-bold text-[#45BA50] dark:text-[#a4fe47] hover:underline transition-colors flex items-center gap-0.5"
               >
                 <span>History</span>
@@ -639,7 +783,7 @@ export default function ClientDashboardContent({
             </div>
 
             <div className="rounded-3xl bg-background-secondary-default border border-border-button-default p-4 divide-y divide-border-separator-border shadow-xs">
-              {recentJobs.slice(0, 4).map((job) => (
+              {filteredJobs.slice(0, 4).map((job) => (
                 <div
                   key={job.id}
                   className="py-3 flex items-center justify-between gap-3 first:pt-1 last:pb-1"
@@ -659,9 +803,9 @@ export default function ClientDashboardContent({
                   </div>
                   <Chip
                     variant="caption"
-                    color={job.status === "completed" ? "lime" : "blue"}
+                    color={job.status === "completed" || job.status === "paid" || job.status === "closed" ? "lime" : "blue"}
                   >
-                    {job.status === "completed" ? "Completed" : "In Progress"}
+                    {job.status === "completed" || job.status === "paid" || job.status === "closed" ? "Completed" : "In Progress"}
                   </Chip>
                 </div>
               ))}
@@ -679,10 +823,10 @@ export default function ClientDashboardContent({
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-headline-medium font-bold text-text-primary">
-                  My Contracts
+                  My Contracts ({filteredContracts.length})
                 </h2>
                 <p className="text-caption-1-semibold text-text-tertiary mt-0.5">
-                  Live direct agreements with sparkline budget progression
+                  Real contracts from your account with sparkline progress
                 </p>
               </div>
               <Link
@@ -695,17 +839,35 @@ export default function ClientDashboardContent({
             </div>
 
             {/* Grid of Contract Cards Filling Width */}
-            <div className="grid grid-cols-2 xl:grid-cols-3 gap-5">
-              {displayContracts.map((contract, i) => (
-                <ContractCard
-                  key={contract.id || i}
-                  contract={contract}
-                  index={i}
-                  onClick={() => setSelectedContract(contract)}
-                  isDesktop={true}
-                />
-              ))}
-            </div>
+            {filteredContracts.length > 0 ? (
+              <div className="grid grid-cols-2 xl:grid-cols-3 gap-5">
+                {filteredContracts.map((contract, i) => (
+                  <ContractCard
+                    key={contract.id || i}
+                    contract={contract}
+                    index={i}
+                    onClick={() => setSelectedContract(contract)}
+                    isDesktop={true}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-3xl bg-background-secondary-default border border-border-button-default p-8 text-center space-y-2">
+                <p className="text-body-medium font-bold text-text-primary">No contracts found</p>
+                <p className="text-caption-1-semibold text-text-tertiary">
+                  {timeFilter === "all"
+                    ? "You don't have any active contracts. Find a verified artisan to get started."
+                    : "No contracts were created in this time period."}
+                </p>
+                <Link
+                  href="/client/search"
+                  className="inline-flex items-center gap-1.5 mt-2 px-4 py-2 rounded-xl bg-[#45BA50] text-zinc-950 font-bold text-xs"
+                >
+                  <RiAddLine className="w-4 h-4 stroke-[2]" />
+                  <span>Hire an Artisan</span>
+                </Link>
+              </div>
+            )}
           </section>
 
           {/* Desktop Expanded Recent Requests Table Card */}
@@ -713,14 +875,14 @@ export default function ClientDashboardContent({
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-headline-medium font-bold text-text-primary">
-                  Recent Job Requests
+                  Recent Job Requests ({filteredJobs.length})
                 </h2>
                 <p className="text-caption-1-semibold text-text-tertiary mt-0.5">
                   Direct requests commissioned by your account
                 </p>
               </div>
               <Link
-                href="/client/contracts"
+                href="/client/history"
                 className="text-xs font-bold text-[#45BA50] dark:text-[#a4fe47] hover:underline transition-colors flex items-center gap-0.5"
               >
                 <span>Full History</span>
@@ -730,8 +892,8 @@ export default function ClientDashboardContent({
 
             <div className="rounded-3xl bg-background-secondary-default border border-border-button-default shadow-xs overflow-hidden">
               <div className="divide-y divide-border-separator-border">
-                {recentJobs.length > 0 ? (
-                  recentJobs.slice(0, 5).map((job) => (
+                {filteredJobs.length > 0 ? (
+                  filteredJobs.slice(0, 5).map((job) => (
                     <div
                       key={job.id}
                       className="px-6 py-4 flex items-center justify-between hover:bg-background-tertiary-default/50 transition-colors"
@@ -763,14 +925,14 @@ export default function ClientDashboardContent({
                       <div className="flex items-center gap-3 shrink-0">
                         <Chip
                           variant="caption"
-                          color={job.status === "completed" ? "lime" : "blue"}
+                          color={job.status === "completed" || job.status === "paid" || job.status === "closed" ? "lime" : "blue"}
                         >
-                          {job.status === "completed" ? "Completed" : "In Progress"}
+                          {job.status === "completed" || job.status === "paid" || job.status === "closed" ? "Completed" : "In Progress"}
                         </Chip>
                         <Link
-                          href="/client/contracts"
+                          href="/client/history"
                           className="p-1.5 rounded-full hover:bg-background-tertiary-default text-text-tertiary hover:text-text-primary transition-colors"
-                          title="View contract details"
+                          title="View history & receipts"
                         >
                           <RiArrowRightSLine className="w-5 h-5" />
                         </Link>
@@ -779,9 +941,11 @@ export default function ClientDashboardContent({
                   ))
                 ) : (
                   <div className="p-8 text-center">
-                    <p className="text-body-medium font-bold text-text-primary">No recent requests</p>
+                    <p className="text-body-medium font-bold text-text-primary">No requests found</p>
                     <p className="text-caption-1-semibold text-text-tertiary mt-1">
-                      When you post a request or hire an artisan, they will appear here.
+                      {timeFilter === "all"
+                        ? "When you post a request or hire an artisan, they will appear here."
+                        : "No requests found for this time period."}
                     </p>
                     <Link
                       href="/client/search"
@@ -864,10 +1028,10 @@ export default function ClientDashboardContent({
                 <span>Dire Dawa Support 24/7</span>
               </Link>
               <Link
-                href="/client/disputes"
+                href="/client/history"
                 className="text-xs font-semibold text-text-tertiary hover:text-text-primary transition-colors"
               >
-                Resolution Center
+                Audit History
               </Link>
             </div>
           </div>
@@ -883,11 +1047,11 @@ export default function ClientDashboardContent({
                 <span>Find Workers</span>
               </Link>
               <Link
-                href="/client/messages"
+                href="/client/history"
                 className="p-3 rounded-2xl bg-background-tertiary-default/50 hover:bg-background-tertiary-default text-text-primary font-bold text-caption-1-semibold flex flex-col items-center text-center gap-1.5 transition-colors"
               >
-                <RiChat1Line className="w-5 h-5 text-blue-500" />
-                <span>Live Messages</span>
+                <RiFileTextLine className="w-5 h-5 text-blue-500" />
+                <span>All Receipts</span>
               </Link>
             </div>
           </div>
@@ -967,7 +1131,7 @@ export default function ClientDashboardContent({
               <div className="flex items-center justify-between text-body-medium py-3 px-1 mb-5 border-b border-border-separator-border">
                 <span className="text-text-tertiary">Agreed Contract Payment:</span>
                 <span className="text-title-3-semibold font-black text-text-primary">
-                  ETB {selectedContract.budget ? Number(selectedContract.budget).toLocaleString() : (selectedContract.budgetVal || "3,500")}
+                  ETB {selectedContract.budgetVal || (selectedContract.budget ? Number(selectedContract.budget).toLocaleString() : "1,000")}
                 </span>
               </div>
 
