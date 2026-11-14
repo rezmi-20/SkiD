@@ -228,7 +228,7 @@ export default function MapComponent({
             </Popup>
           </Marker>
 
-          {/* Workers Pins with Rating Bubbles */}
+          {/* Workers Pins with Rating Bubbles - Clicking selects artisan in ride-hailing bottom sheet */}
           {workers.filter(w => isValidCoord(w.lat) && isValidCoord(w.lng)).map((worker) => {
             const isSelected = selectedWorkerId === worker.id;
             return (
@@ -241,26 +241,7 @@ export default function MapComponent({
                     onSelectWorker?.(worker);
                   },
                 }}
-              >
-                <Popup className="compact-popup">
-                  <div className="p-1 font-sans min-w-[140px]">
-                    <p className="font-black text-xs mb-0.5 truncate text-white">{worker.name}</p>
-                    <p className="text-[10px] text-[#a4fe47] uppercase font-bold mb-1.5 truncate">{worker.skill}</p>
-                    
-                    <div className="flex items-center justify-between text-[10px] mb-2 text-white/80">
-                      <span className="text-amber-400 font-bold">★ {worker.rating > 0 ? worker.rating.toFixed(1) : "5.0"}</span>
-                      <span>{worker.distance !== "N/A" ? `${worker.distance} km` : "Dire Dawa"}</span>
-                    </div>
-                    
-                    <a 
-                      href={`/client/worker/${worker.id}`} 
-                      className="block text-center py-1.5 bg-[#45BA50] hover:bg-[#3ca346] text-white text-[10px] font-black uppercase tracking-wider rounded-full no-underline transition-colors shadow-xs"
-                    >
-                      View Profile
-                    </a>
-                  </div>
-                </Popup>
-              </Marker>
+              />
             );
           })}
 

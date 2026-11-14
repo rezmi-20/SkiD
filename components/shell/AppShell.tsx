@@ -53,7 +53,7 @@ export default function AppShell({
 
   if (!mounted) return null;
 
-  const isMessagesPage = /^\/(client\/worker\/|client\/messages(\/|$)|worker\/messages(\/|$)|contracts\/)/.test(pathname);
+  const isFullBleedPage = /^\/(client\/worker\/|client\/messages(\/|$)|worker\/messages(\/|$)|contracts\/|client\/search(\/|$))/.test(pathname);
 
   // Derive localized current page title for mobile header
   const getPageTitle = () => {
@@ -202,7 +202,7 @@ export default function AppShell({
 
         {/* ── Main Content ── */}
         <main className="flex-1 w-full overflow-x-clip flex flex-col">
-          {isMessagesPage ? (
+          {isFullBleedPage ? (
             <div className="w-full flex-1 flex flex-col">
               {children}
             </div>
