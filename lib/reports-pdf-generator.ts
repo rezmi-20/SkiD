@@ -54,9 +54,10 @@ export async function generateGovernancePdfBuffer(data: GovernanceReportData): P
       });
 
       // Register Ethiopian Nyala font for Amharic script if available on system
-      const nyalaPath = "C:/Windows/Fonts/nyala.ttf";
+      const fontsDir = process.platform === "win32" ? path.join(process.env.WINDIR || "C:\\Windows", "Fonts") : "";
+      const nyalaPath = fontsDir ? path.join(fontsDir, "nyala.ttf") : "";
       let hasNyala = false;
-      if (fs.existsSync(nyalaPath)) {
+      if (nyalaPath && fs.existsSync(nyalaPath)) {
         try {
           doc.registerFont("Nyala", nyalaPath);
           hasNyala = true;

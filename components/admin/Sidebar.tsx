@@ -208,8 +208,8 @@ export function Sidebar({ userEmail, adminName, adminRole, permissions }: Sideba
     overview: true,
     identity: true,
     disputes: true,
-    operations: false,
-    system: false,
+    operations: true,
+    system: true,
   });
 
   useEffect(() => {
@@ -305,18 +305,18 @@ export function Sidebar({ userEmail, adminName, adminRole, permissions }: Sideba
                       className={cn(
                         "relative flex items-center justify-center w-10 h-10 mx-auto rounded-lg transition-all duration-200 group",
                         isActive
-                          ? "bg-sidebar-accent text-accent shadow-xs"
-                          : "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                          ? "bg-slate-900/[0.08] dark:bg-white/[0.08] text-[#45BA50] shadow-xs"
+                          : "text-muted-foreground hover:text-sidebar-foreground hover:bg-slate-900/[0.04] dark:hover:bg-white/[0.04]"
                       )}
                     >
                       {/* Active Left Indicator Bar */}
                       <span
                         className={cn(
-                          "absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-accent transition-all duration-300",
+                          "absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-[#45BA50] transition-all duration-300",
                           isActive ? "opacity-100" : "opacity-0"
                         )}
                       />
-                      <span className="transition-transform duration-200 group-hover:scale-110">
+                      <span className={cn("transition-transform duration-200 group-hover:scale-110 [&>svg]:w-5 [&>svg]:h-5", isActive ? "text-[#45BA50]" : "")}>
                         {icon}
                       </span>
                     </Link>
@@ -334,23 +334,23 @@ export function Sidebar({ userEmail, adminName, adminRole, permissions }: Sideba
                 <Link
                   href={item.href}
                   className={cn(
-                    "group relative w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200",
+                    "group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
                     isActive
-                      ? "bg-sidebar-accent text-sidebar-foreground font-semibold"
-                      : "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                      ? "bg-slate-900/[0.08] dark:bg-white/[0.08] text-sidebar-foreground font-semibold shadow-xs"
+                      : "text-muted-foreground hover:text-sidebar-foreground hover:bg-slate-900/[0.04] dark:hover:bg-white/[0.04]"
                   )}
                 >
                   {/* Active Left Indicator Bar */}
                   <span
                     className={cn(
-                      "absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-accent transition-all duration-300",
+                      "absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-[#45BA50] transition-all duration-300",
                       isActive ? "opacity-100" : "opacity-0"
                     )}
                   />
                   <span
                     className={cn(
-                      "shrink-0 transition-transform duration-200",
-                      isActive ? "text-accent" : "text-muted-foreground group-hover:scale-110 group-hover:text-foreground"
+                      "shrink-0 transition-transform duration-200 [&>svg]:w-5 [&>svg]:h-5",
+                      isActive ? "text-[#45BA50]" : "text-muted-foreground group-hover:scale-110 group-hover:text-foreground"
                     )}
                   >
                     {item.icon}
@@ -388,23 +388,23 @@ export function Sidebar({ userEmail, adminName, adminRole, permissions }: Sideba
                         key={href}
                         href={href}
                         className={cn(
-                          "group relative w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200",
+                          "group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
                           isActive
-                            ? "bg-sidebar-accent text-sidebar-foreground font-semibold"
-                            : "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                            ? "bg-slate-900/[0.08] dark:bg-white/[0.08] text-sidebar-foreground font-semibold shadow-xs"
+                            : "text-muted-foreground hover:text-sidebar-foreground hover:bg-slate-900/[0.04] dark:hover:bg-white/[0.04]"
                         )}
                       >
                         {/* Active Left Indicator Bar */}
                         <span
                           className={cn(
-                            "absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-accent transition-all duration-300",
+                            "absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-[#45BA50] transition-all duration-300",
                             isActive ? "opacity-100" : "opacity-0"
                           )}
                         />
                         <span
                           className={cn(
-                            "shrink-0 transition-transform duration-200",
-                            isActive ? "text-accent" : "text-muted-foreground group-hover:scale-110 group-hover:text-foreground"
+                            "shrink-0 transition-transform duration-200 [&>svg]:w-5 [&>svg]:h-5",
+                            isActive ? "text-[#45BA50]" : "text-muted-foreground group-hover:scale-110 group-hover:text-foreground"
                           )}
                         >
                           {icon}
@@ -435,7 +435,7 @@ export function Sidebar({ userEmail, adminName, adminRole, permissions }: Sideba
         >
           <Link
             href="/admin/profile"
-            className="w-8 h-8 rounded-lg bg-gradient-to-tr from-accent to-chart-1 text-accent-foreground flex items-center justify-center font-bold text-xs shrink-0 shadow-xs hover:opacity-90 transition"
+            className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#45BA50] to-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs hover:opacity-90 transition"
             title="Profile"
           >
             {getInitials(userEmail || adminName || "AD")}
@@ -444,7 +444,7 @@ export function Sidebar({ userEmail, adminName, adminRole, permissions }: Sideba
           {!collapsed && (
             <div className="min-w-0 flex-1">
               <Link href="/admin/profile" className="block group">
-                <p className="text-xs font-semibold text-sidebar-foreground truncate leading-tight group-hover:text-accent">
+                <p className="text-xs font-semibold text-sidebar-foreground truncate leading-tight group-hover:text-[#45BA50]">
                   {adminName || userEmail?.split("@")[0] || "Admin"}
                 </p>
                 <p className="text-[10px] text-muted-foreground truncate leading-tight">
@@ -479,7 +479,7 @@ export function Sidebar({ userEmail, adminName, adminRole, permissions }: Sideba
                 className="w-8 h-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground transition cursor-pointer"
                 title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
               >
-                {isDark ? <Moon className="w-3.5 h-3.5 text-accent" /> : <Sun className="w-3.5 h-3.5 text-amber-500" />}
+                {isDark ? <Moon className="w-3.5 h-3.5 text-[#45BA50]" /> : <Sun className="w-3.5 h-3.5 text-amber-500" />}
               </button>
             ) : (
               <>
@@ -506,7 +506,7 @@ export function Sidebar({ userEmail, adminName, adminRole, permissions }: Sideba
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <Moon className={cn("w-3.5 h-3.5", isDark ? "text-accent" : "text-muted-foreground")} />
+                  <Moon className={cn("w-3.5 h-3.5", isDark ? "text-[#45BA50]" : "text-muted-foreground")} />
                   <span>Dark</span>
                 </button>
               </>
