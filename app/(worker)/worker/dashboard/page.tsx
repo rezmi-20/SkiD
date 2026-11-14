@@ -18,6 +18,7 @@ export default async function WorkerDashboardPage() {
     SELECT
       u.is_suspended,
       wp.full_name,
+      wp.avatar_url,
       wp.is_verified,
       wp.verification_status,
       (
@@ -30,6 +31,7 @@ export default async function WorkerDashboardPage() {
       ) AS identity_complete,
       wp.district,
       wp.skills,
+      wp.hourly_rate,
       wp.availability
     FROM users u
     LEFT JOIN worker_profiles wp ON wp.user_id = u.id
@@ -50,9 +52,44 @@ export default async function WorkerDashboardPage() {
     redirect(workerRoute);
   }
 
-  const [pendingJobs, recentJobs] = await Promise.all([
+  // Fetch real jobs, real earnings, and real active contracts in parallel
+  const [
+    pendingJobs,
+    recentJobs,
+    totalEarnedRes,
+    activeContractsRes,
+    completedCountRes,
+  ] = await Promise.all([
     getPendingJobs(),
     getWorkerJobs(),
+    sql`
+      SELECT COALESCE(SUM(p.net_amount), 0)::numeric AS total_earned
+      FROM payments p
+      JOIN jobs j ON p.job_id = j.id
+      WHERE j.worker_id = ${session.user.id} AND p.status IN ('released', 'successful', 'completed', 'paid')
+    `,
+    sql`
+      SELECT 
+        c.id as contract_id,
+        COALESCE(c.job_title, j.title) as job_title,
+        COALESCE(c.payment_amount, j.budget, 0)::numeric as budget,
+        cp.full_name as client_name,
+        cp.avatar_url as client_avatar,
+        j.category,
+        j.status as job_status,
+        c.status as contract_status,
+        c.created_at as contract_created_at
+      FROM contracts c
+      JOIN jobs j ON c.job_id = j.id
+      LEFT JOIN client_profiles cp ON j.client_id = cp.user_id
+      WHERE j.worker_id = ${session.user.id} AND j.status IN ('accepted', 'in_progress', 'signed')
+      ORDER BY c.created_at DESC
+    `,
+    sql`
+      SELECT COUNT(*)::int as completed_count
+      FROM jobs
+      WHERE worker_id = ${session.user.id} AND status IN ('completed', 'paid')
+    `,
   ]);
 
   const hour = new Date().getHours();
@@ -61,21 +98,23 @@ export default async function WorkerDashboardPage() {
   const workerData = {
     fullName: worker?.full_name || "Professional",
     firstName: (worker?.full_name || "Professional").split(" ")[0],
+    avatarUrl: worker?.avatar_url || null,
     isVerified: Boolean(worker?.is_verified && worker?.identity_complete),
     district: worker?.district || "Dire Dawa",
     skills: worker?.skills || [],
+    hourlyRate: worker?.hourly_rate || null,
     availability: worker?.availability || "available",
   };
 
-  const completedJobs = recentJobs.filter((job: any) => job.status === "completed");
+  const totalEarned = Number(totalEarnedRes[0]?.total_earned || 0);
+  const completedJobsCount = Number(completedCountRes[0]?.completed_count || 0);
   const activeJobs = recentJobs.filter((job: any) => ["accepted", "active", "in_progress"].includes(job.status));
-  const totalRevenue = completedJobs.reduce((sum: number, job: any) => sum + (Number(job.budget) || 0), 0);
 
   const stats = {
     activeJobs: activeJobs.length,
     pendingJobs: pendingJobs.length,
-    completedJobs: completedJobs.length,
-    revenue: totalRevenue,
+    completedJobs: completedJobsCount,
+    revenue: totalEarned,
   };
 
   return (
@@ -83,7 +122,8 @@ export default async function WorkerDashboardPage() {
       worker={workerData}
       stats={stats}
       pendingJobs={pendingJobs}
-      recentJobs={recentJobs.slice(0, 6)}
+      recentJobs={recentJobs.slice(0, 8)}
+      activeContracts={activeContractsRes || []}
       greeting={greeting}
     />
   );

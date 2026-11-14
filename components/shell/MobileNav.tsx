@@ -11,6 +11,7 @@ import {
   Briefcase,
   FileText,
   User,
+  Users,
   Sparkles,
   MessageSquare,
 } from "lucide-react";
@@ -53,6 +54,7 @@ export default function MobileNav({ role }: MobileNavProps) {
 
   const isHomeActive = pathname === `/${role}/dashboard`;
   const isSearchActive = pathname?.includes("/search") || pathname?.includes("/gigs");
+  const isCommunityActive = pathname?.includes("/community");
   const isContractsActive = pathname?.includes("/contracts") || pathname?.includes("/payments");
   const isProfileActive = pathname?.includes("/profile");
 
@@ -130,15 +132,19 @@ export default function MobileNav({ role }: MobileNavProps) {
           )}
         </Link>
 
-        {/* 3. Center Action Button: Prominent Floating Dark Green Circle with Sparkle */}
+        {/* 3. Center Action Button: Elevated Community Feed Icon */}
         <div className="relative flex items-center justify-center -top-3.5 px-1">
           <Link
-            href={role === "worker" ? "/worker/gigs" : "/client/search"}
-            className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-[#134e27] hover:bg-[#0e3b1c] active:scale-90 transition-all flex items-center justify-center shadow-[0_8px_24px_rgba(19,78,39,0.55)] border-[3.5px] border-white dark:border-[#12171e] text-white touch-manipulation group"
-            title="Quick Action"
-            aria-label="Quick Action"
+            href={`/${role}/community`}
+            className={`w-13 h-13 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-[0_8px_24px_rgba(19,78,39,0.55)] border-[3.5px] border-white dark:border-[#12171e] text-white touch-manipulation group active:scale-90 transition-all ${
+              isCommunityActive
+                ? "bg-[#45BA50] shadow-[0_8px_28px_rgba(69,186,80,0.6)] ring-4 ring-[#45BA50]/30"
+                : "bg-[#134e27] hover:bg-[#0e3b1c]"
+            }`}
+            title={t("nav.community") || "Community Feed"}
+            aria-label={t("nav.community") || "Community Feed"}
           >
-            <Sparkles className="h-6 w-6 text-[#a4fe47] group-hover:rotate-12 transition-transform duration-200" />
+            <Users className="h-6 w-6 text-[#a4fe47] group-hover:scale-110 transition-transform duration-200" />
           </Link>
         </div>
 

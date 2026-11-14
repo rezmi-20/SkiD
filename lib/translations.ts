@@ -1892,7 +1892,7 @@ export const translations = {
     "worker.dashboard.skillsListed": "skills listed",
     "worker.dashboard.setHourlyTrades": "Set hourly rate & trades",
     "worker.dashboard.directBank": "Direct Telebirr / Bank",
-    "worker.dashboard.zeroEscrow": "Zero escrow delays on completion",
+    "worker.dashboard.zeroEscrow": "Instant direct payout upon completion",
     "worker.dashboard.pendingInquiries": "Pending Inquiries",
     "worker.dashboard.noPendingInquiries": "No pending job inquiries",
     "worker.dashboard.keepProfileUpdated": "Keep your profile and skills updated so clients searching for trades in your district can reach you.",

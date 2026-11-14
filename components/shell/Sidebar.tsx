@@ -158,80 +158,122 @@ export default function Sidebar({ role, userEmail, collapsed, onToggle }: Sideba
           collapsed ? "w-[68px]" : "w-64"
         )}
       >
-        {/* ── Logo ── */}
-        <div className="h-16 flex items-center px-4 shrink-0 border-b border-sidebar-border">
-          <DireSkillLogo variant="color" iconSize={32} showWordmark={!collapsed} />
+        {/* ── Brand Header (Flush Top with Top Collapse Button matching Admin Sidebar) ── */}
+        <div
+          className={cn(
+            "flex items-center h-16 px-3.5 border-b border-sidebar-border shrink-0 select-none",
+            collapsed ? "flex-col justify-center gap-1 py-2 h-auto" : "justify-between"
+          )}
+        >
+          <div className="flex items-center gap-2.5 overflow-hidden">
+            <DireSkillLogo variant="color" iconSize={26} showWordmark={!collapsed} />
+          </div>
+
+          <button
+            onClick={onToggle}
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200 cursor-pointer"
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? (
+              <ChevronRight className="w-4 h-4" />
+            ) : (
+              <ChevronLeft className="w-4 h-4" />
+            )}
+          </button>
         </div>
 
         {/* ── Nav Groups ── */}
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 no-scrollbar">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-2 no-scrollbar space-y-3">
           {groups.map((group, gi) => (
-            <div key={group.label} className={cn("px-3", gi > 0 && "mt-2")}>
+            <div key={group.label} className={cn("space-y-1", gi > 0 && "pt-1")}>
               {/* Group label — only shown expanded */}
               {!collapsed && (
-                <p className="px-2 mb-1 mt-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                <p className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
                   {group.label}
                 </p>
               )}
               {collapsed && gi > 0 && (
-                <div className="my-2 border-t border-sidebar-border/50" />
+                <div className="my-2 border-t border-sidebar-border/40" />
               )}
 
               {group.items.map((item) => {
                 const isActive =
                   pathname === item.href ||
-                  (item.href !== "/" && pathname?.startsWith(item.href));
+                  (item.href !== `/${role}/dashboard` && pathname?.startsWith(item.href));
                 const isMessagesItem = item.href.includes("messages");
-
-                const link = (
-                  <Link
-                    key={item.href}
-                    id={`tour-sidebar-${String(item.key).replace("nav.", "")}`}
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150",
-                      "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                      isActive
-                        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-                        : "text-sidebar-foreground/70",
-                      collapsed && "justify-center px-2"
-                    )}
-                  >
-                    <span className="shrink-0 relative">
-                      {item.icon}
-                      {collapsed && isMessagesItem && unreadCount > 0 && (
-                        <span className="absolute -top-1.5 -right-1.5 min-w-[15px] h-[15px] px-0.5 rounded-full bg-rose-500 text-white text-[8px] font-black flex items-center justify-center shadow-sm">
-                          {unreadCount > 9 ? "9+" : unreadCount}
-                        </span>
-                      )}
-                    </span>
-                    {!collapsed && (
-                      <div className="flex-1 flex items-center justify-between min-w-0">
-                        <span className="truncate">{t(item.key)}</span>
-                        {isMessagesItem && unreadCount > 0 && (
-                          <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center shadow-sm">
-                            {unreadCount > 99 ? "99+" : unreadCount}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </Link>
-                );
 
                 if (collapsed) {
                   return (
                     <Tooltip key={item.href}>
                       <TooltipTrigger render={<span className="block" />}>
-                        {link}
+                        <Link
+                          id={`tour-sidebar-${String(item.key).replace("nav.", "")}`}
+                          href={item.href}
+                          className={cn(
+                            "relative flex items-center justify-center w-10 h-10 mx-auto rounded-lg transition-all duration-200 group",
+                            isActive
+                              ? "bg-slate-900/[0.08] dark:bg-white/[0.08] text-[#45BA50] shadow-xs"
+                              : "text-muted-foreground hover:text-sidebar-foreground hover:bg-slate-900/[0.04] dark:hover:bg-white/[0.04]"
+                          )}
+                        >
+                          {/* Active Left Indicator Bar */}
+                          <span
+                            className={cn(
+                              "absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-[#45BA50] transition-all duration-300",
+                              isActive ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          <span className={cn("transition-transform duration-200 group-hover:scale-110 [&>svg]:w-5 [&>svg]:h-5", isActive ? "text-[#45BA50]" : "")}>
+                            {item.icon}
+                          </span>
+                          {isMessagesItem && unreadCount > 0 && (
+                            <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-sidebar" />
+                          )}
+                        </Link>
                       </TooltipTrigger>
-                      <TooltipContent side="right" className="font-medium">
+                      <TooltipContent side="right" className="font-medium text-xs">
                         {t(item.key)}
                       </TooltipContent>
                     </Tooltip>
                   );
                 }
 
-                return link;
+                return (
+                  <Link
+                    key={item.href}
+                    id={`tour-sidebar-${String(item.key).replace("nav.", "")}`}
+                    href={item.href}
+                    className={cn(
+                      "group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                      isActive
+                        ? "bg-slate-900/[0.08] dark:bg-white/[0.08] text-sidebar-foreground font-semibold shadow-xs"
+                        : "text-muted-foreground hover:text-sidebar-foreground hover:bg-slate-900/[0.04] dark:hover:bg-white/[0.04]"
+                    )}
+                  >
+                    {/* Active Left Indicator Bar */}
+                    <span
+                      className={cn(
+                        "absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-[#45BA50] transition-all duration-300",
+                        isActive ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "shrink-0 transition-transform duration-200 [&>svg]:w-5 [&>svg]:h-5",
+                        isActive ? "text-[#45BA50]" : "text-muted-foreground group-hover:scale-110 group-hover:text-foreground"
+                      )}
+                    >
+                      {item.icon}
+                    </span>
+                    <span className="truncate flex-1">{t(item.key)}</span>
+                    {isMessagesItem && unreadCount > 0 && (
+                      <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center shadow-xs">
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </span>
+                    )}
+                  </Link>
+                );
               })}
             </div>
           ))}
@@ -239,27 +281,29 @@ export default function Sidebar({ role, userEmail, collapsed, onToggle }: Sideba
 
         <Separator className="bg-sidebar-border" />
 
-        {/* ── Footer: User + Collapse ── */}
-        <div className="p-3 space-y-1 shrink-0">
-          {/* User card */}
+        {/* ── Footer: User + Sign Out ── */}
+        <div className="p-3 space-y-1.5 shrink-0 select-none">
+          {/* User profile card */}
           <div
             className={cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-xl",
-              collapsed && "justify-center"
+              "flex items-center gap-3 px-2 py-2 rounded-xl bg-slate-900/[0.03] dark:bg-white/[0.03] border border-sidebar-border/60",
+              collapsed && "justify-center px-1"
             )}
           >
             <Avatar className="h-8 w-8 shrink-0 border border-sidebar-border">
               <AvatarImage src={avatarUrl} alt="User avatar" />
-              <AvatarFallback className="text-xs font-bold bg-primary text-primary-foreground">
+              <AvatarFallback className="text-xs font-bold bg-[#45BA50] text-white">
                 {initials}
               </AvatarFallback>
             </Avatar>
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-sidebar-foreground truncate">
-                  {userEmail?.split("@")[0]}
+                <p className="text-xs font-semibold text-sidebar-foreground truncate">
+                  {userEmail?.split("@")[0] || "User"}
                 </p>
-                <p className="text-[11px] text-muted-foreground capitalize">{role}</p>
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#45BA50]/15 text-[#45BA50] capitalize">
+                  {role}
+                </span>
               </div>
             )}
           </div>
@@ -271,46 +315,27 @@ export default function Sidebar({ role, userEmail, collapsed, onToggle }: Sideba
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer"
                   onClick={() => handleAppSignOut()}
                   title={t("common.signout")}
+                  aria-label={t("common.signout")}
                 >
                   <LogOut size={16} />
                 </Button>
               </TooltipTrigger>
-            <TooltipContent side="right">{t("common.signout")}</TooltipContent>
+              <TooltipContent side="right">{t("common.signout")}</TooltipContent>
             </Tooltip>
           ) : (
             <Button
               variant="ghost"
               size="sm"
-              className="w-full justify-start gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              className="w-full justify-start gap-2.5 text-destructive hover:bg-destructive/10 hover:text-destructive text-xs font-medium cursor-pointer"
               onClick={() => handleAppSignOut()}
             >
-              <LogOut size={16} />
+              <LogOut size={15} />
               {t("common.signout") || "Sign Out"}
             </Button>
           )}
-
-          {/* Collapse toggle */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn(
-              "w-full text-muted-foreground hover:text-foreground",
-              collapsed ? "justify-center px-2" : "justify-start gap-2"
-            )}
-            onClick={onToggle}
-          >
-            {collapsed ? (
-              <ChevronRight size={16} />
-            ) : (
-              <>
-                <ChevronLeft size={16} />
-                <span className="text-xs">{t("common.collapse")}</span>
-              </>
-            )}
-          </Button>
         </div>
       </aside>
     </TooltipProvider>
