@@ -24,6 +24,7 @@ interface MapComponentProps {
   workers: Worker[];
   selectedWorkerId?: string | number | null;
   onSelectWorker?: (worker: Worker | null) => void;
+  onMapClick?: () => void;
   className?: string;
 }
 
@@ -72,14 +73,27 @@ const userLocationIcon = () => L.divIcon({
 const MapController = ({ 
   workers, 
   center, 
-  selectedWorker 
+  selectedWorker,
+  onMapClick
 }: { 
   workers: Worker[]; 
   center: [number, number]; 
   selectedWorker?: Worker | null;
+  onMapClick?: () => void;
 }) => {
   const map = useMap();
   const workersHash = workers.map(w => w.id).join(',');
+
+  useEffect(() => {
+    if (!map) return;
+    const handleMapClick = () => {
+      onMapClick?.();
+    };
+    map.on("click", handleMapClick);
+    return () => {
+      map.off("click", handleMapClick);
+    };
+  }, [map, onMapClick]);
 
   useEffect(() => {
     try {
@@ -164,6 +178,7 @@ export default function MapComponent({
   workers,
   selectedWorkerId,
   onSelectWorker,
+  onMapClick,
   className = "",
 }: MapComponentProps) {
   const [isMounted, setIsMounted] = useState(false);
@@ -194,7 +209,7 @@ export default function MapComponent({
           scrollWheelZoom={true}
           style={{ height: "100%", width: "100%", background: isLight ? "#f8f9fa" : "#1a1a1a" }}
         >
-          <MapController workers={workers} center={center} selectedWorker={selectedWorker} />
+          <MapController workers={workers} center={center} selectedWorker={selectedWorker} onMapClick={onMapClick} />
           
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'

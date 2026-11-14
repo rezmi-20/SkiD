@@ -4,20 +4,17 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Worker } from "./types";
 import { useLanguage } from "@/context/LanguageContext";
-import Link from "next/link";
 import { 
   RiStarFill, 
-  RiShieldCheckFill, 
+  RiCheckboxCircleFill, 
+  RiBriefcaseLine,
   RiMapPinLine, 
   RiFlashlightFill,
   RiDropFill,
   RiPaintBrushFill,
   RiHomeGearFill,
   RiBroadcastFill,
-  RiWrenchFill,
-  RiArrowRightLine,
-  RiEyeLine,
-  RiChat1Line
+  RiWrenchFill
 } from "@remixicon/react";
 import { setCachedWorker } from "@/lib/workerCache";
 import { cx } from "@/utils/cx";
@@ -75,10 +72,14 @@ export default function WorkerCard({
     });
   };
 
-  const fallbackImg = `/default-avatar.svg`;
-  const displayPhoto = imgError ? fallbackImg : (worker.photo || fallbackImg);
   const tradeMeta = getTradeMeta(worker.skill);
   const TradeIcon = tradeMeta.icon;
+
+  // Curated reliable portrait fallback
+  const fallbackImg = `/images/worker_holding_card.png`;
+  const displayPhoto = (!imgError && worker.photo && worker.photo !== "/default-avatar.svg")
+    ? worker.photo
+    : fallbackImg;
 
   const handleClick = () => {
     primeCache();
@@ -86,9 +87,12 @@ export default function WorkerCard({
   };
 
   /* ═════════════════════════════════════════════════════════════════════
-     1. TALL PROFILE CARD (For 4-Column Responsive List Grid)
-     - Added height for pro photo, details, bio, skills
-     - Direct Preview, Message, and Book buttons
+     1. MINIMALIST EDITORIAL PROFILE CARD (Direct 1:1 with Alex Clinton Reference Photo)
+     - Prominent rounded portrait on top
+     - Clean Name + Green Verified Checkmark
+     - 1-line clean subtitle
+     - Bottom row: Stats (Rating, Jobs) + Pill Button [Preview +]
+     - Full data accessible on click via Quick Preview modal
      ═════════════════════════════════════════════════════════════════════ */
   if (variant === "grid") {
     return (
@@ -97,149 +101,91 @@ export default function WorkerCard({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
+        onClick={() => {
+          primeCache();
+          onPreview?.(worker);
+        }}
         onMouseEnter={primeCache}
         onTouchStart={primeCache}
         className={cx(
-          "group relative flex flex-col justify-between p-3 sm:p-4 rounded-2xl sm:rounded-3xl select-none transition-all duration-200 border",
-          "bg-background-secondary-default hover:bg-background-tertiary-default/50 border-border-button-default hover:border-[#45BA50]/50 shadow-xs hover:shadow-md",
-          "min-h-[275px] sm:min-h-[295px] w-full",
+          "group relative flex flex-col justify-between p-2.5 sm:p-3 rounded-2xl sm:rounded-3xl select-none transition-all duration-300 border cursor-pointer",
+          "bg-background-secondary-default hover:bg-background-tertiary-default/60 border-border-button-default hover:border-[#45BA50]/50 shadow-xs hover:shadow-md",
           isSelected && "ring-2 ring-[#45BA50] border-[#45BA50]",
           className
         )}
       >
         <div>
-          {/* Top Row: Avatar with Trade Icon + Price & Rating */}
-          <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2.5">
-            {/* Avatar */}
-            <div className="relative w-11 h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl overflow-hidden bg-background-tertiary-default shrink-0 border border-border-button-default shadow-xs">
-              <img
-                src={displayPhoto}
-                alt={worker.name}
-                onError={() => setImgError(true)}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                loading="lazy"
-              />
-              <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-full bg-background-primary-default border border-border-button-default flex items-center justify-center shadow-xs">
-                <TradeIcon className={cx("w-3 h-3 sm:w-3.5 sm:h-3.5", tradeMeta.color)} />
-              </div>
-            </div>
-
-            {/* Price & Rating */}
-            <div className="text-end flex flex-col items-end gap-0.5">
-              <div>
-                <p className="text-xs sm:text-body-medium font-black text-text-primary leading-tight">
-                  ETB {worker.hourlyRate || "450"}
-                </p>
-                <span className="text-[9px] sm:text-[10px] text-text-tertiary font-medium">/hr</span>
-              </div>
-
-              <div className="flex items-center gap-0.5 text-[10px] sm:text-[11px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                <RiStarFill className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-amber-500" />
-                <span>{worker.rating > 0 ? worker.rating.toFixed(1) : "5.0"}</span>
-                <span className="text-text-tertiary font-normal hidden sm:inline">({worker.reviews || 1})</span>
-              </div>
+          {/* Top: Large Rounded Portrait Image (1:1 with Reference Photo) */}
+          <div className="relative w-full aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden bg-background-tertiary-default shrink-0 border border-border-button-default/50">
+            <img
+              src={displayPhoto}
+              alt={worker.name}
+              onError={() => setImgError(true)}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              loading="lazy"
+            />
+            {/* Subtle Trade Badge Overlay */}
+            <div className="absolute top-2 end-2 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-[9px] sm:text-[10px] font-bold flex items-center gap-1 shadow-xs">
+              <TradeIcon className={cx("w-2.5 h-2.5 sm:w-3 sm:h-3", tradeMeta.color)} />
+              <span>{tradeMeta.label}</span>
             </div>
           </div>
 
-          {/* Pro Identity & Verification Check */}
-          <div className="space-y-0.5 mb-2">
-            <div className="flex items-center gap-1 min-w-0">
+          {/* Middle: Name + Green Verified Badge & Clean 1-Line Subtitle */}
+          <div className="mt-2.5 sm:mt-3 space-y-0.5">
+            <div className="flex items-center gap-1.5 min-w-0">
               <h3 className="text-xs sm:text-body-medium font-bold text-text-primary truncate group-hover:text-[#45BA50] transition-colors">
                 {worker.name}
               </h3>
               {worker.isVerified && (
-                <span 
-                  className="shrink-0 text-[#45BA50]"
-                  title={t("search.verifiedProfessional") || "Kebele & Fayda National ID Verified"}
-                >
-                  <RiShieldCheckFill className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="shrink-0 text-[#45BA50]" title="Kebele & Fayda Verified Artisan">
+                  <RiCheckboxCircleFill className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-[#45BA50]" />
                 </span>
               )}
             </div>
 
-            {/* Trade & Kebele Location */}
-            <div className="flex flex-wrap items-center gap-1 text-[10px] sm:text-xs text-text-tertiary">
-              <span className={cx("px-1.5 py-0.5 rounded text-[10px] font-bold", tradeMeta.bg, tradeMeta.color)}>
-                {tradeMeta.label}
-              </span>
-              <span>•</span>
-              <span className="inline-flex items-center gap-0.5 text-text-secondary font-medium">
-                <RiMapPinLine className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#45BA50]" />
-                {worker.district || "Kezira"}
-              </span>
-              <span className="hidden sm:inline">•</span>
-              <span className="hidden sm:inline">{worker.distance !== "N/A" ? `${worker.distance} km` : "Dire Dawa"}</span>
-            </div>
+            <p className="text-[10px] sm:text-xs text-text-tertiary line-clamp-1 leading-relaxed">
+              {worker.bio || `Certified ${tradeMeta.label.toLowerCase()} pro in ${worker.district || "Dire Dawa"}.`}
+            </p>
           </div>
-
-          {/* Bio Snippet */}
-          <p className="text-caption-1-semibold text-text-tertiary line-clamp-1 sm:line-clamp-2 text-[10px] sm:text-xs leading-snug mb-2">
-            {worker.bio || `Certified and experienced ${tradeMeta.label.toLowerCase()} pro serving Dire Dawa.`}
-          </p>
-
-          {/* Verified Skills Tags */}
-          {worker.skills && worker.skills.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-2.5">
-              {worker.skills.slice(0, 2).map((skill, idx) => (
-                <span key={idx} className="px-1.5 py-0.5 rounded bg-background-primary-default border border-border-button-default text-[9px] sm:text-[10px] font-medium text-text-secondary truncate max-w-[120px]">
-                  {skill}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
 
-        {/* ── Bottom Actions Row: Preview & Message Options ── */}
-        <div className="pt-2 sm:pt-2.5 border-t border-separator-border/60 space-y-1.5 mt-auto">
-          <div className="flex items-center gap-1.5">
-            {/* Option: Preview */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                primeCache();
-                onPreview?.(worker);
-              }}
-              className="flex-1 h-7.5 sm:h-8.5 rounded-lg sm:rounded-xl border border-border-button-default bg-background-primary-default hover:bg-background-tertiary-default text-text-primary text-[10px] sm:text-xs font-bold inline-flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-xs active:scale-95 px-1.5"
-              title="Quick Preview Profile"
-            >
-              <RiEyeLine className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-text-secondary" />
-              <span>Preview</span>
-            </button>
-
-            {/* Option: Message */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                primeCache();
-                onMessage?.(worker);
-              }}
-              className="flex-1 h-7.5 sm:h-8.5 rounded-lg sm:rounded-xl border border-[#45BA50]/30 bg-[#134e27]/15 hover:bg-[#134e27]/25 text-[#45BA50] text-[10px] sm:text-xs font-bold inline-flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-xs active:scale-95 px-1.5"
-              title="Send Direct Message"
-            >
-              <RiChat1Line className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              <span>Message</span>
-            </button>
+        {/* Bottom Row: Stats (Left) + Pill Button (Right) matching Reference Photo */}
+        <div className="mt-2.5 sm:mt-3 pt-2 sm:pt-2.5 border-t border-separator-border/60 flex items-center justify-between gap-1.5">
+          {/* Left Stats: Rating & Completed Jobs */}
+          <div className="flex items-center gap-2 sm:gap-2.5 text-[10px] sm:text-xs text-text-tertiary">
+            <span className="flex items-center gap-0.5 sm:gap-1 font-bold text-text-primary">
+              <RiStarFill className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-500 fill-amber-500" />
+              <span>{worker.rating > 0 ? worker.rating.toFixed(1) : "5.0"}</span>
+            </span>
+            <span className="flex items-center gap-0.5 sm:gap-1 font-medium text-text-secondary">
+              <RiBriefcaseLine className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-text-tertiary" />
+              <span>{worker.reviews || 12}</span>
+            </span>
           </div>
 
-          {/* Direct Booking CTA Button */}
-          <Link
-            href={`/client/contract/new?workerId=${worker.id}`}
-            onClick={(e) => e.stopPropagation()}
-            className="w-full h-8 sm:h-9 rounded-lg sm:rounded-xl bg-[#45BA50] hover:bg-[#3ca346] text-white text-[10px] sm:text-xs font-black inline-flex items-center justify-center gap-1 shadow-[0_2px_10px_rgba(69,186,80,0.3)] transition-all cursor-pointer active:scale-95"
+          {/* Right Action: Pill Button [Preview +] */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              primeCache();
+              onPreview?.(worker);
+            }}
+            className="rounded-full border border-border-button-default bg-background-primary-default hover:bg-[#134e27]/10 hover:border-[#45BA50] hover:text-[#45BA50] text-text-primary text-[10px] sm:text-xs font-bold px-2.5 sm:px-3 py-1 shadow-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1"
+            title="Preview full profile"
           >
-            <span>Book Artisan</span>
-            <RiArrowRightLine className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-          </Link>
+            <span>Preview</span>
+            <span className="text-[#45BA50] font-black">+</span>
+          </button>
         </div>
       </motion.div>
     );
   }
 
   /* ═════════════════════════════════════════════════════════════════════
-     2. COMPACT ROW (For Ride-Hailing Map Bottom Sheet)
-     - Preserves the Image 2 Uber/Sky Comfort style row for Map View
+     2. COMPACT ROW (For Ride-Hailing Map View / Bottom Sheet)
+     - Clean compact row with quick action triggers
      ═════════════════════════════════════════════════════════════════════ */
   return (
     <motion.div
@@ -283,7 +229,7 @@ export default function WorkerCard({
               className="shrink-0 text-[#45BA50]"
               title={t("search.verifiedProfessional") || "Kebele & Fayda Verified Pro"}
             >
-              <RiShieldCheckFill className="w-3.5 h-3.5" />
+              <RiCheckboxCircleFill className="w-3.5 h-3.5 fill-[#45BA50]" />
             </span>
           )}
         </div>
