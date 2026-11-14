@@ -2,24 +2,26 @@
 
 import { ViewMode, SearchFilters as FilterType } from "./types";
 import { useLanguage } from "@/context/LanguageContext";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { Chip } from "@/components/base/badges/chip";
+import { Counter } from "@/components/base/badges/counter";
+import { Button } from "@/components/base/buttons/button";
+import { Switch } from "@/components/base/switch/switch";
 import { 
-  SlidersHorizontal, 
-  Star, 
-  Compass, 
-  RotateCcw,
-  Sparkles,
-  Layers,
-  X,
-  ShieldCheck,
-  Zap,
-  Droplets,
-  Paintbrush,
-  Tv,
-  MapPin
-} from "lucide-react";
+  RiEqualizerLine,
+  RiStarFill,
+  RiCompassLine,
+  RiRestartLine,
+  RiCloseLine,
+  RiShieldCheckFill,
+  RiFlashlightFill,
+  RiDropFill,
+  RiPaintBrushFill,
+  RiBroadcastFill,
+  RiHomeGearFill,
+  RiAppsLine,
+  RiMapPinLine,
+  RiMoneyDollarCircleLine
+} from "@remixicon/react";
 import { cx } from "@/utils/cx";
 
 interface SearchFiltersProps {
@@ -34,14 +36,14 @@ interface SearchFiltersProps {
   isDrawer?: boolean;
 }
 
-// Active Trades Only (Strictly 5 active trades - no coming soon trades)
+// 5 Active Trades strictly (No coming soon trades)
 const CATEGORIES = [
-  { label: "All Trades", value: "", icon: Layers },
-  { label: "Electrical", value: "electrical", icon: Zap },
-  { label: "Plumber", value: "plumbing", icon: Droplets },
-  { label: "Painter", value: "painting", icon: Paintbrush },
-  { label: "House Finishing", value: "house_finishing", icon: Sparkles },
-  { label: "Satellite Dish", value: "satellite_dish", icon: Tv },
+  { label: "All Trades", value: "", icon: RiAppsLine, color: "text-text-primary" },
+  { label: "Electrical", value: "electrical", icon: RiFlashlightFill, color: "text-amber-500" },
+  { label: "Plumber", value: "plumbing", icon: RiDropFill, color: "text-blue-500" },
+  { label: "Painter", value: "painting", icon: RiPaintBrushFill, color: "text-pink-500" },
+  { label: "House Finishing", value: "house_finishing", icon: RiHomeGearFill, color: "text-emerald-500" },
+  { label: "Satellite Dish", value: "satellite_dish", icon: RiBroadcastFill, color: "text-cyan-500" },
 ];
 
 const RATING_PRESETS = [
@@ -53,11 +55,18 @@ const RATING_PRESETS = [
 
 const DISTANCE_PRESETS = [5, 10, 25, 50];
 
+const KEBELES = [
+  "All Dire Dawa",
+  "Kezira",
+  "Sabian",
+  "Megala",
+  "Gende Kore",
+  "Addis Ketema"
+];
+
 export default function SearchFilters({
   filters,
   setFilters,
-  viewMode,
-  setViewMode,
   resultsCount,
   onClose,
   onApply,
@@ -86,83 +95,75 @@ export default function SearchFilters({
   ].filter(Boolean).length;
 
   return (
-    <div className={cx("space-y-4", className)}>
+    <div className={cx("space-y-4 select-none", className)}>
       {/* ── Header Title Block ── */}
-      <div className="flex items-center justify-between pb-1">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-[#134e27] text-[#a4fe47] flex items-center justify-center shrink-0 shadow-xs border border-[#45BA50]/30">
-            <SlidersHorizontal size={14} className="stroke-[2.5]" />
+      <div className="flex items-center justify-between pb-2 border-b border-separator-border">
+        <div className="flex items-center gap-2.5">
+          <div className="h-8 w-8 rounded-xl bg-[#134e27] text-[#a4fe47] flex items-center justify-center shrink-0 border border-[#45BA50]/30 shadow-xs">
+            <RiEqualizerLine className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="font-black text-sm text-text-primary">
-              {t("search.refine") || "Refine Results"}
+            <h3 className="text-body-medium font-bold text-text-primary leading-tight">
+              {t("search.refine") || "Filter Artisans"}
             </h3>
-            <p className="text-[10px] text-text-tertiary">
-              {resultsCount} {t("search.found") || "professionals"} in Dire Dawa
+            <p className="text-caption-1-semibold text-text-tertiary">
+              {resultsCount} {t("search.found") || "pros"} matching criteria
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           {activeCount > 0 && (
-            <Badge variant="outline" className="rounded-full text-[10px] font-bold border-[#45BA50]/40 bg-[#45BA50]/10 text-[#45BA50] px-2.5 py-0.5">
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#134e27] text-[#a4fe47] border border-[#45BA50]/30">
               {activeCount} active
-            </Badge>
+            </span>
           )}
           {onClose && (
             <button
               onClick={onClose}
-              className="h-8 w-8 rounded-full bg-background-tertiary-default text-text-secondary hover:text-text-primary flex items-center justify-center transition-colors shrink-0"
+              className="h-8 w-8 rounded-lg bg-background-tertiary-default text-text-secondary hover:text-text-primary flex items-center justify-center transition-colors shrink-0"
               title="Close Filters"
             >
-              <X size={16} />
+              <RiCloseLine className="w-4 h-4" />
             </button>
           )}
         </div>
       </div>
 
-      <Separator className="bg-separator-border" />
-
-      {/* ── Verified Pros Only Toggle ── */}
-      <div
-        onClick={() => setFilters(f => ({ ...f, verifiedOnly: !f.verifiedOnly }))}
-        className="flex items-center justify-between p-3 rounded-2xl border border-border-button-default bg-background-primary-default hover:border-[#45BA50]/40 transition-all cursor-pointer active:scale-[0.99] touch-manipulation group"
-      >
-        <div className="flex items-center gap-2.5 min-w-0">
+      {/* ── Verified Pros Toggle (Using BoardUI Switch) ── */}
+      <div className="flex items-center justify-between p-3 rounded-2xl border border-border-button-default bg-background-primary-default hover:border-[#45BA50]/40 transition-colors">
+        <div className="flex items-center gap-2.5 min-w-0 pr-2">
           <div className={cx(
-            "h-8 w-8 rounded-full flex items-center justify-center shrink-0 transition-colors",
-            filters.verifiedOnly ? "bg-[#45BA50] text-white shadow-xs" : "bg-background-tertiary-default text-text-tertiary"
+            "h-8 w-8 rounded-xl flex items-center justify-center shrink-0 transition-colors",
+            filters.verifiedOnly ? "bg-[#45BA50] text-white" : "bg-background-tertiary-default text-text-tertiary"
           )}>
-            <ShieldCheck size={16} className="stroke-[2.5]" />
+            <RiShieldCheckFill className="w-4 h-4" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-bold text-text-primary">Verified Pros Only</p>
-            <p className="text-[10px] text-text-tertiary truncate">Kebele & Fayda ID verified</p>
+            <p className="text-body-medium font-bold text-text-primary leading-tight">Verified Artisans Only</p>
+            <p className="text-caption-1-semibold text-text-tertiary truncate">Kebele & Fayda ID verified</p>
           </div>
         </div>
-        <div className={cx(
-          "w-10 h-6 rounded-full p-0.5 transition-colors shrink-0",
-          filters.verifiedOnly ? "bg-[#45BA50]" : "bg-zinc-300 dark:bg-zinc-700"
-        )}>
-          <div className={cx(
-            "h-5 w-5 rounded-full bg-white shadow-md transition-transform",
-            filters.verifiedOnly ? "translate-x-4" : "translate-x-0"
-          )} />
-        </div>
+
+        <Switch
+          isSelected={Boolean(filters.verifiedOnly)}
+          onChange={(checked) => setFilters(f => ({ ...f, verifiedOnly: checked }))}
+          aria-label="Toggle Verified Artisans Only"
+        />
       </div>
 
-      {/* ── Service Categories (5 Active Trades Only) ── */}
-      <div className="space-y-2.5">
-        <div className="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-text-tertiary">
+      {/* ── 5 Active Trades Selector ── */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between text-caption-1-semibold text-text-tertiary font-bold uppercase tracking-wider">
           <span className="flex items-center gap-1.5">
-            <Layers size={13} className="text-[#45BA50]" /> Active Trade
+            <RiAppsLine className="w-3.5 h-3.5 text-[#45BA50]" /> Active Trade
           </span>
           {filters.category && (
             <button
               onClick={() => setFilters(f => ({ ...f, category: "" }))}
               className="text-[10px] text-[#45BA50] hover:underline font-bold"
             >
-              Clear
+              Reset
             </button>
           )}
         </div>
@@ -176,13 +177,13 @@ export default function SearchFilters({
                 type="button"
                 onClick={() => setFilters(f => ({ ...f, category: cat.value }))}
                 className={cx(
-                  "flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-left transition-all touch-manipulation active:scale-95 border",
+                  "flex items-center gap-2 px-3 py-2 rounded-xl text-caption-1-semibold font-bold text-start transition-all active:scale-95 border",
                   isSelected
                     ? "bg-[#45BA50] text-white border-[#45BA50] shadow-sm font-black"
                     : "bg-background-primary-default border-border-button-default text-text-primary hover:bg-background-tertiary-default"
                 )}
               >
-                <Icon size={14} className={isSelected ? "text-white" : "text-text-tertiary"} />
+                <Icon className={cx("w-4 h-4 shrink-0", isSelected ? "text-white" : cat.color)} />
                 <span className="truncate">{cat.label}</span>
               </button>
             );
@@ -190,13 +191,11 @@ export default function SearchFilters({
         </div>
       </div>
 
-      <Separator className="bg-separator-border" />
-
-      {/* ── Rating Filter ── */}
-      <div className="space-y-2.5">
-        <div className="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-text-tertiary">
+      {/* ── Minimum Rating Filter ── */}
+      <div className="space-y-2 pt-1 border-t border-separator-border">
+        <div className="flex items-center justify-between text-caption-1-semibold text-text-tertiary font-bold uppercase tracking-wider">
           <span className="flex items-center gap-1.5">
-            <Star size={13} className="text-amber-500 fill-amber-500" /> Minimum Rating
+            <RiStarFill className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> Minimum Rating
           </span>
           <span className="font-black text-amber-500 text-xs">
             {filters.minRating > 0 ? `${filters.minRating.toFixed(1)} ★` : "Any"}
@@ -211,7 +210,7 @@ export default function SearchFilters({
                 type="button"
                 onClick={() => setFilters(f => ({ ...f, minRating: preset.value }))}
                 className={cx(
-                  "px-3 py-1.5 rounded-full text-xs font-bold transition-all touch-manipulation active:scale-95 border text-center",
+                  "px-3 py-1.5 rounded-lg text-caption-1-semibold font-bold transition-all active:scale-95 border text-center",
                   isSelected
                     ? "bg-amber-500 text-black border-amber-500 font-black shadow-xs"
                     : "bg-background-primary-default border-border-button-default text-text-primary hover:bg-background-tertiary-default"
@@ -224,17 +223,15 @@ export default function SearchFilters({
         </div>
       </div>
 
-      <Separator className="bg-separator-border" />
-
-      {/* ── Distance Slider & Presets ── */}
-      <div className="space-y-2.5">
-        <div className="flex items-center justify-between text-[11px] font-extrabold uppercase tracking-wider text-text-tertiary">
+      {/* ── Distance Radius Slider ── */}
+      <div className="space-y-2 pt-1 border-t border-separator-border">
+        <div className="flex items-center justify-between text-caption-1-semibold text-text-tertiary font-bold uppercase tracking-wider">
           <span className="flex items-center gap-1.5">
-            <Compass size={13} className="text-[#45BA50]" /> Max Distance
+            <RiCompassLine className="w-3.5 h-3.5 text-[#45BA50]" /> Maximum Distance
           </span>
-          <Badge variant="outline" className="font-black text-xs border-[#45BA50]/30 text-[#45BA50] bg-[#45BA50]/10 rounded-full px-2 py-0.5">
+          <span className="text-[11px] font-black px-2 py-0.5 rounded-md bg-[#134e27] text-[#a4fe47] border border-[#45BA50]/30">
             {filters.maxDistance || 50} km
-          </Badge>
+          </span>
         </div>
         
         <input 
@@ -244,14 +241,14 @@ export default function SearchFilters({
           className="w-full h-1.5 bg-background-tertiary-default rounded-full appearance-none cursor-pointer accent-[#45BA50] border border-border-button-default"
         />
 
-        <div className="flex items-center justify-between gap-1 pt-1">
+        <div className="flex items-center justify-between gap-1 pt-0.5">
           {DISTANCE_PRESETS.map((dist) => (
             <button
               key={dist}
               type="button"
               onClick={() => setFilters(f => ({ ...f, maxDistance: dist }))}
               className={cx(
-                "flex-1 py-1 rounded-full text-[10px] font-bold border transition-all active:scale-95",
+                "flex-1 py-1 rounded-lg text-[10px] font-bold border transition-all active:scale-95",
                 filters.maxDistance === dist
                   ? "bg-[#134e27] text-[#a4fe47] border-[#45BA50]"
                   : "bg-background-primary-default border-border-button-default text-text-tertiary hover:bg-background-tertiary-default"
@@ -263,11 +260,9 @@ export default function SearchFilters({
         </div>
       </div>
 
-      <Separator className="bg-separator-border" />
-
       {/* ── Sort By Selection ── */}
-      <div className="space-y-2">
-        <p className="text-[11px] font-extrabold uppercase tracking-wider text-text-tertiary">Sort Results</p>
+      <div className="space-y-2 pt-1 border-t border-separator-border">
+        <p className="text-caption-1-semibold text-text-tertiary font-bold uppercase tracking-wider">Sort Results</p>
         <div className="grid grid-cols-3 gap-1.5">
           {(["Nearest", "Highest Rated", "Most Reviewed"] as const).map((opt) => {
             const isSelected = (filters.sortBy || "Nearest") === opt;
@@ -277,7 +272,7 @@ export default function SearchFilters({
                 type="button"
                 onClick={() => setFilters(f => ({ ...f, sortBy: opt }))}
                 className={cx(
-                  "py-1.5 px-2 rounded-xl text-[10px] font-bold border text-center transition-all active:scale-95 truncate",
+                  "py-1.5 px-2 rounded-lg text-[10px] font-bold border text-center transition-all active:scale-95 truncate",
                   isSelected
                     ? "bg-[#134e27] text-[#a4fe47] border-[#45BA50] font-black"
                     : "bg-background-primary-default border-border-button-default text-text-secondary hover:bg-background-tertiary-default"
@@ -290,29 +285,26 @@ export default function SearchFilters({
         </div>
       </div>
 
-      {/* ── Footer Actions ── */}
-      <div className="pt-2 flex items-center gap-2">
-        <Button 
+      {/* ── Footer Actions (BoardUI Button) ── */}
+      <div className="pt-2 border-t border-separator-border flex items-center gap-2">
+        <button
           onClick={handleReset}
-          variant="outline"
-          size="default"
-          className="rounded-full text-xs font-bold h-11 px-4 border-border-button-default hover:bg-background-tertiary-default text-text-primary"
+          className="h-10 px-3.5 rounded-lg border border-border-button-default bg-background-primary-default hover:bg-background-tertiary-default text-text-primary text-xs font-bold inline-flex items-center gap-1.5 transition-colors active:scale-95"
         >
-          <RotateCcw size={13} className="mr-1" />
-          Reset
-        </Button>
+          <RiRestartLine className="w-3.5 h-3.5" />
+          <span>Reset</span>
+        </button>
 
         {onApply ? (
-          <Button
+          <button
             onClick={onApply}
-            size="default"
-            className="flex-1 rounded-full bg-[#45BA50] hover:bg-[#3ca346] text-white font-black text-xs h-11 shadow-[0_4px_14px_rgba(69,186,80,0.3)] touch-manipulation active:scale-95"
+            className="flex-1 h-10 px-4 rounded-lg bg-[#45BA50] hover:bg-[#3ca346] text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 shadow-[0_4px_14px_rgba(69,186,80,0.3)] active:scale-95 transition-all"
           >
             Apply ({resultsCount} Pros)
-          </Button>
+          </button>
         ) : (
-          <div className="flex-1 text-right text-xs font-bold text-text-tertiary">
-            {resultsCount} match{resultsCount !== 1 ? "es" : ""}
+          <div className="flex-1 text-end text-caption-1-semibold text-text-tertiary">
+            {resultsCount} matching pros
           </div>
         )}
       </div>
