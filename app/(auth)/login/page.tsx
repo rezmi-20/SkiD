@@ -314,8 +314,8 @@ export default function LoginPage() {
 
         {/* Center Headline */}
         <div className="relative z-10 flex flex-col items-center text-center max-w-md">
-          <div className="w-24 h-24 bg-white/10 border border-white/20 flex items-center justify-center rounded-3xl backdrop-blur-xl mb-8 shadow-2xl p-4">
-            <img src="/direskill_icon.png" alt="DireSkill Emblem" className="w-full h-full object-contain filter drop-shadow" />
+          <div className="w-20 h-20 mb-8 flex items-center justify-center">
+            <img src="/direskill_icon.png" alt="DireSkill Emblem" className="w-full h-full object-contain drop-shadow-[0_12px_32px_rgba(0,0,0,0.85)] filter" />
           </div>
           <h2 className="text-5xl font-extrabold tracking-tight text-white leading-tight drop-shadow-[0_4px_20px_rgba(0,0,0,0.9)]">
             {t("auth.marketing.loginTitle")}
