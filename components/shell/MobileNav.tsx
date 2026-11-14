@@ -132,7 +132,7 @@ export default function MobileNav({ role }: MobileNavProps) {
           )}
         </Link>
 
-        {/* 3. Center Action Button: Elevated Community Feed Icon */}
+        {/* 3. Center Action Button: Elevated Sparkles / Community Action (Matches Uploaded Screenshot) */}
         <div className="relative flex items-center justify-center -top-3.5 px-1">
           <Link
             href={`/${role}/community`}
@@ -141,10 +141,10 @@ export default function MobileNav({ role }: MobileNavProps) {
                 ? "bg-[#45BA50] shadow-[0_8px_28px_rgba(69,186,80,0.6)] ring-4 ring-[#45BA50]/30"
                 : "bg-[#134e27] hover:bg-[#0e3b1c]"
             }`}
-            title={t("nav.community") || "Community Feed"}
-            aria-label={t("nav.community") || "Community Feed"}
+            title={t("nav.community") || "Community"}
+            aria-label={t("nav.community") || "Community"}
           >
-            <Users className="h-6 w-6 text-[#a4fe47] group-hover:scale-110 transition-transform duration-200" />
+            <Sparkles className="h-6 w-6 text-[#a4fe47] group-hover:scale-110 transition-transform duration-200" />
           </Link>
         </div>
 
