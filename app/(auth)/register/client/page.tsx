@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import { explainRegistrationException, readRegistrationResponse } from "@/lib/auth/registration-response";
+import DireSkillLogo from "@/components/shell/DireSkillLogo";
 
 const MAX_REGISTRATION_REQUEST_BYTES = 4_000_000;
 
@@ -264,21 +265,13 @@ export default function ClientRegisterPage() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-green-500/10 blur-[140px] pointer-events-none rounded-full mix-blend-screen" />
         </div>
         
-        <div className="absolute top-12 left-12 flex items-center gap-3 z-20">
-          <div className="w-12 h-12 bg-white/95 backdrop-blur-md flex items-center justify-center rounded-2xl shadow-xl shadow-black/40">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-[#09090b]">
-              <path d="M 11 2 C 3 2 1 10 1 15 L 7 15 C 7 11 9 8 11 8 Z" />
-              <path d="M 13 22 C 21 22 23 14 23 9 L 17 9 C 17 13 15 16 13 16 Z" />
-            </svg>
-          </div>
-          <span className="text-2xl font-bold tracking-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">Dire<span className="text-green-400">Skill</span></span>
+        <div className="absolute top-12 left-12 z-20">
+          <DireSkillLogo variant="light" iconSize={42} showWordmark={true} />
         </div>
 
         <div className="relative z-10 flex flex-col items-center text-center max-w-md">
-          <div className="w-24 h-24 bg-white/5 border border-white/10 flex items-center justify-center rounded-3xl backdrop-blur-xl mb-8 shadow-2xl">
-             <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" className="text-green-400">
-              <path d="M 17 21 l -5 -4 l -5 4 V 5 a 2 2 0 0 1 2 -2 h 6 a 2 2 0 0 1 2 2 z" />
-            </svg>
+          <div className="w-24 h-24 bg-white/10 border border-white/20 flex items-center justify-center rounded-3xl backdrop-blur-xl mb-8 shadow-2xl p-4">
+             <img src="/direskill_icon.png" alt="DireSkill Emblem" className="w-full h-full object-contain filter drop-shadow" />
           </div>
           <h2 className="text-5xl font-extrabold tracking-tight text-white leading-tight drop-shadow-[0_4px_20px_rgba(0,0,0,0.9)]">
             {t("auth.marketing.clientTitle")}
@@ -301,15 +294,9 @@ export default function ClientRegisterPage() {
         <div className="w-full max-w-[420px] px-6 py-12 z-10 flex flex-col min-h-[100dvh] items-center justify-center relative">
           
           {/* Header Section */}
-          <div className="flex flex-col items-center mb-8 space-y-5 w-full">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-14 h-14 bg-white flex items-center justify-center rounded-2xl shadow-lg shadow-white/5">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" className="text-[#09090b]">
-                  <path d="M 11 2 C 3 2 1 10 1 15 L 7 15 C 7 11 9 8 11 8 Z" />
-                  <path d="M 13 22 C 21 22 23 14 23 9 L 17 9 C 17 13 15 16 13 16 Z" />
-                </svg>
-              </div>
-              <span className="text-[28px] font-bold tracking-tight text-white">Dire<span className="text-green-400">Skill</span></span>
+          <div className="flex flex-col items-center mb-8 space-y-4 w-full">
+            <div className="mb-2">
+              <DireSkillLogo variant="light" iconSize={44} showWordmark={true} />
             </div>
             
             <div className="text-center space-y-2">

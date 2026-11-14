@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Share2, Globe } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useLanguage } from './context/LanguageContext';
+import DireSkillLogo from "@/components/shell/DireSkillLogo";
 
 export default function Footer({
   language = 'EN',
@@ -32,8 +33,8 @@ export default function Footer({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-16 mb-16 md:mb-24">
           {/* Brand Column */}
           <div className="flex flex-col gap-6 md:gap-8">
-            <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center shrink-0">
-              <span className="text-white font-bold text-lg leading-none font-sans">D</span>
+            <div className="flex items-center">
+              <DireSkillLogo variant="light" iconSize={36} showWordmark={true} />
             </div>
             <p className="text-[15px] text-white/50 max-w-xs leading-relaxed font-normal">
               {t?.footer?.tagline || "Dire Dawa's verified skilled labor marketplace connecting homeowners and businesses with accredited artisans."}

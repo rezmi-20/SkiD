@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import { explainRegistrationException, readRegistrationResponse } from "@/lib/auth/registration-response";
+import DireSkillLogo from "@/components/shell/DireSkillLogo";
 
 // Modular Components
 import RegistrationSidebar from "./components/RegistrationSidebar";
@@ -345,14 +346,9 @@ export default function WorkerRegisterPage() {
         <div className="lg:hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-green-500/10 blur-[150px] pointer-events-none rounded-full" />
 
         <div className="w-full max-w-[480px] px-6 py-12 z-10 flex flex-col min-h-[100dvh] items-center justify-center relative">
-          <div className="flex flex-col items-center mb-8 space-y-5 w-full">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-14 h-14 bg-white flex items-center justify-center rounded-2xl shadow-lg shadow-white/5">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" className="text-[#09090b]">
-                  <path d="M 11 2 C 3 2 1 10 1 15 L 7 15 C 7 11 9 8 11 8 Z" /><path d="M 13 22 C 21 22 23 14 23 9 L 17 9 C 17 13 15 16 13 16 Z" />
-                </svg>
-              </div>
-              <span className="text-[28px] font-bold tracking-tight text-white">Dire<span className="text-green-400">Skill</span></span>
+          <div className="flex flex-col items-center mb-8 space-y-4 w-full">
+            <div className="mb-2">
+              <DireSkillLogo variant="light" iconSize={44} showWordmark={true} />
             </div>
             
             <div className="text-center space-y-1.5">

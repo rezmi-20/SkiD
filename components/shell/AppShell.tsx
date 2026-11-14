@@ -103,9 +103,7 @@ export default function AppShell({
           {/* Mobile Top Navigation (< lg): Left: Logo | Center: Title | Right: NotificationBell */}
           <div className="lg:hidden flex items-center justify-between h-14 px-3 sm:px-4">
             <div className="w-10 flex items-center justify-start shrink-0">
-              <Link href={`/${role}/dashboard`} className="flex items-center focus:outline-none" aria-label="DireSkill Home">
-                <DireSkillLogo variant="color" iconSize={28} />
-              </Link>
+              <DireSkillLogo variant="color" iconSize={28} href={`/${role}/dashboard`} showWordmark={false} />
             </div>
 
             <div className="flex-1 flex items-center justify-center min-w-0 px-2 text-center">
@@ -123,9 +121,9 @@ export default function AppShell({
           <div className="hidden lg:flex items-center justify-between h-16 px-6">
             {/* Left: Brand & Desktop breadcrumb */}
             <div className="flex items-center gap-3 min-w-0">
-              <Link href={`/${role}/dashboard`} className="shrink-0 flex items-center gap-1.5 focus:outline-none">
-                <DireSkillLogo variant="color" iconSize={28} />
-              </Link>
+              <div className="shrink-0 flex items-center">
+                <DireSkillLogo variant="color" iconSize={28} href={`/${role}/dashboard`} showWordmark={false} />
+              </div>
 
               <nav className="flex items-center gap-1 text-sm text-muted-foreground ml-2">
                 {breadcrumbs.map((crumb, i) => (

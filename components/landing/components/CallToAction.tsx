@@ -15,15 +15,19 @@ export const CallToAction: React.FC<CallToActionProps> = ({ onFindWorker, onJoin
     <section className="py-[120px] md:py-[160px] px-4 md:px-10 bg-[#FAF9F5] overflow-hidden">
       <div className="max-w-screen-xl mx-auto flex flex-col items-center text-center">
         <div className="relative z-10 flex flex-col items-center">
-          {/* Monogram circle with scroll entrance animation */}
+          {/* Official DS Emblem badge with scroll entrance animation */}
           <motion.div
             initial={{ opacity: 0, scale: 0.7, rotate: -25 }}
             whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
             viewport={{ once: true, amount: 0.15, margin: "-40px" }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="w-12 h-12 rounded-full border border-[#1B1B1B] flex items-center justify-center mb-12 hover:scale-105 transition-transform will-change-transform"
+            className="w-14 h-14 rounded-full border border-black/15 bg-white/60 shadow-sm flex items-center justify-center mb-12 hover:scale-105 transition-transform will-change-transform p-2.5"
           >
-            <span className="text-[#1B1B1B] font-bold text-xl leading-none font-sans">D</span>
+            <img
+              src="/images/direskill_icon_light.png"
+              alt="DireSkill Emblem"
+              className="w-full h-full object-contain filter drop-shadow-sm"
+            />
           </motion.div>
 
           <motion.h2

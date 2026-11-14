@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { motion, useScroll, useSpring } from 'framer-motion';
+import DireSkillLogo from "@/components/shell/DireSkillLogo";
 
 export default function Navbar({
   language = 'EN',
@@ -106,15 +107,18 @@ export default function Navbar({
       <header className="fixed top-[20px] md:top-[24px] left-0 right-0 z-50 flex items-center justify-center px-4 w-full pointer-events-none">
         <div className="pointer-events-auto w-full max-w-[1060px] flex items-center justify-between bg-[#000000] backdrop-blur-xl rounded-full px-4 py-1.5 shadow-2xl border border-white/10 h-[58px] transition-all">
           <div className="flex items-center gap-6 lg:gap-8 pl-1">
-            {/* Monogram Brand Mark */}
-            <button
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="w-[34px] h-[34px] rounded-full border border-[#FAF9F5]/80 flex items-center justify-center shrink-0 hover:scale-105 active:scale-95 transition-transform"
-              title="DireSkill - Dire Dawa"
-              aria-label="DireSkill Home"
-            >
-              <span className="text-[#FAF9F5] font-bold text-sm leading-none font-sans">D</span>
-            </button>
+            {/* Official Brand Logo */}
+            <div className="flex items-center shrink-0">
+              <DireSkillLogo
+                variant="light"
+                iconSize={30}
+                showWordmark={true}
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              />
+            </div>
 
             {/* Nav links */}
             <nav className="hidden md:flex items-center gap-4 lg:gap-6">
@@ -217,8 +221,13 @@ export default function Navbar({
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-40 overflow-y-auto overscroll-contain bg-black/95 backdrop-blur-2xl md:hidden flex flex-col justify-center items-center p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-center animate-fade-in">
-          <div className="w-12 h-12 rounded-full border border-white/40 flex items-center justify-center text-white font-bold text-xl mb-6">
-            D
+          <div className="mb-6 flex items-center justify-center">
+            <DireSkillLogo
+              variant="light"
+              iconSize={44}
+              showWordmark={true}
+              onClick={() => setMobileMenuOpen(false)}
+            />
           </div>
 
           <div className="flex flex-col space-y-5 mb-8">

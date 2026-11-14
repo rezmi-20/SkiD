@@ -1,4 +1,4 @@
-const CACHE_NAME = 'direskill-v3';
+const CACHE_NAME = 'direskill-v4';
 const ASSETS_TO_CACHE = [
   '/site.webmanifest',
   '/icon-192.png',
