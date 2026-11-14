@@ -94,24 +94,24 @@ export default function WorkerCard({
     return (
       <motion.div
         layout
-        initial={{ opacity: 0, y: 12 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
         onMouseEnter={primeCache}
         onTouchStart={primeCache}
         className={cx(
-          "group relative flex flex-col justify-between p-4 sm:p-5 rounded-3xl select-none transition-all duration-200 border",
+          "group relative flex flex-col justify-between p-3 sm:p-4 rounded-2xl sm:rounded-3xl select-none transition-all duration-200 border",
           "bg-background-secondary-default hover:bg-background-tertiary-default/50 border-border-button-default hover:border-[#45BA50]/50 shadow-xs hover:shadow-md",
-          "min-h-[350px] w-full",
+          "min-h-[275px] sm:min-h-[295px] w-full",
           isSelected && "ring-2 ring-[#45BA50] border-[#45BA50]",
           className
         )}
       >
         <div>
           {/* Top Row: Avatar with Trade Icon + Price & Rating */}
-          <div className="flex items-start justify-between gap-3 mb-3.5">
+          <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2.5">
             {/* Avatar */}
-            <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden bg-background-tertiary-default shrink-0 border border-border-button-default shadow-xs">
+            <div className="relative w-11 h-11 sm:w-13 sm:h-13 rounded-xl sm:rounded-2xl overflow-hidden bg-background-tertiary-default shrink-0 border border-border-button-default shadow-xs">
               <img
                 src={displayPhoto}
                 alt={worker.name}
@@ -119,32 +119,32 @@ export default function WorkerCard({
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 loading="lazy"
               />
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-background-primary-default border border-border-button-default flex items-center justify-center shadow-xs">
-                <TradeIcon className={cx("w-3.5 h-3.5", tradeMeta.color)} />
+              <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-full bg-background-primary-default border border-border-button-default flex items-center justify-center shadow-xs">
+                <TradeIcon className={cx("w-3 h-3 sm:w-3.5 sm:h-3.5", tradeMeta.color)} />
               </div>
             </div>
 
             {/* Price & Rating */}
-            <div className="text-end flex flex-col items-end gap-1">
+            <div className="text-end flex flex-col items-end gap-0.5">
               <div>
-                <p className="text-title-3-semibold font-black text-text-primary leading-tight">
+                <p className="text-xs sm:text-body-medium font-black text-text-primary leading-tight">
                   ETB {worker.hourlyRate || "450"}
                 </p>
-                <span className="text-[10px] text-text-tertiary font-medium">/hr</span>
+                <span className="text-[9px] sm:text-[10px] text-text-tertiary font-medium">/hr</span>
               </div>
 
-              <div className="flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                <RiStarFill className="w-3 h-3 fill-amber-500" />
+              <div className="flex items-center gap-0.5 text-[10px] sm:text-[11px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                <RiStarFill className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-amber-500" />
                 <span>{worker.rating > 0 ? worker.rating.toFixed(1) : "5.0"}</span>
-                <span className="text-text-tertiary font-normal">({worker.reviews || 1})</span>
+                <span className="text-text-tertiary font-normal hidden sm:inline">({worker.reviews || 1})</span>
               </div>
             </div>
           </div>
 
           {/* Pro Identity & Verification Check */}
-          <div className="space-y-1 mb-2.5">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <h3 className="text-body-medium font-bold text-text-primary truncate group-hover:text-[#45BA50] transition-colors">
+          <div className="space-y-0.5 mb-2">
+            <div className="flex items-center gap-1 min-w-0">
+              <h3 className="text-xs sm:text-body-medium font-bold text-text-primary truncate group-hover:text-[#45BA50] transition-colors">
                 {worker.name}
               </h3>
               {worker.isVerified && (
@@ -152,36 +152,36 @@ export default function WorkerCard({
                   className="shrink-0 text-[#45BA50]"
                   title={t("search.verifiedProfessional") || "Kebele & Fayda National ID Verified"}
                 >
-                  <RiShieldCheckFill className="w-4 h-4" />
+                  <RiShieldCheckFill className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </span>
               )}
             </div>
 
             {/* Trade & Kebele Location */}
-            <div className="flex flex-wrap items-center gap-1.5 text-xs text-text-tertiary">
-              <span className={cx("px-2 py-0.5 rounded-md text-[11px] font-bold", tradeMeta.bg, tradeMeta.color)}>
+            <div className="flex flex-wrap items-center gap-1 text-[10px] sm:text-xs text-text-tertiary">
+              <span className={cx("px-1.5 py-0.5 rounded text-[10px] font-bold", tradeMeta.bg, tradeMeta.color)}>
                 {tradeMeta.label}
               </span>
               <span>•</span>
-              <span className="inline-flex items-center gap-0.5 text-text-secondary text-[11px] font-semibold">
-                <RiMapPinLine className="w-3 h-3 text-[#45BA50]" />
+              <span className="inline-flex items-center gap-0.5 text-text-secondary font-medium">
+                <RiMapPinLine className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#45BA50]" />
                 {worker.district || "Kezira"}
               </span>
-              <span>•</span>
-              <span className="text-[11px]">{worker.distance !== "N/A" ? `${worker.distance} km` : "Dire Dawa"}</span>
+              <span className="hidden sm:inline">•</span>
+              <span className="hidden sm:inline">{worker.distance !== "N/A" ? `${worker.distance} km` : "Dire Dawa"}</span>
             </div>
           </div>
 
           {/* Bio Snippet */}
-          <p className="text-caption-1-semibold text-text-tertiary line-clamp-2 text-xs leading-relaxed mb-3">
-            {worker.bio || `Certified and experienced ${tradeMeta.label.toLowerCase()} pro serving Dire Dawa with high customer satisfaction.`}
+          <p className="text-caption-1-semibold text-text-tertiary line-clamp-1 sm:line-clamp-2 text-[10px] sm:text-xs leading-snug mb-2">
+            {worker.bio || `Certified and experienced ${tradeMeta.label.toLowerCase()} pro serving Dire Dawa.`}
           </p>
 
           {/* Verified Skills Tags */}
           {worker.skills && worker.skills.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-3">
-              {worker.skills.slice(0, 3).map((skill, idx) => (
-                <span key={idx} className="px-2 py-0.5 rounded-md bg-background-primary-default border border-border-button-default text-[10px] font-medium text-text-secondary">
+            <div className="flex flex-wrap gap-1 mb-2.5">
+              {worker.skills.slice(0, 2).map((skill, idx) => (
+                <span key={idx} className="px-1.5 py-0.5 rounded bg-background-primary-default border border-border-button-default text-[9px] sm:text-[10px] font-medium text-text-secondary truncate max-w-[120px]">
                   {skill}
                 </span>
               ))}
@@ -190,8 +190,8 @@ export default function WorkerCard({
         </div>
 
         {/* ── Bottom Actions Row: Preview & Message Options ── */}
-        <div className="pt-3 border-t border-separator-border/60 space-y-2 mt-auto">
-          <div className="flex items-center gap-2">
+        <div className="pt-2 sm:pt-2.5 border-t border-separator-border/60 space-y-1.5 mt-auto">
+          <div className="flex items-center gap-1.5">
             {/* Option: Preview */}
             <button
               type="button"
@@ -200,10 +200,10 @@ export default function WorkerCard({
                 primeCache();
                 onPreview?.(worker);
               }}
-              className="flex-1 h-9 rounded-xl border border-border-button-default bg-background-primary-default hover:bg-background-tertiary-default text-text-primary text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs active:scale-95"
+              className="flex-1 h-7.5 sm:h-8.5 rounded-lg sm:rounded-xl border border-border-button-default bg-background-primary-default hover:bg-background-tertiary-default text-text-primary text-[10px] sm:text-xs font-bold inline-flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-xs active:scale-95 px-1.5"
               title="Quick Preview Profile"
             >
-              <RiEyeLine className="w-3.5 h-3.5 text-text-secondary" />
+              <RiEyeLine className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-text-secondary" />
               <span>Preview</span>
             </button>
 
@@ -215,10 +215,10 @@ export default function WorkerCard({
                 primeCache();
                 onMessage?.(worker);
               }}
-              className="flex-1 h-9 rounded-xl border border-[#45BA50]/30 bg-[#134e27]/15 hover:bg-[#134e27]/25 text-[#45BA50] text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-xs active:scale-95"
+              className="flex-1 h-7.5 sm:h-8.5 rounded-lg sm:rounded-xl border border-[#45BA50]/30 bg-[#134e27]/15 hover:bg-[#134e27]/25 text-[#45BA50] text-[10px] sm:text-xs font-bold inline-flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-xs active:scale-95 px-1.5"
               title="Send Direct Message"
             >
-              <RiChat1Line className="w-3.5 h-3.5" />
+              <RiChat1Line className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               <span>Message</span>
             </button>
           </div>
@@ -227,10 +227,10 @@ export default function WorkerCard({
           <Link
             href={`/client/contract/new?workerId=${worker.id}`}
             onClick={(e) => e.stopPropagation()}
-            className="w-full h-10 rounded-xl bg-[#45BA50] hover:bg-[#3ca346] text-white text-xs font-black inline-flex items-center justify-center gap-1.5 shadow-[0_2px_10px_rgba(69,186,80,0.3)] transition-all cursor-pointer active:scale-95"
+            className="w-full h-8 sm:h-9 rounded-lg sm:rounded-xl bg-[#45BA50] hover:bg-[#3ca346] text-white text-[10px] sm:text-xs font-black inline-flex items-center justify-center gap-1 shadow-[0_2px_10px_rgba(69,186,80,0.3)] transition-all cursor-pointer active:scale-95"
           >
             <span>Book Artisan</span>
-            <RiArrowRightLine className="w-3.5 h-3.5" />
+            <RiArrowRightLine className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           </Link>
         </div>
       </motion.div>

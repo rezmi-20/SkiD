@@ -506,9 +506,9 @@ function SearchPageContent() {
           ) : (
             /* ═════════════════════════════════════════════════════════════════
                LIST VIEW: CLEAN, SPACIOUS FULL-WIDTH DISCOVERY FEED
-               - Little space on left and right without container trapping
-               - 4 columns per row on desktop
-               - Taller profile cards with direct Preview and Message options
+               - Generous visible space on left & right (slims down card width)
+               - Filter collapses from the LEFT side, pushing content like a sidebar (NO OVERLAP)
+               - 2 columns on mobile, 4 columns on desktop with sleek profile cards
                ═════════════════════════════════════════════════════════════════ */
             <motion.div
               key="list-mode"
@@ -516,66 +516,97 @@ function SearchPageContent() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
-              className="w-full px-4 sm:px-6 lg:px-8 py-4 space-y-4 pb-28 lg:pb-12"
+              className="w-full px-4 sm:px-8 md:px-12 lg:px-14 xl:px-18 2xl:px-24 py-4 space-y-4 pb-28 lg:pb-12"
             >
-              {/* Header Status Row */}
-              <div className="flex items-center justify-between text-caption-1-semibold text-text-tertiary px-1">
-                <span>Showing <strong className="text-text-primary">{workers.length}</strong> verified pro{workers.length !== 1 ? "s" : ""} in Dire Dawa</span>
-                <span>Sorted by: <strong className="text-[#45BA50]">{filters.sortBy || "Nearest"}</strong></span>
-              </div>
-
-              {/* 4-Column Grid of Taller Profile Cards with Preview & Message Options */}
-              {workers.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-4 sm:gap-5">
-                  {workers.map((worker) => (
-                    <WorkerCard
-                      key={worker.id}
-                      worker={worker}
-                      variant="grid"
-                      isSelected={selectedWorker?.id === worker.id}
-                      onSelect={(w) => setSelectedWorker(w)}
-                      onPreview={(w) => setPreviewWorker(w)}
-                      onMessage={(w) => handleStartMessage(w)}
-                    />
-                  ))}
-                </div>
-              ) : (
-                !loading && (
-                  <div className="rounded-3xl border border-dashed border-border-button-default p-12 text-center bg-background-secondary-default space-y-3">
-                    <RiSearchEyeLine className="w-8 h-8 mx-auto text-[#45BA50]" />
-                    <p className="text-body-medium font-bold text-text-primary">No matching artisans found</p>
-                    <p className="text-caption-1-semibold text-text-tertiary">Try expanding your search criteria or resetting filters.</p>
-                    <button
-                      onClick={() => setFilters({ query: "", category: "", neighborhood: "All Dire Dawa", minRating: 0, maxDistance: 50, sortBy: "Nearest", verifiedOnly: false })}
-                      className="px-4 py-2 rounded-full text-xs font-bold bg-[#45BA50] text-white cursor-pointer"
+              {/* Flex Container: Inline Left Filter Sidebar (Desktop) + Results Grid */}
+              <div className="w-full flex items-start gap-4 lg:gap-6">
+                
+                {/* Collapsible Left Filter Sidebar (Desktop: Slides from Left, pushes content with NO OVERLAP) */}
+                <AnimatePresence initial={false}>
+                  {filterDrawerOpen && (
+                    <motion.aside
+                      initial={{ width: 0, opacity: 0 }}
+                      animate={{ width: 290, opacity: 1 }}
+                      exit={{ width: 0, opacity: 0 }}
+                      transition={{ type: "spring", damping: 28, stiffness: 300 }}
+                      className="shrink-0 overflow-hidden hidden lg:block"
                     >
-                      Reset All Filters
-                    </button>
-                  </div>
-                )
-              )}
+                      <div className="w-[290px] p-5 rounded-3xl bg-background-secondary-default border border-border-button-default shadow-xs sticky top-20">
+                        <SearchFilters
+                          filters={filters}
+                          setFilters={setFilters}
+                          resultsCount={workers.length}
+                          onClose={() => setFilterDrawerOpen(false)}
+                          onApply={() => setFilterDrawerOpen(false)}
+                        />
+                      </div>
+                    </motion.aside>
+                  )}
+                </AnimatePresence>
 
-              {loading && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-4 sm:gap-5">
-                  {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                    <div key={i} className="h-80 rounded-3xl bg-background-secondary-default animate-pulse border border-border-button-default" />
-                  ))}
+                {/* Main Results Grid Area (Flex-1, smoothly slides & adjusts beside sidebar) */}
+                <div className="flex-1 min-w-0 space-y-4">
+                  {/* Header Status Row */}
+                  <div className="flex items-center justify-between text-caption-1-semibold text-text-tertiary px-1">
+                    <span>Showing <strong className="text-text-primary">{workers.length}</strong> verified pro{workers.length !== 1 ? "s" : ""} in Dire Dawa</span>
+                    <span>Sorted by: <strong className="text-[#45BA50]">{filters.sortBy || "Nearest"}</strong></span>
+                  </div>
+
+                  {/* 2 Columns on Mobile, 3 on Tablet, 4 on Desktop */}
+                  {workers.length > 0 ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
+                      {workers.map((worker) => (
+                        <WorkerCard
+                          key={worker.id}
+                          worker={worker}
+                          variant="grid"
+                          isSelected={selectedWorker?.id === worker.id}
+                          onSelect={(w) => setSelectedWorker(w)}
+                          onPreview={(w) => setPreviewWorker(w)}
+                          onMessage={(w) => handleStartMessage(w)}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    !loading && (
+                      <div className="rounded-3xl border border-dashed border-border-button-default p-12 text-center bg-background-secondary-default space-y-3">
+                        <RiSearchEyeLine className="w-8 h-8 mx-auto text-[#45BA50]" />
+                        <p className="text-body-medium font-bold text-text-primary">No matching artisans found</p>
+                        <p className="text-caption-1-semibold text-text-tertiary">Try expanding your search criteria or resetting filters.</p>
+                        <button
+                          onClick={() => setFilters({ query: "", category: "", neighborhood: "All Dire Dawa", minRating: 0, maxDistance: 50, sortBy: "Nearest", verifiedOnly: false })}
+                          className="px-4 py-2 rounded-full text-xs font-bold bg-[#45BA50] text-white cursor-pointer"
+                        >
+                          Reset All Filters
+                        </button>
+                      </div>
+                    )
+                  )}
+
+                  {loading && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                        <div key={i} className="h-64 sm:h-72 rounded-2xl sm:rounded-3xl bg-background-secondary-default animate-pulse border border-border-button-default" />
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
+
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
       {/* ═════════════════════════════════════════════════════════════════════
-          3. FULL-SCREEN SLIDE-OVER FILTER DRAWER (Collapsible to the Right)
+          3. MOBILE SLIDE-OVER FILTER DRAWER (Collapsible from the Left on < lg)
           - Mounted directly in document.body via createPortal
-          - Contains Kebele Neighborhoods, Active Trades, Verified Toggle, Sliders
+          - Slides in and out from the LEFT side (< lg)
           ═════════════════════════════════════════════════════════════════════ */}
       {mounted && typeof document !== "undefined" && createPortal(
         <AnimatePresence>
           {filterDrawerOpen && (
-            <div className="fixed inset-0 z-[9999] flex justify-end">
+            <div className="lg:hidden fixed inset-0 z-[9999] flex justify-start">
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -586,11 +617,11 @@ function SearchPageContent() {
               />
 
               <motion.div
-                initial={{ x: "100%" }}
+                initial={{ x: "-100%" }}
                 animate={{ x: 0 }}
-                exit={{ x: "100%" }}
+                exit={{ x: "-100%" }}
                 transition={{ type: "spring", damping: 28, stiffness: 300 }}
-                className="relative w-full sm:max-w-md h-full bg-background-primary-default border-l border-border-button-default shadow-2xl p-6 overflow-y-auto z-10 flex flex-col justify-between"
+                className="relative w-[85%] max-w-sm h-full bg-background-primary-default border-r border-border-button-default shadow-2xl p-6 overflow-y-auto z-10 flex flex-col justify-between"
               >
                 <SearchFilters
                   filters={filters}
