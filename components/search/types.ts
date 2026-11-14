@@ -25,5 +25,6 @@ export interface SearchFilters {
   maxDistance: number;
   sortBy: "Nearest" | "Highest Rated" | "Most Reviewed" | "";
   verifiedOnly?: boolean;
+  neighborhood?: string;
 }
 

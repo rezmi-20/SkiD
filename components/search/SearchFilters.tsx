@@ -2,9 +2,6 @@
 
 import { ViewMode, SearchFilters as FilterType } from "./types";
 import { useLanguage } from "@/context/LanguageContext";
-import { Chip } from "@/components/base/badges/chip";
-import { Counter } from "@/components/base/badges/counter";
-import { Button } from "@/components/base/buttons/button";
 import { Switch } from "@/components/base/switch/switch";
 import { 
   RiEqualizerLine,
@@ -19,21 +16,17 @@ import {
   RiBroadcastFill,
   RiHomeGearFill,
   RiAppsLine,
-  RiMapPinLine,
-  RiMoneyDollarCircleLine
+  RiMapPinLine
 } from "@remixicon/react";
 import { cx } from "@/utils/cx";
 
 interface SearchFiltersProps {
   filters: FilterType;
   setFilters: (f: FilterType | ((prev: FilterType) => FilterType)) => void;
-  viewMode?: ViewMode;
-  setViewMode?: (v: ViewMode) => void;
   resultsCount: number;
   onClose?: () => void;
   onApply?: () => void;
   className?: string;
-  isDrawer?: boolean;
 }
 
 // 5 Active Trades strictly (No coming soon trades)
@@ -46,6 +39,16 @@ const CATEGORIES = [
   { label: "Satellite Dish", value: "satellite_dish", icon: RiBroadcastFill, color: "text-cyan-500" },
 ];
 
+const KEBELES = [
+  "All Dire Dawa",
+  "Kezira",
+  "Sabian",
+  "Megala",
+  "Gende Kore",
+  "Addis Ketema",
+  "Taiwan"
+];
+
 const RATING_PRESETS = [
   { label: "Any Rating", value: 0 },
   { label: "3.5+ ★", value: 3.5 },
@@ -55,15 +58,6 @@ const RATING_PRESETS = [
 
 const DISTANCE_PRESETS = [5, 10, 25, 50];
 
-const KEBELES = [
-  "All Dire Dawa",
-  "Kezira",
-  "Sabian",
-  "Megala",
-  "Gende Kore",
-  "Addis Ketema"
-];
-
 export default function SearchFilters({
   filters,
   setFilters,
@@ -71,7 +65,6 @@ export default function SearchFilters({
   onClose,
   onApply,
   className = "",
-  isDrawer = false,
 }: SearchFiltersProps) {
   const { t } = useLanguage();
 
@@ -79,6 +72,7 @@ export default function SearchFilters({
     setFilters({
       query: "",
       category: "",
+      neighborhood: "All Dire Dawa",
       minRating: 0,
       maxDistance: 50,
       sortBy: "Nearest",
@@ -88,6 +82,7 @@ export default function SearchFilters({
 
   const activeCount = [
     Boolean(filters.category),
+    Boolean(filters.neighborhood && filters.neighborhood !== "All Dire Dawa"),
     Boolean(filters.minRating > 0),
     Boolean(filters.maxDistance && filters.maxDistance < 50),
     Boolean(filters.verifiedOnly),
@@ -130,30 +125,45 @@ export default function SearchFilters({
         </div>
       </div>
 
-      {/* ── Verified Pros Toggle (Using BoardUI Switch) ── */}
-      <div className="flex items-center justify-between p-3 rounded-2xl border border-border-button-default bg-background-primary-default hover:border-[#45BA50]/40 transition-colors">
-        <div className="flex items-center gap-2.5 min-w-0 pr-2">
-          <div className={cx(
-            "h-8 w-8 rounded-xl flex items-center justify-center shrink-0 transition-colors",
-            filters.verifiedOnly ? "bg-[#45BA50] text-white" : "bg-background-tertiary-default text-text-tertiary"
-          )}>
-            <RiShieldCheckFill className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-body-medium font-bold text-text-primary leading-tight">Verified Artisans Only</p>
-            <p className="text-caption-1-semibold text-text-tertiary truncate">Kebele & Fayda ID verified</p>
-          </div>
+      {/* ── Kebele / Neighborhood Selector ── */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between text-caption-1-semibold text-text-tertiary font-bold uppercase tracking-wider">
+          <span className="flex items-center gap-1.5">
+            <RiMapPinLine className="w-3.5 h-3.5 text-[#45BA50]" /> Kebele / Neighborhood
+          </span>
+          {filters.neighborhood && filters.neighborhood !== "All Dire Dawa" && (
+            <button
+              onClick={() => setFilters(f => ({ ...f, neighborhood: "All Dire Dawa" }))}
+              className="text-[10px] text-[#45BA50] hover:underline font-bold"
+            >
+              Reset
+            </button>
+          )}
         </div>
-
-        <Switch
-          isSelected={Boolean(filters.verifiedOnly)}
-          onChange={(checked) => setFilters(f => ({ ...f, verifiedOnly: checked }))}
-          aria-label="Toggle Verified Artisans Only"
-        />
+        <div className="grid grid-cols-2 gap-1.5">
+          {KEBELES.map((nh) => {
+            const isSelected = (filters.neighborhood || "All Dire Dawa") === nh;
+            return (
+              <button
+                key={nh}
+                type="button"
+                onClick={() => setFilters(f => ({ ...f, neighborhood: nh }))}
+                className={cx(
+                  "px-3 py-1.5 rounded-xl text-caption-1-semibold font-bold text-center transition-all active:scale-95 border truncate",
+                  isSelected
+                    ? "bg-[#134e27] text-[#a4fe47] border-[#45BA50] font-black shadow-xs"
+                    : "bg-background-primary-default border-border-button-default text-text-secondary hover:bg-background-tertiary-default"
+                )}
+              >
+                {nh}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* ── 5 Active Trades Selector ── */}
-      <div className="space-y-2">
+      <div className="space-y-2 pt-1 border-t border-separator-border">
         <div className="flex items-center justify-between text-caption-1-semibold text-text-tertiary font-bold uppercase tracking-wider">
           <span className="flex items-center gap-1.5">
             <RiAppsLine className="w-3.5 h-3.5 text-[#45BA50]" /> Active Trade
@@ -189,6 +199,28 @@ export default function SearchFilters({
             );
           })}
         </div>
+      </div>
+
+      {/* ── Verified Pros Toggle (Using BoardUI Switch) ── */}
+      <div className="flex items-center justify-between p-3 rounded-2xl border border-border-button-default bg-background-primary-default hover:border-[#45BA50]/40 transition-colors">
+        <div className="flex items-center gap-2.5 min-w-0 pr-2">
+          <div className={cx(
+            "h-8 w-8 rounded-xl flex items-center justify-center shrink-0 transition-colors",
+            filters.verifiedOnly ? "bg-[#45BA50] text-white" : "bg-background-tertiary-default text-text-tertiary"
+          )}>
+            <RiShieldCheckFill className="w-4 h-4" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-body-medium font-bold text-text-primary leading-tight">Verified Artisans Only</p>
+            <p className="text-caption-1-semibold text-text-tertiary truncate">Kebele & Fayda ID verified</p>
+          </div>
+        </div>
+
+        <Switch
+          isSelected={Boolean(filters.verifiedOnly)}
+          onChange={(checked) => setFilters(f => ({ ...f, verifiedOnly: checked }))}
+          aria-label="Toggle Verified Artisans Only"
+        />
       </div>
 
       {/* ── Minimum Rating Filter ── */}
@@ -285,11 +317,11 @@ export default function SearchFilters({
         </div>
       </div>
 
-      {/* ── Footer Actions (BoardUI Button) ── */}
+      {/* ── Footer Actions ── */}
       <div className="pt-2 border-t border-separator-border flex items-center gap-2">
         <button
           onClick={handleReset}
-          className="h-10 px-3.5 rounded-lg border border-border-button-default bg-background-primary-default hover:bg-background-tertiary-default text-text-primary text-xs font-bold inline-flex items-center gap-1.5 transition-colors active:scale-95"
+          className="h-10 px-3.5 rounded-xl border border-border-button-default bg-background-primary-default hover:bg-background-tertiary-default text-text-primary text-xs font-bold inline-flex items-center gap-1.5 transition-colors active:scale-95"
         >
           <RiRestartLine className="w-3.5 h-3.5" />
           <span>Reset</span>
@@ -298,9 +330,9 @@ export default function SearchFilters({
         {onApply ? (
           <button
             onClick={onApply}
-            className="flex-1 h-10 px-4 rounded-lg bg-[#45BA50] hover:bg-[#3ca346] text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 shadow-[0_4px_14px_rgba(69,186,80,0.3)] active:scale-95 transition-all"
+            className="flex-1 h-10 px-4 rounded-xl bg-[#45BA50] hover:bg-[#3ca346] text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 shadow-[0_4px_14px_rgba(69,186,80,0.3)] active:scale-95 transition-all"
           >
-            Apply ({resultsCount} Pros)
+            Apply Filters ({resultsCount} Pros)
           </button>
         ) : (
           <div className="flex-1 text-end text-caption-1-semibold text-text-tertiary">
