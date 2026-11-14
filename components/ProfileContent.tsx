@@ -21,14 +21,8 @@ import {
   ArrowRight,
   UserCheck,
   ShieldAlert,
-  MapPin,
-  Phone,
-  Mail,
-  CheckCircle2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 
 interface ProfileContentProps {
   user: {
@@ -125,59 +119,12 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
         {/* Floating Dark Circular Settings Button */}
         <Link
           href={settingsHref}
-          className="h-12 w-12 rounded-full bg-[#181d24] dark:bg-[#1e2329] text-white flex items-center justify-center shadow-md active:scale-90 transition-transform shrink-0"
+          className="h-12 w-12 rounded-full bg-slate-900 dark:bg-zinc-800 text-white flex items-center justify-center shadow-md active:scale-90 transition-transform shrink-0"
           title="Settings"
           aria-label="Settings"
         >
           <Settings className="h-5 w-5 stroke-[1.8]" />
         </Link>
-      </div>
-
-      {/* ── Responsive Account Details Card (Mobile & Desktop) ──────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-6 p-4 rounded-[1.75rem] bg-card border border-border/60 shadow-sm text-xs">
-        <div className="flex items-center gap-2 p-2 rounded-xl bg-muted/40">
-          <Badge
-            variant="outline"
-            className={cn(
-              "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5",
-              user.is_verified
-                ? "bg-[#a4fe47]/15 text-[#3a6613] dark:text-[#a4fe47] border-[#a4fe47]/30"
-                : user.verificationStatus === "pending"
-                ? "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30"
-                : "bg-muted text-muted-foreground border-border"
-            )}
-          >
-            {user.is_verified
-              ? isWorker
-                ? t("profile.status.verifiedPro")
-                : t("profile.status.verifiedClient")
-              : user.verificationStatus === "pending"
-              ? t("settings.pendingVerification")
-              : isWorker
-              ? t("profile.status.unverifiedWorker")
-              : t("profile.status.unverifiedClient")}
-          </Badge>
-          <span className="text-muted-foreground font-medium truncate">{user.district ? `${user.district}, Dire Dawa` : "Dire Dawa, ET"}</span>
-        </div>
-        {user.phone ? (
-          <div className="flex items-center justify-between p-2 rounded-xl bg-muted/40">
-            <span className="flex items-center gap-1.5 text-muted-foreground font-medium"><Phone className="h-3.5 w-3.5 text-primary" /> {t("profile.phone")}</span>
-            <span className="font-bold text-foreground">+251 {user.phone}</span>
-          </div>
-        ) : (
-          <div className="flex items-center justify-between p-2 rounded-xl bg-muted/40">
-            <span className="flex items-center gap-1.5 text-muted-foreground font-medium"><Phone className="h-3.5 w-3.5 text-muted-foreground" /> {t("profile.phone")}</span>
-            <span className="text-muted-foreground italic text-[11px]">{t("profile.notLinked")}</span>
-          </div>
-        )}
-        <div className="flex items-center justify-between p-2 rounded-xl bg-muted/40">
-          <span className="flex items-center gap-1.5 text-muted-foreground font-medium"><ShieldCheck className="h-3.5 w-3.5 text-indigo-400" /> {t("settings.faydaFin")}:</span>
-          {user.maskedFin ? (
-            <span className="font-mono font-bold text-foreground bg-primary/10 px-2 py-0.5 rounded text-[11px] text-primary">{user.maskedFin}</span>
-          ) : (
-            <span className="text-muted-foreground italic text-[11px]">{t("profile.noFinLinked")}</span>
-          )}
-        </div>
       </div>
 
       <div className="space-y-6">
@@ -189,7 +136,7 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
             </h3>
 
             {/* Sleek Dark Capsule Card matching screenshot */}
-            <div className="rounded-[2rem] bg-[#0e1115] text-white p-5 shadow-xl flex items-center justify-around border border-white/5">
+            <div className="rounded-[2rem] bg-slate-950 dark:bg-zinc-900 text-white p-5 shadow-xl flex items-center justify-around border border-slate-800/80 dark:border-zinc-800">
               {/* Item 1: Active Contracts */}
               <Link
                 href={contractsHref}
@@ -249,9 +196,9 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
               {/* Row 1: My Contracts */}
               <Link
                 href={contractsHref}
-                className="rounded-[1.75rem] bg-[#f1f3f6] dark:bg-[#151a21] p-3.5 sm:p-4 flex items-center justify-between shadow-sm hover:border-primary/30 border border-transparent active:scale-[0.99] transition-all touch-manipulation group"
+                className="rounded-[1.75rem] bg-slate-100/90 dark:bg-zinc-900/90 hover:bg-slate-200/70 dark:hover:bg-zinc-800/80 p-3.5 sm:p-4 flex items-center justify-between shadow-sm hover:border-primary/30 border border-slate-200/70 dark:border-zinc-800 active:scale-[0.99] transition-all touch-manipulation group"
               >
-                <div className="h-11 w-11 rounded-full bg-[#181d24] text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <div className="h-11 w-11 rounded-full bg-slate-900 dark:bg-zinc-800 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                   <FileText className="h-4 w-4 stroke-[2]" />
                 </div>
                 <div className="flex-1 min-w-0 ml-3.5">
@@ -264,9 +211,9 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
               {/* Row 2: Payments & Invoices (Chapa) */}
               <Link
                 href={paymentsHref}
-                className="rounded-[1.75rem] bg-[#f1f3f6] dark:bg-[#151a21] p-3.5 sm:p-4 flex items-center justify-between shadow-sm hover:border-primary/30 border border-transparent active:scale-[0.99] transition-all touch-manipulation group"
+                className="rounded-[1.75rem] bg-slate-100/90 dark:bg-zinc-900/90 hover:bg-slate-200/70 dark:hover:bg-zinc-800/80 p-3.5 sm:p-4 flex items-center justify-between shadow-sm hover:border-primary/30 border border-slate-200/70 dark:border-zinc-800 active:scale-[0.99] transition-all touch-manipulation group"
               >
-                <div className="h-11 w-11 rounded-full bg-[#181d24] text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <div className="h-11 w-11 rounded-full bg-slate-900 dark:bg-zinc-800 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                   <CreditCard className="h-4 w-4 stroke-[2]" />
                 </div>
                 <div className="flex-1 min-w-0 ml-3.5">
@@ -279,9 +226,9 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
               {/* Row 3: Security & Contract PIN */}
               <Link
                 href={securityHref}
-                className="rounded-[1.75rem] bg-[#f1f3f6] dark:bg-[#151a21] p-3.5 sm:p-4 flex items-center justify-between shadow-sm hover:border-primary/30 border border-transparent active:scale-[0.99] transition-all touch-manipulation group"
+                className="rounded-[1.75rem] bg-slate-100/90 dark:bg-zinc-900/90 hover:bg-slate-200/70 dark:hover:bg-zinc-800/80 p-3.5 sm:p-4 flex items-center justify-between shadow-sm hover:border-primary/30 border border-slate-200/70 dark:border-zinc-800 active:scale-[0.99] transition-all touch-manipulation group"
               >
-                <div className="h-11 w-11 rounded-full bg-[#181d24] text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <div className="h-11 w-11 rounded-full bg-slate-900 dark:bg-zinc-800 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                   <ShieldCheck className="h-4 w-4 stroke-[2]" />
                 </div>
                 <div className="flex-1 min-w-0 ml-3.5">
@@ -294,9 +241,9 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
               {/* Row 4: Dark Theme (Interactive Toggle Switch) */}
               <div
                 onClick={toggleTheme}
-                className="rounded-[1.75rem] bg-[#f1f3f6] dark:bg-[#151a21] p-3.5 sm:p-4 flex items-center justify-between shadow-sm cursor-pointer active:scale-[0.99] transition-all touch-manipulation group"
+                className="rounded-[1.75rem] bg-slate-100/90 dark:bg-zinc-900/90 hover:bg-slate-200/70 dark:hover:bg-zinc-800/80 p-3.5 sm:p-4 flex items-center justify-between shadow-sm cursor-pointer active:scale-[0.99] transition-all touch-manipulation group border border-slate-200/70 dark:border-zinc-800"
               >
-                <div className="h-11 w-11 rounded-full bg-[#181d24] text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <div className="h-11 w-11 rounded-full bg-slate-900 dark:bg-zinc-800 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                   <Moon className="h-4 w-4 stroke-[2]" />
                 </div>
                 <div className="flex-1 min-w-0 ml-3.5">
@@ -320,9 +267,9 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
               {/* Row 5: Contact Us & Live Support */}
               <Link
                 href={supportHref}
-                className="rounded-[1.75rem] bg-[#f1f3f6] dark:bg-[#151a21] p-3.5 sm:p-4 flex items-center justify-between shadow-sm hover:border-primary/30 border border-transparent active:scale-[0.99] transition-all touch-manipulation group"
+                className="rounded-[1.75rem] bg-slate-100/90 dark:bg-zinc-900/90 hover:bg-slate-200/70 dark:hover:bg-zinc-800/80 p-3.5 sm:p-4 flex items-center justify-between shadow-sm hover:border-primary/30 border border-slate-200/70 dark:border-zinc-800 active:scale-[0.99] transition-all touch-manipulation group"
               >
-                <div className="h-11 w-11 rounded-full bg-[#181d24] text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <div className="h-11 w-11 rounded-full bg-slate-900 dark:bg-zinc-800 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                   <Headphones className="h-4 w-4 stroke-[2]" />
                 </div>
                 <div className="flex-1 min-w-0 ml-3.5">
@@ -335,9 +282,9 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
               {/* Row 6: Disputes & Appeals */}
               <Link
                 href={disputesHref}
-                className="rounded-[1.75rem] bg-[#f1f3f6] dark:bg-[#151a21] p-3.5 sm:p-4 flex items-center justify-between shadow-sm hover:border-primary/30 border border-transparent active:scale-[0.99] transition-all touch-manipulation group"
+                className="rounded-[1.75rem] bg-slate-100/90 dark:bg-zinc-900/90 hover:bg-slate-200/70 dark:hover:bg-zinc-800/80 p-3.5 sm:p-4 flex items-center justify-between shadow-sm hover:border-primary/30 border border-slate-200/70 dark:border-zinc-800 active:scale-[0.99] transition-all touch-manipulation group"
               >
-                <div className="h-11 w-11 rounded-full bg-[#181d24] text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <div className="h-11 w-11 rounded-full bg-slate-900 dark:bg-zinc-800 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                   <Scale className="h-4 w-4 stroke-[2]" />
                 </div>
                 <div className="flex-1 min-w-0 ml-3.5">
