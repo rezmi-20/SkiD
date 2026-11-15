@@ -229,11 +229,11 @@ export default function AppShell({
         {/* ── Main Content ── */}
         <main className="flex-1 w-full overflow-x-clip flex flex-col">
           {isFullBleedPage ? (
-            <div className="w-full flex-1 flex flex-col pb-14 sm:pb-16 lg:pb-0">
+            <div className="w-full flex-1 flex flex-col pb-20 sm:pb-24 lg:pb-0">
               {children}
             </div>
           ) : (
-            <div className="w-full px-3.5 sm:px-6 lg:px-8 xl:px-10 pt-1.5 pb-14 sm:py-6 md:py-8">
+            <div className="w-full px-3.5 sm:px-6 lg:px-8 xl:px-10 pt-1.5 pb-20 sm:pb-24 lg:py-8">
               {children}
             </div>
           )}
