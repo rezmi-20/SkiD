@@ -108,7 +108,7 @@ export default function MobileNav({ role }: MobileNavProps) {
 
   return (
     <nav className="lg:hidden fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] inset-x-0 z-50 flex justify-center pointer-events-none select-none px-3">
-      <div className="pointer-events-auto relative w-full max-w-[360px] sm:max-w-[410px] h-[52px] sm:h-[56px] px-2 py-1.5 rounded-full bg-[#121316]/95 dark:bg-[#0c0d10]/95 backdrop-blur-2xl border border-white/10 dark:border-white/10 shadow-[0_12px_36px_rgba(0,0,0,0.45)] dark:shadow-[0_16px_44px_rgba(0,0,0,0.7)] flex items-center justify-between">
+      <div className="pointer-events-auto relative w-full max-w-[360px] sm:max-w-[410px] h-[56px] sm:h-[60px] px-2.5 py-2 rounded-full bg-[#121316]/95 dark:bg-[#0c0d10]/95 backdrop-blur-2xl border border-white/10 dark:border-white/10 shadow-[0_12px_36px_rgba(0,0,0,0.45)] dark:shadow-[0_16px_44px_rgba(0,0,0,0.7)] flex items-center justify-between">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = item.isActive;
@@ -121,7 +121,7 @@ export default function MobileNav({ role }: MobileNavProps) {
               className={cx(
                 "relative flex items-center justify-center rounded-full transition-all touch-manipulation select-none",
                 isActive
-                  ? "px-3.5 sm:px-4 py-2 text-white"
+                  ? "px-3.5 sm:px-4 py-2 sm:py-2.5 text-white"
                   : "w-10 h-10 sm:w-11 sm:h-11 text-zinc-400 hover:text-zinc-100 active:scale-95"
               )}
             >
