@@ -107,30 +107,17 @@ export function AdminEmployeeLoginForm() {
           <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[#86efac]/20 blur-3xl pointer-events-none" />
 
           {/* Top-Left Header: Brand Logo & Wordmark */}
-          <div className="relative z-10 flex items-center justify-between">
-            <div className="flex items-center gap-3 bg-black/40 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/15 shadow-sm">
-              <DireSkillLogo variant="light" iconSize={36} showWordmark={true} />
-            </div>
-            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-black/40 backdrop-blur-md text-emerald-200 border border-white/15">
-              <span className="w-2 h-2 rounded-full bg-[#a3e635] animate-pulse" />
-              Staff Security Portal
-            </span>
+          <div className="relative z-10 flex items-center">
+            <DireSkillLogo variant="light" iconSize={36} showWordmark={true} />
           </div>
 
           {/* Bottom Headline: Bold Dual-Tone Typography matching the Reference Photo */}
           <div className="relative z-10 pt-12">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-black/50 backdrop-blur-md text-[#bef264] border border-white/15 mb-3">
-              <RiShieldCheckFill className="w-4 h-4 text-[#a3e635]" />
-              <span>Federal KYC & Neutral Milestone Protection</span>
-            </div>
             <h1 className="text-3xl sm:text-4xl lg:text-[2.6rem] font-bold tracking-tight text-white leading-[1.15]">
               Securing Dire Dawa&apos;s
             </h1>
             <p className="text-3xl sm:text-4xl lg:text-[2.6rem] font-extrabold tracking-tight text-[#bef264] leading-[1.15] mt-1">
               Digital Work Marketplace
-            </p>
-            <p className="text-sm sm:text-base text-emerald-100/90 mt-3 max-w-md leading-relaxed font-normal">
-              Federal Fayda biometric KYC verification, neutral milestone fund protections, and transparent artisan governance.
             </p>
           </div>
 
