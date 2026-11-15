@@ -42,13 +42,35 @@ export default function AppShell({
   const { theme, setTheme } = useTheme();
   const { t, language, setLanguage } = useLanguage();
   const [mounted, setMounted] = useState(false);
-  // Sidebar collapse state lives HERE so content area can react with matching margin
   const [collapsed, setCollapsed] = useState(true);
+  const [headerVisible, setHeaderVisible] = useState(true);
   const breadcrumbs = useBreadcrumb();
   const pathname = usePathname();
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  // Smart auto-hiding header: hides when scrolling down, reappears when scrolling back up
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY <= 15) {
+        setHeaderVisible(true);
+      } else if (currentScrollY > lastScrollY + 6) {
+        // Scrolling down -> hide header
+        setHeaderVisible(false);
+      } else if (currentScrollY < lastScrollY - 6) {
+        // Scrolling back up (swiping down) -> reveal header
+        setHeaderVisible(true);
+      }
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   if (!mounted) return null;
@@ -57,6 +79,7 @@ export default function AppShell({
 
   // Derive localized current page title for mobile header
   const getPageTitle = () => {
+    if (pathname.includes("/notifications")) return "Notification";
     if (pathname.includes("/dashboard")) return t("nav.dashboard") || "Dashboard";
     if (pathname.includes("/search")) return t("nav.search") || "Search";
     if (pathname.includes("/gigs")) return t("nav.mygigs") || "My Gigs";
@@ -98,18 +121,23 @@ export default function AppShell({
       {/* ── Content area shifts right to make room for fixed sidebar ── */}
       <div className={cn("flex flex-col min-h-screen transition-all duration-300", sidebarW)}>
 
-        {/* ── Sticky Top Header ── */}
-        <header className="sticky top-0 z-20 w-full bg-background/90 backdrop-blur-xl border-b border-border/80">
-          {/* Mobile Top Navigation (< lg): Left: Logo | Center: Title | Right: NotificationBell */}
+        {/* ── Auto-Hiding Top Header (Hides when scrolling down, reappears when scrolling back up) ── */}
+        <header
+          className={cn(
+            "sticky top-0 z-30 w-full bg-background/95 backdrop-blur-xl border-b border-border/80 transition-transform duration-300 ease-in-out will-change-transform",
+            headerVisible ? "translate-y-0" : "-translate-y-full"
+          )}
+        >
+          {/* Mobile Top Navigation (< lg): Left: Logo | Center: Redesigned Bold Title | Right: NotificationBell */}
           <div className="lg:hidden flex items-center justify-between h-14 px-3 sm:px-4">
             <div className="w-10 flex items-center justify-start shrink-0">
               <DireSkillLogo variant="color" iconSize={28} href={`/${role}/dashboard`} showWordmark={false} />
             </div>
 
             <div className="flex-1 flex items-center justify-center min-w-0 px-2 text-center">
-              <span className="text-sm font-extrabold text-foreground truncate">
+              <h1 className="text-lg sm:text-xl font-black text-foreground tracking-tight truncate">
                 {pageTitle}
-              </span>
+              </h1>
             </div>
 
             <div className="w-10 flex items-center justify-end shrink-0">
@@ -119,28 +147,23 @@ export default function AppShell({
 
           {/* Desktop Top Navigation (>= lg) */}
           <div className="hidden lg:flex items-center justify-between h-16 px-6">
-            {/* Left: Brand & Desktop breadcrumb */}
+            {/* Left: Brand & Desktop Title / Breadcrumb */}
             <div className="flex items-center gap-3 min-w-0">
               <div className="shrink-0 flex items-center">
                 <DireSkillLogo variant="color" iconSize={28} href={`/${role}/dashboard`} showWordmark={false} />
               </div>
 
-              <nav className="flex items-center gap-1 text-sm text-muted-foreground ml-2">
-                {breadcrumbs.map((crumb, i) => (
-                  <span key={i} className="flex items-center gap-1">
-                    {i > 0 && <ChevronRight size={14} className="text-border" />}
-                    <span
-                      className={cn(
-                        i === breadcrumbs.length - 1
-                          ? "font-semibold text-foreground"
-                          : "hover:text-foreground transition-colors cursor-pointer"
-                      )}
-                    >
-                      {crumb}
-                    </span>
-                  </span>
-                ))}
-              </nav>
+              <div className="flex items-center gap-2.5 ml-2">
+                <h1 className="text-xl font-black text-foreground tracking-tight">
+                  {pageTitle}
+                </h1>
+                {breadcrumbs.length > 1 && (
+                  <nav className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <ChevronRight size={13} className="text-border" />
+                    <span>{breadcrumbs[breadcrumbs.length - 1]}</span>
+                  </nav>
+                )}
+              </div>
             </div>
 
             {/* Right: Controls (Desktop Language Switcher, NotificationBell, Theme Toggle) */}

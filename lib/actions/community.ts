@@ -10,7 +10,7 @@ import { isTrustedUploadReference } from "@/lib/security";
 export async function getCommunityPosts(category?: string) {
   try {
     const session = await auth();
-    const currentUserId = session?.user?.id;
+    const currentUserId = session?.user?.id || null;
 
     // Join with both worker_profiles and client_profiles to get the official name and avatar
     // We use a subquery or a series of left joins
@@ -57,7 +57,7 @@ export async function getCommunityPosts(category?: string) {
     // reached production. Voting controls can still report their own errors.
     try {
       const session = await auth();
-      const currentUserId = session?.user?.id;
+      const currentUserId = session?.user?.id || null;
       return await sql`
         SELECT
           cp.*,

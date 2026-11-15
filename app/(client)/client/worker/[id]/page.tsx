@@ -21,6 +21,7 @@ import {
   RiAlertLine
 } from "@remixicon/react";
 import { cx } from "@/utils/cx";
+import { resolveTradeBanner } from "@/lib/trade-banners";
 
 interface WorkerProfile {
   id: string;
@@ -160,6 +161,7 @@ export default function WorkerProfilePage() {
     : [];
 
   const primarySkill = skillsList.length > 0 ? skillsList[0] : "Artisan";
+  const tradeMeta = resolveTradeBanner(skillsList, worker.bio);
   const rawRating = Number(worker.avg_rating);
   const rating = Number.isFinite(rawRating) && rawRating > 0 ? rawRating : 5.0;
   const totalJobs = Number(worker.total_ratings) ? Number(worker.total_ratings) * 2 + 10 : 24;
@@ -180,7 +182,7 @@ export default function WorkerProfilePage() {
             {t("worker.profile.home") || "Search"}
           </Link>
           <span>›</span>
-          <span className="capitalize">{primarySkill}</span>
+          <span className="capitalize">{tradeMeta.shortTitle}</span>
           <span>›</span>
           <span className="text-slate-900 dark:text-white font-bold">{worker.full_name}</span>
         </div>
@@ -197,30 +199,38 @@ export default function WorkerProfilePage() {
       <div className="max-w-5xl mx-auto px-3 sm:px-4 lg:px-6 pt-2 sm:pt-4">
 
         {/* ═════════════════════════════════════════════════════════════════════
-            1. TOP COVER BANNER (Rounded on both mobile and web!)
-            - Wide visual cover with floating back & share buttons
+            1. TOP COVER HERO BANNER (5 Artisan Trades: Satellite, Plumber, Electrician, Painter, Finishing)
+            - Wide visual cover with floating back, trade badge & share button
             ═════════════════════════════════════════════════════════════════════ */}
-        <div className="relative w-full h-48 sm:h-56 lg:h-64 rounded-3xl overflow-hidden bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 shadow-md">
+        <div className="relative w-full h-48 sm:h-60 lg:h-72 rounded-3xl overflow-hidden bg-zinc-950 border border-slate-200/80 dark:border-zinc-800 shadow-xl group">
           <img
-            src="/images/worker_workbench_hero.jpg"
-            alt="Artisan Workbench"
-            className="w-full h-full object-cover opacity-85"
+            src={tradeMeta.bannerUrl}
+            alt={tradeMeta.alt}
+            className="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-102"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#09090b]/90 via-[#09090b]/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#09090b] via-[#09090b]/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#09090b]/70 via-transparent to-[#09090b]/30" />
 
           {/* Floating Actions on Cover (Top-Left Back & Top-Right Share) */}
           <div className="absolute top-4 inset-x-4 flex items-center justify-between z-20">
             <button
               onClick={() => router.back()}
-              className="w-10 h-10 rounded-full bg-[#09090b]/60 text-white backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-[#09090b]/80 active:scale-95 transition-all shadow-md cursor-pointer"
+              className="w-10 h-10 rounded-full bg-[#09090b]/70 text-white backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-[#09090b]/90 active:scale-95 transition-all shadow-md cursor-pointer"
               title="Go Back"
             >
               <RiArrowLeftLine className="w-5 h-5" />
             </button>
 
+            {/* Trade Role Badge on Cover */}
+            <div className="flex items-center gap-2 bg-[#09090b]/80 backdrop-blur-md px-3 sm:px-4 py-1.5 rounded-full border border-white/20 text-white text-xs font-bold shadow-lg">
+              <span className="size-2 rounded-full animate-pulse" style={{ backgroundColor: tradeMeta.accentColor }} />
+              <span className="hidden sm:inline text-zinc-300">DireSkill</span>
+              <span>{tradeMeta.title}</span>
+            </div>
+
             <button
               onClick={handleShare}
-              className="w-10 h-10 rounded-full bg-[#09090b]/60 text-white backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-[#09090b]/80 active:scale-95 transition-all shadow-md cursor-pointer"
+              className="w-10 h-10 rounded-full bg-[#09090b]/70 text-white backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-[#09090b]/90 active:scale-95 transition-all shadow-md cursor-pointer"
               title="Share"
             >
               <RiShareForwardLine className="w-5 h-5" />

@@ -3,7 +3,38 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { completeContractSetup } from "@/lib/actions/contract-setup";
-import { CheckCircle2, PenTool, Lock, FileText, ShieldCheck } from "lucide-react";
+import {
+  RiCheckDoubleLine,
+  RiLock2Fill,
+  RiFileTextLine,
+  RiShieldCheckFill,
+  RiArrowLeftSLine,
+  RiCheckboxCircleFill,
+  RiKeyLine,
+  RiPencilLine
+} from "@remixicon/react";
+
+/* ── draw-svg Skill: Digital Biometric Contract Seal ── */
+function ContractBiometricSealSvg({ className = "w-10 h-10" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+      <circle cx="20" cy="20" r="18" fill="#059669" fillOpacity="0.12" stroke="#10b981" strokeWidth="1.5" />
+      <path
+        d="M20 10 C 25.5 10, 30 14.5, 30 20 C 30 25.5, 25.5 30, 20 30"
+        stroke="#10b981"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M20 14 C 23.3 14, 26 16.7, 26 20 C 26 23.3, 23.3 26, 20 26"
+        stroke="#34d399"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <circle cx="20" cy="20" r="3" fill="#10b981" />
+    </svg>
+  );
+}
 
 interface Props {
   role: "client" | "worker";
@@ -55,162 +86,195 @@ export default function ContractSetupContent({ role, completed, completedAt }: P
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 pb-28">
-      <header className="border-b border-outline-variant pb-6">
-        <p className="text-xs font-black uppercase tracking-widest text-primary">DireSkill Digital Contracts</p>
-        <h1 className="mt-2 text-3xl font-black tracking-tight text-on-surface md:text-4xl">
-          Complete Your Contract Setup
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-on-surface-variant">
-          Set up your private Contract PIN before creating or signing digital contracts on DireSkill.
-        </p>
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 pb-28 pt-2 px-4 sm:px-6 font-['Inter',system-ui,sans-serif] text-text-primary">
+      {/* ── Top Header ── */}
+      <header className="flex items-center justify-between pb-4 border-b border-border-button-default">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => router.push(dashboardHref)}
+            className="w-10 h-10 rounded-2xl border border-border-button-default bg-background-secondary-default hover:bg-background-secondary-hover text-text-primary flex items-center justify-center shadow-xs transition active:scale-95 cursor-pointer"
+            aria-label="Back to dashboard"
+          >
+            <RiArrowLeftSLine className="w-6 h-6" />
+          </button>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+              DireSkill Milestone Security
+            </p>
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-text-primary">
+              Digital Contract PIN Setup
+            </h1>
+          </div>
+        </div>
+
+        <ContractBiometricSealSvg className="w-10 h-10 shrink-0 hidden sm:block" />
       </header>
 
+      {/* ── Already Completed Banner ── */}
       {success && (
-        <section className="rounded-lg border border-primary/30 bg-primary/10 p-5">
-          <div className="flex items-start gap-3">
-            <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
-            <div>
-              <h2 className="text-sm font-black uppercase tracking-widest text-primary">Contract Setup Complete</h2>
-              <p className="mt-1 text-sm text-on-surface-variant">
+        <section className="rounded-3xl border border-emerald-500/30 bg-emerald-500/10 p-5 sm:p-6 shadow-sm">
+          <div className="flex items-start gap-3.5">
+            <RiCheckboxCircleFill className="w-6 h-6 text-emerald-500 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <h2 className="text-sm font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                Contract Setup Active & Verified
+              </h2>
+              <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
                 {completedAt
-                  ? `Completed on ${new Date(completedAt).toLocaleDateString()}.`
-                  : "You can now use contract features and sign finalized agreements with your Contract PIN."}
+                  ? `Your 4-digit signature PIN was configured on ${new Date(completedAt).toLocaleDateString()}.`
+                  : "Your 4-digit signature PIN is active. You can create, accept, and sign milestone agreements."}
               </p>
             </div>
           </div>
         </section>
       )}
 
-      <section className="grid gap-4 md:grid-cols-2">
+      {/* ── 4 Architecture Columns (draw-svg + BoardUI cards) ── */}
+      <section className="grid gap-4 sm:grid-cols-2">
         {[
           {
             title: "Electronic Signature",
-            body: "Your Contract PIN is used as your electronic signature when you voluntarily sign a finalized DireSkill contract.",
-            icon: PenTool,
+            body: "Your 4-digit PIN acts as your binding electronic signature when you voluntarily execute an agreement.",
+            icon: RiPencilLine,
           },
           {
-            title: "Privacy Notice",
-            body: "DireSkill stores only your hashed PIN. The plain PIN is never saved and cannot be viewed by administrators.",
-            icon: Lock,
+            title: "Private Hashing",
+            body: "DireSkill encrypts and hashes your PIN. Plaintext digits are never saved and cannot be viewed by administrators.",
+            icon: RiLock2Fill,
           },
           {
-            title: "Digital Contract Policy",
-            body: "A finalized contract becomes read only. Both parties must sign the same finalized version before work begins.",
-            icon: FileText,
+            title: "Milestone Protection",
+            body: "Every contract records milestone deliverables, PDF evidence hashes, and timestamps for court-grade security.",
+            icon: RiFileTextLine,
           },
           {
-            title: "User Responsibilities",
-            body: "Review every contract carefully, keep your PIN private, and sign only when you understand and agree to all terms.",
-            icon: ShieldCheck,
+            title: "User Control",
+            body: "Review every agreement carefully. Sign only when scope, timeline, and milestone disbursements are verified.",
+            icon: RiShieldCheckFill,
           },
         ].map((item) => {
           const Icon = item.icon;
           return (
-            <article key={item.title} className="rounded-lg border border-outline-variant bg-surface-container-lowest p-5">
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-container text-primary">
-                  <Icon className="h-5 w-5" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-black uppercase tracking-widest text-on-surface">{item.title}</h2>
-                  <p className="mt-2 text-sm leading-6 text-on-surface-variant">{item.body}</p>
-                </div>
+            <article
+              key={item.title}
+              className="rounded-3xl border border-border-button-default bg-background-primary-default p-5 shadow-xs flex items-start gap-3.5"
+            >
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <Icon className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-xs font-black uppercase tracking-wider text-text-primary">{item.title}</h3>
+                <p className="text-xs text-text-secondary leading-relaxed">{item.body}</p>
               </div>
             </article>
           );
         })}
       </section>
 
-      <form onSubmit={handleSubmit} className="rounded-lg border border-outline-variant bg-surface-container-lowest p-6">
-        <div className="space-y-5">
-          <div>
-            <h2 className="text-lg font-black text-on-surface">Terms and Conditions Summary</h2>
-            <p className="mt-2 text-sm leading-6 text-on-surface-variant">
-              DireSkill digital contracts record the agreed job details, signatures, timestamps, audit events, document hash, and final PDF evidence. Signing confirms that you read the finalized agreement and voluntarily accept its terms.
-            </p>
-          </div>
+      {/* ── PIN Setup Form ── */}
+      <form
+        onSubmit={handleSubmit}
+        className="rounded-[2.5rem] border border-border-button-default bg-background-primary-default p-6 sm:p-8 shadow-sm space-y-6"
+      >
+        <div className="space-y-2">
+          <h2 className="text-base font-black text-text-primary tracking-tight">Terms & Security Authorization</h2>
+          <p className="text-xs text-text-secondary leading-relaxed">
+            DireSkill digital contracts record scope, signatures, audit events, and SHA-256 PDF hashes. Signing confirms that you understand the terms and authorize your Contract PIN as your electronic agreement execution.
+          </p>
+        </div>
 
-          <label className="flex items-start gap-3 rounded-lg border border-outline-variant bg-surface-container p-4">
-            <input
-              type="checkbox"
-              checked={acceptedPolicy}
-              onChange={(event) => setAcceptedPolicy(event.target.checked)}
-              className="mt-1 h-4 w-4 accent-primary"
-            />
-            <span className="text-sm font-bold leading-6 text-on-surface">
-              I have read and understood the Digital Contract Policy.
-            </span>
-          </label>
+        {/* Checkbox 1 */}
+        <label className="flex items-start gap-3 p-4 rounded-2xl border border-border-button-default bg-background-secondary-default hover:bg-background-secondary-hover cursor-pointer transition-all">
+          <input
+            type="checkbox"
+            checked={acceptedPolicy}
+            onChange={(event) => setAcceptedPolicy(event.target.checked)}
+            className="mt-1 h-4 w-4 accent-emerald-500"
+          />
+          <span className="text-xs sm:text-sm font-bold text-text-primary leading-snug">
+            I have read and agree to the DireSkill Digital Contract & Milestone Protection Policy.
+          </span>
+        </label>
 
-          <label className="flex items-start gap-3 rounded-lg border border-outline-variant bg-surface-container p-4">
-            <input
-              type="checkbox"
-              checked={acceptedSignatureUse}
-              onChange={(event) => setAcceptedSignatureUse(event.target.checked)}
-              className="mt-1 h-4 w-4 accent-primary"
-            />
-            <span className="text-sm font-bold leading-6 text-on-surface">
-              I agree to use my Contract PIN as my electronic signature for contracts created through DireSkill.
-            </span>
-          </label>
+        {/* Checkbox 2 */}
+        <label className="flex items-start gap-3 p-4 rounded-2xl border border-border-button-default bg-background-secondary-default hover:bg-background-secondary-hover cursor-pointer transition-all">
+          <input
+            type="checkbox"
+            checked={acceptedSignatureUse}
+            onChange={(event) => setAcceptedSignatureUse(event.target.checked)}
+            className="mt-1 h-4 w-4 accent-emerald-500"
+          />
+          <span className="text-xs sm:text-sm font-bold text-text-primary leading-snug">
+            I authorize my 4-digit Contract PIN to execute milestone sign-offs and contract approvals.
+          </span>
+        </label>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                New PIN
-              </label>
+        {/* 4-digit PIN Inputs */}
+        <div className="grid gap-4 sm:grid-cols-2 pt-2">
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-black uppercase tracking-wider text-text-tertiary">
+              4-Digit Contract PIN
+            </label>
+            <div className="relative">
               <input
                 type="password"
                 inputMode="numeric"
                 maxLength={4}
                 value={pin}
                 onChange={(event) => setPin(event.target.value.replace(/\D/g, "").slice(0, 4))}
-                className="h-12 w-full rounded-lg border border-outline-variant bg-surface-container px-4 text-center text-lg font-black tracking-[0.4em] text-on-surface outline-none focus:border-primary"
+                placeholder="••••"
+                className="h-14 w-full rounded-2xl border border-border-button-default bg-background-secondary-default px-4 text-center text-2xl font-black tracking-[0.5em] text-text-primary outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all"
               />
             </div>
-            <div className="space-y-2">
-              <label className="ml-1 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                Confirm PIN
-              </label>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-black uppercase tracking-wider text-text-tertiary">
+              Confirm 4-Digit PIN
+            </label>
+            <div className="relative">
               <input
                 type="password"
                 inputMode="numeric"
                 maxLength={4}
                 value={confirmPin}
                 onChange={(event) => setConfirmPin(event.target.value.replace(/\D/g, "").slice(0, 4))}
-                className="h-12 w-full rounded-lg border border-outline-variant bg-surface-container px-4 text-center text-lg font-black tracking-[0.4em] text-on-surface outline-none focus:border-primary"
+                placeholder="••••"
+                className="h-14 w-full rounded-2xl border border-border-button-default bg-background-secondary-default px-4 text-center text-2xl font-black tracking-[0.5em] text-text-primary outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all"
               />
             </div>
           </div>
+        </div>
 
-          {error && (
-            <div className="rounded-lg border border-error/20 bg-error-container p-4 text-sm font-bold text-on-error-container">
-              {error}
-            </div>
-          )}
-
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <button
-              type="submit"
-              disabled={!canSubmit}
-              className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-xs font-black uppercase tracking-widest text-on-primary disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {submitting ? (
-                <span className="h-4 w-4 rounded-full border-2 border-on-primary border-t-transparent animate-spin" />
-              ) : (
-                <ShieldCheck className="h-4 w-4" />
-              )}
-              <span>{submitting ? "Saving..." : "Create Contract PIN"}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push(dashboardHref)}
-              className="inline-flex h-12 flex-1 items-center justify-center rounded-lg border border-outline-variant bg-surface-container px-4 text-xs font-black uppercase tracking-widest text-on-surface-variant"
-            >
-              Back to Dashboard
-            </button>
+        {error && (
+          <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-3.5 text-xs font-bold text-red-600 dark:text-red-400">
+            {error}
           </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-2">
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            className="flex h-13 sm:h-14 flex-1 items-center justify-center gap-2 rounded-full bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 text-xs sm:text-sm font-black uppercase tracking-wider shadow-xl hover:opacity-90 disabled:opacity-50 transition active:scale-[0.98] cursor-pointer"
+          >
+            {submitting ? (
+              <div className="w-5 h-5 rounded-full border-2 border-white dark:border-zinc-950 border-t-transparent animate-spin" />
+            ) : (
+              <RiKeyLine className="w-4 h-4" />
+            )}
+            <span>{submitting ? "Configuring PIN…" : success ? "Update Contract PIN" : "Set Contract PIN"}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => router.push(dashboardHref)}
+            className="flex h-13 sm:h-14 sm:w-48 items-center justify-center rounded-full border border-border-button-default bg-background-secondary-default text-text-primary hover:bg-background-secondary-hover text-xs font-black uppercase tracking-wider transition active:scale-[0.98] cursor-pointer"
+          >
+            Dashboard
+          </button>
         </div>
       </form>
     </div>

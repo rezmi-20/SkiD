@@ -2,8 +2,23 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import { completeJob, getWorkerJobs, startJob } from "@/lib/actions/jobs";
 import { useLanguage } from "@/context/LanguageContext";
+import {
+  RiBriefcaseLine,
+  RiPlayFill,
+  RiCheckDoubleFill,
+  RiTimeLine,
+  RiMapPin2Line,
+  RiShieldCheckFill,
+  RiBookmarkLine,
+  RiBookmarkFill,
+  RiCloseLine,
+  RiFileTextLine,
+  RiInboxLine,
+  RiMessage3Line,
+} from "@remixicon/react";
 
 interface Gig {
   id: string;
@@ -16,6 +31,34 @@ interface Gig {
   client_avatar: string | null;
   contract_id: string | null;
   completion_rejection_reason?: string | null;
+  location?: string | null;
+}
+
+/* ── draw-svg Skill: Topographic Contour Vector Background Texture ─────────── */
+function TopographicContourSvg({ className = "absolute inset-0 w-full h-full pointer-events-none opacity-20" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 800 240" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} preserveAspectRatio="none" aria-hidden="true">
+      <path d="M-50 120 C 150 70, 260 170, 460 120 C 660 70, 760 150, 900 90" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.45" />
+      <path d="M-50 150 C 120 100, 230 200, 430 150 C 630 100, 730 180, 900 120" stroke="currentColor" strokeWidth="1" strokeOpacity="0.35" />
+      <path d="M-50 90 C 180 40, 290 140, 490 90 C 690 40, 790 120, 900 60" stroke="currentColor" strokeWidth="0.8" strokeOpacity="0.25" />
+    </svg>
+  );
+}
+
+function formatDate(dateValue: string | Date | null | undefined) {
+  if (!dateValue) return "Flexible Schedule";
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return "Flexible Schedule";
+  return date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function formatBudget(value: number | null | undefined) {
+  if (value === null || value === undefined || value <= 0) return "Negotiable";
+  return `${Number(value).toLocaleString()} ETB`;
 }
 
 export default function GigsPage() {
@@ -23,6 +66,9 @@ export default function GigsPage() {
   const [gigs, setGigs] = useState<Gig[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [filterTab, setFilterTab] = useState<"all" | "active" | "accepted" | "completed">("all");
+  const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
+  const [selectedGigDetails, setSelectedGigDetails] = useState<Gig | null>(null);
 
   const fetchGigs = useCallback(async () => {
     try {
@@ -39,6 +85,16 @@ export default function GigsPage() {
     fetchGigs();
   }, [fetchGigs]);
 
+  const toggleBookmark = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setBookmarkedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const handleStartJob = async (jobId: string) => {
     setActionLoading(jobId);
     try {
@@ -47,6 +103,7 @@ export default function GigsPage() {
         setGigs((prev) =>
           prev.map((g) => (g.id === jobId ? { ...g, status: "in_progress" } : g))
         );
+        setSelectedGigDetails(null);
       } else {
         alert(result.error);
       }
@@ -65,6 +122,7 @@ export default function GigsPage() {
         setGigs((prev) =>
           prev.map((g) => (g.id === jobId ? { ...g, status: "completion_requested" } : g))
         );
+        setSelectedGigDetails(null);
       } else {
         alert(result.error);
       }
@@ -75,270 +133,373 @@ export default function GigsPage() {
     }
   };
 
-  // Filter gigs by status groups
+  // Status groups
   const activeGigs = gigs.filter((g) => g.status === "in_progress");
   const acceptedGigs = gigs.filter((g) => g.status === "active" || g.status === "accepted");
-  const completedGigs = gigs.filter((g) => ["completion_requested", "completed", "payment_pending", "paid", "closed"].includes(g.status));
+  const completedGigs = gigs.filter((g) =>
+    ["completion_requested", "completed", "payment_pending", "paid", "closed"].includes(g.status)
+  );
   const pendingRequests = gigs.filter((g) => g.status === "pending");
 
-  const activeCount = activeGigs.length;
-  const acceptedCount = acceptedGigs.length;
-  const doneCount = completedGigs.length;
+  const filteredGigs =
+    filterTab === "active"
+      ? activeGigs
+      : filterTab === "accepted"
+      ? acceptedGigs
+      : filterTab === "completed"
+      ? completedGigs
+      : gigs;
 
   return (
-    <div className="space-y-8 pb-28 md:pb-10 text-on-surface">
+    <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 md:space-y-8 font-['Inter',system-ui,sans-serif] text-zinc-900 dark:text-zinc-100 pb-28 md:pb-12">
+      
+      {/* ── Top Header Card (with Topographic Contour Aesthetic & Embedded Counters) ── */}
+      <div className="relative rounded-[2rem] bg-[#111216] dark:bg-zinc-950 text-white p-6 sm:p-8 overflow-hidden border border-zinc-800 shadow-md space-y-6">
+        <TopographicContourSvg className="absolute inset-0 w-full h-full pointer-events-none opacity-20 text-white" />
 
-      {/* ── Header ── */}
-      <div className="flex items-start justify-between px-1">
-        <div className="space-y-1">
-          <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-on-surface">{t("worker.gigs.title")}</h1>
-          <p className="text-on-surface-variant text-sm font-medium opacity-60">{t("worker.gigs.subtitle")}</p>
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="space-y-1.5">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white leading-tight">
+              {t("worker.gigs.title") || "My Gigs & Contracts"}
+            </h1>
+            <p className="text-xs sm:text-sm text-zinc-400 max-w-lg leading-relaxed">
+              {t("worker.gigs.subtitle") || "Track active milestones, initiate scheduled jobs, and request client completion."}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            <Link
+              href="/worker/jobs"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-white hover:bg-zinc-100 text-zinc-950 px-5 text-xs sm:text-sm font-semibold transition-all shadow-sm active:scale-95 cursor-pointer"
+            >
+              <RiInboxLine className="size-4" />
+              <span>Job Inquiries</span>
+              {pendingRequests.length > 0 && (
+                <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] text-white font-bold ml-1">
+                  {pendingRequests.length}
+                </span>
+              )}
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
-          <Link
-            href="/worker/jobs"
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-outline-variant bg-surface-container-high px-3 text-[10px] font-black uppercase tracking-widest text-on-surface-variant transition-all hover:border-primary/40 hover:text-primary active:scale-95"
-          >
-            <span className="material-symbols-outlined text-[16px]">inbox</span>
-            Job Requests
-            {pendingRequests.length > 0 && (
-              <span className="rounded-full bg-primary px-2 py-0.5 text-[9px] text-on-primary">
-                {pendingRequests.length}
-              </span>
-            )}
-          </Link>
-          <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 px-3 py-2 rounded-xl">
-            <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
-            <span className="text-[10px] font-black text-primary uppercase tracking-widest">{t("worker.gigs.badge_live")}</span>
+
+        {/* ── Embedded Counters: Active, Accepted, Done Inside My Gigs Card ── */}
+        <div className="relative z-10 grid grid-cols-3 gap-3 pt-2 border-t border-zinc-800/80">
+          <div className="rounded-2xl bg-white/5 border border-white/10 p-3 sm:p-4 text-center backdrop-blur-xs">
+            <p className="text-2xl sm:text-3xl font-black text-emerald-400">
+              {loading ? "–" : activeGigs.length}
+            </p>
+            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-zinc-400 mt-0.5">
+              Active
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-white/5 border border-white/10 p-3 sm:p-4 text-center backdrop-blur-xs">
+            <p className="text-2xl sm:text-3xl font-black text-white">
+              {loading ? "–" : acceptedGigs.length}
+            </p>
+            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-zinc-400 mt-0.5">
+              Accepted
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-white/5 border border-white/10 p-3 sm:p-4 text-center backdrop-blur-xs">
+            <p className="text-2xl sm:text-3xl font-black text-zinc-300">
+              {loading ? "–" : completedGigs.length}
+            </p>
+            <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-zinc-400 mt-0.5">
+              Done
+            </p>
           </div>
         </div>
       </div>
 
-      {/* ── Stats Row ── */}
-      <div className="grid grid-cols-3 gap-4">
+      {/* ── Filter Tabs ── */}
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
         {[
-          { label: t("worker.gigs.stat_active"), value: loading ? "–" : String(activeCount), color: "text-primary" },
-          { label: t("worker.gigs.stat_accepted"), value: loading ? "–" : String(acceptedCount), color: "text-on-surface" },
-          { label: t("worker.gigs.stat_done"), value: loading ? "–" : String(doneCount), color: "text-on-surface-variant" },
-        ].map((stat) => (
-          <div key={stat.label} className="bg-surface-container-low border border-outline-variant rounded-[2rem] p-5 text-center space-y-2 shadow-sm">
-            <span className={`text-3xl md:text-5xl font-black tracking-tighter ${stat.color}`}>{stat.value}</span>
-            <p className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60">{stat.label}</p>
-          </div>
+          { key: "all", label: "All Gigs", count: gigs.length },
+          { key: "active", label: "Active", count: activeGigs.length },
+          { key: "accepted", label: "Accepted", count: acceptedGigs.length },
+          { key: "completed", label: "Done", count: completedGigs.length },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setFilterTab(tab.key as any)}
+            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+              filterTab === tab.key
+                ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-sm"
+                : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 border border-slate-200/80 dark:border-zinc-800"
+            }`}
+          >
+            {tab.label} <span className="opacity-60 ml-1">({tab.count})</span>
+          </button>
         ))}
       </div>
 
-      {/* ── Loading Skeleton ── */}
-      {loading && (
-        <div className="space-y-4">
-          {[1, 2].map((i) => (
-            <div key={i} className="bg-surface-container-low border border-outline-variant rounded-[2.5rem] p-8 space-y-5 animate-pulse">
-              <div className="flex items-start justify-between">
-                <div className="space-y-3 flex-1">
-                  <div className="h-3 w-20 bg-surface-container-high rounded-lg" />
-                  <div className="h-5 w-48 bg-surface-container-high rounded-lg" />
-                  <div className="h-3 w-32 bg-surface-container-high rounded-lg" />
-                </div>
-                <div className="h-7 w-20 bg-surface-container-high rounded-lg" />
+      {/* ── Gigs Cards Grid (Matches Pinterest/Stripe Card Layout) ── */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rounded-[2.25rem] bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 p-6 space-y-4 animate-pulse min-h-[260px]">
+              <div className="flex items-center gap-3">
+                <div className="size-12 rounded-full bg-zinc-200 dark:bg-zinc-800" />
+                <div className="h-4 w-32 bg-zinc-200 dark:bg-zinc-800 rounded-lg" />
               </div>
-              <div className="h-2 bg-surface-container-high rounded-full" />
-              <div className="flex gap-3">
-                <div className="flex-1 h-11 bg-surface-container-high rounded-xl" />
-                <div className="w-24 h-11 bg-surface-container-high rounded-xl" />
-              </div>
+              <div className="h-5 w-48 bg-zinc-200 dark:bg-zinc-800 rounded-lg" />
+              <div className="h-3 w-full bg-zinc-200 dark:bg-zinc-800 rounded-lg" />
+              <div className="h-10 w-24 bg-zinc-100 dark:bg-zinc-800 rounded-full ml-auto" />
             </div>
           ))}
         </div>
-      )}
-
-      {/* ── Active Gigs (In Progress) ── */}
-      {!loading && activeGigs.map((gig) => (
-        <div key={gig.id} className="relative overflow-hidden bg-surface-container border border-primary/20 rounded-[2.5rem] p-8 shadow-xl">
-          <div className="absolute top-0 right-0 w-60 h-60 bg-primary/5 blur-[80px] pointer-events-none" />
-          <div className="relative z-10 space-y-6">
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-primary">{t("worker.gigs.active_now")}</span>
-                </div>
-                <h2 className="text-xl md:text-2xl font-black tracking-tight text-on-surface">{gig.title}</h2>
-                <p className="text-sm text-on-surface-variant font-medium opacity-60">
-                  Client: {gig.client_name || "Client"} · {new Date(gig.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}
-                </p>
-              </div>
-              <div className="text-right shrink-0">
-                <p className="text-2xl font-black text-primary">{gig.budget ? `${gig.budget.toLocaleString()} ETB` : "—"}</p>
-                <p className="text-[10px] text-on-surface-variant font-medium uppercase tracking-widest mt-0.5 opacity-40">{t("worker.gigs.budget")}</p>
-              </div>
-            </div>
-
-            {/* Progress Bar (visual only — 50% for in_progress) */}
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant opacity-60">{t("worker.gigs.progress")}</span>
-                <span className="text-[10px] font-black text-primary">50%</span>
-              </div>
-              <div className="h-2 bg-surface-container-highest rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full transition-all duration-700"
-                  style={{ width: "50%" }}
-                />
-              </div>
-            </div>
-
-            {/* Rejection notice if client requested rework */}
-            {gig.completion_rejection_reason && (
-              <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 space-y-2.5">
-                <div className="flex items-start gap-2.5">
-                  <span className="material-symbols-outlined text-amber-500 text-[20px] shrink-0 mt-0.5">
-                    feedback
-                  </span>
-                  <div className="space-y-1">
-                    <p className="text-xs font-bold uppercase tracking-wider text-amber-500">
-                      Client Requested Revisions
-                    </p>
-                    <p className="text-xs text-on-surface leading-relaxed">
-                      &ldquo;{gig.completion_rejection_reason}&rdquo;
-                    </p>
-                  </div>
-                </div>
-                <p className="text-[11px] text-on-surface-variant opacity-80 pl-7">
-                  You can revise the work and resubmit, or raise a dispute if you believe the work is already complete.
-                </p>
-              </div>
-            )}
-
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => handleCompleteJob(gig.id)}
-                disabled={actionLoading === gig.id}
-                className="flex-1 min-w-[160px] h-11 bg-primary text-on-primary rounded-xl font-black text-sm tracking-tight transition-all active:scale-95 shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {actionLoading === gig.id ? (
-                  <div className="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <span className="material-symbols-outlined text-[18px]">
-                    {gig.completion_rejection_reason ? "restart_alt" : "check_circle"}
-                  </span>
-                )}
-                {gig.completion_rejection_reason ? "Revise & Resubmit" : t("worker.gigs.btn_complete")}
-              </button>
-
-              {gig.completion_rejection_reason && (
-                <Link
-                  href={`/worker/disputes/new?jobId=${gig.id}`}
-                  className="px-4 h-11 border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-xl font-bold text-xs tracking-tight transition-all active:scale-95 flex items-center justify-center gap-1.5"
-                >
-                  <span className="material-symbols-outlined text-[16px]">gavel</span>
-                  Raise Dispute
-                </Link>
-              )}
-
-              {gig.contract_id ? (
-                <Link
-                  href={`/worker/contracts/${gig.contract_id}`}
-                  className="px-5 h-11 bg-surface-container-high border border-outline-variant text-on-surface-variant hover:text-on-surface rounded-xl font-black text-sm transition-all active:scale-95 flex items-center justify-center"
-                >
-                  {t("worker.gigs.btn_details")}
-                </Link>
-              ) : (
-                <button className="px-5 h-11 bg-surface-container-high border border-outline-variant text-on-surface-variant hover:text-on-surface rounded-xl font-black text-sm transition-all active:scale-95">
-                  {t("worker.gigs.btn_details")}
-                </button>
-              )}
-            </div>
+      ) : filteredGigs.length === 0 ? (
+        <div className="rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-dashed border-slate-200 dark:border-zinc-800 p-16 text-center space-y-3 shadow-sm">
+          <div className="size-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mx-auto text-zinc-400">
+            <RiBriefcaseLine className="size-8" />
           </div>
+          <h3 className="text-base font-bold text-zinc-900 dark:text-white">
+            No gigs in this view
+          </h3>
+          <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
+            Jobs accepted from clients in Dire Dawa will appear here for progress execution.
+          </p>
         </div>
-      ))}
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+          {filteredGigs.map((gig) => {
+            const isBookmarked = bookmarkedIds.has(gig.id);
+            const isInProgress = gig.status === "in_progress";
+            const isAccepted = gig.status === "active" || gig.status === "accepted";
+            const isDone = ["completion_requested", "completed", "payment_pending", "paid", "closed"].includes(gig.status);
+            const clientName = gig.client_name || "Dire Dawa Client";
+            const initials = clientName.split(" ").filter(Boolean).map((p) => p[0]).join("").slice(0, 2).toUpperCase() || "CL";
 
-      {/* ── Accepted Gigs (Ready to Start) ── */}
-      {!loading && acceptedGigs.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-on-surface-variant opacity-40 ml-1">{t("worker.gigs.ready_start")}</h2>
-          {acceptedGigs.map((gig) => (
-            <div key={gig.id} className="group bg-surface-container-low border border-outline-variant hover:border-primary/20 rounded-[1.75rem] p-5 md:p-6 transition-all duration-300 shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-surface-container-high border border-outline-variant rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-primary/10 group-hover:border-primary/20 transition-all">
-                  <span className="material-symbols-outlined text-on-surface-variant opacity-40 group-hover:text-primary group-hover:opacity-100 transition-all">
-                    work
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors truncate">{gig.title}</h3>
-                  <p className="text-xs text-on-surface-variant font-medium mt-0.5 opacity-60">
-                    {gig.client_name || "Client"} · {new Date(gig.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}
+            return (
+              <article
+                key={gig.id}
+                className="rounded-[2.25rem] border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden flex flex-col justify-between min-h-[270px] group"
+              >
+                <div className="space-y-3.5">
+                  {/* Top Row: Client Brand Avatar + Company Name + Bookmark Button */}
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="size-11 sm:size-12 rounded-full border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 flex items-center justify-center overflow-hidden shrink-0 shadow-xs">
+                        {gig.client_avatar ? (
+                          <img src={gig.client_avatar} alt="" className="size-full object-cover" />
+                        ) : (
+                          <div className="size-full bg-gradient-to-br from-emerald-500 to-teal-700 text-white font-extrabold text-sm flex items-center justify-center">
+                            {initials}
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs sm:text-sm font-semibold text-zinc-700 dark:text-zinc-300 truncate">
+                          {clientName}
+                        </p>
+                        <span
+                          className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider ${
+                            isInProgress
+                              ? "text-emerald-600 dark:text-emerald-400"
+                              : isAccepted
+                              ? "text-blue-600 dark:text-blue-400"
+                              : "text-zinc-400"
+                          }`}
+                        >
+                          <span className="size-1.5 rounded-full bg-current" />
+                          {isInProgress ? "Active" : isAccepted ? "Accepted" : "Done"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Bookmark Icon Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => toggleBookmark(gig.id, e)}
+                      aria-label="Bookmark Gig"
+                      className="text-zinc-400 hover:text-zinc-900 dark:hover:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-zinc-800 transition active:scale-90 cursor-pointer shrink-0"
+                    >
+                      {isBookmarked ? (
+                        <RiBookmarkFill className="size-5 text-emerald-600 dark:text-emerald-400" />
+                      ) : (
+                        <RiBookmarkLine className="size-5" />
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Title and Rate Row */}
+                  <div className="flex items-baseline justify-between gap-3 pt-1">
+                    <h3 className="text-base sm:text-lg font-bold tracking-tight text-zinc-900 dark:text-white truncate flex-1">
+                      {gig.title}
+                    </h3>
+                    <span className="text-base sm:text-lg font-extrabold text-zinc-900 dark:text-white shrink-0">
+                      {formatBudget(gig.budget)}
+                    </span>
+                  </div>
+
+                  {/* Description Snippet (2-line clamped) */}
+                  <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 line-clamp-2 leading-relaxed">
+                    {gig.description || "Active milestone execution in Dire Dawa governed under DireSkill Milestone Protection."}
                   </p>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="text-right">
-                    <p className="text-sm font-black text-on-surface">{gig.budget ? `${gig.budget.toLocaleString()} ETB` : "—"}</p>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-secondary">{t("worker.gigs.stat_accepted")}</span>
+
+                {/* Bottom Row: Date & Location on Left + Solid Dark Pill 'Details' Button on Right */}
+                <div className="flex items-end justify-between gap-3 pt-4 border-t border-slate-100 dark:border-zinc-800/80 mt-4">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-zinc-900 dark:text-white">
+                      {formatDate(gig.created_at)}
+                    </p>
+                    <p className="text-[11px] text-zinc-400 truncate mt-0.5 flex items-center gap-1">
+                      <RiMapPin2Line className="size-3 shrink-0" />
+                      <span>{gig.location || "Dire Dawa, Ethiopia"}</span>
+                    </p>
                   </div>
+
+                  {/* Details Action Pill */}
                   <button
-                    onClick={() => handleStartJob(gig.id)}
-                    disabled={actionLoading === gig.id}
-                    className="h-10 px-4 bg-primary text-on-primary rounded-xl font-black text-xs tracking-tight transition-all active:scale-95 shadow-md shadow-primary/20 disabled:opacity-50 flex items-center gap-1.5"
+                    type="button"
+                    onClick={() => setSelectedGigDetails(gig)}
+                    className="rounded-full bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-950 px-5 py-2 text-xs font-semibold shadow-sm transition-all active:scale-95 cursor-pointer whitespace-nowrap"
                   >
-                    {actionLoading === gig.id ? (
-                      <div className="w-3.5 h-3.5 border-2 border-on-primary border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <span className="material-symbols-outlined text-[16px]">play_arrow</span>
-                    )}
-                    {t("worker.gigs.btn_start")}
+                    Details
                   </button>
                 </div>
-              </div>
-            </div>
-          ))}
+              </article>
+            );
+          })}
         </div>
       )}
 
-      {/* ── Completed Gigs ── */}
-      {!loading && completedGigs.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-on-surface-variant opacity-40 ml-1">{t("worker.gigs.completed_section")}</h2>
-          {completedGigs.map((gig) => (
-            <div key={gig.id} className="group bg-surface-container-low border border-outline-variant rounded-[1.75rem] p-5 md:p-6 flex items-center gap-4 transition-all duration-300 shadow-sm opacity-60">
-              <div className="w-12 h-12 bg-primary/10 border border-primary/20 rounded-2xl flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-primary opacity-60">
-                  check_circle
-                </span>
+      {/* ── Stageshow Interactive Modal Drawer for Gig Details ── */}
+      <AnimatePresence>
+        {selectedGigDetails && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              className="w-full max-w-lg rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden"
+            >
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => setSelectedGigDetails(null)}
+                className="absolute top-6 right-6 size-9 rounded-full bg-slate-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-white flex items-center justify-center transition cursor-pointer"
+              >
+                <RiCloseLine className="size-5" />
+              </button>
+
+              {/* Header */}
+              <div className="flex items-center gap-3.5 pr-8">
+                <div className="size-12 rounded-full border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
+                  {selectedGigDetails.client_avatar ? (
+                    <img src={selectedGigDetails.client_avatar} alt="" className="size-full object-cover" />
+                  ) : (
+                    <div className="size-full bg-emerald-600 text-white font-extrabold text-sm flex items-center justify-center">
+                      CL
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-zinc-900 dark:text-white">
+                    {selectedGigDetails.client_name || "Dire Dawa Client"}
+                  </h3>
+                  <p className="text-xs text-zinc-400">
+                    Status:{" "}
+                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                      {selectedGigDetails.status === "in_progress"
+                        ? "Active"
+                        : selectedGigDetails.status === "accepted" || selectedGigDetails.status === "active"
+                        ? "Accepted"
+                        : ["completion_requested", "completed", "payment_pending", "paid", "closed"].includes(selectedGigDetails.status)
+                        ? "Done"
+                        : selectedGigDetails.status.replace("_", " ")}
+                    </span>
+                  </p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-bold text-on-surface truncate">{gig.title}</h3>
-                <p className="text-xs text-on-surface-variant font-medium mt-0.5 opacity-60">
-                  {gig.client_name || "Client"} · {new Date(gig.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}
+
+              {/* Title & Budget Card */}
+              <div className="rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 p-4 space-y-1.5 border border-slate-100 dark:border-zinc-800">
+                <p className="text-sm font-bold text-zinc-900 dark:text-white">
+                  {selectedGigDetails.title}
+                </p>
+                <div className="flex items-center justify-between text-xs pt-1">
+                  <span className="text-zinc-500">Contract Value</span>
+                  <span className="font-extrabold text-emerald-600 dark:text-emerald-400 text-sm">
+                    {formatBudget(selectedGigDetails.budget)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Scope of Work */}
+              <div className="space-y-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                  <RiFileTextLine className="size-4 text-emerald-500" />
+                  Scope of Work & Agreement
+                </span>
+                <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto pr-2">
+                  {selectedGigDetails.description || "Milestone execution governed by DireSkill Milestone Protection terms in Dire Dawa."}
                 </p>
               </div>
-              <div className="text-right shrink-0">
-                <p className="text-sm font-black text-on-surface">{gig.budget ? `${gig.budget.toLocaleString()} ETB` : "—"}</p>
-                <span className="text-[9px] font-black uppercase tracking-widest text-primary">{t("worker.gigs.stat_done")}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
 
-      {/* ── Empty state if no gigs ── */}
-      {!loading && gigs.filter(g => ["active", "accepted", "in_progress", "completion_requested", "completed", "payment_pending", "paid", "closed"].includes(g.status)).length === 0 && (
-        <div className="relative overflow-hidden bg-surface-container-low border border-dashed border-outline rounded-[2.5rem] py-20 flex flex-col items-center justify-center gap-6 text-center">
-          <div className="w-20 h-20 bg-surface-container-high border border-outline-variant rounded-3xl flex items-center justify-center">
-             <span className="material-symbols-outlined text-on-surface-variant opacity-20 text-[36px]">construction</span>
+              {/* Revision note if any */}
+              {selectedGigDetails.completion_rejection_reason && (
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs space-y-1 text-amber-700 dark:text-amber-300">
+                  <p className="font-bold uppercase tracking-wider text-[10px]">
+                    Client Revision Request
+                  </p>
+                  <p className="italic">&ldquo;{selectedGigDetails.completion_rejection_reason}&rdquo;</p>
+                </div>
+              )}
+
+              {/* Direct Actions */}
+              <div className="flex flex-col gap-2.5 pt-2">
+                {selectedGigDetails.status === "in_progress" && (
+                  <button
+                    type="button"
+                    onClick={() => handleCompleteJob(selectedGigDetails.id)}
+                    disabled={actionLoading === selectedGigDetails.id}
+                    className="w-full py-3.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    {actionLoading === selectedGigDetails.id ? (
+                      <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <RiCheckDoubleFill className="size-4" />
+                    )}
+                    <span>Request Milestone Completion</span>
+                  </button>
+                )}
+
+                {(selectedGigDetails.status === "active" || selectedGigDetails.status === "accepted") && (
+                  <button
+                    type="button"
+                    onClick={() => handleStartJob(selectedGigDetails.id)}
+                    disabled={actionLoading === selectedGigDetails.id}
+                    className="w-full py-3.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    {actionLoading === selectedGigDetails.id ? (
+                      <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <RiPlayFill className="size-4" />
+                    )}
+                    <span>Start Working</span>
+                  </button>
+                )}
+
+                {selectedGigDetails.contract_id && (
+                  <Link
+                    href={`/worker/contracts/${selectedGigDetails.contract_id}`}
+                    className="w-full py-3 rounded-full border border-slate-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-zinc-800 transition"
+                  >
+                    <span>View Contract Document</span>
+                  </Link>
+                )}
+              </div>
+            </motion.div>
           </div>
-          <div className="space-y-2">
-            <p className="text-on-surface font-black text-lg">{t("worker.gigs.empty_title")}</p>
-            <p className="text-on-surface-variant text-sm font-medium max-w-xs leading-relaxed opacity-60">{t("worker.gigs.empty_desc")}</p>
-          </div>
-          <Link
-            href="/worker/jobs"
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-xs font-black uppercase tracking-widest text-on-primary transition-all active:scale-95"
-          >
-            <span className="material-symbols-outlined text-[18px]">inbox</span>
-            Open Job Requests
-          </Link>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

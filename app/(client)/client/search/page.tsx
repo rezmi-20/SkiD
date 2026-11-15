@@ -30,6 +30,7 @@ import {
   RiEyeLine
 } from "@remixicon/react";
 import { cx } from "@/utils/cx";
+import { resolveTradeBanner } from "@/lib/trade-banners";
 
 // Dynamically import Map with no SSR
 const MapComponent = dynamic(() => import("@/components/search/MapComponent"), { 
@@ -780,46 +781,65 @@ function SearchPageContent() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200/80 dark:border-zinc-800 shadow-2xl p-5 sm:p-6 z-10 max-h-[90vh] overflow-y-auto space-y-5"
+              className="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200/80 dark:border-zinc-800 shadow-2xl overflow-hidden z-10 max-h-[90vh] overflow-y-auto"
             >
-              {/* Header with Close */}
-              <div className="flex items-start justify-between pb-3 border-b border-slate-200/80 dark:border-zinc-800">
-                <div className="flex items-center gap-3">
-                  <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 dark:bg-zinc-800 border border-slate-200/80 dark:border-zinc-700 shrink-0">
+              {/* Cover Hero Banner */}
+              {(() => {
+                const previewTrade = resolveTradeBanner(previewWorker.skills, previewWorker.bio, previewWorker.category);
+                return (
+                  <div className="relative w-full h-36 sm:h-40 overflow-hidden bg-zinc-950">
                     <img
-                      src={previewWorker.photo || "/images/worker_holding_card.png"}
-                      alt={previewWorker.name}
-                      className="w-full h-full object-cover"
+                      src={previewTrade.bannerUrl}
+                      alt={previewTrade.alt}
+                      className="w-full h-full object-cover opacity-90"
                     />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-                        {previewWorker.name}
-                      </h2>
-                      {previewWorker.isVerified && (
-                        <span title="Kebele & Fayda Verified">
-                          <RiShieldCheckFill className="w-5 h-5 text-[#45BA50]" />
-                        </span>
-                      )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                    <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/20 text-white text-[11px] font-bold">
+                      <span className="size-2 rounded-full" style={{ backgroundColor: previewTrade.accentColor }} />
+                      <span>{previewTrade.shortTitle}</span>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5 flex items-center gap-1">
-                      <RiMapPinLine className="w-3.5 h-3.5 text-[#45BA50]" />
-                      <span>{previewWorker.district || "Kezira"}, Dire Dawa</span>
-                      <span>•</span>
-                      <span>{previewWorker.distance !== "N/A" ? `${previewWorker.distance} km away` : "Dire Dawa"}</span>
-                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewWorker(null)}
+                      className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-black/60 text-white backdrop-blur-md border border-white/20 hover:bg-black/80 transition-colors cursor-pointer"
+                    >
+                      <RiCloseLine className="w-4 h-4" />
+                    </button>
+                  </div>
+                );
+              })()}
+
+              <div className="p-5 sm:p-6 space-y-5 -mt-6 relative z-10">
+                {/* Header with Avatar */}
+                <div className="flex items-start justify-between pb-3 border-b border-slate-200/80 dark:border-zinc-800">
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-white dark:bg-zinc-900 border-2 border-white dark:border-zinc-800 shadow-md shrink-0">
+                      <img
+                        src={previewWorker.photo || "/images/worker_holding_card.png"}
+                        alt={previewWorker.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+                          {previewWorker.name}
+                        </h2>
+                        {previewWorker.isVerified && (
+                          <span title="Kebele & Fayda Verified">
+                            <RiShieldCheckFill className="w-5 h-5 text-[#45BA50]" />
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5 flex items-center gap-1">
+                        <RiMapPinLine className="w-3.5 h-3.5 text-[#45BA50]" />
+                        <span>{previewWorker.district || "Kezira"}, Dire Dawa</span>
+                        <span>•</span>
+                        <span>{previewWorker.distance !== "N/A" ? `${previewWorker.distance} km away` : "Dire Dawa"}</span>
+                      </p>
+                    </div>
                   </div>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => setPreviewWorker(null)}
-                  className="p-1.5 rounded-full text-slate-400 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-                >
-                  <RiCloseLine className="w-5 h-5" />
-                </button>
-              </div>
 
               {/* Rate & Rating Highlights Grid */}
               <div className="grid grid-cols-3 gap-2.5 p-3 rounded-2xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/80 dark:border-zinc-800 text-center">
@@ -902,7 +922,8 @@ function SearchPageContent() {
                   <span>Full Profile</span>
                 </Link>
               </div>
-            </motion.div>
+            </div>
+          </motion.div>
           </div>
         </AnimatePresence>,
         document.body

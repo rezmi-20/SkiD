@@ -3,16 +3,36 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { createCommunityPost } from "@/lib/actions/community";
-import { ImagePlus, X, Send } from "lucide-react";
+import {
+  RiCloseLine,
+  RiImageAddLine,
+  RiSendPlaneFill,
+  RiSparklingLine,
+  RiCheckLine,
+} from "@remixicon/react";
 
-const CATEGORIES = ["Plumbing", "Electrical", "Painting", "DIY", "Gardening"];
+const CATEGORIES = [
+  "Plumbing",
+  "Electrical",
+  "Woodwork & Finishing",
+  "Masonry & Tile",
+  "Painting & Decor",
+  "Solar & Energy",
+  "Tips & Q&A",
+];
 
-export default function CreatePostModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+export default function CreatePostModal({
+  onClose,
+  onSuccess,
+}: {
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
   const [formData, setFormData] = useState({
     title: "",
     content: "",
     category: "Plumbing",
-    mediaUrl: ""
+    mediaUrl: "",
   });
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -21,16 +41,16 @@ export default function CreatePostModal({ onClose, onSuccess }: { onClose: () =>
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title || !formData.content) return;
+    if (!formData.title.trim() || !formData.content.trim()) return;
 
     setLoading(true);
     setError(null);
-    
+
     const res = await createCommunityPost(formData);
     if (res.success) {
       onSuccess();
     } else {
-      setError(res.error || "Failed to post");
+      setError(res.error || "Failed to publish post. Please try again.");
     }
     setLoading(false);
   };
@@ -52,9 +72,9 @@ export default function CreatePostModal({ onClose, onSuccess }: { onClose: () =>
       if (res.ok && data.url) {
         setFormData((prev) => ({ ...prev, mediaUrl: data.url }));
       } else {
-        setError(data.error || "Failed to upload image");
+        setError(data.error || "Failed to upload image.");
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred during image upload.");
     } finally {
       setUploading(false);
@@ -62,9 +82,9 @@ export default function CreatePostModal({ onClose, onSuccess }: { onClose: () =>
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-6">
+    <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-6">
       {/* Backdrop */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -72,122 +92,168 @@ export default function CreatePostModal({ onClose, onSuccess }: { onClose: () =>
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
       />
 
-      {/* Modal */}
+      {/* Modal Sheet */}
       <motion.div
-        initial={{ y: "100%" }}
-        animate={{ y: 0 }}
-        exit={{ y: "100%" }}
-        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="relative w-full max-w-xl bg-card border border-border rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl flex flex-col gap-5"
+        initial={{ y: "100%", opacity: 0.8 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: "100%", opacity: 0 }}
+        transition={{ type: "spring", damping: 28, stiffness: 320 }}
+        className="relative w-full max-w-xl bg-background-primary-default border border-border-button-default rounded-t-[2.5rem] sm:rounded-3xl p-6 sm:p-7 shadow-2xl flex flex-col gap-5 max-h-[90vh] overflow-y-auto"
       >
-        <div className="flex items-center justify-between">
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground font-semibold text-sm">Cancel</button>
-          <h2 className="text-base font-extrabold tracking-tight uppercase">New Community Post</h2>
-          <div className="w-10" />
+        {/* Header */}
+        <div className="flex items-center justify-between pb-1 border-b border-separator-border">
+          <div>
+            <div className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+              <RiSparklingLine className="w-3.5 h-3.5" />
+              Dire Dawa Artisan Hub
+            </div>
+            <h2 className="text-xl font-black tracking-tight text-text-primary mt-0.5">
+              Share Your Craft
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-10 h-10 rounded-full border border-border-button-default bg-background-secondary-default text-text-secondary hover:text-text-primary hover:bg-background-secondary-hover flex items-center justify-center transition-all active:scale-95"
+            aria-label="Close dialog"
+          >
+            <RiCloseLine className="w-5 h-5" />
+          </button>
         </div>
 
         {error && (
-          <div className="p-4 bg-destructive/10 text-destructive border border-destructive/20 rounded-xl text-xs font-bold flex items-center gap-3">
-             {error}
+          <div className="p-3.5 bg-red-500/10 border border-red-500/20 text-text-error-primary rounded-2xl text-xs font-semibold">
+            {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-3">
-            <input 
-              type="text" 
-              placeholder="Post Title (e.g. Tips for repairing leaky pipes)"
-              value={formData.title}
-              onChange={e => setFormData({...formData, title: e.target.value})}
-              required
-              className="w-full h-12 bg-background border border-border rounded-xl px-4 font-bold text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
-            />
+            <div>
+              <label className="block text-[11px] font-black uppercase tracking-wider text-text-tertiary mb-1.5">
+                Craft Title
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Copper Pipe Brazing Masterclass in Kebele 02"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                required
+                className="w-full h-12 bg-background-secondary-default border border-border-button-default rounded-2xl px-4 font-bold text-text-primary placeholder:text-text-placeholder outline-none focus-visible:ring-2 focus-visible:ring-border-focus-ring transition-all text-sm"
+              />
+            </div>
 
-            <textarea 
-              placeholder="What knowledge would you like to share today?"
-              value={formData.content}
-              onChange={e => setFormData({...formData, content: e.target.value})}
-              required
-              rows={4}
-              className="w-full bg-background border border-border rounded-xl p-4 font-medium text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none text-sm leading-relaxed"
-            />
+            <div>
+              <label className="block text-[11px] font-black uppercase tracking-wider text-text-tertiary mb-1.5">
+                Project Breakdown & Insights
+              </label>
+              <textarea
+                placeholder="What technique, troubleshooting fix, or mastercraft tips would you like to share with the community?"
+                value={formData.content}
+                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                required
+                rows={4}
+                className="w-full bg-background-secondary-default border border-border-button-default rounded-2xl p-4 font-medium text-text-primary placeholder:text-text-placeholder outline-none focus-visible:ring-2 focus-visible:ring-border-focus-ring transition-all resize-none text-sm leading-relaxed"
+              />
+            </div>
           </div>
 
           {/* Category selection */}
           <div className="space-y-2">
-            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Select Category</label>
-            <div className="flex flex-wrap gap-1.5">
-              {CATEGORIES.map(cat => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setFormData({...formData, category: cat})}
-                  className={`px-4 py-2 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${
-                    formData.category === cat 
-                      ? "bg-primary text-primary-foreground shadow-sm" 
-                      : "bg-muted text-muted-foreground hover:bg-border"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
+            <label className="text-[11px] font-black uppercase tracking-widest text-text-tertiary">
+              Trade Category
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {CATEGORIES.map((cat) => {
+                const isSelected = formData.category === cat;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, category: cat })}
+                    className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all active:scale-95 flex items-center gap-1.5 ${
+                      isSelected
+                        ? "bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 shadow-sm"
+                        : "bg-background-secondary-default text-text-secondary hover:bg-background-secondary-hover hover:text-text-primary border border-border-button-default/60"
+                    }`}
+                  >
+                    {isSelected && <RiCheckLine className="w-3.5 h-3.5" />}
+                    {cat}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           {/* Image Uploader */}
           <div className="space-y-2">
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              className="hidden" 
-              accept="image/*" 
-              onChange={handleImageUpload} 
+            <label className="text-[11px] font-black uppercase tracking-widest text-text-tertiary">
+              Project Media (Optional)
+            </label>
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/*"
+              onChange={handleImageUpload}
             />
 
             {formData.mediaUrl ? (
-              <div className="relative rounded-xl overflow-hidden border border-border bg-muted h-40 group">
-                <img src={formData.mediaUrl} alt="Upload preview" className="w-full h-full object-cover" />
+              <div className="relative rounded-2xl overflow-hidden border border-border-button-default bg-background-secondary-default h-48 group">
+                <img
+                  src={formData.mediaUrl}
+                  alt="Upload preview"
+                  className="w-full h-full object-cover"
+                />
                 <button
                   type="button"
                   onClick={() => setFormData((prev) => ({ ...prev, mediaUrl: "" }))}
-                  className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
+                  className="absolute top-3 right-3 p-2 rounded-full bg-black/70 text-white hover:bg-black/90 transition-colors shadow-lg active:scale-95"
+                  aria-label="Remove image"
                 >
-                  <X size={14} />
+                  <RiCloseLine className="w-4 h-4" />
                 </button>
               </div>
             ) : (
-              <button 
+              <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="w-full py-6 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-1.5 hover:bg-muted/40 transition-colors group"
+                className="w-full py-7 border-2 border-dashed border-border-button-default rounded-2xl flex flex-col items-center justify-center gap-2 hover:bg-background-secondary-default/50 transition-colors group cursor-pointer"
               >
                 {uploading ? (
-                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
-                    <ImagePlus size={18} className="text-muted-foreground group-hover:text-primary transition-colors" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors">Attach Photo</span>
+                    <div className="w-10 h-10 rounded-full bg-background-secondary-default flex items-center justify-center text-text-secondary group-hover:text-text-primary group-hover:scale-105 transition-all">
+                      <RiImageAddLine className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-text-secondary group-hover:text-text-primary">
+                      Attach Craft Photo or Diagram
+                    </span>
                   </>
                 )}
               </button>
             )}
           </div>
 
-          <button 
-            type="submit"
-            disabled={loading || uploading}
-            className="w-full h-12 bg-primary text-primary-foreground rounded-xl font-bold uppercase tracking-widest flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] transition-all disabled:opacity-50 text-xs"
-          >
-            {loading ? (
-              <div className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <>
-                Post Tip
-                <Send size={13} />
-              </>
-            )}
-          </button>
+          {/* Submit Button */}
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={loading || uploading}
+              className="w-full h-13 py-3.5 bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 rounded-full font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm hover:scale-[1.01] active:scale-[0.98] transition-all disabled:opacity-50 text-xs cursor-pointer"
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-white dark:border-zinc-900 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <RiSendPlaneFill className="w-4 h-4" />
+                  Publish To Artisan Community
+                </>
+              )}
+            </button>
+          </div>
         </form>
       </motion.div>
     </div>

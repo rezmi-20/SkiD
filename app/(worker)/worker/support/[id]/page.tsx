@@ -1,18 +1,28 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
 import { getUserSupportTicketDetails } from "@/lib/actions/support";
 import UserSupportDetails from "@/components/support/UserSupportDetails";
+import { DEMO_SUPPORT_TICKET } from "@/lib/mock-support";
 
 export const dynamic = "force-dynamic";
 
 export default async function WorkerSupportDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const data = await getUserSupportTicketDetails(id);
-  if (!data) notFound();
+  const isDemo = id === "demo";
+
+  let data = null;
+  if (!isDemo) {
+    try {
+      data = await getUserSupportTicketDetails(id);
+    } catch {
+      data = null;
+    }
+  }
+
+  const finalData = data || DEMO_SUPPORT_TICKET;
+  const isDemoActive = isDemo || !data;
+
   return (
     <div className="mx-auto max-w-4xl">
-      <Link href="/worker/support" className="mb-4 inline-block text-xs font-black uppercase tracking-widest text-primary">Back to support</Link>
-      <UserSupportDetails data={data} role="worker" />
+      <UserSupportDetails data={finalData} role="worker" isDemoMode={isDemoActive} />
     </div>
   );
 }

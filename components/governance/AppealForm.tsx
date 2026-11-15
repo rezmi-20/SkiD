@@ -31,6 +31,21 @@ export interface EligibleDispute {
   existingAppealStatus?: string | null;
 }
 
+const DEMO_ELIGIBLE_DISPUTES: EligibleDispute[] = [
+  {
+    id: "disp-bo-9082",
+    title: "Incomplete Signal Calibration and Missing LNB Bracket",
+    final_decision: "partial_refund",
+    resolved_at: new Date(Date.now() - 2 * 864e5).toISOString(),
+  },
+  {
+    id: "disp-pia-4109",
+    title: "Copper Piping vs PVC Pressure Standard Dispute",
+    final_decision: "full_worker_payout",
+    resolved_at: new Date(Date.now() - 4 * 864e5).toISOString(),
+  },
+];
+
 interface AttachedFile {
   url: string;
   name: string;
@@ -102,8 +117,11 @@ export default function AppealForm({
   const videoInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
 
+  const activeEligibleDisputes = eligibleDisputes.length > 0 ? eligibleDisputes : DEMO_ELIGIBLE_DISPUTES;
+  const isDemo = eligibleDisputes.length === 0;
+
   // Check details for selected dispute
-  const selectedDispute = eligibleDisputes.find((d) => d.id === targetId);
+  const selectedDispute = activeEligibleDisputes.find((d) => d.id === targetId);
   const isSelectedExpired = selectedDispute
     ? Date.now() - new Date(selectedDispute.resolved_at).getTime() > GOVERNANCE_APPEAL_WINDOW_DAYS * 864e5
     : false;
@@ -218,6 +236,13 @@ export default function AppealForm({
     setSubmissionStep("Assembling evidence package...");
     startTransition(async () => {
       try {
+        if (isDemo || trimmedTargetId.startsWith("disp-bo-9082") || trimmedTargetId.startsWith("disp-pia-4109")) {
+          setSubmissionStep("Recording appeal on governance ledger...");
+          await new Promise((r) => setTimeout(r, 600));
+          window.location.href = `/${role}/appeals/demo`;
+          return;
+        }
+
         const allRefs = [
           ...photoFiles.map((f) => f.url),
           ...videoFiles.map((f) => f.url),
@@ -313,9 +338,9 @@ export default function AppealForm({
             Target Decision or Case
           </label>
 
-          {eligibleDisputes.length > 0 && (
+          {activeEligibleDisputes.length > 0 && (
             <select
-              value={eligibleDisputes.some((d) => d.id === targetId) ? targetId : ""}
+              value={activeEligibleDisputes.some((d) => d.id === targetId) ? targetId : ""}
               onChange={(e) => {
                 if (e.target.value) setTargetId(e.target.value);
               }}
@@ -323,7 +348,7 @@ export default function AppealForm({
               className="w-full rounded-md border border-input bg-muted/30 px-3 py-2 text-xs font-semibold text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
             >
               <option value="">Choose from your recent resolved disputes...</option>
-              {eligibleDisputes.map((d) => {
+              {activeEligibleDisputes.map((d) => {
                 const expired =
                   Date.now() - new Date(d.resolved_at).getTime() > GOVERNANCE_APPEAL_WINDOW_DAYS * 864e5;
                 const statusTag = d.existingAppealId

@@ -12,6 +12,7 @@ import {
   FileText,
   User,
   Users,
+  MessageSquare,
 } from "lucide-react";
 import { cx } from "@/utils/cx";
 
@@ -54,8 +55,17 @@ export default function MobileNav({ role }: MobileNavProps) {
   const isHome = pathname === `/${role}/dashboard`;
   const isSearch = pathname?.includes("/search") || pathname?.includes("/gigs");
   const isCommunity = pathname?.includes("/community");
-  const isContracts = pathname?.includes("/contracts") || pathname?.includes("/payments");
+  const isMessages = pathname === `/${role}/messages`;
   const isProfile = pathname?.includes("/profile");
+
+  // Completely hide bottom nav inside active chat threads so the message input bar is flush and unobstructed
+  const isInsideActiveChat = Boolean(
+    pathname && /\/(?:worker|client)\/messages\/[a-zA-Z0-9_-]+/.test(pathname)
+  );
+
+  if (isInsideActiveChat) {
+    return null;
+  }
 
   const navItems = [
     {
@@ -80,11 +90,11 @@ export default function MobileNav({ role }: MobileNavProps) {
       isActive: isCommunity,
     },
     {
-      id: "contracts",
-      label: t("nav.contracts") || "Contracts",
-      href: `/${role}/contracts`,
-      icon: FileText,
-      isActive: isContracts,
+      id: "messages",
+      label: t("nav.chat") || "Messages",
+      href: `/${role}/messages`,
+      icon: MessageSquare,
+      isActive: isMessages,
       badge: unreadCount,
     },
     {

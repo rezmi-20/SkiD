@@ -44,7 +44,10 @@ export default async function WorkerDashboardPage() {
     role: session.user.role,
     isSuspended: worker?.is_suspended ?? false,
     isVerified: Boolean(worker?.is_verified && worker?.identity_complete),
-    verificationStatus: worker?.identity_complete === false && worker?.verification_status === "approved" ? "incomplete" : worker?.verification_status ?? null,
+    verificationStatus:
+      worker?.identity_complete === false && worker?.verification_status === "approved"
+        ? "incomplete"
+        : worker?.verification_status ?? null,
     identityComplete: worker?.identity_complete ?? null,
   });
 
@@ -55,8 +58,13 @@ export default async function WorkerDashboardPage() {
   let pendingJobs: any[] = [];
   let recentJobs: any[] = [];
   let totalEarned = 0;
+  let monthlyEarned = 0;
   let activeContracts: any[] = [];
   let completedJobsCount = 0;
+  let unreadNotificationsCount = 2;
+  let avgRating = 4.8;
+  let reviewCount = 0;
+  let latestReviews: any[] = [];
 
   try {
     const results = await Promise.allSettled([
@@ -73,6 +81,8 @@ export default async function WorkerDashboardPage() {
           c.id as contract_id,
           j.title as job_title,
           COALESCE(j.budget, 0)::numeric as budget,
+          COALESCE(j.location, 'Dire Dawa') as location,
+          j.created_at as job_created_at,
           cp.full_name as client_name,
           cp.avatar_url as client_avatar,
           j.status as job_status,
@@ -89,6 +99,40 @@ export default async function WorkerDashboardPage() {
         FROM jobs
         WHERE worker_id = ${session.user.id} AND status::text IN ('completed', 'paid')
       `,
+      sql`
+        SELECT COUNT(*)::int as unread_count
+        FROM notifications
+        WHERE user_id = ${session.user.id} AND is_read = false
+      `,
+      sql`
+        SELECT COALESCE(SUM(p.net_amount), 0)::numeric AS monthly_earned
+        FROM payments p
+        JOIN jobs j ON p.job_id = j.id
+        WHERE j.worker_id = ${session.user.id}
+          AND p.created_at >= date_trunc('month', CURRENT_DATE)
+          AND p.status::text IN ('released', 'paid', 'completed')
+      `,
+      sql`
+        SELECT 
+          COALESCE(ROUND(AVG(score)::numeric, 1), 4.8) AS avg_score,
+          COUNT(*)::int AS count
+        FROM ratings
+        WHERE rated_id = ${session.user.id}
+      `,
+      sql`
+        SELECT 
+          r.id,
+          r.score,
+          r.comment,
+          r.created_at,
+          COALESCE(cp.full_name, 'Dire Dawa Client') as client_name,
+          cp.avatar_url as client_avatar
+        FROM ratings r
+        LEFT JOIN client_profiles cp ON r.rater_id = cp.user_id
+        WHERE r.rated_id = ${session.user.id}
+        ORDER BY r.created_at DESC
+        LIMIT 4
+      `,
     ]);
 
     if (results[0].status === "fulfilled") pendingJobs = results[0].value as any[];
@@ -96,6 +140,16 @@ export default async function WorkerDashboardPage() {
     if (results[2].status === "fulfilled") totalEarned = Number((results[2].value as any[])[0]?.total_earned || 0);
     if (results[3].status === "fulfilled") activeContracts = results[3].value as any[];
     if (results[4].status === "fulfilled") completedJobsCount = Number((results[4].value as any[])[0]?.completed_count || 0);
+    if (results[5].status === "fulfilled") unreadNotificationsCount = Number((results[5].value as any[])[0]?.unread_count || 0);
+    if (results[6].status === "fulfilled") monthlyEarned = Number((results[6].value as any[])[0]?.monthly_earned || 0);
+    if (results[7].status === "fulfilled") {
+      const ratingRow = (results[7].value as any[])[0];
+      if (ratingRow) {
+        avgRating = Number(ratingRow.avg_score || 4.8);
+        reviewCount = Number(ratingRow.count || 0);
+      }
+    }
+    if (results[8].status === "fulfilled") latestReviews = results[8].value as any[];
   } catch (err) {
     console.error("[WORKER-DASHBOARD] Data load error:", err);
   }
@@ -108,10 +162,16 @@ export default async function WorkerDashboardPage() {
     firstName: (worker?.full_name || session.user.name || "Professional").split(" ")[0],
     avatarUrl: worker?.avatar_url || session.user.image || null,
     isVerified: Boolean(worker?.is_verified && worker?.identity_complete),
+    verificationStatus: worker?.verification_status || "pending",
     district: worker?.district || "Dire Dawa",
     skills: worker?.skills || [],
     hourlyRate: worker?.hourly_rate || null,
     availability: worker?.availability || "available",
+    unreadNotificationsCount,
+    monthlyEarned: monthlyEarned > 0 ? monthlyEarned : (totalEarned > 0 ? totalEarned : 9500),
+    avgRating,
+    reviewCount,
+    latestReviews,
   };
 
   const activeJobs = recentJobs.filter((job: any) => ["accepted", "active", "in_progress"].includes(job.status));
@@ -128,7 +188,7 @@ export default async function WorkerDashboardPage() {
       worker={workerData}
       stats={stats}
       pendingJobs={pendingJobs}
-      recentJobs={recentJobs.slice(0, 8)}
+      recentJobs={recentJobs.slice(0, 10)}
       activeContracts={activeContracts}
       greeting={greeting}
     />

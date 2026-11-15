@@ -47,46 +47,8 @@ export function AdminUnauthorizedNoticeModal({
 
     window.addEventListener("admin-unauthorized-action", handleGlobalNotice);
 
-    // Global fetch interceptor: automatically catch 401 & 403 responses to show friendly popup modal
-    const originalFetch = window.fetch;
-    window.fetch = async (...args) => {
-      const response = await originalFetch(...args);
-      if (response.status === 401 || response.status === 403) {
-        try {
-          const clone = response.clone();
-          const data = await clone.json();
-          const message =
-            data?.message ||
-            data?.error ||
-            "You are attempting an administrative action that you are not authorized to perform.";
-          setInternalNotice({
-            isOpen: true,
-            title:
-              response.status === 401
-                ? "Authentication Clearance Required"
-                : "Action Restricted · Clearance Required",
-            message: typeof message === "string" ? message : JSON.stringify(message),
-            actionName: typeof args[0] === "string" ? args[0].split("?")[0] : "Administrative Action",
-          });
-        } catch {
-          setInternalNotice({
-            isOpen: true,
-            title:
-              response.status === 401
-                ? "Authentication Clearance Required"
-                : "Action Restricted · Clearance Required",
-            message:
-              "You are attempting an administrative action that you are not authorized to perform with your current role.",
-            actionName: typeof args[0] === "string" ? args[0].split("?")[0] : "Administrative Action",
-          });
-        }
-      }
-      return response;
-    };
-
     return () => {
       window.removeEventListener("admin-unauthorized-action", handleGlobalNotice);
-      window.fetch = originalFetch;
     };
   }, []);
 

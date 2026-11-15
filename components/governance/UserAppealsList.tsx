@@ -1,8 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { Scale, ChevronRight, Clock, CheckCircle2, AlertCircle, Plus } from "lucide-react";
+import {
+  RiScales3Line,
+  RiArrowRightLine,
+  RiTimeLine,
+  RiCheckDoubleLine,
+  RiAlertLine,
+  RiAddLine,
+  RiEyeLine,
+} from "@remixicon/react";
 import { useLanguage } from "@/context/LanguageContext";
+import { cx } from "@/utils/cx";
 
 interface AppealItem {
   id: string;
@@ -17,60 +27,29 @@ interface AppealItem {
   updated_at?: string | Date;
 }
 
-function getStatusBadge(status: string, outcome: string | null | undefined, t: (k: any) => string) {
-  if (outcome) {
-    switch (outcome) {
-      case "upheld":
-        return {
-          label: t("appeals.ruling.upheld"),
-          classes: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-        };
-      case "overturned":
-        return {
-          label: t("appeals.ruling.overturned"),
-          classes: "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400",
-        };
-      case "returned_for_re_review":
-        return {
-          label: t("appeals.ruling.returned"),
-          classes: "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
-        };
-      case "dismissed":
-        return {
-          label: t("appeals.ruling.dismissed"),
-          classes: "border-muted-foreground/30 bg-muted/40 text-muted-foreground",
-        };
-    }
-  }
-
-  switch (status) {
-    case "appeal_requested":
-      return {
-        label: t("appeals.status.underReview"),
-        classes: "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400",
-      };
-    case "appeal_under_review":
-      return {
-        label: t("appeals.status.superAdmin"),
-        classes: "border-purple-500/30 bg-purple-500/10 text-purple-600 dark:text-purple-400",
-      };
-    case "appeal_resolved":
-      return {
-        label: t("appeals.status.adjudicated"),
-        classes: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-      };
-    case "appeal_dismissed":
-      return {
-        label: t("appeals.ruling.dismissed"),
-        classes: "border-muted-foreground/30 bg-muted/40 text-muted-foreground",
-      };
-    default:
-      return {
-        label: status.replaceAll("_", " "),
-        classes: "border-border bg-muted/30 text-foreground",
-      };
-  }
-}
+const SAMPLE_APPEALS: AppealItem[] = [
+  {
+    id: "demo",
+    reference: "DS-APL-2026-0814",
+    appeal_type: "dispute_resolution",
+    target_type: "dispute",
+    target_id: "disp-bo-9082",
+    status: "appeal_under_review",
+    reason: "new_evidence",
+    created_at: "2026-11-13T12:00:00Z",
+  },
+  {
+    id: "demo-resolved",
+    reference: "DS-APL-2026-0792",
+    appeal_type: "worker_verification",
+    target_type: "verification",
+    target_id: "ver-fayda-501",
+    status: "appeal_resolved",
+    outcome: "overturned",
+    reason: "procedural_error",
+    created_at: "2026-11-04T09:15:00Z",
+  },
+];
 
 export default function UserAppealsList({
   appeals,
@@ -80,88 +59,108 @@ export default function UserAppealsList({
   role: "client" | "worker";
 }) {
   const { t } = useLanguage();
+  const [showDemo, setShowDemo] = useState(appeals.length === 0);
 
-  if (appeals.length === 0) {
-    return (
-      <div className="rounded-2xl border border-dashed border-border/80 bg-card p-12 text-center space-y-4 shadow-xs">
-        <div className="mx-auto w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-          <Scale className="h-6 w-6" />
-        </div>
-        <div className="space-y-1 max-w-sm mx-auto">
-          <h3 className="text-sm font-bold text-foreground">{t("appeals.noAppealsTitle")}</h3>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            {t("appeals.noAppealsDesc")}
-          </p>
-        </div>
-        <div>
-          <Link
-            href={`/${role}/appeals/new`}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-sm hover:opacity-90 active:scale-95 transition"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            {t("appeals.requestNew")}
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const displayList = appeals.length > 0 ? appeals : showDemo ? SAMPLE_APPEALS : [];
 
   return (
-    <div className="rounded-2xl border border-border/70 bg-card overflow-hidden shadow-xs divide-y divide-border/60">
-      {appeals.map((appeal) => {
-        const badge = getStatusBadge(appeal.status, appeal.outcome, t);
-        return (
-          <Link
-            key={appeal.id}
-            href={`/${role}/appeals/${appeal.id}`}
-            className="group flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-5 hover:bg-accent/40 transition-colors"
+    <div className="space-y-4">
+      {appeals.length === 0 && (
+        <div className="flex items-center justify-between rounded-2xl border border-accent-500/30 bg-accent-500/10 p-3.5 text-caption-1-semibold text-text-primary">
+          <div className="flex items-center gap-2">
+            <RiScales3Line className="size-4 text-accent-600 shrink-0" />
+            <span>Zero pending appeals on your record.</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowDemo((prev) => !prev)}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-background-primary-default px-3 py-1.5 text-[11px] font-bold text-accent-600 border border-border-button-default hover:bg-background-secondary-default transition"
           >
-            <div className="space-y-1.5 min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="font-mono text-xs font-bold text-primary">
-                  {appeal.reference}
-                </span>
-                <span
-                  className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${badge.classes}`}
-                >
-                  {badge.label}
-                </span>
-                <span className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground capitalize">
-                  {String(appeal.appeal_type).replaceAll("_", " ")}
-                </span>
-              </div>
+            <RiEyeLine className="size-3.5" />
+            <span>{showDemo ? "Hide Sample Appeals" : "Inspect Sample Appeals"}</span>
+          </button>
+        </div>
+      )}
 
-              <h3 className="text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">
-                {appeal.reason ? String(appeal.reason).replaceAll("_", " ") : "Governance Appeal Review"}
-              </h3>
+      {displayList.length === 0 ? (
+        <div className="rounded-3xl border border-dashed border-border-button-default bg-background-primary-default p-12 text-center space-y-4 shadow-xs">
+          <div className="mx-auto size-12 rounded-2xl bg-background-secondary-default flex items-center justify-center text-accent-600">
+            <RiScales3Line className="size-6" />
+          </div>
+          <div className="space-y-1 max-w-sm mx-auto">
+            <h3 className="text-title-3-semibold text-text-primary">{t("appeals.noAppealsTitle") || "No Appeals Filed"}</h3>
+            <p className="text-caption-2 text-text-secondary leading-relaxed">
+              {t("appeals.noAppealsDesc") || "If you contest a dispute ruling, you can request an independent Super Admin governance review."}
+            </p>
+          </div>
+          <div>
+            <Link
+              href={`/${role}/appeals/new`}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-accent-600 px-4 py-2.5 text-caption-1-semibold font-bold uppercase tracking-wider text-white shadow-xs hover:bg-accent-700 transition"
+            >
+              <RiAddLine className="size-4" />
+              <span>Request Appeal</span>
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {displayList.map((appeal) => {
+            const isResolved = ["appeal_resolved", "appeal_dismissed", "appeal_granted"].includes(appeal.status);
+            const targetHref = appeal.id.startsWith("demo")
+              ? `/${role}/appeals/demo`
+              : `/${role}/appeals/${appeal.id}`;
 
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                <span>
-                  Case: <span className="font-mono text-foreground">{String(appeal.target_id).slice(0, 8)}...</span>
-                </span>
-                <span>·</span>
-                <span className="inline-flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  Filed on {new Date(appeal.created_at).toLocaleDateString(undefined, {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </span>
-              </div>
-            </div>
+            return (
+              <Link
+                key={appeal.id}
+                href={targetHref}
+                className="group block rounded-3xl border border-border-button-default bg-background-primary-default p-5 sm:p-6 transition-all hover:border-accent-500/50 hover:shadow-xs"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-[11px] font-bold text-accent-600 px-2 py-0.5 rounded-md bg-background-secondary-default border border-border-button-default">
+                        {appeal.reference}
+                      </span>
+                      <span className="text-[11px] text-text-tertiary">
+                        {String(appeal.appeal_type).replaceAll("_", " ")}
+                      </span>
+                    </div>
 
-            <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-              <span className="text-xs font-bold text-muted-foreground group-hover:text-primary transition-colors hidden sm:inline">
-                View Dossier
-              </span>
-              <div className="rounded-md bg-muted/60 p-1.5 text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-colors">
-                <ChevronRight className="h-4 w-4" />
-              </div>
-            </div>
-          </Link>
-        );
-      })}
+                    <h3 className="text-title-3-semibold text-text-primary group-hover:text-accent-600 transition-colors">
+                      Grounds: {String(appeal.reason).replaceAll("_", " ")}
+                    </h3>
+                  </div>
+
+                  <span
+                    className={cx(
+                      "inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider shrink-0",
+                      isResolved
+                        ? "border border-accent-500/30 bg-accent-500/10 text-accent-700 dark:text-accent-300"
+                        : "border border-chart-4/30 bg-chart-4/10 text-chart-4"
+                    )}
+                  >
+                    {isResolved ? <RiCheckDoubleLine className="size-3.5" /> : <RiTimeLine className="size-3.5" />}
+                    <span>{appeal.outcome ? String(appeal.outcome).replaceAll("_", " ") : String(appeal.status).replaceAll("_", " ")}</span>
+                  </span>
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-separator-border pt-3 text-caption-2 text-text-secondary">
+                  <span>
+                    Filed on {new Date(appeal.created_at).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}
+                  </span>
+
+                  <span className="inline-flex items-center gap-1 font-bold text-accent-600 group-hover:translate-x-0.5 transition-transform">
+                    <span>View Docket</span>
+                    <RiArrowRightLine className="size-3.5" />
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

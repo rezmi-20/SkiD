@@ -18,9 +18,21 @@ const MAX_SIZE_BY_MIME: Record<string, number> = {
   "video/webm": 35 * 1024 * 1024,
   "video/quicktime": 35 * 1024 * 1024,
   "video/ogg": 35 * 1024 * 1024,
+  "audio/webm": 25 * 1024 * 1024,
+  "audio/ogg": 25 * 1024 * 1024,
+  "audio/wav": 25 * 1024 * 1024,
+  "audio/mpeg": 25 * 1024 * 1024,
+  "audio/mp4": 25 * 1024 * 1024,
 };
 
-const RAW_EXTENSION: Record<string, string> = { "application/pdf": ".pdf" };
+const RAW_EXTENSION: Record<string, string> = {
+  "application/pdf": ".pdf",
+  "audio/webm": ".webm",
+  "audio/ogg": ".ogg",
+  "audio/wav": ".wav",
+  "audio/mpeg": ".mp3",
+  "audio/mp4": ".m4a",
+};
 
 function signUploadParams(params: Record<string, string | number>, apiSecret: string) {
   const payload = Object.entries(params)
@@ -52,7 +64,12 @@ export async function POST(req: NextRequest) {
     if (file.size <= 0 || file.size > maxSize) return uploadError("File exceeds the allowed size.", 400);
 
     const bytes = Buffer.from(await file.arrayBuffer());
-    if (detectFileType(bytes) !== file.type) return uploadError("The file content does not match its declared format.", 400);
+    const detected = detectFileType(bytes);
+    const isValidFormat = detected === file.type ||
+      (detected === "video/webm" && file.type === "audio/webm") ||
+      (detected === "video/ogg" && file.type === "audio/ogg") ||
+      (detected === "video/mp4" && file.type === "audio/mp4");
+    if (!isValidFormat) return uploadError("The file content does not match its declared format.", 400);
 
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
     const apiKey = process.env.CLOUDINARY_API_KEY;
@@ -60,7 +77,7 @@ export async function POST(req: NextRequest) {
     if (!cloudName || !apiKey || !apiSecret) return uploadError("Private file storage is not configured.", 503);
 
     const timestamp = Math.floor(Date.now() / 1000);
-    const resourceType = file.type.startsWith("image/") ? "image" : file.type.startsWith("video/") ? "video" : "raw";
+    const resourceType = file.type.startsWith("image/") ? "image" : (file.type.startsWith("video/") || file.type.startsWith("audio/")) ? "video" : "raw";
     const extension = RAW_EXTENSION[file.type] || "";
     const params: Record<string, string | number> = {
       folder: "direskill/private",

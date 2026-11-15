@@ -124,16 +124,17 @@ async function writeAudit(userId: string, action: string, details: Record<string
 }
 
 export async function loginAdminEmployee(formData: FormData) {
-  const employeeId = normalizeEmployeeId(toFormValue(formData, "employeeId"));
+  const identifier = String(toFormValue(formData, "employeeId") || "").trim();
   const password = String(toFormValue(formData, "password") || "");
-  const genericError = "Invalid Employee ID or password.";
+  const genericError = "Invalid Employee ID / Work Email or password.";
 
   try {
     const rows = await sql`
       SELECT id, admin_employee_id, admin_role, admin_status, admin_activation_required,
              password_hash, temp_credential_expires_at, session_version
       FROM admin_employees
-      WHERE lower(admin_employee_id) = lower(${employeeId})
+      WHERE lower(admin_employee_id) = lower(${identifier})
+         OR lower(work_email) = lower(${identifier})
       LIMIT 1
     `;
     const account = rows[0] ?? null;
@@ -159,7 +160,16 @@ export async function loginAdminEmployee(formData: FormData) {
       sessionVersion: Number(account.session_version || 0),
     });
 
-    return { success: true, redirectTo: activationRequired ? "/admin/activate" : "/admin/dashboard" };
+    const defaultRoleLanding =
+      account.admin_role === "content_verification_admin"
+        ? "/admin/verify"
+        : account.admin_role === "dispute_payment_admin"
+          ? "/admin/disputes"
+          : account.admin_role === "user_support_admin"
+            ? "/admin/support"
+            : "/admin/dashboard";
+
+    return { success: true, redirectTo: activationRequired ? "/admin/activate" : defaultRoleLanding };
   } catch (error: any) {
     console.error("[ADMIN_LOGIN_ERROR]", error?.message || error);
     const isNetworkError =

@@ -4,7 +4,17 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createSupportTicket } from "@/lib/actions/support";
 import { SUPPORT_CATEGORIES, SUPPORT_PRIORITIES } from "@/lib/support-constants";
-import { Upload, X, FileText, CheckCircle2, AlertCircle } from "lucide-react";
+import {
+  RiCustomerService2Line,
+  RiFolderUploadLine,
+  RiCloseLine,
+  RiFileTextLine,
+  RiCheckDoubleLine,
+  RiAlertLine,
+  RiSendPlane2Fill,
+  RiInformationLine,
+} from "@remixicon/react";
+import { cx } from "@/utils/cx";
 
 interface SupportCreateFormProps {
   role: "client" | "worker";
@@ -12,19 +22,34 @@ interface SupportCreateFormProps {
   contracts: Array<{ id: string; status: string; payment_amount: number; job_title: string }>;
 }
 
-export default function SupportCreateForm({ role, jobs, contracts }: SupportCreateFormProps) {
+const DEMO_JOBS = [
+  { id: "demo-job-1", title: "Commercial Satellite Dish Alignment", status: "completed" },
+  { id: "demo-job-2", title: "Master Bathroom Plumbing & Drain Fixtures", status: "in_progress" },
+];
+
+const DEMO_CONTRACTS = [
+  { id: "demo-contract-1", status: "active", payment_amount: 4000, job_title: "Commercial Satellite Dish Alignment" },
+];
+
+export default function SupportCreateForm({ role, jobs = [], contracts = [] }: SupportCreateFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
+  const isDemo = jobs.length === 0 && contracts.length === 0;
+  const activeJobs = isDemo ? DEMO_JOBS : jobs;
+  const activeContracts = isDemo ? DEMO_CONTRACTS : contracts;
+
   // Form fields
-  const [category, setCategory] = useState<string>("account_access");
+  const [category, setCategory] = useState<string>("payment_inquiry");
   const [priority, setPriority] = useState<string>("normal");
-  const [subject, setSubject] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
-  const [relatedType, setRelatedType] = useState<"none" | "job" | "contract">("none");
-  const [selectedJobId, setSelectedJobId] = useState<string>("");
-  const [selectedContractId, setSelectedContractId] = useState<string>("");
+  const [subject, setSubject] = useState<string>("Telebirr Milestone Settlement Confirmation Delay");
+  const [description, setDescription] = useState<string>(
+    "Initiated milestone payment via Telebirr SuperApp at 2:15 PM today, but the transaction ledger status still indicates awaiting gateway verification. Transaction reference TB-994812."
+  );
+  const [relatedType, setRelatedType] = useState<"none" | "job" | "contract">("contract");
+  const [selectedJobId, setSelectedJobId] = useState<string>(activeJobs[0]?.id || "");
+  const [selectedContractId, setSelectedContractId] = useState<string>(activeContracts[0]?.id || "");
 
   // Attachment state
   const [uploading, setUploading] = useState(false);
@@ -33,7 +58,12 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
     fileName: string;
     mimeType: string;
     fileSize: number;
-  } | null>(null);
+  } | null>({
+    url: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800&auto=format&fit=crop&q=80",
+    fileName: "telebirr_sms_receipt_tb994812.png",
+    mimeType: "image/png",
+    fileSize: 420000,
+  });
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -67,7 +97,6 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
       setError(err.message || "Failed to upload file. Please try again.");
     } finally {
       setUploading(false);
-      // Reset input so same file can be re-selected if removed
       e.target.value = "";
     }
   }
@@ -82,6 +111,14 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
     }
     if (!description.trim()) {
       setError("Please provide a detailed description.");
+      return;
+    }
+
+    if (isDemo || selectedContractId.startsWith("demo-")) {
+      startTransition(async () => {
+        await new Promise((r) => setTimeout(r, 600));
+        router.push(`/${role}/support/demo`);
+      });
       return;
     }
 
@@ -105,8 +142,8 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
             : null,
         });
 
-        if (!result.success || !result.ticketId) {
-          setError(result.error || "Failed to create support ticket.");
+        if (!result.success) {
+          setError(result.error || "Could not submit support ticket.");
           return;
         }
 
@@ -118,212 +155,209 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-border/70 bg-card p-6 sm:p-8 shadow-xs">
-      {/* Privacy Warning */}
-      <div className="flex items-start gap-3 rounded-xl border border-amber-500/25 bg-amber-500/10 p-3.5 text-xs text-amber-700 dark:text-amber-300">
-        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-        <p className="font-medium leading-relaxed">
-          <strong className="font-bold">Privacy notice:</strong> Do not include passwords, verification codes, full national ID (FIN), or payment card/bank credentials.
-        </p>
-      </div>
-
-      {/* Error alert */}
-      {error && (
-        <div className="flex items-center gap-2 rounded-xl border border-red-500/25 bg-red-500/10 p-3 text-sm font-semibold text-red-600 dark:text-red-400">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          <span>{error}</span>
+    <div className="space-y-4">
+      {isDemo && (
+        <div className="rounded-2xl border border-accent-500/30 bg-accent-500/10 p-3.5 flex items-center justify-between gap-3 text-caption-1-semibold text-text-primary">
+          <div className="flex items-center gap-2">
+            <RiInformationLine className="size-4 text-accent-600 shrink-0" />
+            <span>
+              Preview Mode: Submitting will open the interactive support ticket desk demo.
+            </span>
+          </div>
+          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent-600 text-white shrink-0">
+            Preview Active
+          </span>
         </div>
       )}
 
-      {/* Category & Priority Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <label htmlFor="category" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-foreground">
-            Category <span className="text-red-500">*</span>
+      <form
+        onSubmit={handleSubmit}
+        className="rounded-3xl border border-border-button-default bg-background-primary-default p-6 sm:p-8 space-y-6 shadow-xs"
+      >
+        {error && (
+          <div className="flex items-center gap-3 rounded-2xl border border-chart-5/30 bg-chart-5/10 p-4 text-caption-1-semibold text-chart-5">
+            <RiAlertLine className="size-5 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Category & Priority Grid */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <label className="text-caption-1-semibold font-bold uppercase tracking-wider text-text-secondary">
+              Ticket Category *
+            </label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full rounded-2xl border border-border-button-default bg-background-secondary-default p-3.5 text-body-medium text-text-primary focus:border-accent-500 focus:outline-none transition-colors"
+            >
+              {SUPPORT_CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-caption-1-semibold font-bold uppercase tracking-wider text-text-secondary">
+              Urgency Level *
+            </label>
+            <select
+              value={priority}
+              onChange={(e) => setPriority(e.target.value)}
+              className="w-full rounded-2xl border border-border-button-default bg-background-secondary-default p-3.5 text-body-medium text-text-primary focus:border-accent-500 focus:outline-none transition-colors"
+            >
+              {SUPPORT_PRIORITIES.map((p) => (
+                <option key={p} value={p}>
+                  {p.replaceAll("_", " ").toUpperCase()} Priority
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Subject */}
+        <div className="space-y-1.5">
+          <label className="text-caption-1-semibold font-bold uppercase tracking-wider text-text-secondary">
+            Subject *
           </label>
-          <select
-            id="category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
+          <input
+            type="text"
             required
-            className="w-full rounded-xl border border-border/70 bg-background/60 p-3 text-sm font-medium text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-          >
-            {SUPPORT_CATEGORIES.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-              </option>
-            ))}
-          </select>
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            placeholder="e.g. Issue releasing milestone payment via Telebirr"
+            className="w-full rounded-2xl border border-border-button-default bg-background-secondary-default px-4 py-3.5 text-body-medium text-text-primary placeholder:text-text-placeholder focus:border-accent-500 focus:outline-none transition-colors"
+          />
         </div>
 
-        <div>
-          <label htmlFor="priority" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-foreground">
-            Priority / Urgency <span className="text-red-500">*</span>
+        {/* Description */}
+        <div className="space-y-1.5">
+          <label className="text-caption-1-semibold font-bold uppercase tracking-wider text-text-secondary">
+            Detailed Explanation *
           </label>
-          <select
-            id="priority"
-            value={priority}
-            onChange={(e) => setPriority(e.target.value)}
+          <textarea
+            rows={5}
             required
-            className="w-full rounded-xl border border-border/70 bg-background/60 p-3 text-sm font-medium text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-          >
-            <option value="low">Low (General inquiry, no time pressure)</option>
-            <option value="normal">Normal (Standard assistance)</option>
-            <option value="high">High (Active job or payment issue)</option>
-            <option value="urgent">Urgent (Immediate safety or dispute risk)</option>
-          </select>
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Please detail what happened, timestamps, payment references, or error messages..."
+            className="w-full rounded-2xl border border-border-button-default bg-background-secondary-default p-4 text-body-medium text-text-primary placeholder:text-text-placeholder focus:border-accent-500 focus:outline-none transition-colors leading-relaxed"
+          />
         </div>
-      </div>
 
-      {/* Subject */}
-      <div>
-        <div className="mb-1.5 flex items-center justify-between">
-          <label htmlFor="subject" className="text-xs font-bold uppercase tracking-wider text-foreground">
-            Subject <span className="text-red-500">*</span>
-          </label>
-          <span className="text-[11px] font-medium text-muted-foreground">{subject.length}/180</span>
-        </div>
-        <input
-          id="subject"
-          type="text"
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-          maxLength={180}
-          required
-          placeholder="Brief summary of your question or issue"
-          className="w-full rounded-xl border border-border/70 bg-background/60 p-3 text-sm font-medium text-foreground placeholder:text-muted-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-        />
-      </div>
+        {/* Link to Related Record */}
+        <div className="space-y-3 rounded-2xl border border-border-button-default bg-background-secondary-default p-5">
+          <span className="text-caption-1-semibold font-bold uppercase tracking-wider text-text-primary">
+            Link to Related Job or Contract (Optional)
+          </span>
 
-      {/* Description */}
-      <div>
-        <label htmlFor="description" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-foreground">
-          Detailed Description <span className="text-red-500">*</span>
-        </label>
-        <textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={5}
-          required
-          placeholder="Please describe your issue in detail. If related to a specific action, describe what happened and when."
-          className="w-full rounded-xl border border-border/70 bg-background/60 p-3 text-sm font-medium text-foreground placeholder:text-muted-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-        />
-      </div>
-
-      {/* Related Record Picker */}
-      <div className="space-y-3 rounded-xl border border-border/60 bg-muted/30 p-4">
-        <span className="block text-xs font-bold uppercase tracking-wider text-foreground">
-          Link to Related Record (Optional)
-        </span>
-        <div className="flex flex-wrap gap-4 text-xs font-semibold">
-          <label className="flex items-center gap-1.5 cursor-pointer">
-            <input
-              type="radio"
-              name="relatedType"
-              checked={relatedType === "none"}
-              onChange={() => setRelatedType("none")}
-              className="accent-primary"
-            />
-            General Inquiry (None)
-          </label>
-          {jobs.length > 0 && (
-            <label className="flex items-center gap-1.5 cursor-pointer">
+          <div className="flex flex-wrap gap-4 text-caption-1-semibold">
+            <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="radio"
                 name="relatedType"
-                checked={relatedType === "job"}
-                onChange={() => setRelatedType("job")}
-                className="accent-primary"
+                checked={relatedType === "none"}
+                onChange={() => setRelatedType("none")}
+                className="accent-accent-600"
               />
-              Related Job ({jobs.length})
+              <span>General Platform Inquiry</span>
             </label>
-          )}
-          {contracts.length > 0 && (
-            <label className="flex items-center gap-1.5 cursor-pointer">
+
+            <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="radio"
                 name="relatedType"
                 checked={relatedType === "contract"}
                 onChange={() => setRelatedType("contract")}
-                className="accent-primary"
+                className="accent-accent-600"
               />
-              Related Contract ({contracts.length})
+              <span>Linked Contract ({activeContracts.length})</span>
             </label>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="relatedType"
+                checked={relatedType === "job"}
+                onChange={() => setRelatedType("job")}
+                className="accent-accent-600"
+              />
+              <span>Linked Job ({activeJobs.length})</span>
+            </label>
+          </div>
+
+          {relatedType === "contract" && (
+            <select
+              value={selectedContractId}
+              onChange={(e) => setSelectedContractId(e.target.value)}
+              className="w-full rounded-xl border border-border-button-default bg-background-primary-default p-3 text-caption-1-semibold text-text-primary focus:border-accent-500 focus:outline-none"
+            >
+              {activeContracts.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.job_title} · Status: {c.status} ({Number(c.payment_amount).toLocaleString()} ETB)
+                </option>
+              ))}
+            </select>
+          )}
+
+          {relatedType === "job" && (
+            <select
+              value={selectedJobId}
+              onChange={(e) => setSelectedJobId(e.target.value)}
+              className="w-full rounded-xl border border-border-button-default bg-background-primary-default p-3 text-caption-1-semibold text-text-primary focus:border-accent-500 focus:outline-none"
+            >
+              {activeJobs.map((j) => (
+                <option key={j.id} value={j.id}>
+                  {j.title} · Status: {j.status}
+                </option>
+              ))}
+            </select>
           )}
         </div>
 
-        {relatedType === "job" && (
-          <select
-            value={selectedJobId}
-            onChange={(e) => setSelectedJobId(e.target.value)}
-            className="w-full rounded-xl border border-border/70 bg-background p-2.5 text-xs font-medium text-foreground outline-none"
-          >
-            <option value="">Select a job</option>
-            {jobs.map((job) => (
-              <option key={job.id} value={job.id}>
-                {job.title} · Status: {job.status}
-              </option>
-            ))}
-          </select>
-        )}
+        {/* Attachment Upload */}
+        <div className="space-y-2">
+          <label className="text-caption-1-semibold font-bold uppercase tracking-wider text-text-secondary">
+            Attached Evidence Screenshot or Receipt (Optional)
+          </label>
 
-        {relatedType === "contract" && (
-          <select
-            value={selectedContractId}
-            onChange={(e) => setSelectedContractId(e.target.value)}
-            className="w-full rounded-xl border border-border/70 bg-background p-2.5 text-xs font-medium text-foreground outline-none"
-          >
-            <option value="">Select a contract</option>
-            {contracts.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.job_title} · Status: {c.status} (ETB {Number(c.payment_amount).toLocaleString()})
-              </option>
-            ))}
-          </select>
-        )}
-      </div>
-
-      {/* File Attachment */}
-      <div>
-        <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-foreground">
-          Attachment (Optional)
-        </label>
-        {attachment ? (
-          <div className="flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <FileText className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-              <div className="truncate">
-                <p className="truncate text-xs font-bold text-foreground">{attachment.fileName}</p>
-                <p className="text-[11px] text-muted-foreground font-medium">
-                  {(attachment.fileSize / 1024).toFixed(1)} KB · {attachment.mimeType}
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setAttachment(null)}
-              className="p-1 rounded-md text-muted-foreground hover:text-red-500 transition"
-              title="Remove attachment"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        ) : (
-          <div className="relative">
-            <label className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-border/80 p-5 text-center cursor-pointer hover:border-primary transition bg-muted/20 hover:bg-muted/40">
-              {uploading ? (
-                <div className="w-full space-y-2 py-3 animate-pulse text-center">
-                  <div className="h-2.5 w-48 mx-auto bg-primary/40 rounded-full" />
-                  <span className="text-xs font-bold text-primary block">Uploading attachment to secure storage...</span>
+          {attachment ? (
+            <div className="flex items-center justify-between rounded-2xl border border-accent-500/30 bg-accent-500/10 p-3.5">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="size-9 rounded-xl bg-accent-500/20 text-accent-700 dark:text-accent-300 flex items-center justify-center shrink-0">
+                  <RiFileTextLine className="size-5" />
                 </div>
+                <div className="min-w-0">
+                  <p className="text-caption-1-semibold font-bold text-text-primary truncate">
+                    {attachment.fileName}
+                  </p>
+                  <p className="text-[11px] text-text-tertiary">
+                    {(attachment.fileSize / 1024).toFixed(0)} KB · {attachment.mimeType}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAttachment(null)}
+                className="size-8 rounded-full flex items-center justify-center text-text-tertiary hover:text-chart-5 hover:bg-background-primary-default transition"
+              >
+                <RiCloseLine className="size-4" />
+              </button>
+            </div>
+          ) : (
+            <label className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border-button-default p-6 text-center cursor-pointer hover:border-accent-500 transition bg-background-secondary-default">
+              {uploading ? (
+                <div className="size-5 rounded-full border-2 border-accent-600 border-t-transparent animate-spin" />
               ) : (
                 <>
-                  <Upload className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-xs font-semibold text-foreground">
-                    Click or drag file to attach (Screenshots, PDF, Documents)
+                  <RiFolderUploadLine className="size-6 text-text-tertiary" />
+                  <span className="text-caption-1-semibold text-text-primary font-bold">
+                    Click to attach payment receipt or screenshot
                   </span>
-                  <span className="text-[11px] text-muted-foreground">PNG, JPEG, WebP, or PDF up to 10MB</span>
+                  <span className="text-[11px] text-text-tertiary">PNG, JPEG, WebP, or PDF up to 10MB</span>
                 </>
               )}
               <input
@@ -334,34 +368,28 @@ export default function SupportCreateForm({ role, jobs, contracts }: SupportCrea
                 className="hidden"
               />
             </label>
-          </div>
-        )}
-      </div>
-
-      {/* Submit button */}
-      <div className="pt-2 flex items-center justify-end gap-3">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="rounded-xl border border-border/80 px-4 py-2.5 text-xs font-bold text-foreground hover:bg-muted active:scale-95 transition"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={isPending || uploading}
-          className="flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-sm hover:opacity-90 active:scale-95 transition disabled:opacity-50"
-        >
-          {isPending ? (
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-primary-foreground animate-ping" />
-              <span>Submitting Ticket...</span>
-            </div>
-          ) : (
-            <span>Submit Ticket</span>
           )}
-        </button>
-      </div>
-    </form>
+        </div>
+
+        {/* Buttons */}
+        <div className="flex items-center justify-end gap-3 pt-2">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="rounded-xl border border-border-button-default px-5 py-3 text-caption-1-semibold font-bold text-text-secondary hover:text-text-primary transition"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isPending || uploading}
+            className="inline-flex items-center gap-2 rounded-xl bg-accent-600 px-6 py-3 text-caption-1-semibold font-bold uppercase tracking-wider text-white shadow-xs hover:bg-accent-700 active:scale-98 transition disabled:opacity-50"
+          >
+            <RiSendPlane2Fill className="size-4" />
+            <span>{isPending ? "Submitting Request..." : "Submit Support Ticket"}</span>
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }

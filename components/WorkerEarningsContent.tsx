@@ -1,11 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { Download, CreditCard, ArrowUpRight, Receipt, Briefcase, Building2, Clock, Landmark, TrendingUp } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import FadeContent from "@/components/ui/fade-content";
-import { Separator } from "@/components/ui/separator";
 import { getChapaReceiptUrl } from "@/lib/config";
+import {
+  RiDownload2Line,
+  RiBankCardLine,
+  RiShieldCheckFill,
+  RiTimeLine,
+  RiBriefcaseLine,
+  RiBuilding2Line,
+  RiArrowRightUpLine,
+  RiReceiptLine,
+  RiCheckboxCircleFill,
+} from "@remixicon/react";
 
 interface Transaction {
   id: string;
@@ -34,6 +43,48 @@ interface WorkerEarningsContentProps {
   earnings: WorkerEarnings;
 }
 
+const DEMO_WORKER_TRANSACTIONS: Transaction[] = [
+  {
+    id: "tx-demo-1",
+    jobId: "demo-job-1",
+    title: "Commercial Satellite Dish & LNB Alignment",
+    client: "Almaz Bekele",
+    amount: 4000,
+    commissionAmount: 200,
+    netAmount: 3800,
+    status: "released",
+    chapaRef: "CP-TXN-2026-9082",
+    chapaReference: "CP-TXN-2026-9082",
+    createdAt: new Date(Date.now() - 2 * 864e5).toISOString(),
+  },
+  {
+    id: "tx-demo-2",
+    jobId: "demo-job-2",
+    title: "Piassa Villa Plumbing & Fixture Installation",
+    client: "Dawit Haile",
+    amount: 6500,
+    commissionAmount: 325,
+    netAmount: 6175,
+    status: "held",
+    chapaRef: "CP-TXN-2026-8814",
+    chapaReference: "CP-TXN-2026-8814",
+    createdAt: new Date(Date.now() - 12 * 864e5).toISOString(),
+  },
+  {
+    id: "tx-demo-3",
+    jobId: "demo-job-3",
+    title: "Residential Electrical Distribution Box Wiring",
+    client: "Solomon Kassa",
+    amount: 5200,
+    commissionAmount: 260,
+    netAmount: 4940,
+    status: "released",
+    chapaRef: "CP-TXN-2026-7719",
+    chapaReference: "CP-TXN-2026-7719",
+    createdAt: new Date(Date.now() - 35 * 864e5).toISOString(),
+  },
+];
+
 function formatMoney(value: number) {
   return `${Math.round(value).toLocaleString()} ETB`;
 }
@@ -50,7 +101,7 @@ function formatDate(value: string) {
 
 function statusLabel(status: string) {
   if (status === "released") return "Released";
-  if (status === "held") return "Pending";
+  if (status === "held") return "Milestone Protected";
   if (status === "refunded") return "Refunded";
   return status;
 }
@@ -58,27 +109,48 @@ function statusLabel(status: string) {
 function statusClass(status: string) {
   switch (status) {
     case "released":
-      return "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20";
+      return "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300/40 dark:border-emerald-700/40";
     case "held":
-      return "bg-amber-500/10 text-amber-500 border border-amber-500/20";
+      return "bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300/40 dark:border-amber-700/40";
     case "refunded":
-      return "bg-rose-500/10 text-rose-500 border border-rose-500/20";
+      return "bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-300/40 dark:border-rose-700/40";
     default:
-      return "bg-surface-container-high text-on-surface-variant border border-outline-variant/40";
+      return "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700";
   }
 }
 
+/* ── draw-svg Skill: Topographic Contour Vector Background Texture ─────────── */
+function TopographicContourSvg({ className = "absolute inset-0 w-full h-full pointer-events-none opacity-20" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 800 240" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} preserveAspectRatio="none" aria-hidden="true">
+      <path d="M-50 120 C 150 70, 260 170, 460 120 C 660 70, 760 150, 900 90" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.45" />
+      <path d="M-50 150 C 120 100, 230 200, 430 150 C 630 100, 730 180, 900 120" stroke="currentColor" strokeWidth="1" strokeOpacity="0.35" />
+      <path d="M-50 90 C 180 40, 290 140, 490 90 C 690 40, 790 120, 900 60" stroke="currentColor" strokeWidth="0.8" strokeOpacity="0.25" />
+    </svg>
+  );
+}
+
 export default function WorkerEarningsContent({ earnings }: WorkerEarningsContentProps) {
+  const [showDemo, setShowDemo] = useState(earnings.transactions.length === 0);
+  const isDemoActive = showDemo && earnings.transactions.length === 0;
+
+  const activeTransactions = isDemoActive ? DEMO_WORKER_TRANSACTIONS : earnings.transactions;
+  const totalEarn = isDemoActive ? 15700 : earnings.totalEarnings;
+  const availEarn = isDemoActive ? 8740 : earnings.availableEarnings;
+  const pendEarn = isDemoActive ? 6175 : earnings.pendingEarnings;
+  const compJobs = isDemoActive ? 3 : earnings.completedJobs;
+  const commFees = isDemoActive ? 785 : earnings.commissionFees;
+
   const stats = [
-    { label: "Available Balance", value: formatMoney(earnings.availableEarnings), detail: "Released payouts", icon: Landmark },
-    { label: "Pending Funds", value: formatMoney(earnings.pendingEarnings), detail: "Held in escrow", icon: Clock },
-    { label: "Completed Jobs", value: earnings.completedJobs.toLocaleString(), detail: "Successfully billed", icon: Briefcase },
-    { label: "Commission Fees", value: formatMoney(earnings.commissionFees), detail: "Platform share (5%)", icon: Building2 },
+    { label: "Available Balance", value: formatMoney(availEarn), detail: "Direct released payouts", icon: RiBankCardLine },
+    { label: "Protected Funds", value: formatMoney(pendEarn), detail: "Under Milestone Protection", icon: RiShieldCheckFill },
+    { label: "Completed Jobs", value: compJobs.toLocaleString(), detail: "Successfully executed", icon: RiBriefcaseLine },
+    { label: "Commission Fees", value: formatMoney(commFees), detail: "Platform share (5%)", icon: RiBuilding2Line },
   ];
 
-  // Process transaction history for visual AreaChart
+  // Process transaction history for AreaChart
   const getChartData = () => {
-    const grouped = earnings.transactions.reduce((acc: Record<string, number>, tx) => {
+    const grouped = activeTransactions.reduce((acc: Record<string, number>, tx) => {
       const date = new Date(tx.createdAt);
       if (isNaN(date.getTime())) return acc;
       const month = date.toLocaleDateString(undefined, { month: "short", year: "2-digit" });
@@ -103,7 +175,7 @@ export default function WorkerEarningsContent({ earnings }: WorkerEarningsConten
 
   const handleExportStatements = () => {
     const headers = ["Transaction ID", "Job Title", "Client", "Gross Amount (ETB)", "Commission Fee (ETB)", "Net Earnings (ETB)", "Status", "Reference", "Date"];
-    const rows = earnings.transactions.map((tx) => [
+    const rows = activeTransactions.map((tx) => [
       `"${tx.id}"`,
       `"${(tx.title || "Job").replace(/"/g, '""')}"`,
       `"${(tx.client || "Client").replace(/"/g, '""')}"`,
@@ -119,7 +191,7 @@ export default function WorkerEarningsContent({ earnings }: WorkerEarningsConten
     rows.push([
       `"SUMMARY"`,
       `"Total Released: ${(earnings.totalEarnings || 0).toFixed(2)} ETB"`,
-      `"Total Pending: ${(earnings.pendingEarnings || 0).toFixed(2)} ETB"`,
+      `"Total Protected: ${(earnings.pendingEarnings || 0).toFixed(2)} ETB"`,
       (earnings.totalEarnings || 0).toFixed(2),
       (earnings.commissionFees || 0).toFixed(2),
       (earnings.availableEarnings || 0).toFixed(2),
@@ -141,185 +213,239 @@ export default function WorkerEarningsContent({ earnings }: WorkerEarningsConten
   };
 
   return (
-    <FadeContent blur duration={0.4} className="space-y-6 pb-24 max-w-full">
-      {/* Page Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant shadow-sm transition-colors duration-300">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary">
-            Financial Dashboard
-          </p>
-          <h1 className="text-3xl font-extrabold tracking-tight text-on-surface mt-0.5">Earnings & Payouts</h1>
-          <p className="text-sm text-on-surface-variant opacity-75 mt-0.5">
-            Track released payments, pending escrows, and financial statements.
+    <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 md:space-y-8 font-['Inter',system-ui,sans-serif] text-zinc-900 dark:text-zinc-100 pb-28 md:pb-12">
+      
+      {/* ── Top Header Card (with Topographic Contour Aesthetic) ── */}
+      <div className="relative rounded-[2rem] bg-[#111216] dark:bg-zinc-950 text-white p-6 sm:p-8 overflow-hidden border border-zinc-800 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <TopographicContourSvg className="absolute inset-0 w-full h-full pointer-events-none opacity-20 text-white" />
+
+        <div className="relative z-10 space-y-1.5">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Direct Milestone Settlements</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white leading-tight">
+            Earnings & Payout Ledger
+          </h1>
+          <p className="text-xs sm:text-sm text-zinc-400 max-w-lg leading-relaxed">
+            Track cleared payments, milestone release receipts, and direct bank deposits without custodial holding.
           </p>
         </div>
-        <button
-          onClick={handleExportStatements}
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-4.5 text-xs font-black uppercase tracking-wider text-primary hover:bg-primary hover:text-on-primary transition shadow-sm shrink-0 cursor-pointer"
-        >
-          <Download className="w-4 h-4" />
-          Export Statements
-        </button>
+
+        <div className="relative z-10 shrink-0">
+          <button
+            type="button"
+            onClick={handleExportStatements}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-white hover:bg-zinc-100 text-zinc-950 px-5 text-xs sm:text-sm font-semibold transition-all shadow-sm active:scale-95 cursor-pointer whitespace-nowrap"
+          >
+            <RiDownload2Line className="size-4" />
+            <span>Export Statement (CSV)</span>
+          </button>
+        </div>
       </div>
 
-      {/* Main Income Summary Hero Card */}
-      <section className="relative overflow-hidden rounded-3xl border border-outline-variant bg-gradient-to-br from-[#0c121e] to-[#060a12] p-6 shadow-md">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative z-10">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">Total Released Income</p>
-          <div className="mt-2.5 flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-              <p className="text-4xl font-extrabold tracking-tight text-white leading-none">
-                {formatMoney(earnings.totalEarnings)}
-              </p>
-              <p className="text-xs text-zinc-400 mt-2">All payments cleared and sent directly to your registered bank account.</p>
-            </div>
-            <span className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-primary">
-              <TrendingUp className="w-3.5 h-3.5" />
-              Commission Rate 5%
-            </span>
-          </div>
+      {/* ── Main Income Summary Hero Card ── */}
+      <div className="rounded-[2rem] bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 p-6 sm:p-8 shadow-sm flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+            Total Released Income
+          </span>
+          <p className="text-3xl sm:text-5xl font-black tracking-tight text-zinc-900 dark:text-white leading-none">
+            {formatMoney(totalEarn)}
+          </p>
+          <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-2">
+            Cleared milestone payouts sent directly to your account with 0 escrow delays.
+          </p>
         </div>
-      </section>
 
-      {/* Stats Grid */}
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold shrink-0">
+          <RiArrowRightUpLine className="size-4" />
+          <span>DireSkill Fixed Fee 5%</span>
+        </div>
+      </div>
+
+      {/* ── 4-Metric Grid ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <div key={stat.label} className="rounded-2xl border border-outline-variant/70 bg-surface-container-lowest p-5 transition-all duration-200 hover:border-primary/25 hover:shadow-sm">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant opacity-60">{stat.label}</p>
-                <div className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary">
-                  <Icon className="w-4 h-4" />
+            <div
+              key={stat.label}
+              className="rounded-[1.75rem] bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 p-5 space-y-2 shadow-sm transition-all hover:shadow-md"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] sm:text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                  {stat.label}
+                </span>
+                <div className="size-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-700 dark:text-zinc-300">
+                  <Icon className="size-4" />
                 </div>
               </div>
-              <p className="mt-3.5 text-2xl font-extrabold tracking-tight text-on-surface">{stat.value}</p>
-              <p className="mt-1 text-xs text-on-surface-variant opacity-60">{stat.detail}</p>
+
+              <p className="text-xl sm:text-2xl font-extrabold text-zinc-900 dark:text-white">
+                {stat.value}
+              </p>
+
+              <p className="text-[11px] text-zinc-400 font-medium">
+                {stat.detail}
+              </p>
             </div>
           );
         })}
-      </section>
+      </div>
 
-      {/* Analytics Chart */}
-      <section className="rounded-2xl border border-outline-variant/75 bg-surface-container-lowest p-5 shadow-sm">
-        <div className="mb-5">
-          <h2 className="text-sm font-bold text-on-surface">Income Performance</h2>
-          <p className="text-xs text-on-surface-variant opacity-60">Visualize cleared payouts grouped by month.</p>
+      {/* ── Analytics Chart ── */}
+      <div className="rounded-[2rem] bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 p-6 sm:p-8 shadow-sm space-y-5">
+        <div>
+          <h2 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-white">
+            Income Distribution Over Time
+          </h2>
+          <p className="text-xs text-zinc-400">
+            Monthly cleared payouts released upon client milestone verification.
+          </p>
         </div>
 
-        <div className="h-[240px] w-full pr-4">
+        <div className="h-[250px] w-full">
           {hasChartData ? (
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="earningsGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--md-sys-color-primary)" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="var(--md-sys-color-primary)" stopOpacity={0} />
+                  <linearGradient id="workerEarningsGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--md-sys-color-outline-variant)" opacity={0.3} />
-                <XAxis dataKey="month" tick={{ fill: "var(--md-sys-color-on-surface-variant)", fontSize: 11, fontWeight: 600 }} />
-                <YAxis tick={{ fill: "var(--md-sys-color-on-surface-variant)", fontSize: 11, fontWeight: 600 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.4} />
+                <XAxis dataKey="month" tick={{ fill: "#94a3b8", fontSize: 11, fontWeight: 600 }} />
+                <YAxis tick={{ fill: "#94a3b8", fontSize: 11, fontWeight: 600 }} />
                 <Tooltip
                   formatter={(value) => formatMoney(Number(value))}
                   contentStyle={{
-                    background: "var(--md-sys-color-surface-container-lowest)",
-                    border: "1px solid var(--md-sys-color-outline-variant)",
-                    borderRadius: 12,
-                    color: "var(--md-sys-color-on-surface)",
-                    fontSize: 11,
+                    background: "#111216",
+                    border: "1px solid #27272a",
+                    borderRadius: 16,
+                    color: "#ffffff",
+                    fontSize: 12,
                     fontWeight: "bold",
                   }}
                 />
                 <Area
                   type="monotone"
                   dataKey="Earnings"
-                  stroke="var(--md-sys-color-primary)"
+                  stroke="#22c55e"
                   strokeWidth={2.5}
                   fillOpacity={1}
-                  fill="url(#earningsGrad)"
+                  fill="url(#workerEarningsGrad)"
                 />
               </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex h-full items-center justify-center rounded-xl bg-surface-container/30 text-xs font-bold uppercase tracking-wider text-on-surface-variant opacity-40">
-              No historical data available
+            <div className="flex h-full items-center justify-center rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 text-xs font-semibold text-zinc-400">
+              No historical payment trends yet
             </div>
           )}
         </div>
-      </section>
+      </div>
 
-      {/* Transaction History Card */}
-      <section className="rounded-2xl border border-outline-variant/80 bg-surface-container-lowest overflow-hidden shadow-sm">
-        <div className="flex items-center justify-between border-b border-outline-variant/40 px-5 py-4">
+      {/* ── Transaction Ledger Table ── */}
+      <div className="rounded-[2rem] bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 overflow-hidden shadow-sm">
+        <div className="p-6 border-b border-slate-100 dark:border-zinc-800 flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-bold text-on-surface">Transaction Ledger</h2>
-            <p className="text-xs text-on-surface-variant opacity-60">Audit trail of cleared payouts, platform shares, and net earnings.</p>
+            <h2 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-white">
+              Transaction Ledger
+            </h2>
+            <p className="text-xs text-zinc-400">
+              Audit trail of cleared payouts, platform shares, and net earnings.
+            </p>
           </div>
-          <span className="text-xs font-bold text-on-surface-variant bg-surface-container px-3 py-1 rounded-full border border-outline-variant/30">
-            {earnings.transactions.length} Records
-          </span>
+          <div className="flex items-center gap-2">
+            {earnings.transactions.length === 0 && (
+              <button
+                type="button"
+                onClick={() => setShowDemo((prev) => !prev)}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 px-3 py-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:opacity-80 transition"
+              >
+                <span>{showDemo ? "Hide Sample Data" : "Inspect Sample Transactions"}</span>
+              </button>
+            )}
+            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+              {activeTransactions.length} Records
+            </span>
+          </div>
         </div>
 
-        {earnings.transactions.length === 0 ? (
-          <div className="px-5 py-16 text-center space-y-3">
-            <div className="w-12 h-12 bg-primary/5 rounded-full flex items-center justify-center mx-auto text-primary/60">
-              <CreditCard className="w-6 h-6" />
-            </div>
-            <div className="max-w-xs mx-auto space-y-0.5">
-              <p className="text-sm font-black text-on-surface uppercase tracking-wide">No transactions yet</p>
-              <p className="text-xs text-on-surface-variant opacity-60">Cleared funds from completed jobs will appear in this ledger.</p>
-            </div>
+        {activeTransactions.length === 0 ? (
+          <div className="p-12 text-center space-y-2">
+            <RiReceiptLine className="size-10 text-zinc-400 mx-auto" />
+            <p className="text-sm font-bold text-zinc-900 dark:text-white">
+              No transactions recorded yet
+            </p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
+              Cleared funds from completed jobs will appear in this ledger.
+            </p>
           </div>
         ) : (
-          <div className="divide-y divide-outline-variant/40">
-            {earnings.transactions.map((tx) => (
+          <div className="divide-y divide-slate-100 dark:divide-zinc-800">
+            {activeTransactions.map((tx) => (
               <div
                 key={tx.id}
-                className="grid gap-4 p-5 lg:grid-cols-[1fr_130px_130px_150px] lg:items-center hover:bg-surface-container/20 transition-colors duration-150 group"
+                className="p-5 sm:p-6 grid gap-4 lg:grid-cols-[1fr_140px_140px_160px] lg:items-center hover:bg-slate-50/60 dark:hover:bg-zinc-800/30 transition-colors"
               >
                 <div className="min-w-0">
-                  <p className="truncate font-bold text-on-surface group-hover:text-primary transition-colors text-sm">{tx.title}</p>
-                  <p className="mt-1 text-xs text-on-surface-variant opacity-75">
-                    Client: <span className="font-semibold">{tx.client}</span> &bull; {formatDate(tx.createdAt)}
+                  <p className="font-bold text-sm text-zinc-900 dark:text-white truncate">
+                    {tx.title}
+                  </p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                    Client: <span className="font-semibold text-zinc-700 dark:text-zinc-300">{tx.client}</span> • {formatDate(tx.createdAt)}
                   </p>
                   {tx.chapaRef && (
-                    <p className="mt-1 truncate font-mono text-[10px] text-on-surface-variant opacity-50">{tx.chapaRef}</p>
+                    <p className="text-[10px] font-mono text-zinc-400 mt-0.5 truncate">
+                      Ref: {tx.chapaRef}
+                    </p>
                   )}
-                  {tx.status === "released" && tx.id && (
+                  {tx.status === "released" && (
                     <div className="mt-2">
                       <a
                         href={getChapaReceiptUrl(tx.chapaRef)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-primary hover:underline"
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
                       >
-                        <Receipt className="w-3.5 h-3.5" />
-                        Chapa Receipt
+                        <RiReceiptLine className="size-3.5" />
+                        <span>Chapa Official Receipt</span>
                       </a>
                     </div>
                   )}
                 </div>
 
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant opacity-50">Gross Invoice</p>
-                  <p className="text-sm font-bold text-on-surface mt-0.5">{formatMoney(tx.amount)}</p>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">
+                    Gross Invoice
+                  </span>
+                  <span className="text-sm font-bold text-zinc-900 dark:text-white">
+                    {formatMoney(tx.amount)}
+                  </span>
                 </div>
 
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant opacity-50">Platform Fee</p>
-                  <p className="text-sm font-semibold text-on-surface-variant mt-0.5">{formatMoney(tx.commissionAmount)}</p>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">
+                    Platform Fee (5%)
+                  </span>
+                  <span className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">
+                    {formatMoney(tx.commissionAmount)}
+                  </span>
                 </div>
 
-                <div className="flex items-center justify-between gap-3 lg:block lg:text-right">
+                <div className="flex items-center justify-between lg:block lg:text-right">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant opacity-50 lg:hidden">Payout Net</p>
-                    <p className="text-sm font-black text-primary lg:mt-0.5">{formatMoney(tx.netAmount)}</p>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block lg:hidden">
+                      Payout Net
+                    </span>
+                    <span className="text-sm sm:text-base font-extrabold text-emerald-600 dark:text-emerald-400">
+                      {formatMoney(tx.netAmount)}
+                    </span>
                   </div>
-                  <span
-                    className={`mt-1.5 inline-flex rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider border ${statusClass(tx.status)}`}
-                  >
+                  <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide mt-1.5 ${statusClass(tx.status)}`}>
                     {statusLabel(tx.status)}
                   </span>
                 </div>
@@ -327,7 +453,8 @@ export default function WorkerEarningsContent({ earnings }: WorkerEarningsConten
             ))}
           </div>
         )}
-      </section>
-    </FadeContent>
+      </div>
+
+    </div>
   );
 }

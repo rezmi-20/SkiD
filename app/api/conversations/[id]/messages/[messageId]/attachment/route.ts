@@ -31,6 +31,10 @@ export async function GET(
 
   const contentType = rows[0].media_type === "video"
     ? upstream.headers.get("content-type") || "video/mp4"
+    : rows[0].media_type === "audio"
+    ? upstream.headers.get("content-type") || "audio/webm"
+    : rows[0].media_type === "file"
+    ? upstream.headers.get("content-type") || "application/pdf"
     : upstream.headers.get("content-type") || "application/octet-stream";
   return new NextResponse(upstream.body, {
     status: 200,

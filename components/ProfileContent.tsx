@@ -23,6 +23,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import WorkerTradeHeroBanner from "@/components/worker/WorkerTradeHeroBanner";
 
 interface ProfileContentProps {
   user: {
@@ -38,6 +39,7 @@ interface ProfileContentProps {
     district?: string;
     verificationStatus?: string;
     maskedFin?: string | null;
+    bio?: string | null;
   };
   stats?: {
     label: string;
@@ -80,51 +82,13 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
   return (
     <div className="w-full max-w-md md:max-w-4xl mx-auto px-3 sm:px-6 pb-32 animate-in fade-in duration-300">
       
-      {/* ── USER PROFILE HEADER (Pixel-Perfect from Inspiration) ──── */}
-      <div className="flex items-center justify-between gap-3 mb-6 px-1 pt-2 sm:pt-4">
-        <div className="flex items-center gap-3.5 min-w-0">
-          {/* Avatar with mint/green badge container */}
-          <div className="relative shrink-0">
-            <div className={`h-16 w-16 rounded-full ${user.is_verified ? "bg-[#bbf7d0] dark:bg-[#143d22]" : "bg-muted"} p-0.5 flex items-center justify-center`}>
-              <Avatar className="h-full w-full rounded-full">
-                {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
-                <AvatarFallback className={user.is_verified ? "bg-[#bbf7d0] text-[#166534] font-black text-lg" : "bg-muted text-muted-foreground font-black text-lg"}>
-                  {user.initials}
-                </AvatarFallback>
-              </Avatar>
-            </div>
-            {/* Status icon badge pinned to bottom right */}
-            <div className={`absolute -bottom-0.5 -right-0.5 h-6 w-6 rounded-full border-2 border-background flex items-center justify-center shadow-sm ${
-              user.is_verified ? "bg-[#86efac] text-[#14532d]" : "bg-amber-400 text-amber-950"
-            }`}>
-              {user.is_verified ? (
-                <UserCheck className="h-3.5 w-3.5 stroke-[2.5]" />
-              ) : (
-                <ShieldAlert className="h-3.5 w-3.5 stroke-[2.5]" />
-              )}
-            </div>
-          </div>
-
-          {/* Name & Email */}
-          <div className="min-w-0">
-            <h2 className="text-lg sm:text-xl font-extrabold text-foreground truncate leading-tight">
-              {user.name}
-            </h2>
-            <p className="text-xs sm:text-sm text-muted-foreground truncate mt-0.5 font-medium">
-              {user.email}
-            </p>
-          </div>
-        </div>
-
-        {/* Floating Dark Circular Settings Button */}
-        <Link
-          href={settingsHref}
-          className="h-12 w-12 rounded-full bg-slate-900 dark:bg-zinc-800 text-white flex items-center justify-center shadow-md active:scale-90 transition-transform shrink-0"
-          title="Settings"
-          aria-label="Settings"
-        >
-          <Settings className="h-5 w-5 stroke-[1.8]" />
-        </Link>
+      {/* ── COVER PROFILE HERO (Clean Banner, Overlapping Avatar, Trade Pill & Name) ── */}
+      <div className="mb-6 pt-1 sm:pt-2">
+        <WorkerTradeHeroBanner
+          user={user}
+          skills={skills}
+          bio={user.bio}
+        />
       </div>
 
       <div className="space-y-6">

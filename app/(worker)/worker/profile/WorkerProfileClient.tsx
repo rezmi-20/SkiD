@@ -62,7 +62,8 @@ export default function WorkerProfileClient({ profile }: { profile: any }) {
         district: profile?.district,
         is_verified: Boolean(profile?.is_verified && profile?.has_fin),
         verificationStatus: profile?.verification_status || "incomplete",
-        maskedFin: profile?.masked_fin || null
+        maskedFin: profile?.masked_fin || null,
+        bio: profile?.bio || null,
       }}
       stats={stats}
       menuGroups={menuGroups}

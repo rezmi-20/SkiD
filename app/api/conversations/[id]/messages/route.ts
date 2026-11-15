@@ -9,7 +9,7 @@ import { z } from "zod";
 const messageSchema = z.object({
   body: z.string().max(5000).optional(),
   imageUrl: z.string().max(2048).optional(),
-  mediaType: z.enum(["image", "video"]).optional(),
+  mediaType: z.enum(["image", "video", "audio", "file"]).optional(),
 }).strict();
 
 // GET /api/conversations/[id]/messages
@@ -146,8 +146,12 @@ export async function POST(
     let finalMediaType = mediaType || "image";
     if (imageUrl && !mediaType) {
       const lower = imageUrl.toLowerCase();
-      if (lower.endsWith(".mp4") || lower.endsWith(".webm") || lower.endsWith(".mov") || lower.endsWith(".ogg") || lower.includes("/video/")) {
+      if (lower.endsWith(".mp4") || lower.endsWith(".mov") || lower.includes("/video/")) {
         finalMediaType = "video";
+      } else if (lower.endsWith(".webm") || lower.endsWith(".ogg") || lower.endsWith(".mp3") || lower.endsWith(".wav") || lower.includes("/audio/")) {
+        finalMediaType = "audio";
+      } else if (lower.endsWith(".pdf") || lower.includes("/raw/")) {
+        finalMediaType = "file";
       }
     }
 

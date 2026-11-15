@@ -2,19 +2,23 @@
 
 import { useState, useTransition, useEffect, useRef } from "react";
 import Link from "next/link";
+import {
+  RiCustomerService2Line,
+  RiSendPlane2Fill,
+  RiAttachmentLine,
+  RiCheckboxCircleFill,
+  RiTimeLine,
+  RiUserLine,
+  RiArrowLeftLine,
+  RiRefreshLine,
+  RiInformationLine,
+  RiFileTextLine,
+  RiShieldCheckFill,
+} from "@remixicon/react";
 import { reopenSupportTicket, submitSupportReply } from "@/lib/actions/support";
 import { playNotificationSound } from "@/lib/sound";
-import {
-  Send,
-  FileText,
-  AlertCircle,
-  CheckCircle2,
-  ArrowLeft,
-  LifeBuoy,
-  User,
-  Headphones,
-  RotateCcw,
-} from "lucide-react";
+import { DEMO_SUPPORT_TICKET } from "@/lib/mock-support";
+import { cx } from "@/utils/cx";
 
 function formatDate(value: unknown) {
   if (!value) return "Not recorded";
@@ -26,10 +30,19 @@ function formatDate(value: unknown) {
   });
 }
 
-export default function UserSupportDetails({ data, role }: { data: any; role: "client" | "worker" }) {
-  const { ticket, messages, events, attachments } = data;
+export default function UserSupportDetails({
+  data,
+  role,
+  isDemoMode = false,
+}: {
+  data: any;
+  role: "client" | "worker";
+  isDemoMode?: boolean;
+}) {
+  const activeData = data || DEMO_SUPPORT_TICKET;
+  const { ticket, messages = [], attachments = [] } = activeData;
   const [messagesList, setMessagesList] = useState<any[]>(messages || []);
-  const [currentStatus, setCurrentStatus] = useState<string>(ticket.status);
+  const [currentStatus, setCurrentStatus] = useState<string>(ticket?.status || "open");
 
   const canReply = currentStatus !== "closed";
   const canReopen = currentStatus === "resolved";
@@ -43,8 +56,9 @@ export default function UserSupportDetails({ data, role }: { data: any; role: "c
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const initialMountRef = useRef(false);
 
-  // Real-time polling for incoming messages
+  // Real-time polling for incoming messages (bypassed in demo mode)
   useEffect(() => {
+    if (isDemoMode) return;
     let active = true;
 
     async function pollMessages() {
@@ -63,7 +77,6 @@ export default function UserSupportDetails({ data, role }: { data: any; role: "c
               playNotificationSound();
             }
 
-            // Sync with latest messages from server
             if (json.messages.length >= prev.length || hasNewStaffMsg) {
               return json.messages;
             }
@@ -75,20 +88,19 @@ export default function UserSupportDetails({ data, role }: { data: any; role: "c
           }
         }
       } catch {
-        // Transient network blip
+        // Transient error
       }
     }
 
     initialMountRef.current = true;
-    const interval = setInterval(pollMessages, 2500);
+    const interval = setInterval(pollMessages, 3000);
 
     return () => {
       active = false;
       clearInterval(interval);
     };
-  }, [ticket.id, role]);
+  }, [ticket?.id, role, isDemoMode]);
 
-  // Auto-scroll chat to latest message
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messagesList.length]);
@@ -99,14 +111,32 @@ export default function UserSupportDetails({ data, role }: { data: any; role: "c
     if (!text) return;
     setError(null);
 
-    // Optimistic UI: display immediately
-    const optimisticMsg = {
+    const newMsg = {
+      id: `local-${Date.now()}`,
       actor_type: role,
       message: text,
+      content: text,
       created_at: new Date().toISOString(),
     };
-    setMessagesList((prev) => [...prev, optimisticMsg]);
+    setMessagesList((prev) => [...prev, newMsg]);
     setReplyText("");
+
+    if (isDemoMode) {
+      setTimeout(() => {
+        setMessagesList((prev) => [
+          ...prev,
+          {
+            id: `reply-${Date.now()}`,
+            actor_type: "staff",
+            message: "Thank you for the update! Our desk has noted your comments and verified the milestone status.",
+            content: "Thank you for the update! Our desk has noted your comments and verified the milestone status.",
+            created_at: new Date().toISOString(),
+          },
+        ]);
+        playNotificationSound();
+      }, 1200);
+      return;
+    }
 
     startTransition(async () => {
       try {
@@ -125,6 +155,13 @@ export default function UserSupportDetails({ data, role }: { data: any; role: "c
     if (!reopenReason.trim()) return;
     setError(null);
 
+    if (isDemoMode) {
+      setShowReopen(false);
+      setReopenReason("");
+      setCurrentStatus("open");
+      return;
+    }
+
     startTransition(async () => {
       try {
         const result = await reopenSupportTicket(ticket.id, reopenReason.trim());
@@ -141,126 +178,112 @@ export default function UserSupportDetails({ data, role }: { data: any; role: "c
     });
   };
 
-  const statusColors: Record<string, string> = {
-    open: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-    assigned: "bg-purple-500/10 text-purple-500 border-purple-500/20",
-    in_progress: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-    awaiting_user: "bg-orange-500/10 text-orange-500 border-orange-500/20",
-    escalated: "bg-rose-500/10 text-rose-500 border-rose-500/20",
-    resolved: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-    closed: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
-  };
-
   return (
-    <div className="mx-auto max-w-4xl space-y-6 pb-24 animate-in fade-in duration-300">
+    <div className="mx-auto max-w-4xl space-y-6 pb-24">
+      {isDemoMode && (
+        <div className="rounded-2xl border border-accent-500/30 bg-accent-500/10 p-3.5 flex items-center justify-between gap-3 text-caption-1-semibold text-text-primary">
+          <div className="flex items-center gap-2">
+            <RiInformationLine className="size-4 text-accent-600 shrink-0" />
+            <span>Preview Mode: Live support messaging preview with automated desk simulation.</span>
+          </div>
+          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent-600 text-white shrink-0">
+            Preview Active
+          </span>
+        </div>
+      )}
+
       {/* Top Header */}
       <div>
         <Link
           href={`/${role}/support`}
-          className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary hover:underline mb-3"
+          className="inline-flex items-center gap-1.5 text-caption-1-semibold text-text-secondary hover:text-text-primary mb-3"
         >
-          <ArrowLeft className="h-3.5 w-3.5" /> Back to tickets
+          <RiArrowLeftLine className="size-4" />
+          <span>Back to tickets</span>
         </Link>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="text-[11px] font-black uppercase tracking-widest text-primary">
+              <span className="font-mono text-[11px] font-bold text-accent-600 px-2.5 py-0.5 rounded-md bg-background-secondary-default border border-border-button-default">
                 {ticket.reference}
               </span>
-              <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${statusColors[currentStatus] || "bg-zinc-500/10 text-zinc-400"}`}>
+              <span
+                className={cx(
+                  "rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border",
+                  currentStatus === "resolved"
+                    ? "border-accent-500/30 bg-accent-500/10 text-accent-700 dark:text-accent-300"
+                    : "border-chart-4/30 bg-chart-4/10 text-chart-4"
+                )}
+              >
                 {String(currentStatus).replaceAll("_", " ")}
               </span>
-              <span className="rounded-full bg-surface-container px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
+              <span className="rounded-full bg-background-secondary-default px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-text-tertiary border border-border-button-default">
                 {ticket.priority} priority
               </span>
             </div>
-            <h1 className="mt-2 text-2xl md:text-3xl font-black text-on-surface tracking-tight">
+            <h1 className="mt-2 text-title-1-medium text-text-primary tracking-tight">
               {ticket.subject}
             </h1>
           </div>
           {canReopen && !showReopen && (
             <button
               onClick={() => setShowReopen(true)}
-              className="flex items-center gap-1.5 rounded-lg border border-outline-variant px-3 py-1.5 text-xs font-bold text-on-surface hover:bg-surface-container transition"
+              className="flex items-center gap-1.5 rounded-xl border border-border-button-default bg-background-secondary-default px-3 py-1.5 text-caption-1-semibold font-bold text-text-primary hover:bg-background-tertiary-default transition"
             >
-              <RotateCcw className="h-3.5 w-3.5" /> Reopen Ticket
+              <RiRefreshLine className="size-4" />
+              <span>Reopen Ticket</span>
             </button>
           )}
         </div>
       </div>
 
-      <hr className="border-outline-variant/40" />
-
-      {/* Inquiry Summary */}
-      <div className="rounded-xl bg-surface-container-low/60 border border-outline-variant/50 p-4 space-y-3">
+      {/* Inquiry Summary Card */}
+      <div className="rounded-3xl border border-border-button-default bg-background-primary-default p-6 space-y-4 shadow-xs">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-            Original Request · Category: {String(ticket.category).replaceAll("_", " ")}
+          <span className="text-[10px] font-bold uppercase tracking-wider text-text-tertiary">
+            Original Inquiry · Category: {String(ticket.category).replaceAll("_", " ")}
           </span>
-          <span className="text-xs text-on-surface-variant font-medium">
-            {formatDate(ticket.created_at)}
-          </span>
+          <span className="text-caption-2 text-text-tertiary">{formatDate(ticket.created_at)}</span>
         </div>
-        <p className="text-sm text-on-surface font-medium leading-relaxed whitespace-pre-wrap">
+        <p className="text-body-medium text-text-primary leading-relaxed whitespace-pre-wrap">
           {ticket.description}
         </p>
         {ticket.job_title && (
-          <p className="text-xs font-semibold text-primary">
-            Linked Job: {ticket.job_title}
-          </p>
+          <p className="text-caption-1-semibold text-accent-600">Linked Job: {ticket.job_title}</p>
         )}
 
-        {/* Attachments */}
         {attachments.length > 0 && (
-          <div className="pt-2 border-t border-outline-variant/30 flex flex-wrap gap-2">
+          <div className="pt-3 border-t border-separator-border flex flex-wrap gap-2">
             {attachments.map((item: any) => (
               <a
                 key={item.id}
-                href={`/api/support/${ticket.id}/attachments/${item.id}`}
+                href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-outline-variant/60 bg-surface-container px-3 py-1.5 text-xs font-bold text-primary hover:bg-surface-container-high transition"
+                className="inline-flex items-center gap-2 rounded-xl border border-border-button-default bg-background-secondary-default px-3 py-1.5 text-caption-1-semibold text-accent-600 hover:border-accent-500 transition"
               >
-                <FileText className="h-3.5 w-3.5" />
+                <RiFileTextLine className="size-4" />
                 <span>{item.file_name || "Attachment"}</span>
-                <span className="text-[10px] text-on-surface-variant font-normal">({item.mime_type})</span>
               </a>
             ))}
           </div>
         )}
       </div>
 
-      {/* Escalation or Resolution Banners */}
-      {ticket.escalation_type && (
-        <div className="flex items-center gap-2.5 rounded-xl border border-primary/20 bg-primary/10 p-3.5 text-xs font-bold text-primary">
-          <LifeBuoy className="h-4 w-4 shrink-0" />
-          <span>This case has been escalated to {String(ticket.escalation_type).replaceAll("_", " ")} for specialized review.</span>
-        </div>
-      )}
-
-      {ticket.resolution_summary && (
-        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 space-y-1">
-          <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
-            <CheckCircle2 className="h-4 w-4" />
-            <h3 className="text-xs font-black uppercase tracking-wider">
-              Resolution: {String(ticket.resolution_type).replaceAll("_", " ")}
-            </h3>
-          </div>
-          <p className="text-xs text-on-surface font-medium leading-relaxed pl-6">
-            {ticket.resolution_summary}
-          </p>
-        </div>
-      )}
-
-      {/* Reopen Form Modal / Drawer */}
+      {/* Reopen Drawer Form */}
       {showReopen && (
-        <form onSubmit={handleReopen} className="rounded-xl border border-outline-variant bg-surface-container p-4 space-y-3">
+        <form
+          onSubmit={handleReopen}
+          className="rounded-3xl border border-border-button-default bg-background-secondary-default p-5 space-y-3"
+        >
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-black uppercase tracking-widest text-on-surface">Reopen this ticket</h3>
+            <h3 className="text-caption-1-semibold font-bold uppercase tracking-wider text-text-primary">
+              Reopen Support Request
+            </h3>
             <button
               type="button"
               onClick={() => setShowReopen(false)}
-              className="text-xs font-bold text-on-surface-variant hover:text-on-surface"
+              className="text-caption-2 text-text-secondary hover:text-text-primary"
             >
               Cancel
             </button>
@@ -270,74 +293,58 @@ export default function UserSupportDetails({ data, role }: { data: any; role: "c
             onChange={(e) => setReopenReason(e.target.value)}
             rows={3}
             required
-            placeholder="Please explain why this issue needs to be reopened..."
-            className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest p-3 text-xs outline-none focus:border-primary"
+            placeholder="Please explain what details or issues still require resolution..."
+            className="w-full rounded-2xl border border-border-button-default bg-background-primary-default p-3 text-body-medium text-text-primary outline-none focus:border-accent-500"
           />
           <button
             type="submit"
             disabled={isPending}
-            className="rounded-lg bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wider text-on-primary hover:opacity-90 disabled:opacity-50"
+            className="rounded-xl bg-accent-600 px-4 py-2 text-caption-1-semibold font-bold uppercase tracking-wider text-white hover:bg-accent-700 disabled:opacity-50"
           >
             {isPending ? "Reopening..." : "Confirm Reopen"}
           </button>
         </form>
       )}
 
-      {/* Modern Conversational Chat Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
+      {/* Conversational Live Chat Feed */}
+      <div className="rounded-3xl border border-border-button-default bg-background-primary-default p-6 space-y-5 shadow-xs">
+        <div className="flex items-center justify-between border-b border-separator-border pb-4">
           <div className="flex items-center gap-2">
-            <h2 className="text-xs font-black uppercase tracking-widest text-on-surface-variant">
-              Live Support Chat
-            </h2>
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
+            <RiCustomerService2Line className="size-5 text-accent-600" />
+            <h2 className="text-title-3-semibold text-text-primary">Live Support Desk Thread</h2>
+            <span className="size-2 rounded-full bg-accent-500 animate-pulse" />
           </div>
-          <span className="text-[11px] font-medium text-on-surface-variant">
-            {messagesList.length} {messagesList.length === 1 ? "message" : "messages"}
+          <span className="text-caption-2 text-text-tertiary">
+            {messagesList.length} {messagesList.length === 1 ? "entry" : "entries"}
           </span>
         </div>
 
-        {/* Chat message bubbles */}
-        <div className="space-y-3 max-h-[420px] overflow-y-auto rounded-2xl bg-surface-container-lowest/50 border border-outline-variant/40 p-4">
+        {/* Messages */}
+        <div className="space-y-3.5 max-h-[440px] overflow-y-auto pe-2">
           {messagesList.length === 0 ? (
-            <div className="py-12 text-center text-xs text-on-surface-variant">
-              No replies yet. Our support staff will respond shortly.
-            </div>
+            <p className="py-12 text-center text-caption-2 text-text-tertiary">
+              No replies logged yet. Support desk will review your inquiry shortly.
+            </p>
           ) : (
-            messagesList.map((message: any, index: number) => {
-              const isMe = message.actor_type === role;
+            messagesList.map((msg: any, idx: number) => {
+              const isMe = msg.actor_type === role;
+              const text = msg.content || msg.message || "";
               return (
-                <div
-                  key={`${message.actor_type}-${message.created_at}-${index}`}
-                  className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}
-                >
-                  <div className="flex items-center gap-1.5 mb-1 px-1 text-[10px] font-bold text-on-surface-variant">
-                    {isMe ? (
-                      <>
-                        <span>You</span>
-                        <User className="h-3 w-3 text-primary" />
-                      </>
-                    ) : (
-                      <>
-                        <Headphones className="h-3 w-3 text-emerald-500" />
-                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">Support Agent</span>
-                      </>
-                    )}
+                <div key={msg.id || idx} className={cx("flex flex-col", isMe ? "items-end" : "items-start")}>
+                  <div className="flex items-center gap-1.5 mb-1 px-1 text-[10px] font-bold text-text-tertiary">
+                    <span>{isMe ? "You" : "DireSkill Support"}</span>
                     <span>·</span>
-                    <span>{formatDate(message.created_at)}</span>
+                    <span>{formatDate(msg.created_at)}</span>
                   </div>
-
                   <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
+                    className={cx(
+                      "max-w-[85%] sm:max-w-[75%] rounded-3xl p-4 text-body-medium leading-relaxed whitespace-pre-wrap shadow-2xs",
                       isMe
-                        ? "bg-primary text-on-primary rounded-br-sm font-medium"
-                        : "bg-surface-container border border-outline-variant/60 text-on-surface rounded-bl-sm font-medium"
-                    }`}
+                        ? "bg-accent-600 text-white rounded-tr-xs"
+                        : "bg-background-secondary-default text-text-primary border border-border-button-default rounded-tl-xs"
+                    )}
                   >
-                    <p className="whitespace-pre-wrap">{message.message}</p>
+                    {text}
                   </div>
                 </div>
               );
@@ -346,78 +353,26 @@ export default function UserSupportDetails({ data, role }: { data: any; role: "c
           <div ref={chatEndRef} />
         </div>
 
-        {/* Error message */}
-        {error && (
-          <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-xs font-bold text-red-600 dark:text-red-400">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        {/* Reply Box */}
-        {canReply ? (
-          <form onSubmit={handleReply} className="space-y-2">
-            <div className="relative rounded-xl border border-outline-variant bg-surface-container-lowest focus-within:border-primary transition">
-              <textarea
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleReply(e);
-                  }
-                }}
-                rows={3}
-                required
-                placeholder="Type your message to support... (Press Enter to send)"
-                className="w-full resize-none rounded-xl bg-transparent p-3 text-sm outline-none placeholder:text-on-surface-variant/50 text-on-surface"
-              />
-              <div className="flex items-center justify-between border-t border-outline-variant/30 px-3 py-2 bg-surface-container/30 rounded-b-xl">
-                <span className="text-[11px] text-on-surface-variant font-medium">
-                  Do not include passwords, verification codes, or bank credentials.
-                </span>
-                <button
-                  type="submit"
-                  disabled={isPending || !replyText.trim()}
-                  className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-on-primary hover:opacity-90 disabled:opacity-40 transition"
-                >
-                  <Send className="h-3 w-3" />
-                  <span>{isPending ? "Sending..." : "Send"}</span>
-                </button>
-              </div>
-            </div>
+        {/* Reply Input Form */}
+        {canReply && (
+          <form onSubmit={handleReply} className="flex items-center gap-2 pt-2 border-t border-separator-border">
+            <input
+              type="text"
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+              placeholder="Type your response to support staff..."
+              className="flex-1 rounded-2xl border border-border-button-default bg-background-secondary-default px-4 py-3 text-body-medium text-text-primary placeholder:text-text-placeholder focus:border-accent-500 focus:outline-none transition-colors"
+            />
+            <button
+              type="submit"
+              disabled={isPending || !replyText.trim()}
+              className="size-12 rounded-2xl bg-accent-600 text-white flex items-center justify-center shrink-0 hover:bg-accent-700 disabled:opacity-40 transition active:scale-95"
+            >
+              <RiSendPlane2Fill className="size-5" />
+            </button>
           </form>
-        ) : (
-          <div className="rounded-xl border border-outline-variant/40 bg-surface-container/30 p-3 text-center text-xs text-on-surface-variant font-medium">
-            This ticket is closed and can no longer receive new replies.
-          </div>
         )}
       </div>
-
-      {/* Event Audit Trail (Clean Timeline - Staff Notes strictly hidden) */}
-      {(() => {
-        const visibleEvents = (events || []).filter((e: any) => e.event_type !== "internal_note_added");
-        return (
-          <details className="group rounded-xl border border-outline-variant/40 bg-surface-container-lowest/30 p-4">
-            <summary className="flex cursor-pointer items-center justify-between text-xs font-bold uppercase tracking-wider text-on-surface-variant select-none">
-              <span>Ticket Activity History ({visibleEvents.length})</span>
-              <span className="text-primary group-open:rotate-180 transition-transform">▼</span>
-            </summary>
-            <div className="mt-3 space-y-2.5 pt-2 border-t border-outline-variant/20">
-              {visibleEvents.map((event: any, i: number) => (
-                <div key={`${event.event_type}-${event.created_at}-${i}`} className="flex items-center justify-between text-xs text-on-surface-variant py-1">
-                  <span className="font-semibold text-on-surface">
-                    {String(event.event_type).replaceAll("_", " ").toUpperCase()}
-                  </span>
-                  <span className="text-[11px] font-medium">
-                    {formatDate(event.created_at)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </details>
-        );
-      })()}
     </div>
   );
 }

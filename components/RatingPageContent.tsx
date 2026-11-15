@@ -3,7 +3,18 @@
 import { useState } from "react";
 import { submitRating } from "@/lib/actions/ratings";
 import { useRouter } from "next/navigation";
-import { Lock, Loader2, Star, ArrowLeft, ShieldCheck, CheckCircle2, Sparkles } from "lucide-react";
+import Link from "next/link";
+import {
+  RiArrowLeftSLine,
+  RiStarFill,
+  RiStarLine,
+  RiShieldCheckFill,
+  RiCheckDoubleLine,
+  RiSparklingFill,
+  RiThumbUpLine,
+  RiChat1Line,
+  RiArrowRightLine
+} from "@remixicon/react";
 
 interface RatingPageContentProps {
   jobId: string;
@@ -16,15 +27,16 @@ interface RatingPageContentProps {
   alreadyRated: boolean;
   canRate: boolean;
   dashboardHref: string;
+  isDemoMode?: boolean;
 }
 
 const STAR_DETAILS = [
   { label: "Select Rating", desc: "Tap a star to rate your overall experience" },
-  { label: "Poor", desc: "Substantial issues encountered" },
+  { label: "Poor", desc: "Substantial quality issues or unpunctual delivery" },
   { label: "Fair", desc: "Some issues, needs improvement" },
-  { label: "Good", desc: "Satisfactory job completion" },
-  { label: "Very Good", desc: "Great work and communication" },
-  { label: "Outstanding!", desc: "Exceptional quality & highly recommended" },
+  { label: "Good", desc: "Satisfactory completion & verified work" },
+  { label: "Very Good", desc: "Great trade quality and smooth communication" },
+  { label: "Outstanding!", desc: "Exceptional mastery & highly recommended in Dire Dawa" },
 ];
 
 const WORKER_COMPLIMENT_TAGS = [
@@ -37,11 +49,11 @@ const WORKER_COMPLIMENT_TAGS = [
 ];
 
 const CLIENT_COMPLIMENT_TAGS = [
-  "⚡ Prompt Payment",
-  "📋 Clear Requirements",
+  "⚡ Prompt Milestone Release",
+  "📋 Clear Specifications",
   "💬 Highly Responsive",
   "🤝 Respectful Host",
-  "🌟 Great to Work With",
+  "🌟 Great Collaboration",
 ];
 
 export default function RatingPageContent({
@@ -55,6 +67,7 @@ export default function RatingPageContent({
   alreadyRated,
   canRate,
   dashboardHref,
+  isDemoMode = false,
 }: RatingPageContentProps) {
   const router = useRouter();
   const [hoveredStar, setHoveredStar] = useState(0);
@@ -66,11 +79,10 @@ export default function RatingPageContent({
 
   const activeStar = hoveredStar || selectedStar;
   const isClient = currentUserRole === "client";
-  const ratedRole = isClient ? "Verified Worker" : "Hiring Client";
+  const ratedRole = isClient ? "Verified Artisan" : "Hiring Client";
   const complimentTags = isClient ? WORKER_COMPLIMENT_TAGS : CLIENT_COMPLIMENT_TAGS;
 
   const toggleTag = (tag: string) => {
-    // Strip emoji for clean insertion
     const cleanTag = tag.replace(/^[^\w\s]+\s*/, "").trim();
     if (comment.includes(cleanTag)) {
       setComment((prev) =>
@@ -88,6 +100,15 @@ export default function RatingPageContent({
     e.preventDefault();
     if (!selectedStar) {
       setError("Please select a star rating first.");
+      return;
+    }
+
+    if (isDemoMode) {
+      setLoading(true);
+      setTimeout(() => {
+        setLoading(false);
+        setSubmitted(true);
+      }, 500);
       return;
     }
 
@@ -113,22 +134,44 @@ export default function RatingPageContent({
   };
 
   return (
-    <div className="min-h-screen bg-background pb-28 text-foreground selection:bg-primary/20">
+    <div className="min-h-screen bg-background-primary-default pb-28 text-text-primary font-['Inter',system-ui,sans-serif]">
+      {/* ── Demo / Preview Interactive Mode Banner ── */}
+      {isDemoMode && (
+        <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 text-xs text-amber-700 dark:text-amber-400 font-bold">
+          <div className="max-w-2xl mx-auto flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              <RiSparklingFill className="w-4 h-4 text-amber-500 shrink-0" />
+              <span>Inspection Preview Mode — Test the Rating & Review Composer interactively</span>
+            </div>
+            {submitted && (
+              <button
+                type="button"
+                onClick={() => setSubmitted(false)}
+                className="px-2.5 py-0.5 rounded-full bg-amber-500 text-black text-[11px] font-bold"
+              >
+                Reset Review
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── Top Header Bar ── */}
-      <header className="sticky top-0 z-30 border-b border-border/40 bg-background/80 backdrop-blur-xl px-4 sm:px-6">
+      <header className="sticky top-0 z-30 border-b border-border-button-default bg-background-primary-default/95 backdrop-blur-md px-4 sm:px-6">
         <div className="mx-auto flex h-16 max-w-2xl items-center justify-between">
           <button
+            type="button"
             onClick={() => router.back()}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border/50 bg-surface-container-high/40 text-muted-foreground hover:text-foreground hover:bg-surface-container-high transition-all active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border-button-default bg-background-secondary-default hover:bg-background-secondary-hover text-text-primary transition-all active:scale-95 cursor-pointer shadow-xs"
             aria-label="Go back"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <RiArrowLeftSLine className="h-6 w-6" />
           </button>
           <div className="text-center min-w-0 px-2">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">
+            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
               Verified Experience
             </span>
-            <h1 className="truncate text-sm sm:text-base font-black tracking-tight text-foreground">
+            <h1 className="truncate text-base font-black tracking-tight text-text-primary">
               Rate & Review
             </h1>
           </div>
@@ -137,14 +180,14 @@ export default function RatingPageContent({
       </header>
 
       <main className="mx-auto max-w-2xl space-y-5 px-4 sm:px-6 py-6 sm:py-8">
-        {/* ── Counterparty Summary Card (Mobbin Profile Pill) ── */}
-        <section className="relative overflow-hidden rounded-3xl border border-border/50 bg-surface-container-low/60 backdrop-blur-md p-5 sm:p-6 shadow-sm">
+        {/* ── Counterparty Summary Card ── */}
+        <section className="relative overflow-hidden rounded-[2rem] border border-border-button-default bg-background-secondary-default p-5 sm:p-6 shadow-sm">
           <div className="flex items-center gap-4">
-            <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border/60 bg-surface-container shadow-inner">
+            <div className="relative flex h-14 w-14 sm:h-16 sm:w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border-button-default bg-background-primary-default shadow-xs">
               {ratedAvatar ? (
                 <img src={ratedAvatar} alt={ratedName} className="h-full w-full object-cover" />
               ) : (
-                <span className="text-xl font-black text-primary">
+                <span className="text-xl font-black text-text-primary">
                   {ratedName?.[0]?.toUpperCase() ?? "U"}
                 </span>
               )}
@@ -152,85 +195,61 @@ export default function RatingPageContent({
 
             <div className="min-w-0 flex-1 space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="truncate text-base font-black tracking-tight text-foreground">
+                <p className="truncate text-base font-black tracking-tight text-text-primary">
                   {ratedName}
                 </p>
                 {ratedVerified && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
-                    <ShieldCheck className="h-3 w-3" />
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                    <RiShieldCheckFill className="h-3.5 w-3.5" />
                     Verified
                   </span>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground font-medium">
-                {ratedRole} on <span className="text-foreground font-semibold">&ldquo;{jobTitle}&rdquo;</span>
+              <p className="text-xs text-text-tertiary font-medium">
+                {ratedRole} on <span className="text-text-primary font-bold">&ldquo;{jobTitle}&rdquo;</span>
               </p>
             </div>
           </div>
         </section>
 
         {submitted ? (
-          /* ── Submitted Success State (Mobbin Celebratory Modal Style) ── */
-          <section className="relative overflow-hidden rounded-3xl border border-primary/20 bg-surface-container-low/80 backdrop-blur-md p-8 sm:p-10 text-center space-y-6 shadow-xl">
-            <div className="mx-auto relative flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 border border-primary/30 text-primary shadow-lg shadow-primary/10">
-              <CheckCircle2 className="h-10 w-10 text-primary" />
-              <div className="absolute inset-0 rounded-3xl bg-primary/20 blur-xl -z-10 animate-pulse" />
+          /* ── Submitted Success State (Celebratory Card) ── */
+          <section className="relative overflow-hidden rounded-[2.5rem] border border-emerald-500/30 bg-emerald-500/5 backdrop-blur-md p-8 sm:p-10 text-center space-y-6 shadow-xl">
+            <div className="mx-auto relative flex h-20 w-20 items-center justify-center rounded-3xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 shadow-xl">
+              <RiCheckDoubleLine className="h-10 w-10 text-emerald-500" />
             </div>
 
             <div className="space-y-2 max-w-md mx-auto">
-              <h2 className="text-2xl font-black tracking-tight text-foreground">
-                {alreadyRated ? "Review Already Recorded" : "Thank You For Your Review!"}
+              <h2 className="text-2xl font-black text-text-primary tracking-tight">
+                Thank You for Your Feedback!
               </h2>
-              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                {alreadyRated
-                  ? "Your review for this job is securely published and contributes directly to the transparent community trust score."
-                  : `Your feedback for ${ratedName} has been cryptographically recorded on the platform profile.`}
+              <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
+                Your verified rating directly builds mutual trust on DireSkill. It has been recorded on{" "}
+                <strong className="text-text-primary">{ratedName}&apos;s</strong> public profile.
               </p>
             </div>
 
-            <div className="pt-2">
-              <button
-                onClick={() => router.push(dashboardHref)}
-                className="h-12 px-8 rounded-full bg-primary text-primary-foreground text-xs sm:text-sm font-black uppercase tracking-wider hover:opacity-90 shadow-lg shadow-primary/25 transition active:scale-95 cursor-pointer"
+            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2 max-w-sm mx-auto">
+              <Link
+                href={dashboardHref}
+                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-zinc-950 dark:bg-zinc-100 text-xs sm:text-sm font-black uppercase tracking-wider text-white dark:text-zinc-950 shadow-md hover:opacity-90 transition active:scale-95"
               >
-                Back to Dashboard
-              </button>
+                Return to Dashboard
+              </Link>
             </div>
-          </section>
-        ) : !canRate ? (
-          /* ── Locked State ── */
-          <section className="rounded-3xl border border-border/50 bg-surface-container-low/60 p-8 text-center space-y-4 shadow-sm">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-container-high border border-border/40 text-muted-foreground">
-              <Lock className="h-6 w-6" />
-            </div>
-            <div className="space-y-1 max-w-sm mx-auto">
-              <h2 className="text-lg font-black text-foreground">Review Locked</h2>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Reviews become available once the job completion is accepted and the settlement payment is fully released.
-              </p>
-            </div>
-            <button
-              onClick={() => router.push(dashboardHref)}
-              className="mt-2 inline-flex h-11 items-center justify-center rounded-full border border-border/60 bg-surface-container px-6 text-xs font-bold uppercase tracking-wider text-foreground hover:bg-surface-container-high transition active:scale-95 cursor-pointer"
-            >
-              Back to Dashboard
-            </button>
           </section>
         ) : (
-          /* ── Interactive Rating Form (Mobbin Clean Modern Card) ── */
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* 1. Star Rating Card */}
-            <section className="rounded-3xl border border-border/50 bg-surface-container-low/70 backdrop-blur-md p-6 sm:p-8 space-y-6 shadow-sm text-center">
-              <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">
-                  Overall Rating
-                </p>
-                <h3 className="mt-1 text-xl sm:text-2xl font-black text-foreground tracking-tight">
-                  How was your experience?
-                </h3>
-              </div>
+          /* ── Interactive Review Form ── */
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6 rounded-[2.5rem] border border-border-button-default bg-background-primary-default p-6 sm:p-8 shadow-sm"
+          >
+            {/* Star Rating Section */}
+            <div className="space-y-3 text-center">
+              <p className="text-[11px] font-black uppercase tracking-wider text-text-tertiary">
+                Overall Work Quality & Experience
+              </p>
 
-              {/* Big Interactive Stars */}
               <div className="flex items-center justify-center gap-2 sm:gap-3 py-2">
                 {[1, 2, 3, 4, 5].map((star) => {
                   const isFilled = star <= activeStar;
@@ -241,55 +260,47 @@ export default function RatingPageContent({
                       onMouseEnter={() => setHoveredStar(star)}
                       onMouseLeave={() => setHoveredStar(0)}
                       onClick={() => setSelectedStar(star)}
-                      className="group relative p-2 focus:outline-none transition-transform active:scale-90"
+                      className="p-1 rounded-2xl hover:scale-115 active:scale-95 transition-all cursor-pointer focus:outline-none"
                       aria-label={`Rate ${star} star`}
                     >
-                      <Star
-                        className={`h-9 w-9 sm:h-11 sm:w-11 transition-all duration-200 stroke-[1.5] ${
-                          isFilled
-                            ? "fill-amber-400 text-amber-400 filter drop-shadow-[0_2px_10px_rgba(251,191,36,0.5)] scale-110"
-                            : "fill-transparent text-border/70 hover:text-amber-300 group-hover:scale-105"
-                        }`}
-                      />
+                      {isFilled ? (
+                        <RiStarFill className="w-9 h-9 sm:w-11 sm:h-11 text-amber-400 drop-shadow-md" />
+                      ) : (
+                        <RiStarLine className="w-9 h-9 sm:w-11 sm:h-11 text-zinc-300 dark:text-zinc-700 hover:text-amber-300" />
+                      )}
                     </button>
                   );
                 })}
               </div>
 
-              {/* Dynamic Emotional Feedback Badge */}
-              <div className="inline-flex flex-col items-center gap-0.5 rounded-2xl bg-surface-container px-5 py-2.5 border border-border/40">
-                <span className="text-sm font-black text-foreground tracking-tight">
+              <div className="h-10 flex flex-col items-center justify-center">
+                <p className="text-sm font-extrabold text-text-primary transition-all">
                   {STAR_DETAILS[activeStar]?.label}
-                </span>
-                <span className="text-[11px] text-muted-foreground font-medium">
-                  {STAR_DETAILS[activeStar]?.desc}
-                </span>
-              </div>
-            </section>
-
-            {/* 2. Quick Compliments / Tag Pills */}
-            <section className="rounded-3xl border border-border/50 bg-surface-container-low/70 backdrop-blur-md p-5 sm:p-6 space-y-3 shadow-sm">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-primary" />
-                  What stood out? (Optional)
                 </p>
-                <span className="text-[10px] text-muted-foreground font-medium">Tap to add</span>
+                <p className="text-xs text-text-tertiary font-medium">
+                  {STAR_DETAILS[activeStar]?.desc}
+                </p>
               </div>
+            </div>
 
-              <div className="flex flex-wrap gap-2 pt-1">
+            {/* Compliment Quick Badges */}
+            <div className="space-y-2 border-t border-border-button-default/70 pt-5">
+              <label className="text-[11px] font-black uppercase tracking-wider text-text-tertiary block">
+                Quick Praise & Performance Badges
+              </label>
+              <div className="flex flex-wrap gap-2">
                 {complimentTags.map((tag) => {
-                  const clean = tag.replace(/^[^\w\s]+\s*/, "").trim();
-                  const isSelected = comment.includes(clean);
+                  const cleanTag = tag.replace(/^[^\w\s]+\s*/, "").trim();
+                  const isSelected = comment.includes(cleanTag);
                   return (
                     <button
                       key={tag}
                       type="button"
                       onClick={() => toggleTag(tag)}
-                      className={`h-9 px-3.5 rounded-full text-xs font-bold transition-all active:scale-95 cursor-pointer border ${
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 cursor-pointer border ${
                         isSelected
-                          ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                          : "bg-surface-container-high/60 border-border/50 text-muted-foreground hover:text-foreground hover:border-border"
+                          ? "bg-emerald-500/15 border-emerald-500 text-emerald-600 dark:text-emerald-400 shadow-xs"
+                          : "bg-background-secondary-default hover:bg-background-secondary-hover border-border-button-default text-text-secondary"
                       }`}
                     >
                       {tag}
@@ -297,56 +308,56 @@ export default function RatingPageContent({
                   );
                 })}
               </div>
-            </section>
+            </div>
 
-            {/* 3. Written Review Textarea */}
-            <section className="rounded-3xl border border-border/50 bg-surface-container-low/70 backdrop-blur-md p-5 sm:p-6 space-y-3 shadow-sm">
-              <label
-                htmlFor="review"
-                className="text-xs font-black uppercase tracking-wider text-muted-foreground block"
-              >
-                Detailed Review
-              </label>
+            {/* Written Testimonial Textarea */}
+            <div className="space-y-2 border-t border-border-button-default/70 pt-5">
+              <div className="flex items-center justify-between">
+                <label
+                  htmlFor="review-comment"
+                  className="text-[11px] font-black uppercase tracking-wider text-text-tertiary"
+                >
+                  Written Feedback & Testimonial
+                </label>
+                <span className="text-[10px] text-text-tertiary font-mono">
+                  {comment.length}/1000
+                </span>
+              </div>
               <textarea
-                id="review"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
+                id="review-comment"
                 rows={4}
                 maxLength={1000}
-                placeholder="Share specific details about quality, timeliness, and cooperation to help future clients and workers..."
-                className="w-full resize-none rounded-2xl border border-border/50 bg-background/60 p-4 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-primary/80 focus:ring-2 focus:ring-primary/20"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder={
+                  isClient
+                    ? "Share details about the craft quality, timeliness, and precision of the artisan's work in Dire Dawa..."
+                    : "Describe your experience working with this client, milestone approval speed, and site readiness..."
+                }
+                className="w-full rounded-2xl border border-border-button-default bg-background-secondary-default p-4 text-xs sm:text-sm font-medium text-text-primary placeholder:text-text-placeholder outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all resize-none"
               />
-              <div className="flex justify-between items-center text-[11px] text-muted-foreground pt-1">
-                <span>Reviews are public and verifiable.</span>
-                <span className="font-mono">{comment.length}/1000</span>
-              </div>
-            </section>
+            </div>
 
             {/* Error Message */}
             {error && (
-              <div className="rounded-2xl border border-error/30 bg-error/10 px-4 py-3 text-xs sm:text-sm font-semibold text-error">
+              <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs font-bold text-red-600 dark:text-red-400">
                 {error}
               </div>
             )}
 
             {/* Submit Button */}
-            <div className="pt-2">
+            <div className="border-t border-border-button-default/70 pt-5">
               <button
                 type="submit"
-                disabled={loading || !selectedStar}
-                className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm sm:text-base font-black uppercase tracking-wider text-primary-foreground shadow-lg shadow-primary/25 hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 transition active:scale-[0.98] cursor-pointer"
+                disabled={loading || selectedStar === 0}
+                className="flex h-13 sm:h-14 w-full items-center justify-center gap-2 rounded-full bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 text-xs sm:text-sm font-black uppercase tracking-wider shadow-xl hover:opacity-90 disabled:opacity-50 transition active:scale-[0.98] cursor-pointer"
               >
                 {loading ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <span>Publishing Review…</span>
-                  </>
+                  <div className="w-5 h-5 rounded-full border-2 border-white dark:border-zinc-950 border-t-transparent animate-spin" />
                 ) : (
-                  <>
-                    <Star className="h-5 w-5 fill-current" />
-                    <span>Submit Verified Review</span>
-                  </>
+                  <RiStarFill className="w-4 h-4 text-amber-400" />
                 )}
+                <span>{loading ? "Submitting Rating…" : "Submit Verified Review"}</span>
               </button>
             </div>
           </form>

@@ -109,15 +109,17 @@ export function AdminDashboardClient({
         <TopPerformers performers={topPerformers} />
       </div>
 
-      {/* ── Row 4: Single Unified Data Surface for Pending Fayda Verifications ── */}
-      <div className="pt-2">
-        <PendingFaydaQueueTable
-          workers={unverifiedWorkers}
-          canReview={verificationCapabilities.canReview}
-          canApprove={verificationCapabilities.canApprove}
-          canReject={verificationCapabilities.canReject}
-        />
-      </div>
+      {/* ── Row 4: Single Unified Data Surface for Pending Fayda Verifications (Only for Authorized Identity/Super Admins) ── */}
+      {verificationCapabilities.canRead && (
+        <div className="pt-2">
+          <PendingFaydaQueueTable
+            workers={unverifiedWorkers}
+            canReview={verificationCapabilities.canReview}
+            canApprove={verificationCapabilities.canApprove}
+            canReject={verificationCapabilities.canReject}
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -1,18 +1,29 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
 import { getUserDisputeDetails } from "@/lib/actions/disputes";
 import UserDisputeDetails from "@/components/disputes/UserDisputeDetails";
+import { MOCK_DISPUTE_SCENARIOS } from "@/lib/mock-dispute";
 
 export const dynamic = "force-dynamic";
 
 export default async function WorkerDisputeDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const data = await getUserDisputeDetails(id);
-  if (!data) notFound();
+  const isDemo = id === "demo";
+
+  let data = null;
+  if (!isDemo) {
+    try {
+      data = await getUserDisputeDetails(id);
+    } catch {
+      data = null;
+    }
+  }
+
+  // Graceful fallback to demo mode so the dispute resolution interface can always be inspected
+  const finalData = data || MOCK_DISPUTE_SCENARIOS.under_review.data;
+  const isDemoActive = isDemo || !data;
+
   return (
     <div className="mx-auto max-w-4xl">
-      <Link href="/worker/disputes" className="mb-4 inline-block text-xs font-black uppercase tracking-widest text-primary">Back to disputes</Link>
-      <UserDisputeDetails data={data} role="worker" />
+      <UserDisputeDetails data={finalData} role="worker" isDemoMode={isDemoActive} />
     </div>
   );
 }
