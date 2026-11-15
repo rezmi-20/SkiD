@@ -230,9 +230,12 @@ export default function ClientRegisterPage() {
       if (!res.ok) {
         setError(profileData.error || "Profile creation failed.");
       } else {
+        if (typeof window !== "undefined") {
+          window.sessionStorage.setItem("direskill_just_registered", "true");
+        }
         // If email verification is enabled, data.user.emailVerified will be false
         if (!resolvedEmailVerified) {
-          window.location.href = `/otp-verification?email=${encodeURIComponent(formData.email.trim())}`;
+          window.location.href = `/otp-verification?email=${encodeURIComponent(formData.email.trim())}&registered=true`;
         } else {
           window.location.href = "/login?registered=true";
         }

@@ -213,7 +213,7 @@ export default function WorkerEarningsContent({ earnings }: WorkerEarningsConten
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 md:space-y-8 font-['Inter',system-ui,sans-serif] text-zinc-900 dark:text-zinc-100 pb-28 md:pb-12">
+    <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 md:space-y-8 font-['Inter',system-ui,sans-serif] text-zinc-900 dark:text-zinc-100 pb-10 sm:pb-12">
       
       {/* ── Top Header Card (with Topographic Contour Aesthetic) ── */}
       <div className="relative rounded-[2rem] bg-[#111216] dark:bg-zinc-950 text-white p-6 sm:p-8 overflow-hidden border border-zinc-800 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-6">

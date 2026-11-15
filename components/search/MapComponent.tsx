@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -25,6 +25,7 @@ interface MapComponentProps {
   selectedWorkerId?: string | number | null;
   onSelectWorker?: (worker: Worker | null) => void;
   onMapClick?: () => void;
+  recenterSignal?: number;
   className?: string;
 }
 
@@ -70,19 +71,22 @@ const userLocationIcon = () => L.divIcon({
 });
 
 // Map controller for automatic viewport framing & manual real-time re-centering
-const MapController = ({ 
-  workers, 
-  center, 
+const MapController = ({
+  workers,
+  center,
   selectedWorker,
-  onMapClick
-}: { 
-  workers: Worker[]; 
-  center: [number, number]; 
+  onMapClick,
+  recenterSignal,
+}: {
+  workers: Worker[];
+  center: [number, number];
   selectedWorker?: Worker | null;
   onMapClick?: () => void;
+  recenterSignal?: number;
 }) => {
   const map = useMap();
-  const workersHash = workers.map(w => w.id).join(',');
+  const initialFittedRef = useRef(false);
+  const prevRecenterSignal = useRef(recenterSignal);
 
   useEffect(() => {
     if (!map) return;
@@ -95,6 +99,16 @@ const MapController = ({
     };
   }, [map, onMapClick]);
 
+  // Recenter signal from external trigger (e.g. My GPS button in header)
+  useEffect(() => {
+    if (recenterSignal !== undefined && recenterSignal !== prevRecenterSignal.current) {
+      prevRecenterSignal.current = recenterSignal;
+      try {
+        map.flyTo(center, 16, { duration: 0.9 });
+      } catch {}
+    }
+  }, [recenterSignal, center, map]);
+
   useEffect(() => {
     try {
       if (!map) return;
@@ -105,21 +119,26 @@ const MapController = ({
         return;
       }
 
-      const validWorkers = workers.filter(w => isValidCoord(w.lat) && isValidCoord(w.lng));
-      if (validWorkers.length > 0) {
-        const bounds = L.latLngBounds([center]);
-        validWorkers.forEach(w => bounds.extend([Number(w.lat), Number(w.lng)]));
-        if (bounds.isValid()) {
-          map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+      // Only auto-fit all workers once initially or when worker list length changes, not on every user pan/center update
+      if (!initialFittedRef.current) {
+        const validWorkers = workers.filter(w => isValidCoord(w.lat) && isValidCoord(w.lng));
+        if (validWorkers.length > 0) {
+          const bounds = L.latLngBounds([center]);
+          validWorkers.forEach(w => bounds.extend([Number(w.lat), Number(w.lng)]));
+          if (bounds.isValid()) {
+            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+            initialFittedRef.current = true;
+          }
+        } else {
+          map.setView(center, 14);
+          initialFittedRef.current = true;
         }
-      } else {
-        map.setView(center, 13);
       }
     } catch (err) {
       console.warn("[MapController] caught non-fatal map animation warning:", err);
     }
-  }, [workersHash, center[0], center[1], selectedWorker?.id, map]);
-  
+  }, [workers.length, selectedWorker?.id, map]);
+
   return null;
 };
 
@@ -129,22 +148,28 @@ const LocateMeControl = ({ center, onLocate }: { center: [number, number]; onLoc
 
   const handleLocate = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     onLocate();
     try {
-      map.flyTo(center, 15, { duration: 0.8 });
-    } catch {}
+      map.flyTo(center, 16, { duration: 0.9 });
+    } catch { }
   }, [center, map, onLocate]);
 
   return (
-    <div className="leaflet-bottom leaflet-right" style={{ marginBottom: "20px", marginRight: "12px", zIndex: 1000 }}>
+    <div className="leaflet-top leaflet-right" style={{ marginTop: "64px", marginRight: "12px", zIndex: 900 }}>
       <div className="leaflet-control">
         <button
           type="button"
           onClick={handleLocate}
-          className="h-10 w-10 rounded-full bg-background-primary-default/95 backdrop-blur-md border border-border-button-default text-text-primary shadow-xl flex items-center justify-center hover:bg-background-tertiary-default active:scale-95 transition-all group"
+          className="relative h-11 w-11 sm:h-12 sm:w-12 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-2 border-[#45BA50] text-[#45BA50] shadow-[0_8px_30px_rgba(0,0,0,0.35)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all cursor-pointer group"
           title="Center on My Real-Time Location"
+          aria-label="Center on My Real-Time Location"
         >
-          <Crosshair className="h-4 w-4 text-[#45BA50]" />
+          <Crosshair className="h-5 w-5 sm:h-6 sm:w-6 text-[#45BA50] stroke-[2.2] group-hover:rotate-45 transition-transform duration-300" />
+          <span className="absolute -top-1 -right-1 flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#45BA50] opacity-75" />
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-[#45BA50]" />
+          </span>
         </button>
       </div>
     </div>
@@ -179,6 +204,7 @@ export default function MapComponent({
   selectedWorkerId,
   onSelectWorker,
   onMapClick,
+  recenterSignal,
   className = "",
 }: MapComponentProps) {
   const [isMounted, setIsMounted] = useState(false);
@@ -195,7 +221,7 @@ export default function MapComponent({
   const centerLat = isValidCoord(location?.lat) ? Number(location!.lat) : DEFAULT_CENTER.lat;
   const centerLng = isValidCoord(location?.lng) ? Number(location!.lng) : DEFAULT_CENTER.lng;
   const center: [number, number] = [centerLat, centerLng];
-  
+
   const selectedWorker = workers.find(w => w.id === selectedWorkerId) || null;
   const isLight = theme === 'light';
   const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -209,13 +235,19 @@ export default function MapComponent({
           scrollWheelZoom={true}
           style={{ height: "100%", width: "100%", background: isLight ? "#f8f9fa" : "#1a1a1a" }}
         >
-          <MapController workers={workers} center={center} selectedWorker={selectedWorker} onMapClick={onMapClick} />
-          
+          <MapController
+            workers={workers}
+            center={center}
+            selectedWorker={selectedWorker}
+            onMapClick={onMapClick}
+            recenterSignal={recenterSignal}
+          />
+
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url={tileUrl}
           />
-          
+
           {/* Real-time GPS accuracy circle */}
           {isValidCoord(location?.lat) && isValidCoord(location?.lng) && (
             <Circle

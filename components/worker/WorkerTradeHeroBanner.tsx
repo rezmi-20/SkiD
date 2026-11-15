@@ -47,9 +47,23 @@ export default function WorkerTradeHeroBanner({
   onTradeChange,
   className = "",
 }: WorkerTradeHeroBannerProps) {
-  const defaultMeta = initialTradeKey
-    ? WORKER_TRADE_BANNERS[initialTradeKey]
-    : resolveTradeBanner(skills, bio);
+  const isWorker = String(user?.role || "").toLowerCase() === "worker";
+  const defaultMeta = isWorker
+    ? (initialTradeKey
+        ? WORKER_TRADE_BANNERS[initialTradeKey]
+        : resolveTradeBanner(skills, bio))
+    : {
+        key: "house-finishing" as WorkerTradeKey,
+        title: "DireSkill Client Project Hub",
+        shortTitle: "DireSkill Client",
+        bannerUrl: "/images/client_project_hero.jpg",
+        alt: "DireSkill Client Project Hub",
+        iconName: "home",
+        badgeLabel: "DireSkill Client",
+        accentColor: "#10b981",
+        gradientOverlay: "from-emerald-950/80 via-zinc-950/40 to-transparent",
+        keywords: [],
+      };
 
   const [activeTrade, setActiveTrade] = useState<TradeBannerMeta>(defaultMeta);
   const [showTradeMenu, setShowTradeMenu] = useState(false);
@@ -62,36 +76,37 @@ export default function WorkerTradeHeroBanner({
     }
   };
 
-  const isWorker = user.role === "worker";
   const settingsHref = isWorker ? "/worker/profile/settings" : "/client/profile/settings";
   const statsHref = isWorker ? "/worker/earnings" : "/client/dashboard";
 
   return (
     <div className={`w-full font-['Inter',system-ui,sans-serif] ${className}`}>
-      {/* ── 1. CLEAN COVER HERO BANNER (Full-bleed trade hero, pure image, rounded corners) ── */}
-      <div className="relative w-full h-52 sm:h-64 md:h-72 rounded-[2.5rem] overflow-hidden bg-background-secondary-default shadow-xl border border-border-button-default">
+      {/* ── 1. CLEAN COVER HERO BANNER (Flush to mobile edges, rounded on desktop) ── */}
+      <div className="relative w-full h-52 sm:h-64 md:h-72 rounded-b-3xl sm:rounded-[2.5rem] overflow-hidden bg-background-secondary-default shadow-xl border-b sm:border border-border-button-default">
         {/* Pure High-Resolution Cover Image - NO text overlaid */}
         <img
-          src={activeTrade.bannerUrl}
-          alt={activeTrade.alt}
+          src={isWorker ? activeTrade.bannerUrl : "/images/client_project_hero.jpg"}
+          alt={isWorker ? activeTrade.alt : "DireSkill Client Project"}
           className="w-full h-full object-cover select-none"
         />
 
         {/* Minimal Subtle Edge Vignette */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/35 pointer-events-none" />
 
-        {/* Top-Right Change Cover Photo Button (Discrete & Clean) */}
-        <div className="absolute top-4 right-4 z-20">
-          <button
-            type="button"
-            onClick={() => setShowTradeMenu((prev) => !prev)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md text-white text-xs font-bold border border-white/20 shadow-lg active:scale-95 transition-all cursor-pointer"
-            title="Change trade cover hero"
-          >
-            <RiCameraLine className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline text-[11px]">Change Cover</span>
-          </button>
-        </div>
+        {/* Top-Right Change Cover Photo Button (Only for workers) */}
+        {isWorker && (
+          <div className="absolute top-3.5 right-3.5 z-20">
+            <button
+              type="button"
+              onClick={() => setShowTradeMenu((prev) => !prev)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md text-white text-xs font-bold border border-white/20 shadow-lg active:scale-95 transition-all cursor-pointer"
+              title="Change trade cover hero"
+            >
+              <RiCameraLine className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline text-[11px]">Change Cover</span>
+            </button>
+          </div>
+        )}
 
         {/* Dropdown to change trade banner */}
         {showTradeMenu && (
@@ -179,10 +194,10 @@ export default function WorkerTradeHeroBanner({
 
       {/* ── 3. CLEAN IDENTITY BLOCK (Trade Pill Badge, Big Bold Name, Fayda Verification) ── */}
       <div className="flex flex-col items-center text-center mt-3.5 space-y-1.5 px-4 mb-2">
-        {/* Trade Role Pill Badge */}
+        {/* Role Pill Badge */}
         <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full border border-accent-500/30 bg-accent-500/10 text-accent-700 dark:text-accent-300 text-xs font-bold uppercase tracking-wider">
           <RiSparklingFill className="w-3.5 h-3.5 text-accent-600 shrink-0" />
-          <span>{activeTrade.shortTitle || "DireSkill Certified"}</span>
+          <span>{isWorker ? (activeTrade.shortTitle || "DireSkill Certified") : "DireSkill Client"}</span>
         </div>
 
         {/* Big Bold Clean Name */}
@@ -190,13 +205,13 @@ export default function WorkerTradeHeroBanner({
           {user.name}
         </h1>
 
-        {/* ── Total Jobs Counter (Only Total Jobs kept; followers, likes, follow button, and chat removed) ── */}
+        {/* ── Total Jobs / Hires Counter ── */}
         <div className="flex flex-col items-center justify-center pt-2">
           <span className="text-xl sm:text-2xl font-black text-text-primary tracking-tight">
             {totalJobs}
           </span>
           <span className="text-[11px] font-bold text-text-secondary">
-            Total Jobs
+            {isWorker ? "Total Jobs" : "Total Hires"}
           </span>
         </div>
 

@@ -98,7 +98,7 @@ export default function ClientPaymentsContent({ payments = [] }: { payments: Pay
   const displayList = payments.length > 0 ? payments : showDemo ? DEMO_PAYMENTS : [];
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6 pb-10 sm:pb-14">
       {/* ── Page Header ── */}
       <div className="rounded-3xl border border-border-button-default bg-background-primary-default p-6 sm:p-8 shadow-xs space-y-2">
         <div className="flex items-center gap-2">

@@ -30,6 +30,9 @@ import {
   AlertCircle,
   ShieldCheck,
   UploadCloud,
+  Globe,
+  Compass,
+  Check,
 } from "lucide-react";
 
 interface Props {
@@ -369,27 +372,35 @@ export default function SettingsContent({ initialData, role }: Props) {
   };
 
   const sections = [
-    { id: "personal", label: t("settings.section.personalInfo"), icon: "person" },
-    ...(role === "worker" ? [{ id: "professional", label: t("settings.section.professional"), icon: "construction" }] : []),
-    ...(role === "worker" ? [{ id: "payout", label: t("settings.section.payout"), icon: "account_balance" }] : []),
-    { id: "security", label: t("settings.section.security"), icon: "security" },
-    { id: "notifications", label: t("settings.section.preferences"), icon: "notifications" },
+    { id: "personal", label: t("settings.section.personalInfo"), icon: User },
+    ...(role === "worker" ? [{ id: "professional", label: t("settings.section.professional"), icon: Wrench }] : []),
+    ...(role === "worker" ? [{ id: "payout", label: t("settings.section.payout"), icon: Landmark }] : []),
+    { id: "security", label: t("settings.section.security"), icon: Shield },
+    { id: "notifications", label: t("settings.section.preferences") || "Preferences & Language", icon: Globe },
   ];
 
   return (
-    <div className="flex flex-col gap-8 pb-32 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="flex flex-col gap-6 sm:gap-8 pb-10 sm:pb-14 animate-in fade-in slide-in-from-bottom-4 duration-500">
       
       {/* ── Page Header ── */}
-      <header className="flex flex-col gap-4">
+      <header className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-           <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center bg-surface-container rounded-full hover:bg-surface-container-high transition-all active:scale-90">
+           <button 
+             type="button"
+             onClick={() => router.back()} 
+             className="w-10 h-10 flex items-center justify-center bg-background-secondary-default hover:bg-background-tertiary-default text-text-primary rounded-full border border-border-button-default transition-all active:scale-90 cursor-pointer shadow-sm"
+             aria-label="Go Back"
+           >
               <ArrowLeft className="h-4 w-4" />
            </button>
            <button 
              form="settings-form"
+             type="submit"
              disabled={isPending}
-             className={`px-8 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 ${
-               success ? "bg-green-500 text-white" : "bg-primary text-on-primary shadow-lg shadow-primary/20"
+             className={`px-5 sm:px-7 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all active:scale-95 flex items-center gap-2 cursor-pointer shadow-md ${
+               success 
+                 ? "bg-emerald-600 text-white" 
+                 : "bg-[#134e27] hover:bg-[#1a6834] text-[#a4fe47] shadow-[0_4px_16px_rgba(19,78,39,0.3)]"
              }`}
            >
               {isPending ? (
@@ -401,37 +412,45 @@ export default function SettingsContent({ initialData, role }: Props) {
               )}
            </button>
         </div>
-        <h1 className="hidden sm:block text-2xl sm:text-3xl font-black text-on-surface tracking-tight uppercase">{t("settings.titleProfile")} <span className="text-primary italic">{t("settings.titleSettings")}</span></h1>
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-text-primary tracking-tight">
+          {t("settings.titleProfile")}{" "}
+          <span className="text-[#45BA50] italic">{t("settings.titleSettings")}</span>
+        </h1>
         {verificationReason && (
-          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-5 py-4 text-sm font-semibold text-on-surface">
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs sm:text-sm font-semibold text-text-primary">
             {verificationReason}
           </div>
         )}
       </header>
 
       {/* ── Main Layout ── */}
-      <div className="flex flex-col lg:flex-row gap-8">
+      <div className="flex flex-col lg:flex-row gap-6 sm:gap-8">
         
-        {/* Navigation Sidebar (Desktop) / Horizontal Tabs (Mobile) */}
-        <aside className="lg:w-64 flex lg:flex-col overflow-x-auto no-scrollbar gap-2 lg:sticky lg:top-24 h-fit">
-           {sections.map(s => (
-             <button 
-               key={s.id}
-               onClick={() => setActiveSection(s.id)}
-               className={`flex items-center gap-3 px-6 py-4 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all shrink-0 ${
-                 activeSection === s.id 
-                  ? "bg-on-surface text-surface-container-lowest shadow-lg" 
-                  : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container border border-surface-container-highest/30"
-               }`}
-             >
-                 {s.id === "personal" ? <User className="h-4 w-4" /> : s.id === "professional" ? <Wrench className="h-4 w-4" /> : s.id === "payout" ? <Landmark className="h-4 w-4" /> : s.id === "security" ? <Shield className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
-                {s.label}
-             </button>
-           ))}
+        {/* Navigation Sidebar (Desktop) / Horizontal Scrollable Tabs (Mobile) */}
+        <aside className="lg:w-64 flex lg:flex-col overflow-x-auto no-scrollbar gap-1.5 sm:gap-2 lg:sticky lg:top-24 h-fit pb-1">
+           {sections.map(s => {
+             const Icon = s.icon;
+             const isSelected = activeSection === s.id;
+             return (
+               <button 
+                 key={s.id}
+                 type="button"
+                 onClick={() => setActiveSection(s.id)}
+                 className={`flex items-center gap-2.5 px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                   isSelected 
+                    ? "bg-[#134e27] text-[#a4fe47] shadow-lg shadow-[#134e27]/25 border border-[#45BA50]/40" 
+                    : "bg-background-secondary-default text-text-secondary hover:bg-background-tertiary-default hover:text-text-primary border border-border-button-default"
+                 }`}
+               >
+                 <Icon className="h-4 w-4 shrink-0" />
+                 <span className="truncate">{s.label}</span>
+               </button>
+             );
+           })}
         </aside>
 
         {/* Content Area */}
-        <div className="flex-grow max-w-2xl">
+        <div className="flex-grow max-w-2xl min-w-0">
           <form id="settings-form" onSubmit={handleSave} className="space-y-12">
             
             <AnimatePresence mode="wait">
@@ -444,34 +463,34 @@ export default function SettingsContent({ initialData, role }: Props) {
                   className="space-y-8"
                 >
                   {/* Avatar Upload & Verification Request Card */}
-                  <div className="p-6 sm:p-8 rounded-[3rem] border border-surface-container-highest bg-surface-container-low/40 space-y-6">
+                  <div className="p-6 sm:p-8 rounded-3xl border border-border-button-default bg-background-primary-default space-y-6">
                     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                       <div 
                         className={`relative group shrink-0 ${role === "worker" || !initialData.is_verified ? "cursor-pointer" : "cursor-default"}`} 
                         onClick={() => !(role === "worker" && avatarRequestStatus === "pending") && (role === "worker" || !initialData.is_verified) && !uploading && fileInputRef.current?.click()}
                       >
-                         <div className={`w-28 h-28 rounded-[2.5rem] border-4 shadow-xl flex items-center justify-center overflow-hidden transition-all ${
-                           initialData.is_verified ? "bg-primary/10 border-primary" : "bg-surface-container-high border-surface"
+                         <div className={`w-28 h-28 rounded-3xl border-4 shadow-xl flex items-center justify-center overflow-hidden transition-all ${
+                           initialData.is_verified ? "bg-[#134e27]/10 border-[#45BA50]" : "bg-background-secondary-default border-border-button-default"
                          }`}>
                             {formData.avatarUrl ? (
                               <img src={formData.avatarUrl} alt="" className="w-full h-full object-cover" />
                             ) : (
-                              <span className="text-4xl font-bold text-primary">{formData.fullName.charAt(0) || "U"}</span>
+                              <span className="text-4xl font-black text-[#45BA50]">{formData.fullName.charAt(0) || "U"}</span>
                             )}
                          </div>
                          {(role === "worker" || !initialData.is_verified) && avatarRequestStatus !== "pending" && !uploading && (
-                           <div className="absolute inset-0 bg-black/40 rounded-[2.5rem] opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                           <div className="absolute inset-0 bg-black/40 rounded-3xl opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                               <Camera className="h-6 w-6 text-white" />
                            </div>
                          )}
                          {uploading && (
-                           <div className="absolute inset-0 bg-black/60 rounded-[2.5rem] flex items-center justify-center">
+                           <div className="absolute inset-0 bg-black/60 rounded-3xl flex items-center justify-center">
                               <div className="w-7 h-7 border-2 border-white border-t-transparent rounded-full animate-spin" />
                            </div>
                          )}
                          {initialData.is_verified && (
-                           <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary text-on-primary rounded-full border-4 border-surface flex items-center justify-center shadow-lg">
-                              <CheckCircle2 className="h-4 w-4 text-on-primary" />
+                           <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-[#134e27] text-[#a4fe47] rounded-full border-2 border-background-primary-default flex items-center justify-center shadow-lg">
+                              <CheckCircle2 className="h-4 w-4" />
                            </div>
                          )}
                          <input
@@ -487,7 +506,7 @@ export default function SettingsContent({ initialData, role }: Props) {
 
                       <div className="flex-1 min-w-0 text-center sm:text-left space-y-3">
                         <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                          <h3 className="text-sm font-black text-on-surface uppercase tracking-wider">
+                          <h3 className="text-sm font-black text-text-primary uppercase tracking-wider">
                             {role === "worker" ? "Verified Worker Photo" : "Profile Photo"}
                           </h3>
                           {avatarRequestStatus === "pending" && (
@@ -507,7 +526,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                           )}
                         </div>
 
-                        <p className="text-xs text-on-surface-variant leading-relaxed opacity-75">
+                        <p className="text-xs text-text-secondary leading-relaxed">
                           {role === "worker"
                             ? "Your photo is validated against your Fayda National ID for trust and fraud prevention. To replace your profile photo, upload a new image for administrator review."
                             : "Upload a clear headshot photo to help skilled artisans identify you during on-site milestone visits."}
@@ -524,12 +543,12 @@ export default function SettingsContent({ initialData, role }: Props) {
                             type="button"
                             disabled={uploading || (role === "worker" && avatarRequestStatus === "pending")}
                             onClick={() => fileInputRef.current?.click()}
-                            className="h-10 px-5 rounded-2xl bg-surface-container-highest hover:bg-surface-container text-on-surface text-xs font-black uppercase tracking-wider border border-surface-container-highest transition active:scale-95 disabled:opacity-50 flex items-center gap-2"
+                            className="h-10 px-5 rounded-2xl bg-background-secondary-default hover:bg-background-tertiary-default text-text-primary text-xs font-black uppercase tracking-wider border border-border-button-default transition active:scale-95 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                           >
-                            <Camera className="h-3.5 w-3.5 text-primary" />
+                            <Camera className="h-3.5 w-3.5 text-[#45BA50]" />
                             <span>{avatarRequestStatus === "pending" ? "Request Pending" : "Request New Photo"}</span>
                           </button>
-                          <span className="text-[10px] text-on-surface-variant opacity-60">
+                          <span className="text-[10px] text-text-tertiary">
                             JPG, PNG or WebP &bull; Max 250 KB
                           </span>
                         </div>
@@ -539,33 +558,33 @@ export default function SettingsContent({ initialData, role }: Props) {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2 relative">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">{t("settings.fullName")}</label>
+                       <label className="text-[10px] font-black uppercase tracking-widest text-text-secondary ml-4">{t("settings.fullName")}</label>
                        <input 
                          type="text" 
                          value={formData.fullName}
                          onChange={e => setFormData({...formData, fullName: e.target.value})}
                          disabled={initialData.is_verified}
-                         className={`w-full h-14 border rounded-2xl px-6 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-bold text-sm ${
+                         className={`w-full h-14 border rounded-2xl px-6 focus:ring-2 focus:ring-[#45BA50]/20 focus:border-[#45BA50] outline-none transition-all font-bold text-sm text-text-primary ${
                            initialData.is_verified 
-                            ? "bg-surface-container-low border-primary/20 text-on-surface opacity-80 cursor-not-allowed" 
-                            : "bg-surface-container-lowest border-surface-container-highest"
+                            ? "bg-background-secondary-default border-border-button-default opacity-80 cursor-not-allowed" 
+                            : "bg-background-primary-default border-border-button-default"
                          }`}
                        />
                        {initialData.is_verified && (
-                         <CheckCircle2 className="absolute right-4 top-[42px] text-primary h-4 w-4" />
+                         <CheckCircle2 className="absolute right-4 top-[42px] text-[#45BA50] h-4 w-4" />
                        )}
                     </div>
                     <div className="space-y-2">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">{t("settings.phoneNumber")}</label>
+                       <label className="text-[10px] font-black uppercase tracking-widest text-text-secondary ml-4">{t("settings.phoneNumber")}</label>
                        <input 
                          type="text" 
                          value={formData.phone}
                          onChange={e => setFormData({...formData, phone: e.target.value})}
-                         className="w-full h-14 bg-surface-container-lowest border border-surface-container-highest rounded-2xl px-6 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-bold text-sm"
+                         className="w-full h-14 bg-background-primary-default border border-border-button-default rounded-2xl px-6 focus:ring-2 focus:ring-[#45BA50]/20 focus:border-[#45BA50] outline-none transition-all font-bold text-sm text-text-primary"
                        />
                     </div>
                     <div className="space-y-2 md:col-span-2">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">{t("settings.faydaFin")}</label>
+                       <label className="text-[10px] font-black uppercase tracking-widest text-text-secondary ml-4">{t("settings.faydaFin")}</label>
                        <div className="relative">
                          <input
                            type={initialData.is_verified || showFin ? "text" : "password"}
@@ -579,10 +598,10 @@ export default function SettingsContent({ initialData, role }: Props) {
                            }}
                            disabled={initialData.is_verified || (role === "client" && !clientCanSubmitVerification)}
                            placeholder={initialData.is_verified ? initialData.masked_fin || t("settings.notRecorded") : t("verification.resubmit.fin_placeholder")}
-                           className={`w-full h-14 border rounded-2xl pl-6 pr-14 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-bold text-sm ${
+                           className={`w-full h-14 border rounded-2xl pl-6 pr-14 focus:ring-2 focus:ring-[#45BA50]/20 focus:border-[#45BA50] outline-none transition-all font-bold text-sm text-text-primary ${
                              initialData.is_verified
-                              ? "bg-surface-container-low border-primary/20 text-on-surface opacity-80 cursor-not-allowed"
-                              : "bg-surface-container-lowest border-surface-container-highest"
+                              ? "bg-background-secondary-default border-border-button-default opacity-80 cursor-not-allowed"
+                              : "bg-background-primary-default border-border-button-default"
                            }`}
                          />
                          {!initialData.is_verified && clientCanSubmitVerification && (
@@ -591,7 +610,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                              onClick={() => setShowFin((value) => !value)}
                              aria-label={showFin ? t("settings.hideFin") : t("settings.showFin")}
                              title={showFin ? t("settings.hideFin") : t("settings.showFin")}
-                             className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface"
+                             className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-text-secondary transition-colors hover:bg-background-secondary-default hover:text-text-primary cursor-pointer"
                            >
                              {showFin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                            </button>
@@ -599,31 +618,31 @@ export default function SettingsContent({ initialData, role }: Props) {
                        </div>
                     </div>
                     {role === "client" && (
-                      <div className="space-y-3 md:col-span-2 rounded-2xl border border-surface-container-highest bg-surface-container-low/60 p-4">
+                      <div className="space-y-3 md:col-span-2 rounded-2xl border border-border-button-default bg-background-secondary-default/50 p-4">
                         <div className="flex items-start justify-between gap-4">
                           <div>
-                            <p className="text-xs font-black uppercase tracking-widest text-on-surface">{t("settings.faydaVerification")}</p>
-                            <p className="mt-1 text-xs leading-5 text-on-surface-variant">
+                            <p className="text-xs font-black uppercase tracking-widest text-text-primary">{t("settings.faydaVerification")}</p>
+                            <p className="mt-1 text-xs leading-5 text-text-secondary">
                               {t("settings.faydaVerificationDesc")}
                             </p>
                             {verificationStatus === "pending" && (
                               <p className="mt-2 text-xs font-bold text-amber-500">{t("settings.pendingVerification")}</p>
                             )}
                             {verificationStatus === "rejected" && (
-                              <p className="mt-2 text-xs font-bold text-error">
+                              <p className="mt-2 text-xs font-bold text-rose-500">
                                 {t("settings.rejected")}{initialData.verification_reason ? `: ${initialData.verification_reason}` : ""}
                               </p>
                             )}
                             {verificationStatus === "revoked" && (
-                              <p className="mt-2 text-xs font-bold text-error">
+                              <p className="mt-2 text-xs font-bold text-rose-500">
                                 {t("settings.revoked")}{initialData.verification_reason ? `: ${initialData.verification_reason}` : ""}
                               </p>
                             )}
                             {verificationStatus === "approved" && (
-                              <p className="mt-2 text-xs font-bold text-primary">{t("settings.approvedMaskedFin")} {initialData.masked_fin || t("settings.recorded")}</p>
+                              <p className="mt-2 text-xs font-bold text-[#45BA50]">{t("settings.approvedMaskedFin")} {initialData.masked_fin || t("settings.recorded")}</p>
                             )}
                           </div>
-                          <span className="rounded-full border border-surface-container-highest px-3 py-1 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+                          <span className="rounded-full border border-border-button-default px-3 py-1 text-[10px] font-black uppercase tracking-widest text-text-secondary">
                             {verificationStatus === "incomplete" || verificationStatus === "not_started"
                               ? t("settings.notStarted")
                               : t(`verification.status.${verificationStatus}` as any)}
@@ -632,7 +651,7 @@ export default function SettingsContent({ initialData, role }: Props) {
 
                         {clientCanSubmitVerification && (
                           <div className="space-y-3">
-                            <label className="flex h-12 cursor-pointer items-center justify-center rounded-2xl border border-dashed border-surface-container-highest bg-surface-container-lowest px-4 text-xs font-bold text-on-surface-variant hover:border-primary/50">
+                            <label className="flex h-12 cursor-pointer items-center justify-center rounded-2xl border border-dashed border-border-button-default bg-background-primary-default px-4 text-xs font-bold text-text-secondary hover:border-[#45BA50]/50 transition-colors">
                               <input
                                 type="file"
                                 className="hidden"
@@ -646,12 +665,12 @@ export default function SettingsContent({ initialData, role }: Props) {
                               name="intent"
                               value="client-verification"
                               disabled={isPending}
-                              className="flex h-12 w-full items-center justify-center rounded-2xl bg-primary px-4 text-xs font-black uppercase tracking-widest text-on-primary transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+                              className="flex h-12 w-full items-center justify-center rounded-2xl bg-[#134e27] hover:bg-[#1a6834] px-4 text-xs font-black uppercase tracking-widest text-[#a4fe47] transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer shadow-md"
                             >
                               {isPending ? t("verification.resubmit.submitting") : t("settings.submitVerification")}
                             </button>
                             {verificationError && (
-                              <p className="rounded-2xl border border-error/20 bg-error-container px-4 py-3 text-xs font-bold text-on-error-container">
+                              <p className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-xs font-bold text-rose-500">
                                 {verificationError}
                               </p>
                             )}
@@ -660,20 +679,20 @@ export default function SettingsContent({ initialData, role }: Props) {
                       </div>
                     )}
                     <div className="space-y-2">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">{t("settings.emailAddress")}</label>
+                       <label className="text-[10px] font-black uppercase tracking-widest text-text-secondary ml-4">{t("settings.emailAddress")}</label>
                        <input 
                          type="email" 
                          value={formData.email}
                          onChange={e => setFormData({...formData, email: e.target.value})}
-                         className="w-full h-14 bg-surface-container-lowest border border-surface-container-highest rounded-2xl px-6 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-bold text-sm"
+                         className="w-full h-14 bg-background-primary-default border border-border-button-default rounded-2xl px-6 focus:ring-2 focus:ring-[#45BA50]/20 focus:border-[#45BA50] outline-none transition-all font-bold text-sm text-text-primary"
                        />
                     </div>
                     <div className="space-y-2">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">{t("settings.gender")}</label>
+                       <label className="text-[10px] font-black uppercase tracking-widest text-text-secondary ml-4">{t("settings.gender")}</label>
                        <select 
                          value={formData.gender}
                          onChange={e => setFormData({...formData, gender: e.target.value})}
-                         className="w-full h-14 bg-surface-container-lowest border border-surface-container-highest rounded-2xl px-6 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-bold text-sm appearance-none"
+                         className="w-full h-14 bg-background-primary-default border border-border-button-default rounded-2xl px-6 focus:ring-2 focus:ring-[#45BA50]/20 focus:border-[#45BA50] outline-none transition-all font-bold text-sm text-text-primary appearance-none cursor-pointer"
                        >
                           <option value="">{t("settings.selectGender")}</option>
                           <option value="male">{t("settings.genderMale")}</option>
@@ -694,28 +713,28 @@ export default function SettingsContent({ initialData, role }: Props) {
                   className="space-y-8"
                 >
                   <div className="space-y-2">
-                     <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">{t("settings.professionalBio")}</label>
+                     <label className="text-[10px] font-black uppercase tracking-widest text-text-secondary ml-4">{t("settings.professionalBio")}</label>
                      <textarea 
                        rows={4}
                        value={formData.bio}
                        onChange={e => setFormData({...formData, bio: e.target.value})}
-                       className="w-full bg-surface-container-lowest border border-surface-container-highest rounded-[2rem] p-6 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-medium text-sm leading-relaxed"
+                       className="w-full bg-background-primary-default border border-border-button-default rounded-[2rem] p-6 focus:ring-2 focus:ring-[#45BA50]/20 focus:border-[#45BA50] outline-none transition-all font-medium text-sm leading-relaxed"
                        placeholder={t("settings.professionalBioPlaceholder")}
                      />
                   </div>
 
                   <div className="space-y-4">
-                     <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">{t("settings.serviceSkills")}</label>
+                     <label className="text-[10px] font-black uppercase tracking-widest text-text-secondary ml-4">{t("settings.serviceSkills")}</label>
                      <div className="flex flex-wrap gap-2">
                         {formData.skills.map((s: string, i: number) => (
-                          <span key={i} className="px-5 py-2.5 bg-primary/10 text-primary border border-primary/20 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                          <span key={i} className="px-5 py-2.5 bg-[#134e27]/20 text-[#45BA50] border border-[#45BA50]/30 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
                              {s}
                              <button type="button" onClick={() => setFormData({...formData, skills: formData.skills.filter((_: string, idx: number) => idx !== i)})}>
                                 <X className="h-3.5 w-3.5" />
                              </button>
                           </span>
                         ))}
-                        <button type="button" className="px-5 py-2.5 bg-surface-container-high border border-surface-container-highest rounded-2xl text-[10px] font-black uppercase tracking-widest text-on-surface-variant flex items-center gap-2 hover:bg-primary/5 hover:text-primary transition-all">
+                        <button type="button" className="px-5 py-2.5 bg-background-tertiary-default border border-border-button-default rounded-2xl text-[10px] font-black uppercase tracking-widest text-text-secondary flex items-center gap-2 hover:bg-[#134e27]/15 hover:text-[#45BA50] transition-all cursor-pointer">
                            <Plus className="h-3.5 w-3.5" />
                            {t("settings.addSkill")}
                         </button>
@@ -724,21 +743,21 @@ export default function SettingsContent({ initialData, role }: Props) {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">{t("settings.hourlyRate")}</label>
+                       <label className="text-[10px] font-black uppercase tracking-widest text-text-secondary ml-4">{t("settings.hourlyRate")}</label>
                        <input 
                          type="number" 
                          value={formData.hourlyRate}
                          onChange={e => setFormData({...formData, hourlyRate: parseInt(e.target.value) || 0})}
-                         className="w-full h-14 bg-surface-container-lowest border border-surface-container-highest rounded-2xl px-6 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-bold text-sm"
+                         className="w-full h-14 bg-background-primary-default border border-border-button-default rounded-2xl px-6 focus:ring-2 focus:ring-[#45BA50]/20 focus:border-[#45BA50] outline-none transition-all font-bold text-sm"
                        />
                     </div>
                     <div className="space-y-2">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant ml-4">{t("settings.districtArea")}</label>
+                       <label className="text-[10px] font-black uppercase tracking-widest text-text-secondary ml-4">{t("settings.districtArea")}</label>
                        <input 
                          type="text" 
                          value={formData.district}
                          onChange={e => setFormData({...formData, district: e.target.value})}
-                         className="w-full h-14 bg-surface-container-lowest border border-surface-container-highest rounded-2xl px-6 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-bold text-sm"
+                         className="w-full h-14 bg-background-primary-default border border-border-button-default rounded-2xl px-6 focus:ring-2 focus:ring-[#45BA50]/20 focus:border-[#45BA50] outline-none transition-all font-bold text-sm"
                        />
                     </div>
                   </div>
@@ -753,10 +772,10 @@ export default function SettingsContent({ initialData, role }: Props) {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-8"
                 >
-                  <div className="rounded-[2rem] border border-surface-container-highest bg-surface-container-low/50 p-6">
+                  <div className="rounded-[2rem] border border-border-button-default bg-background-secondary-default/50 p-6">
                     <div className="flex items-start gap-4">
                       <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
-                        hasChapaSubaccount ? "bg-primary/10 text-primary" : "bg-surface-container-high text-on-surface-variant"
+                        hasChapaSubaccount ? "bg-[#134e27]/20 text-[#45BA50]" : "bg-background-tertiary-default text-text-secondary"
                       }`}>
                         {hasChapaSubaccount ? (
                           <CheckCircle2 className="h-6 w-6" />
@@ -765,16 +784,16 @@ export default function SettingsContent({ initialData, role }: Props) {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <h3 className="text-sm font-black uppercase tracking-widest text-on-surface">
+                        <h3 className="text-sm font-black uppercase tracking-widest text-text-primary">
                           {t("settings.chapaPayoutAccount")}
                         </h3>
-                        <p className="mt-1 text-xs leading-5 text-on-surface-variant">
+                        <p className="mt-1 text-xs leading-5 text-text-secondary">
                           {hasChapaSubaccount
                             ? t("settings.chapaConnectedDesc")
                             : t("settings.chapaConnectDesc")}
                         </p>
                         {hasChapaSubaccount && (
-                          <p className="mt-3 truncate font-mono text-[11px] text-primary">
+                          <p className="mt-3 truncate font-mono text-[11px] text-[#45BA50]">
                             {initialData.chapa_subaccount_id}
                           </p>
                         )}
@@ -786,31 +805,31 @@ export default function SettingsContent({ initialData, role }: Props) {
                     <div className="space-y-6">
                       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <div className="space-y-2">
-                          <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+                          <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-text-secondary">
                             {t("settings.accountName")}
                           </label>
                           <input
                             type="text"
                             value={payoutForm.accountName}
                             onChange={(e) => setPayoutForm({ ...payoutForm, accountName: e.target.value })}
-                            className="h-14 w-full rounded-2xl border border-surface-container-highest bg-surface-container-lowest px-6 text-sm font-bold outline-none transition-all focus:ring-2 focus:ring-primary/20"
+                            className="h-14 w-full rounded-2xl border border-border-button-default bg-background-primary-default px-6 text-sm font-bold outline-none transition-all focus:ring-2 focus:ring-[#45BA50]/20 focus:border-[#45BA50]"
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+                          <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-text-secondary">
                             {t("settings.accountNumber")}
                           </label>
                           <input
                             type="text"
                             value={payoutForm.accountNumber}
                             onChange={(e) => setPayoutForm({ ...payoutForm, accountNumber: e.target.value })}
-                            className="h-14 w-full rounded-2xl border border-surface-container-highest bg-surface-container-lowest px-6 text-sm font-bold outline-none transition-all focus:ring-2 focus:ring-primary/20"
+                            className="h-14 w-full rounded-2xl border border-border-button-default bg-background-primary-default px-6 text-sm font-bold outline-none transition-all focus:ring-2 focus:ring-[#45BA50]/20 focus:border-[#45BA50]"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+                        <label className="ml-4 text-[10px] font-black uppercase tracking-widest text-text-secondary">
                           {t("settings.bank")}
                         </label>
                         <select
@@ -824,7 +843,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                             });
                           }}
                           disabled={banksLoading}
-                          className="h-14 w-full appearance-none rounded-2xl border border-surface-container-highest bg-surface-container-lowest px-6 text-sm font-bold outline-none transition-all focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
+                          className="h-14 w-full appearance-none rounded-2xl border border-border-button-default bg-background-primary-default px-6 text-sm font-bold outline-none transition-all focus:ring-2 focus:ring-[#45BA50]/20 focus:border-[#45BA50] disabled:opacity-60"
                         >
                           <option value="">{banksLoading ? t("settings.loadingBanks") : t("settings.selectBank")}</option>
                           {banks.map((bank) => {
@@ -844,7 +863,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                         type="button"
                         onClick={handleCreateSubaccount}
                         disabled={payoutStatus === "loading" || !payoutForm.accountName || !payoutForm.accountNumber || !payoutForm.bankCode}
-                        className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 text-xs font-black uppercase tracking-widest text-on-primary transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[#134e27] hover:bg-[#1a6834] px-6 text-xs font-black uppercase tracking-widest text-[#a4fe47] transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer shadow-md"
                       >
                         {payoutStatus === "loading" ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -859,8 +878,8 @@ export default function SettingsContent({ initialData, role }: Props) {
                   {payoutMessage && (
                     <div className={`rounded-2xl border p-4 text-center text-xs font-bold ${
                       payoutStatus === "error"
-                        ? "border-error/20 bg-error-container text-on-error-container"
-                        : "border-primary/20 bg-primary/10 text-primary"
+                        ? "border-rose-500/30 bg-rose-500/10 text-rose-500"
+                        : "border-[#45BA50]/30 bg-[#134e27]/20 text-[#45BA50]"
                     }`}>
                       {payoutMessage}
                     </div>
@@ -876,20 +895,20 @@ export default function SettingsContent({ initialData, role }: Props) {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-8"
                 >
-                  <div className="p-8 bg-surface-container-low/50 border border-surface-container-highest rounded-[3rem] space-y-6">
+                  <div className="p-8 bg-background-secondary-default/50 border border-border-button-default rounded-[3rem] space-y-6">
                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center">
+                        <div className="w-12 h-12 bg-[#134e27]/20 text-[#45BA50] rounded-2xl flex items-center justify-center">
                            <Lock className="h-5 w-5" />
                         </div>
                         <div>
-                           <h3 className="text-sm font-black text-on-surface uppercase tracking-widest">{t("settings.accountSecurity")}</h3>
-                           <p className="text-xs text-on-surface-variant opacity-60">{t("settings.manageCredentials")}</p>
+                           <h3 className="text-sm font-black text-text-primary uppercase tracking-widest">{t("settings.accountSecurity")}</h3>
+                           <p className="text-xs text-text-secondary opacity-60">{t("settings.manageCredentials")}</p>
                         </div>
                      </div>
                      
                      <div className="flex flex-col gap-4">
                         {/* Change Contract PIN */}
-                        <div className="rounded-2xl border border-surface-container-highest bg-surface-container-lowest overflow-hidden transition-all">
+                        <div className="rounded-2xl border border-border-button-default bg-background-primary-default overflow-hidden transition-all">
                           <button
                             type="button"
                             onClick={() => {
@@ -897,28 +916,28 @@ export default function SettingsContent({ initialData, role }: Props) {
                               setPinError(null);
                               setPinSuccess(null);
                             }}
-                            className="w-full h-16 flex items-center justify-between px-6 hover:bg-surface-container/30 transition-all group"
+                            className="w-full h-16 flex items-center justify-between px-6 hover:bg-background-secondary-default/40 transition-all group"
                           >
                             <div className="flex items-center gap-3">
                               <KeyRound className="h-4 w-4 text-amber-500" />
                               <div className="text-left">
-                                <span className="text-xs font-bold text-on-surface uppercase tracking-widest block">{t("settings.changePin")}</span>
-                                <span className="text-[10px] text-on-surface-variant opacity-60">Digital contract signing PIN</span>
+                                <span className="text-xs font-bold text-text-primary uppercase tracking-widest block">{t("settings.changePin")}</span>
+                                <span className="text-[10px] text-text-secondary opacity-60">Digital contract signing PIN</span>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] font-bold text-amber-500/80 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">4 digits</span>
                               {activeSecurityPanel === "pin" ? (
-                                <ChevronDown className="h-4 w-4 text-primary transition-transform" />
+                                <ChevronDown className="h-4 w-4 text-[#45BA50] transition-transform" />
                               ) : (
-                                <ChevronRight className="h-4 w-4 text-on-surface-variant group-hover:text-primary transition-transform" />
+                                <ChevronRight className="h-4 w-4 text-text-secondary group-hover:text-[#45BA50] transition-transform" />
                               )}
                             </div>
                           </button>
 
                           {activeSecurityPanel === "pin" && (
-                            <form onSubmit={handlePinSubmit} className="p-6 border-t border-surface-container-highest/60 bg-surface-container-low/20 space-y-4 animate-in fade-in duration-200">
-                              <p className="text-xs text-on-surface-variant leading-relaxed">
+                            <form onSubmit={handlePinSubmit} className="p-6 border-t border-border-button-default bg-background-secondary-default/50 space-y-4 animate-in fade-in duration-200">
+                              <p className="text-xs text-text-secondary leading-relaxed">
                                 Your 4-digit PIN secures your electronic contract signatures and agreements.
                               </p>
 
@@ -938,18 +957,18 @@ export default function SettingsContent({ initialData, role }: Props) {
 
                               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <div>
-                                  <label className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant block mb-1.5 opacity-70">Current PIN (if set)</label>
+                                  <label className="text-[10px] font-black uppercase tracking-wider text-text-secondary block mb-1.5 opacity-70">Current PIN (if set)</label>
                                   <input
                                     type="password"
                                     maxLength={4}
                                     placeholder="••••"
                                     value={currentPin}
                                     onChange={(e) => setCurrentPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                                    className="w-full h-11 px-4 text-center font-mono text-base tracking-widest rounded-xl border border-surface-container-highest bg-surface-container-lowest text-on-surface outline-none focus:border-primary transition"
+                                    className="w-full h-11 px-4 text-center font-mono text-base tracking-widest rounded-xl border border-border-button-default bg-background-primary-default text-text-primary outline-none focus:border-[#45BA50] transition"
                                   />
                                 </div>
                                 <div>
-                                  <label className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant block mb-1.5 opacity-70">New PIN (4 digits)</label>
+                                  <label className="text-[10px] font-black uppercase tracking-wider text-text-secondary block mb-1.5 opacity-70">New PIN (4 digits)</label>
                                   <input
                                     type="password"
                                     required
@@ -957,11 +976,11 @@ export default function SettingsContent({ initialData, role }: Props) {
                                     placeholder="••••"
                                     value={newPin}
                                     onChange={(e) => setNewPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                                    className="w-full h-11 px-4 text-center font-mono text-base tracking-widest rounded-xl border border-surface-container-highest bg-surface-container-lowest text-on-surface outline-none focus:border-primary transition"
+                                    className="w-full h-11 px-4 text-center font-mono text-base tracking-widest rounded-xl border border-border-button-default bg-background-primary-default text-text-primary outline-none focus:border-[#45BA50] transition"
                                   />
                                 </div>
                                 <div>
-                                  <label className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant block mb-1.5 opacity-70">Confirm New PIN</label>
+                                  <label className="text-[10px] font-black uppercase tracking-wider text-text-secondary block mb-1.5 opacity-70">Confirm New PIN</label>
                                   <input
                                     type="password"
                                     required
@@ -969,7 +988,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                                     placeholder="••••"
                                     value={confirmPin}
                                     onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                                    className="w-full h-11 px-4 text-center font-mono text-base tracking-widest rounded-xl border border-surface-container-highest bg-surface-container-lowest text-on-surface outline-none focus:border-primary transition"
+                                    className="w-full h-11 px-4 text-center font-mono text-base tracking-widest rounded-xl border border-border-button-default bg-background-primary-default text-text-primary outline-none focus:border-[#45BA50] transition"
                                   />
                                 </div>
                               </div>
@@ -978,14 +997,14 @@ export default function SettingsContent({ initialData, role }: Props) {
                                 <button
                                   type="button"
                                   onClick={() => setActiveSecurityPanel("none")}
-                                  className="h-10 px-4 rounded-xl border border-surface-container-highest text-xs font-bold text-on-surface hover:bg-surface-container transition"
+                                  className="h-10 px-4 rounded-xl border border-border-button-default text-xs font-bold text-text-primary hover:bg-background-secondary-default transition"
                                 >
                                   Cancel
                                 </button>
                                 <button
                                   type="submit"
                                   disabled={pinLoading || newPin.length !== 4 || confirmPin.length !== 4}
-                                  className="h-10 px-5 rounded-xl bg-primary text-on-primary text-xs font-black uppercase tracking-wider hover:opacity-90 active:scale-95 transition disabled:opacity-50 flex items-center gap-2"
+                                  className="h-10 px-5 rounded-xl bg-[#134e27] text-[#a4fe47] text-xs font-black uppercase tracking-wider hover:opacity-90 active:scale-95 transition disabled:opacity-50 flex items-center gap-2"
                                 >
                                   {pinLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                                   <span>Update Contract PIN</span>
@@ -996,7 +1015,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                         </div>
 
                         {/* Update Account Password */}
-                        <div className="rounded-2xl border border-surface-container-highest bg-surface-container-lowest overflow-hidden transition-all">
+                        <div className="rounded-2xl border border-border-button-default bg-background-primary-default overflow-hidden transition-all">
                           <button
                             type="button"
                             onClick={() => {
@@ -1004,28 +1023,28 @@ export default function SettingsContent({ initialData, role }: Props) {
                               setPasswordError(null);
                               setPasswordSuccess(null);
                             }}
-                            className="w-full h-16 flex items-center justify-between px-6 hover:bg-surface-container/30 transition-all group"
+                            className="w-full h-16 flex items-center justify-between px-6 hover:bg-background-secondary-default/40 transition-all group"
                           >
                             <div className="flex items-center gap-3">
-                              <Lock className="h-4 w-4 text-primary" />
+                              <Lock className="h-4 w-4 text-[#45BA50]" />
                               <div className="text-left">
-                                <span className="text-xs font-bold text-on-surface uppercase tracking-widest block">{t("settings.updatePassword")}</span>
-                                <span className="text-[10px] text-on-surface-variant opacity-60">Account login credentials</span>
+                                <span className="text-xs font-bold text-text-primary uppercase tracking-widest block">{t("settings.updatePassword")}</span>
+                                <span className="text-[10px] text-text-secondary opacity-60">Account login credentials</span>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-bold text-primary/80 bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20">Better Auth</span>
+                              <span className="text-[10px] font-bold text-[#45BA50] bg-[#134e27]/20 px-2.5 py-0.5 rounded-full border border-[#45BA50]/30">Better Auth</span>
                               {activeSecurityPanel === "password" ? (
-                                <ChevronDown className="h-4 w-4 text-primary transition-transform" />
+                                <ChevronDown className="h-4 w-4 text-[#45BA50] transition-transform" />
                               ) : (
-                                <ChevronRight className="h-4 w-4 text-on-surface-variant group-hover:text-primary transition-transform" />
+                                <ChevronRight className="h-4 w-4 text-text-secondary group-hover:text-[#45BA50] transition-transform" />
                               )}
                             </div>
                           </button>
 
                           {activeSecurityPanel === "password" && (
-                            <form onSubmit={handlePasswordSubmit} className="p-6 border-t border-surface-container-highest/60 bg-surface-container-low/20 space-y-4 animate-in fade-in duration-200">
-                              <p className="text-xs text-on-surface-variant leading-relaxed">
+                            <form onSubmit={handlePasswordSubmit} className="p-6 border-t border-border-button-default bg-background-secondary-default/50 space-y-4 animate-in fade-in duration-200">
+                              <p className="text-xs text-text-secondary leading-relaxed">
                                 Enter your current password and choose a secure new password (minimum 8 characters).
                               </p>
 
@@ -1045,19 +1064,19 @@ export default function SettingsContent({ initialData, role }: Props) {
 
                               <div className="space-y-3">
                                 <div>
-                                  <label className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant block mb-1.5 opacity-70">Current Password</label>
+                                  <label className="text-[10px] font-black uppercase tracking-wider text-text-secondary block mb-1.5 opacity-70">Current Password</label>
                                   <input
                                     type="password"
                                     required
                                     placeholder="Enter current password"
                                     value={currentPassword}
                                     onChange={(e) => setCurrentPassword(e.target.value)}
-                                    className="w-full h-11 px-4 text-xs font-medium rounded-xl border border-surface-container-highest bg-surface-container-lowest text-on-surface outline-none focus:border-primary transition"
+                                    className="w-full h-11 px-4 text-xs font-medium rounded-xl border border-border-button-default bg-background-primary-default text-text-primary outline-none focus:border-[#45BA50] transition"
                                   />
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                   <div>
-                                    <label className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant block mb-1.5 opacity-70">New Password (min 8)</label>
+                                    <label className="text-[10px] font-black uppercase tracking-wider text-text-secondary block mb-1.5 opacity-70">New Password (min 8)</label>
                                     <input
                                       type="password"
                                       required
@@ -1065,11 +1084,11 @@ export default function SettingsContent({ initialData, role }: Props) {
                                       placeholder="••••••••"
                                       value={newPassword}
                                       onChange={(e) => setNewPassword(e.target.value)}
-                                      className="w-full h-11 px-4 text-xs font-medium rounded-xl border border-surface-container-highest bg-surface-container-lowest text-on-surface outline-none focus:border-primary transition"
+                                      className="w-full h-11 px-4 text-xs font-medium rounded-xl border border-border-button-default bg-background-primary-default text-text-primary outline-none focus:border-[#45BA50] transition"
                                     />
                                   </div>
                                   <div>
-                                    <label className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant block mb-1.5 opacity-70">Confirm New Password</label>
+                                    <label className="text-[10px] font-black uppercase tracking-wider text-text-secondary block mb-1.5 opacity-70">Confirm New Password</label>
                                     <input
                                       type="password"
                                       required
@@ -1077,7 +1096,7 @@ export default function SettingsContent({ initialData, role }: Props) {
                                       placeholder="••••••••"
                                       value={confirmPassword}
                                       onChange={(e) => setConfirmPassword(e.target.value)}
-                                      className="w-full h-11 px-4 text-xs font-medium rounded-xl border border-surface-container-highest bg-surface-container-lowest text-on-surface outline-none focus:border-primary transition"
+                                      className="w-full h-11 px-4 text-xs font-medium rounded-xl border border-border-button-default bg-background-primary-default text-text-primary outline-none focus:border-[#45BA50] transition"
                                     />
                                   </div>
                                 </div>
@@ -1087,14 +1106,14 @@ export default function SettingsContent({ initialData, role }: Props) {
                                 <button
                                   type="button"
                                   onClick={() => setActiveSecurityPanel("none")}
-                                  className="h-10 px-4 rounded-xl border border-surface-container-highest text-xs font-bold text-on-surface hover:bg-surface-container transition"
+                                  className="h-10 px-4 rounded-xl border border-border-button-default text-xs font-bold text-text-primary hover:bg-background-secondary-default transition"
                                 >
                                   Cancel
                                 </button>
                                 <button
                                   type="submit"
                                   disabled={passwordLoading || newPassword.length < 8 || confirmPassword.length < 8}
-                                  className="h-10 px-5 rounded-xl bg-primary text-on-primary text-xs font-black uppercase tracking-wider hover:opacity-90 active:scale-95 transition disabled:opacity-50 flex items-center gap-2"
+                                  className="h-10 px-5 rounded-xl bg-[#134e27] text-[#a4fe47] text-xs font-black uppercase tracking-wider hover:opacity-90 active:scale-95 transition disabled:opacity-50 flex items-center gap-2"
                                 >
                                   {passwordLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                                   <span>Update Password</span>
@@ -1106,12 +1125,12 @@ export default function SettingsContent({ initialData, role }: Props) {
                      </div>
                   </div>
 
-                  <div className="p-8 bg-error-container/10 border border-error/20 rounded-[3rem] flex items-center justify-between">
+                  <div className="p-8 bg-rose-500/10 border border-rose-500/30 rounded-[3rem] flex items-center justify-between">
                      <div className="space-y-1">
-                        <h3 className="text-sm font-black text-error uppercase tracking-widest">{t("settings.dangerZone")}</h3>
-                        <p className="text-xs text-error opacity-60">{t("settings.deleteAccountDesc")}</p>
+                        <h3 className="text-sm font-black text-rose-500 uppercase tracking-widest">{t("settings.dangerZone")}</h3>
+                        <p className="text-xs text-rose-500 opacity-60">{t("settings.deleteAccountDesc")}</p>
                      </div>
-                     <button type="button" className="px-6 py-3 bg-error text-on-error rounded-xl text-[10px] font-black uppercase tracking-widest hover:shadow-lg hover:shadow-error/20 active:scale-95 transition-all">
+                     <button type="button" className="px-6 py-3 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:shadow-lg hover:shadow-error/20 active:scale-95 transition-all">
                         {t("settings.deleteAccount")}
                      </button>
                   </div>
@@ -1124,56 +1143,96 @@ export default function SettingsContent({ initialData, role }: Props) {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="space-y-10"
+                  className="space-y-8"
                 >
-                  <div className="space-y-6">
-                     <h3 className="text-label-sm uppercase tracking-[0.2em] text-on-surface-variant ml-4 opacity-60">{t("footer.language")}</h3>
-                     <div className="grid grid-cols-3 gap-4">
-                        <button 
-                          type="button"
-                          onClick={() => setLanguage('en')}
-                          className={`h-20 rounded-[2rem] border transition-all flex flex-col items-center justify-center gap-1 ${
-                            language === 'en' ? "bg-primary text-on-primary border-primary shadow-xl" : "bg-surface-container-low border-surface-container-highest text-on-surface-variant"
-                          }`}
-                        >
-                           <span className="text-xl font-black">EN</span>
-                           <span className="text-[9px] uppercase tracking-widest font-bold opacity-60">English</span>
-                        </button>
-                        <button 
-                          type="button"
-                          onClick={() => setLanguage('am')}
-                          className={`h-20 rounded-[2rem] border transition-all flex flex-col items-center justify-center gap-1 ${
-                            language === 'am' ? "bg-primary text-on-primary border-primary shadow-xl" : "bg-surface-container-low border-surface-container-highest text-on-surface-variant"
-                          }`}
-                        >
-                           <span className="text-xl font-black">አማ</span>
-                           <span className="text-[9px] uppercase tracking-widest font-bold opacity-60">Amharic</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setLanguage('om')}
-                          className={`h-20 rounded-[2rem] border transition-all flex flex-col items-center justify-center gap-1 ${
-                            language === 'om' ? "bg-primary text-on-primary border-primary shadow-xl" : "bg-surface-container-low border-surface-container-highest text-on-surface-variant"
-                          }`}
-                        >
-                           <span className="text-xl font-black">OM</span>
-                           <span className="text-[9px] uppercase tracking-widest font-bold opacity-60">Afaan Oromo</span>
-                        </button>
+                  {/* 1. Language Selection Cards */}
+                  <div className="p-5 sm:p-7 rounded-3xl border border-border-button-default bg-background-primary-default shadow-sm space-y-4">
+                     <div className="flex items-center gap-2">
+                       <Globe className="w-5 h-5 text-[#45BA50]" />
+                       <h3 className="text-sm font-black text-text-primary tracking-tight">{t("footer.language") || "Language Preference"}</h3>
+                     </div>
+                     <p className="text-xs text-text-secondary">
+                       Choose your preferred interface language. The marketplace instantly updates and saves your preference across devices.
+                     </p>
+
+                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                        {[
+                          { code: "en", script: "English", sub: "Platform Default", label: "EN" },
+                          { code: "am", script: "አማርኛ", sub: "የኢትዮጵያ ፌዴራል ቋንቋ", label: "አማ" },
+                          { code: "om", script: "Afaan Oromoo", sub: "Afaan Hawaasaa", label: "OM" },
+                        ].map((item) => {
+                          const isSelected = language === item.code;
+                          return (
+                            <button 
+                              key={item.code}
+                              type="button"
+                              onClick={() => setLanguage(item.code as any)}
+                              className={`p-4 rounded-2xl border text-start transition-all relative cursor-pointer active:scale-[0.98] ${
+                                isSelected 
+                                  ? "bg-[#134e27]/20 border-[#45BA50] shadow-md ring-2 ring-[#45BA50]/30 text-text-primary" 
+                                  : "bg-background-secondary-default hover:bg-background-tertiary-default border-border-button-default text-text-secondary"
+                              }`}
+                            >
+                               <div className="flex items-center justify-between mb-1.5">
+                                 <span className={`text-base font-black ${isSelected ? "text-[#45BA50]" : "text-text-primary"}`}>
+                                   {item.label}
+                                 </span>
+                                 {isSelected && (
+                                   <div className="w-5 h-5 rounded-full bg-[#134e27] text-[#a4fe47] flex items-center justify-center">
+                                     <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                   </div>
+                                 )}
+                               </div>
+                               <p className="text-xs font-bold text-text-primary">{item.script}</p>
+                               <p className="text-[10px] text-text-tertiary truncate mt-0.5">{item.sub}</p>
+                            </button>
+                          );
+                        })}
                      </div>
                   </div>
 
-                  <div className="space-y-6">
-                     <h3 className="text-label-sm uppercase tracking-[0.2em] text-on-surface-variant ml-4 opacity-60">{t("settings.pushNotifications")}</h3>
-                     <div className="space-y-3">
+                  {/* 2. First-Time Guided Walkthrough Replay Card */}
+                  <div className="p-5 sm:p-7 rounded-3xl border border-border-button-default bg-background-primary-default shadow-sm space-y-4">
+                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                       <div className="space-y-1">
+                         <div className="flex items-center gap-2">
+                           <Compass className="w-5 h-5 text-[#45BA50]" />
+                           <h4 className="text-sm font-black text-text-primary">First-Time Guided Tour</h4>
+                         </div>
+                         <p className="text-xs text-text-secondary leading-relaxed max-w-md">
+                           Revisit the step-by-step interactive onboarding walkthrough to learn about DireSkill Milestone Protection, signed contracts, and verified trade features.
+                         </p>
+                       </div>
+                       <button
+                         type="button"
+                         onClick={() => window.dispatchEvent(new CustomEvent("onboarding:start"))}
+                         className="px-5 py-2.5 rounded-2xl bg-[#134e27] hover:bg-[#1a6834] text-[#a4fe47] font-bold text-xs shrink-0 active:scale-95 transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
+                       >
+                         <Compass className="w-4 h-4" />
+                         <span>Replay Tour</span>
+                       </button>
+                     </div>
+                  </div>
+
+                  {/* 3. Push Notifications */}
+                  <div className="p-5 sm:p-7 rounded-3xl border border-border-button-default bg-background-primary-default shadow-sm space-y-4">
+                     <div className="flex items-center gap-2">
+                       <Bell className="w-5 h-5 text-[#45BA50]" />
+                       <h3 className="text-sm font-black text-text-primary tracking-tight">{t("settings.pushNotifications")}</h3>
+                     </div>
+                     <div className="space-y-2.5">
                         {[
-                          { label: t("settings.notifyJobRequests"), id: "notify_requests" },
-                          { label: t("settings.notifyContractUpdates"), id: "notify_contracts" },
-                          { label: t("settings.notifyMessages"), id: "notify_messages" },
+                          { label: t("settings.notifyJobRequests"), id: "notify_requests", desc: "Alerts when clients send direct work or gig requests" },
+                          { label: t("settings.notifyContractUpdates"), id: "notify_contracts", desc: "Status changes on milestone funding and signature approvals" },
+                          { label: t("settings.notifyMessages"), id: "notify_messages", desc: "Real-time client-artisan direct chat messages" },
                         ].map(n => (
-                          <div key={n.id} className="flex items-center justify-between p-6 bg-surface-container-lowest border border-surface-container-highest rounded-[2rem]">
-                             <span className="text-xs font-bold text-on-surface uppercase tracking-widest">{n.label}</span>
-                             <div className="w-12 h-6 bg-primary/20 rounded-full relative p-1 cursor-pointer">
-                                <div className="w-4 h-4 bg-primary rounded-full translate-x-6" />
+                          <div key={n.id} className="flex items-center justify-between p-4 bg-background-secondary-default border border-border-button-default rounded-2xl">
+                             <div className="min-w-0 pr-4">
+                               <span className="text-xs font-bold text-text-primary block">{n.label}</span>
+                               <span className="text-[10px] text-text-tertiary block mt-0.5">{n.desc}</span>
+                             </div>
+                             <div className="w-11 h-6 bg-[#134e27]/40 rounded-full relative p-0.5 cursor-pointer shrink-0">
+                                <div className="w-5 h-5 bg-[#45BA50] rounded-full translate-x-5 shadow-xs transition-transform" />
                              </div>
                           </div>
                         ))}
@@ -1184,7 +1243,7 @@ export default function SettingsContent({ initialData, role }: Props) {
             </AnimatePresence>
 
             {error && (
-              <div className="p-4 bg-error-container text-on-error-container rounded-2xl text-xs font-bold text-center border border-error/20">
+              <div className="p-4 bg-rose-500/10 text-rose-500 rounded-2xl text-xs font-bold text-center border border-rose-500/30">
                 {error}
               </div>
             )}

@@ -85,9 +85,9 @@ export default function NotificationBell({ role }: { role: "client" | "worker" }
       )}
     >
       {count > 0 ? (
-        <BellDot size={18} className="text-primary animate-pulse" />
+        <BellDot size={20} className="text-primary animate-pulse" />
       ) : (
-        <Bell size={18} />
+        <Bell size={20} />
       )}
       {count > 0 && (
         <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-black text-on-primary ring-2 ring-background shadow-sm">

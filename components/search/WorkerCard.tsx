@@ -87,15 +87,18 @@ export default function WorkerCard({
   };
 
   /* ═════════════════════════════════════════════════════════════════════
-     1. MINIMALIST EDITORIAL PROFILE CARD (Alex Clinton Reference Style)
-     - Matches login/register dark mode: bg-[#09090b] ground, bg-zinc-900 card
-     - Increased height on mobile for breathing space
-     - Prominent rounded portrait on top
-     - Clean Name + Green Verified Checkmark
-     - 1-line clean subtitle
-     - Bottom row: Stats (Rating, Jobs) + Pill Button [Preview +]
+     1. TALL EDITORIAL PROFILE CARD (Search Results Grid View)
+     - Increased height with generous vertical breathing room
+     - Taller prominent portrait on top
+     - Name + Kebele/Fayda Verified Checkmark
+     - Multi-trade specialty skill pills
+     - 2-line bio preview for artisan context
+     - Location & hourly rate info row
+     - Dual actions: Preview Profile + Book / Message
      ═════════════════════════════════════════════════════════════════════ */
   if (variant === "grid") {
+    const skillsList = worker.skills && worker.skills.length > 0 ? worker.skills : [tradeMeta.label];
+
     return (
       <motion.div
         layout
@@ -109,15 +112,15 @@ export default function WorkerCard({
         onMouseEnter={primeCache}
         onTouchStart={primeCache}
         className={cx(
-          "group relative flex flex-col justify-between p-3 sm:p-3.5 rounded-2xl sm:rounded-3xl select-none transition-all duration-300 border cursor-pointer min-h-[295px] sm:min-h-[305px]",
+          "group relative flex flex-col justify-between p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl select-none transition-all duration-300 border cursor-pointer min-h-[385px] sm:min-h-[415px]",
           "bg-white dark:bg-zinc-900/90 hover:bg-slate-50 dark:hover:bg-zinc-900 border-slate-200/80 dark:border-zinc-800 hover:border-[#45BA50]/50 shadow-xs hover:shadow-md",
           isSelected && "ring-2 ring-[#45BA50] border-[#45BA50]",
           className
         )}
       >
-        <div>
-          {/* Top: Large Rounded Portrait Image (Taller on mobile for better breathing space) */}
-          <div className="relative w-full aspect-square sm:aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden bg-slate-100 dark:bg-zinc-800 shrink-0 border border-slate-200/60 dark:border-zinc-800/80">
+        <div className="space-y-3">
+          {/* Top: Large Rounded Portrait Image (Taller for editorial breathing space) */}
+          <div className="relative w-full aspect-[4/3.5] sm:aspect-[4/3.3] rounded-xl sm:rounded-2xl overflow-hidden bg-slate-100 dark:bg-zinc-800 shrink-0 border border-slate-200/60 dark:border-zinc-800/80">
             <img
               src={displayPhoto}
               alt={worker.name}
@@ -125,47 +128,72 @@ export default function WorkerCard({
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"
             />
-            {/* Subtle Trade Badge Overlay */}
-            <div className="absolute top-2 end-2 px-2 py-0.5 rounded-full bg-[#09090b]/75 backdrop-blur-md border border-white/20 text-white text-[9px] sm:text-[10px] font-bold flex items-center gap-1 shadow-xs">
-              <TradeIcon className={cx("w-2.5 h-2.5 sm:w-3 sm:h-3", tradeMeta.color)} />
+            {/* Trade Badge Overlay */}
+            <div className="absolute top-2.5 end-2.5 px-2.5 py-1 rounded-full bg-[#09090b]/80 backdrop-blur-md border border-white/20 text-white text-[10px] sm:text-xs font-bold flex items-center gap-1.5 shadow-xs">
+              <TradeIcon className={cx("w-3 h-3", tradeMeta.color)} />
               <span>{tradeMeta.label}</span>
+            </div>
+
+            {/* Price Badge Overlay (Bottom Left) */}
+            <div className="absolute bottom-2.5 start-2.5 px-2.5 py-0.5 rounded-full bg-[#09090b]/80 backdrop-blur-md border border-white/20 text-white text-[10px] sm:text-[11px] font-black shadow-xs">
+              <span>ETB {worker.hourlyRate || "450"}</span>
+              <span className="text-zinc-400 font-normal text-[9px] ms-0.5">/hr</span>
             </div>
           </div>
 
-          {/* Middle: Name + Green Verified Badge & Clean 1-Line Subtitle */}
-          <div className="mt-2.5 sm:mt-3 space-y-0.5">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-[#45BA50] transition-colors">
-                {worker.name}
-              </h3>
-              {worker.isVerified && (
-                <span className="shrink-0 text-[#45BA50]" title="Kebele & Fayda Verified Artisan">
-                  <RiCheckboxCircleFill className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-[#45BA50]" />
-                </span>
-              )}
+          {/* Identity & Rating Row */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-1.5 min-w-0">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate group-hover:text-[#45BA50] transition-colors">
+                  {worker.name}
+                </h3>
+                {worker.isVerified && (
+                  <span className="shrink-0 text-[#45BA50]" title="Kebele & Fayda Verified Artisan">
+                    <RiCheckboxCircleFill className="w-4 h-4 fill-[#45BA50]" />
+                  </span>
+                )}
+              </div>
+
+              {/* Star Rating & Review count */}
+              <div className="flex items-center gap-1 text-xs shrink-0 font-bold text-slate-900 dark:text-white">
+                <RiStarFill className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                <span>{worker.rating > 0 ? worker.rating.toFixed(1) : "5.0"}</span>
+                <span className="text-zinc-400 font-normal text-[11px]">({worker.reviews || 12})</span>
+              </div>
             </div>
 
-            <p className="text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400 line-clamp-1 leading-relaxed">
-              {worker.bio || `Certified ${tradeMeta.label.toLowerCase()} pro in ${worker.district || "Dire Dawa"}.`}
+            {/* Trade Specialty Skills Pills */}
+            <div className="flex flex-wrap gap-1 pt-0.5">
+              {skillsList.slice(0, 3).map((skill) => (
+                <span
+                  key={skill}
+                  className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/60 dark:border-zinc-700/60"
+                >
+                  {skill}
+                </span>
+              ))}
+            </div>
+
+            {/* 2-Line Bio Description */}
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-zinc-400 line-clamp-2 leading-relaxed pt-0.5">
+              {worker.bio || `Certified ${tradeMeta.label.toLowerCase()} artisan serving clients across ${worker.district || "Dire Dawa"} with milestone-protected contracts.`}
             </p>
+
+            {/* District & Distance metadata */}
+            <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-zinc-400 pt-0.5">
+              <span className="flex items-center gap-0.5 font-medium text-slate-700 dark:text-zinc-300">
+                <RiMapPinLine className="w-3 h-3 text-[#45BA50] shrink-0" />
+                <span>{worker.district || "Dire Dawa"}</span>
+              </span>
+              <span>•</span>
+              <span>{worker.distance !== "N/A" ? `${worker.distance} km away` : "Available now"}</span>
+            </div>
           </div>
         </div>
 
-        {/* Bottom Row: Stats (Left) + Pill Button (Right) matching Reference Photo */}
-        <div className="mt-2.5 sm:mt-3 pt-2 sm:pt-2.5 border-t border-slate-200/70 dark:border-zinc-800/80 flex items-center justify-between gap-1.5">
-          {/* Left Stats: Rating & Completed Jobs */}
-          <div className="flex items-center gap-2 sm:gap-2.5 text-[10px] sm:text-xs text-slate-500 dark:text-zinc-400">
-            <span className="flex items-center gap-0.5 sm:gap-1 font-bold text-slate-900 dark:text-white">
-              <RiStarFill className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-500 fill-amber-500" />
-              <span>{worker.rating > 0 ? worker.rating.toFixed(1) : "5.0"}</span>
-            </span>
-            <span className="flex items-center gap-0.5 sm:gap-1 font-medium text-slate-400 dark:text-zinc-500">
-              <RiBriefcaseLine className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              <span>{worker.reviews || 12}</span>
-            </span>
-          </div>
-
-          {/* Right Action: Pill Button [Preview +] */}
+        {/* Bottom Actions Row: Preview & Book Dual Controls */}
+        <div className="mt-3.5 pt-3 border-t border-slate-200/70 dark:border-zinc-800/80 flex items-center justify-between gap-2">
           <button
             type="button"
             onClick={(e) => {
@@ -173,11 +201,27 @@ export default function WorkerCard({
               primeCache();
               onPreview?.(worker);
             }}
-            className="rounded-full border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/80 hover:bg-[#134e27]/15 hover:border-[#45BA50] hover:text-[#45BA50] text-slate-800 dark:text-zinc-200 text-[10px] sm:text-xs font-bold px-2.5 sm:px-3 py-1 shadow-xs transition-all active:scale-95 cursor-pointer flex items-center gap-1"
+            className="flex-1 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/80 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 text-xs font-bold py-2 shadow-xs transition-all active:scale-95 cursor-pointer text-center"
             title="Preview full profile"
           >
-            <span>Preview</span>
-            <span className="text-[#45BA50] font-black">+</span>
+            Preview
+          </button>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              primeCache();
+              if (onMessage) {
+                onMessage(worker);
+              } else {
+                onSelect?.(worker);
+              }
+            }}
+            className="flex-1 rounded-xl bg-[#45BA50] hover:bg-[#3ea847] text-white text-xs font-bold py-2 shadow-xs transition-all active:scale-95 cursor-pointer text-center"
+            title="Book or message artisan"
+          >
+            Hire / Message
           </button>
         </div>
       </motion.div>

@@ -189,10 +189,10 @@ export function Sidebar({ userEmail, adminName, adminRole, permissions }: Sideba
           badge: "Full",
         },
         {
-          href: "/admin/audit",
+          href: isSuperAdmin ? "/admin/audit" : "/admin/audit?myLogs=true",
           icon: <ClipboardList className="w-4 h-4" />,
-          label: t("admin.sidebar.audit" as any) || "System Audit Logs",
-          visible: can("audit.read") && isSuperAdmin,
+          label: isSuperAdmin ? (t("admin.sidebar.audit" as any) || "System Audit Logs") : "My Activity Logs",
+          visible: can("audit.read"),
         },
         {
           href: "/admin/settings",

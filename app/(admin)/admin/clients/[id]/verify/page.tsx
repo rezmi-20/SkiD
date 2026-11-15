@@ -31,10 +31,14 @@ export const dynamic = "force-dynamic";
 
 export default async function ClientVerificationReviewPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ error?: string }>;
 }) {
   const admin = await requireAdminPermission("verification.read");
+  const queryParams = searchParams ? await searchParams : {};
+  const errorMessage = queryParams.error ? decodeURIComponent(queryParams.error) : null;
   const capabilities = {
     canReview: hasAdminPermission(admin, "verification.review"),
     canApprove: hasAdminPermission(admin, "verification.approve"),
@@ -52,6 +56,7 @@ export default async function ClientVerificationReviewPage({
     "COALESCE(cp.full_name, u.email, 'Unknown client') AS full_name",
     "COALESCE(cp.is_verified, false) AS is_verified",
     "cp.user_id AS profile_user_id",
+    ...(columns.has("avatar_url") ? ["cp.avatar_url"] : []),
     ...(columns.has("verification_status") ? ["cp.verification_status"] : []),
     ...(columns.has("verification_reason") ? ["cp.verification_reason"] : []),
     ...(columns.has("verified_at") ? ["cp.verified_at"] : []),
@@ -118,20 +123,21 @@ export default async function ClientVerificationReviewPage({
   );
   const canRevealDocument = Boolean(
     capabilities.canReview &&
-      admin.role === "content_verification_admin" &&
+      (admin.role === "content_verification_admin" || admin.role === "super_admin") &&
       attempt?.id &&
       attempt.status === "pending" &&
       activeReviewStatus &&
       displayStatus === "pending" &&
       !client.is_suspended &&
-      !client.is_verified &&
-      !(history || []).some((event: any) => event.action === "viewed_document" && event.reason === "one-time Fayda document reveal"),
+      !client.is_verified
   );
 
   async function approveClient() {
     "use server";
     const result = await updateClientVerificationStatus(id, "approved", undefined, attempt?.id ?? null);
-    if (!result.success) throw new Error(result.error);
+    if (!result.success) {
+      redirect(`/admin/clients/${id}/verify?error=${encodeURIComponent(result.error || "Failed to approve client.")}`);
+    }
     redirect("/admin/verify");
   }
 
@@ -141,10 +147,12 @@ export default async function ClientVerificationReviewPage({
     const reason = String(formData.get("reason") || "").trim();
     const confirmedRevocation = formData.get("confirmRevocation") === "on";
     if (status === "revoked" && !confirmedRevocation) {
-      throw new Error("Confirm revocation before submitting.");
+      redirect(`/admin/clients/${id}/verify?error=${encodeURIComponent("Confirm revocation before submitting.")}`);
     }
     const result = await updateClientVerificationStatus(id, status, reason, attempt?.id ?? null);
-    if (!result.success) throw new Error(result.error);
+    if (!result.success) {
+      redirect(`/admin/clients/${id}/verify?error=${encodeURIComponent(result.error || "Failed to update client status.")}`);
+    }
     redirect("/admin/verify");
   }
 
@@ -280,6 +288,12 @@ export default async function ClientVerificationReviewPage({
   // State: Reviewable Client Verification (Split-screen Studio)
   return (
     <div className="space-y-6 pb-24">
+      {errorMessage && (
+        <div className="p-4 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
       {/* 1. Flush, Unboxed Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1 pb-2">
         <div className="space-y-2">
@@ -292,8 +306,17 @@ export default async function ClientVerificationReviewPage({
           </Link>
 
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 border border-black/[0.08] dark:border-white/[0.1] flex items-center justify-center text-slate-700 dark:text-slate-200 font-bold text-base shadow-2xs">
-              {client.full_name?.charAt(0) || "C"}
+            <div className="relative w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 border border-black/[0.08] dark:border-white/[0.1] flex items-center justify-center text-slate-700 dark:text-slate-200 font-bold text-base shadow-2xs overflow-hidden">
+              {client.avatar_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={client.avatar_url}
+                  alt={client.full_name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                client.full_name?.charAt(0) || "C"
+              )}
             </div>
 
             <div>
@@ -344,8 +367,55 @@ export default async function ClientVerificationReviewPage({
 
       {/* 2. Main 2-Column Split Workspace */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column (8 cols): Document Inspection Studio */}
+        {/* Left Column (8 cols): Document & Identity Inspection Studio */}
         <div className="lg:col-span-7 xl:col-span-8 space-y-4">
+          {/* Biometric Avatar & ID Face Comparison Panel */}
+          <div className="rounded-xl border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-[#141E30] p-4 space-y-3 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  Biometric Face & Identity Audit
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Verify that the client profile photo matches the face photo on their official Fayda ID document.
+                </p>
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                Visual KYC
+              </span>
+            </div>
+
+            <div className="flex items-center gap-4 pt-1">
+              <div className="relative w-24 h-24 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 shrink-0">
+                {client.avatar_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={client.avatar_url}
+                    alt={client.full_name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 text-[10px] font-medium text-center p-1">
+                    <User className="h-6 w-6 opacity-40 mb-1" />
+                    <span>No Avatar Uploaded</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-1 text-xs">
+                <p className="font-semibold text-slate-800 dark:text-slate-200">
+                  Registered Profile Photo
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  {client.avatar_url ? "Uploaded by client as platform identity avatar." : "Client has not yet submitted an avatar."}
+                </p>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 pt-1">
+                  Compare face geometry, eye line, and facial contours directly against the Fayda ID document below.
+                </div>
+              </div>
+            </div>
+          </div>
+
           {client.fayda_doc_url ? (
             <ProtectedVerificationDocumentViewer
               documentUrl={`/api/clients/${client.user_id}/verification-document`}

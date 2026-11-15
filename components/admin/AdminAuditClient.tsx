@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import {
@@ -12,6 +13,9 @@ import {
   Activity,
   ChevronLeft,
   ChevronRight,
+  Download,
+  User,
+  CheckCircle2,
 } from "lucide-react";
 
 interface AuditEntry {
@@ -40,6 +44,7 @@ interface AdminAuditClientProps {
     from?: string;
     to?: string;
     highRisk?: string;
+    myLogs?: string;
   };
 }
 
@@ -79,21 +84,105 @@ export function AdminAuditClient({
   params,
 }: AdminAuditClientProps) {
   const { t } = useLanguage();
+  const [isExporting, setIsExporting] = useState(false);
+
+  const isMyLogs = params.myLogs === "true";
 
   const hasActiveFilters = Boolean(
     params.q || params.module || params.from || params.to || params.highRisk === "1"
   );
 
+  const exportWorkReportWithLogs = async () => {
+    setIsExporting(true);
+    try {
+      const payload = {
+        reportTitle: isMyLogs
+          ? "Personal Staff Work Report & System Logs"
+          : "System Activity Audit Report",
+        category: "Staff Work & Activity Audit",
+        period: params.from && params.to ? `${params.from} to ${params.to}` : "Filtered Date Range",
+        generatedAt: new Date().toISOString(),
+        metrics: {
+          totalClients: 0,
+          totalWorkers: 0,
+          verifiedWorkers: 0,
+          verifiedClients: 0,
+          jobsCreated: 0,
+          jobsCompleted: 0,
+          escrowVerified: 0,
+          escrowReleased: 0,
+          escrowHeld: 0,
+          openDisputes: 0,
+          resolvedDisputes: 0,
+        },
+        auditLogs: entries.slice(0, 50).map((e) => ({
+          action: e.action,
+          module: e.module,
+          created_at: String(e.created_at || ""),
+          target_id: e.target_id,
+          reason: e.reason,
+        })),
+      };
+
+      const res = await fetch("/api/admin/reports/pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error("Failed to export PDF report");
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Staff_Work_Report_Logs_${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to export staff work report. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-6 w-full pb-24">
-      {/* 1. Header (deals.tsx style: Clean h1 + p, no dots, no pill badges) */}
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-          {t("admin.audit.title")}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {t("admin.audit.desc")}
-        </p>
+      {/* 1. Header with Title & Work Report PDF Export Action */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+              {isMyLogs ? "My Personal Activity Logs & Work Audit" : t("admin.audit.title")}
+            </h1>
+            {isMyLogs && (
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                Personal Logs
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">
+            {isMyLogs
+              ? "Personal system log specified to your staff account actions, decisions, and administrative reviews."
+              : t("admin.audit.desc")}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 self-start sm:self-center">
+          <button
+            type="button"
+            onClick={exportWorkReportWithLogs}
+            disabled={isExporting}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-accent text-accent-foreground hover:opacity-90 text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer"
+          >
+            <Download className="h-4 w-4" />
+            <span>{isExporting ? "Generating Report..." : "Export Work Report with Logs (PDF)"}</span>
+          </button>
+        </div>
       </div>
 
       {/* 2. Quick Stat Cards (deals.tsx metric cards style) */}
@@ -146,6 +235,7 @@ export function AdminAuditClient({
         method="GET"
         className="p-4 bg-card border border-border rounded-xl shadow-xs space-y-3"
       >
+        {isMyLogs && <input type="hidden" name="myLogs" value="true" />}
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-6 items-end">
           <div className="space-y-1 lg:col-span-2">
             <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -213,7 +303,7 @@ export function AdminAuditClient({
             </button>
             {hasActiveFilters && (
               <Link
-                href="/admin/audit"
+                href={isMyLogs ? "/admin/audit?myLogs=true" : "/admin/audit"}
                 className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground bg-secondary transition-colors"
                 title={t("admin.audit.resetBtn")}
               >

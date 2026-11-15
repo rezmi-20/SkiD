@@ -66,7 +66,7 @@ export async function POST(
   }
 
   const { id: workerId } = await params;
-  if (admin.role !== "content_verification_admin" || !hasAdminPermission(admin, "verification.review")) {
+  if ((admin.role !== "content_verification_admin" && admin.role !== "super_admin") || !hasAdminPermission(admin, "verification.review")) {
     return documentError("Forbidden", 403);
   }
 

@@ -156,7 +156,10 @@ export async function getAuditLogEntries(input: {
   to?: string;
 } = {}) {
   const admin = await requireAdminPermission("audit.read");
-  if (admin.role !== "super_admin") return { entries: [], page: 1, pageSize: 50, error: "Only super admin may view global audit logs." };
+  const isSuperAdmin = admin.role === "super_admin";
+  const effectiveEmployeeId = !isSuperAdmin
+    ? admin.id
+    : (cleanText(input.adminEmployeeId, 80) || null);
   const page = Math.max(1, Number(input.page || 1));
   const pageSize = 50;
   const offset = (page - 1) * pageSize;
@@ -167,6 +170,7 @@ export async function getAuditLogEntries(input: {
   return {
     page,
     pageSize,
+    isPersonalLogsOnly: !isSuperAdmin,
     entries: await sql`
       SELECT
         al.id,
@@ -193,7 +197,7 @@ export async function getAuditLogEntries(input: {
         AND (${cleanText(input.action, 80) || null}::text IS NULL OR al.action = ${cleanText(input.action, 80) || null})
         AND (${cleanText(input.module, 80) || null}::text IS NULL OR al.module = ${cleanText(input.module, 80) || null})
         AND (${cleanText(input.targetType, 80) || null}::text IS NULL OR al.target_type = ${cleanText(input.targetType, 80) || null})
-        AND (${cleanText(input.adminEmployeeId, 80) || null}::uuid IS NULL OR al.admin_employee_id = ${cleanText(input.adminEmployeeId, 80) || null})
+        AND (${effectiveEmployeeId}::uuid IS NULL OR al.admin_employee_id = ${effectiveEmployeeId})
         AND (${cleanText(input.adminRole, 80) || null}::text IS NULL OR al.admin_role = ${cleanText(input.adminRole, 80) || null})
         AND (${highRisk} = false OR al.high_risk = true)
         AND (${start ? start.toISOString() : null}::timestamp IS NULL OR al.created_at >= ${start ? start.toISOString() : null})
@@ -207,7 +211,7 @@ export async function getAuditLogEntries(input: {
 
 export async function getAdminActivitySummary(employeeId: string) {
   const admin = await requireAdminPermission("audit.read");
-  if (admin.role !== "super_admin") return null;
+  if (admin.role !== "super_admin" && admin.id !== employeeId) return null;
   const [employeeRows, auditRows, verificationRows, disputeRows, supportRows, financialRows] = await Promise.all([
     sql`
       SELECT id, admin_employee_id, full_name, work_email, admin_role, admin_status, created_at

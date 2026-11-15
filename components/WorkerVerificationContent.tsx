@@ -81,6 +81,7 @@ interface WorkerVerificationContentProps {
   onReject?: (reason: string) => void;
   onRevoke?: (reason: string) => void;
   onPending?: (reason: string) => void;
+  errorMessage?: string | null;
 }
 
 const QUICK_REASONS = [
@@ -102,9 +103,11 @@ export default function WorkerVerificationContent({
   onReject,
   onRevoke,
   onPending,
+  errorMessage,
 }: WorkerVerificationContentProps) {
   const [rejectReason, setRejectReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [photoMatchStatus, setPhotoMatchStatus] = useState<"unconfirmed" | "matched" | "mismatch">("unconfirmed");
   const [activeTab, setActiveTab] = useState<"profile" | "id_doc" | "face_match" | "certificates">("profile");
 
   const displayStatus = toWorkerDisplayStatus(
@@ -165,6 +168,12 @@ export default function WorkerVerificationContent({
 
   return (
     <div className="space-y-6 pb-24">
+      {errorMessage && (
+        <div className="p-4 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
       {/* 1. Flush, Unboxed Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1 pb-2">
         <div className="space-y-2">
@@ -409,25 +418,46 @@ export default function WorkerVerificationContent({
             </div>
           )}
 
-          {/* TAB 2: Face Verification Side-by-Side - Clean Uncontained */}
+          {/* TAB 2: Face Verification Side-by-Side Biometric Audit Studio */}
           {activeTab === "face_match" && (
-            <div className="rounded-xl border border-border bg-card p-6 space-y-5 shadow-xs">
-              <div>
-                <h3 className="text-base font-semibold text-foreground">
-                  Visual Biometric & Photo Audit
-                </h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Compare the worker profile avatar with the photo depicted on their official Fayda ID document.
-                </p>
+            <div className="rounded-xl border border-border bg-card p-6 space-y-6 shadow-xs animate-in fade-in duration-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border pb-4">
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">
+                    Biometric Avatar vs. Fayda ID Comparison
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Compare the artisan&apos;s submitted profile photo directly alongside their government Fayda National ID document.
+                  </p>
+                </div>
+                {photoMatchStatus === "matched" && (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center gap-1.5 self-start">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    <span>Likeness Confirmed</span>
+                  </span>
+                )}
+                {photoMatchStatus === "mismatch" && (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20 flex items-center gap-1.5 self-start">
+                    <ShieldAlert className="h-3.5 w-3.5" />
+                    <span>Likeness Mismatch Flagged</span>
+                  </span>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
-                {/* Profile Photo */}
-                <div className="flex flex-col items-center text-center space-y-3">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Registered Profile Photo
-                  </span>
-                  <div className="w-44 h-44 rounded-xl overflow-hidden border border-border bg-secondary flex items-center justify-center shadow-xs">
+              {/* Side-by-Side Biometric Comparison Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                {/* 1. Submitted Profile Photo */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      1. Submitted Profile Avatar
+                    </span>
+                    <span className="text-[11px] font-semibold text-accent">
+                      Public Client View
+                    </span>
+                  </div>
+
+                  <div className="w-full aspect-[4/3] rounded-xl overflow-hidden border border-border bg-secondary flex items-center justify-center shadow-xs relative">
                     {worker.avatar_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -437,38 +467,105 @@ export default function WorkerVerificationContent({
                       />
                     ) : (
                       <div className="text-muted-foreground text-xs font-medium flex flex-col items-center gap-2">
-                        <User className="h-8 w-8 opacity-40" />
+                        <User className="h-10 w-10 opacity-40" />
                         <span>No Avatar Uploaded</span>
                       </div>
                     )}
                   </div>
-                  <p className="text-[11px] text-muted-foreground">
-                    Visible to clients when booking jobs
+
+                  <div className="p-3 rounded-lg bg-secondary/50 border border-border text-xs space-y-1">
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Artisan Name:</span>
+                      <span className="font-semibold text-foreground">{worker.full_name}</span>
+                    </div>
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>District:</span>
+                      <span className="font-semibold text-foreground">{worker.district || "Dire Dawa"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Official Fayda National ID Document */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      2. Official Fayda National ID
+                    </span>
+                    <span className="text-[11px] font-semibold text-emerald-500">
+                      National Registry ID
+                    </span>
+                  </div>
+
+                  {verificationDocument.available ? (
+                    <ProtectedVerificationDocumentViewer
+                      documentUrl={`/api/workers/${worker.user_id}/verification-document`}
+                      title="Fayda Document"
+                      attemptId={verificationDocument.attemptId}
+                      canReveal={verificationDocument.canReveal}
+                      revealUsed={verificationDocument.revealUsed}
+                    />
+                  ) : (
+                    <div className="w-full aspect-[4/3] rounded-xl border border-dashed border-border bg-card flex flex-col items-center justify-center p-6 text-center">
+                      <FileQuestion className="h-8 w-8 text-amber-500 mb-2" />
+                      <p className="text-xs font-bold text-foreground">No Fayda Document</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">Worker has not submitted an ID scan.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Inspection Protocol & Quick Verdict Helpers */}
+              <div className="pt-4 border-t border-border space-y-4">
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Biometric Likeness Verification Verdict
+                  </h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Confirm that facial structure, eye geometry, and contours in the profile avatar correspond to the person depicted on the official Fayda card.
                   </p>
                 </div>
 
-                {/* ID Reference Guidance */}
-                <div className="flex flex-col justify-between space-y-4">
-                  <div className="space-y-3">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Inspection Protocol
-                    </span>
-                    <div className="space-y-2 text-xs text-muted-foreground">
-                      <p>Verify that:</p>
-                      <ul className="list-disc list-inside space-y-1.5 text-xs text-foreground/80 pl-1">
-                        <li>Facial geometry, eyes, and contours correspond to Fayda document.</li>
-                        <li>No photo-manipulation, blurring, or face filter artifacts.</li>
-                        <li>Photo reflects current age and person identity.</li>
-                      </ul>
-                    </div>
-                  </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPhotoMatchStatus("matched");
+                    }}
+                    className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border transition ${
+                      photoMatchStatus === "matched"
+                        ? "bg-emerald-500 text-white border-emerald-600 shadow-xs"
+                        : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
+                    }`}
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    <span>✓ Face Matches Fayda Card</span>
+                  </button>
 
                   <button
                     type="button"
-                    onClick={() => setActiveTab("id_doc")}
-                    className="w-full py-2.5 px-4 rounded-lg bg-secondary hover:bg-secondary/80 border border-border text-xs font-semibold text-foreground transition text-center"
+                    onClick={() => {
+                      setPhotoMatchStatus("mismatch");
+                      handleQuickReasonClick("Profile photo does not match Fayda ID photo");
+                    }}
+                    className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border transition ${
+                      photoMatchStatus === "mismatch"
+                        ? "bg-rose-500 text-white border-rose-600 shadow-xs"
+                        : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 hover:bg-rose-500/20"
+                    }`}
                   >
-                    View Fayda ID Document →
+                    <ShieldAlert className="h-3.5 w-3.5" />
+                    <span>⚠ Face Does Not Match Fayda</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleQuickReasonClick("Fayda ID photo scan is too blurry to compare with avatar");
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border bg-secondary hover:bg-secondary/80 border-border text-foreground transition"
+                  >
+                    <Eye className="h-3.5 w-3.5 text-amber-500" />
+                    <span>⚠ ID Photo Scan Unclear / Blurry</span>
                   </button>
                 </div>
               </div>

@@ -228,7 +228,7 @@ export default function ContractsPageContent({ contracts = [], role }: Props) {
   }, [contracts, activeTab, searchQuery]);
 
   return (
-    <div className="w-full min-h-screen bg-[#f8fafc] dark:bg-[#09090b] text-slate-900 dark:text-zinc-100 pb-24 transition-colors">
+    <div className="w-full min-h-screen bg-[#f8fafc] dark:bg-[#09090b] text-slate-900 dark:text-zinc-100 pb-10 sm:pb-14 transition-colors">
       
       {/* ── Page Header & Top CTA ── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 space-y-6">

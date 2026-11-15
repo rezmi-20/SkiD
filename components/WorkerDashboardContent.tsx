@@ -295,7 +295,7 @@ export default function WorkerDashboardContent({
       };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 md:space-y-8 font-['Inter',system-ui,sans-serif] text-zinc-900 dark:text-zinc-100">
+    <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-2 pb-10 sm:py-6 space-y-6 md:space-y-8 font-['Inter',system-ui,sans-serif] text-zinc-900 dark:text-zinc-100">
       
       {/* ───────────────────────────────────────────────────────────────────
           1. TOP ROW: WELCOME HERO + MINI PROFILE & NOTIFICATIONS

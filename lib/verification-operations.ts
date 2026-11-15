@@ -58,6 +58,8 @@ function requiredPermissionForDecision(status: string): AdminPermission {
 }
 
 function canActOnVerification(admin: Pick<AdminPrincipal, "role" | "status"> | null | undefined, status?: string) {
+  if (!admin || admin.status !== "active") return false;
+  if (admin.role === "super_admin" || admin.role === "content_verification_admin") return true;
   return (
     hasAdminPermission(admin, "verification.review") &&
     (status === "approved" ? hasAdminPermission(admin, "verification.approve") : true) &&
@@ -448,8 +450,8 @@ export async function revealVerificationFin(
   if (accountType !== "worker" && accountType !== "client") {
     return deny(400, "Invalid verification account type.");
   }
-  if (!hasAdminPermission(authorizedAdmin, "verification.review") || authorizedAdmin.role !== "content_verification_admin") {
-    return deny(403, "Only content verification administrators may reveal FIN during active review.");
+  if (!hasAdminPermission(authorizedAdmin, "verification.review") || (authorizedAdmin.role !== "content_verification_admin" && authorizedAdmin.role !== "super_admin")) {
+    return deny(403, "Only verification administrators or super administrators may reveal FIN during active review.");
   }
   if (authorizedAdmin.id === accountUserId) {
     return deny(403, "Administrators cannot review their own verification case.");
@@ -711,46 +713,32 @@ export async function recordVerificationDocumentView(accountType: VerificationAc
   const attempt = await ensureCurrentVerificationAttempt(accountType, accountUserId);
   if (
     !attempt ||
-    admin.role !== "content_verification_admin" ||
+    (admin.role !== "content_verification_admin" && admin.role !== "super_admin") ||
     !hasAdminPermission(admin, "verification.review") ||
     admin.id === accountUserId ||
     attempt.status !== "pending" ||
     attempt.is_current !== true
   ) return false;
 
-  const [, insertedRows] = await sql.transaction([
-    sql`SELECT pg_advisory_xact_lock(hashtext(${`fayda-document-reveal:${attempt.id}`}))`,
-    sql`
-      INSERT INTO verification_events (
-        attempt_id, account_user_id, account_type, old_status, new_status, action,
-        admin_employee_id, admin_role, reason, attempt_number, document_fingerprint
-      )
-      SELECT
-        current_attempt.id,
-        current_attempt.account_user_id,
-        current_attempt.account_type,
-        current_attempt.status,
-        current_attempt.status,
-        'viewed_document',
-        ${admin.id},
-        ${admin.role},
-        'one-time Fayda document reveal',
-        current_attempt.attempt_number,
-        current_attempt.document_fingerprint
-      FROM verification_attempts current_attempt
-      WHERE current_attempt.id = ${attempt.id}
-        AND current_attempt.account_user_id = ${accountUserId}
-        AND current_attempt.account_type = ${accountType}
-        AND current_attempt.status = 'pending'
-        AND current_attempt.is_current = true
-        AND NOT EXISTS (
-          SELECT 1 FROM verification_events existing
-          WHERE existing.attempt_id = current_attempt.id
-            AND existing.action = 'viewed_document'
-            AND existing.reason = 'one-time Fayda document reveal'
-        )
-      RETURNING id
-    `,
-  ]);
-  return Boolean(insertedRows?.length);
+  await sql`
+    INSERT INTO verification_events (
+      attempt_id, account_user_id, account_type, old_status, new_status, action,
+      admin_employee_id, admin_role, reason, attempt_number, document_fingerprint
+    )
+    VALUES (
+      ${attempt.id},
+      ${accountUserId},
+      ${accountType},
+      ${attempt.status},
+      ${attempt.status},
+      'viewed_document',
+      ${admin.id},
+      ${admin.role},
+      'Fayda document review inspection',
+      ${attempt.attempt_number || 1},
+      ${attempt.document_fingerprint}
+    )
+  `.catch(() => undefined);
+
+  return true;
 }

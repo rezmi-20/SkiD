@@ -147,10 +147,10 @@ export default function PaymentPageContent({
   } | null>(
     alreadyPaid
       ? {
-          paymentId: paymentId || "PAY-CONFIRMED",
-          chapaReference: existingTxRef || "DS-CHAPA-REC",
-          breakdown: { amount, commissionAmount, netAmount },
-        }
+        paymentId: paymentId || "PAY-CONFIRMED",
+        chapaReference: existingTxRef || "DS-CHAPA-REC",
+        breakdown: { amount, commissionAmount, netAmount },
+      }
       : null
   );
 
@@ -225,8 +225,8 @@ export default function PaymentPageContent({
         if (!silent) {
           setError(
             data.error ||
-              data.message ||
-              "Payment not confirmed yet. Please complete the payment in the Chapa tab, then try again."
+            data.message ||
+            "Payment not confirmed yet. Please complete the payment in the Chapa tab, then try again."
           );
         }
         return false;
@@ -329,7 +329,7 @@ export default function PaymentPageContent({
   };
 
   return (
-    <div className="min-h-screen bg-background-primary-default text-text-primary pb-24 font-['Inter',system-ui,sans-serif]">
+    <div className="min-h-screen bg-background-primary-default text-text-primary pb-10 sm:pb-14 font-['Inter',system-ui,sans-serif]">
       {/* ── Demo / Preview Interactive Mode Banner ── */}
       {isDemoMode && (
         <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2.5 text-xs text-amber-700 dark:text-amber-400">
@@ -390,21 +390,20 @@ export default function PaymentPageContent({
 
           {/* Status Badge */}
           <span
-            className={`rounded-full px-3.5 py-1 text-[11px] font-black uppercase tracking-wider border ${
-              step === "paid" || step === "confirmed"
+            className={`rounded-full px-3.5 py-1 text-[11px] font-black uppercase tracking-wider border ${step === "paid" || step === "confirmed"
                 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
                 : step === "awaiting" || hasPendingVerification
-                ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                : "bg-background-secondary-default text-text-secondary border-border-button-default"
-            }`}
+                  ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                  : "bg-background-secondary-default text-text-secondary border-border-button-default"
+              }`}
           >
             {step === "paid" || step === "confirmed"
               ? "Payment Released"
               : step === "awaiting" || hasPendingVerification
-              ? "Pending Verification"
-              : paymentStatus === "held"
-              ? "Initiated"
-              : "Ready to Pay"}
+                ? "Pending Verification"
+                : paymentStatus === "held"
+                  ? "Initiated"
+                  : "Ready to Pay"}
           </span>
         </div>
       </header>
@@ -475,11 +474,10 @@ export default function PaymentPageContent({
                       key={method.id}
                       type="button"
                       onClick={() => setSelectedMethod(method.id)}
-                      className={`flex items-center gap-3 p-3.5 rounded-2xl border text-left transition-all active:scale-[0.99] cursor-pointer ${
-                        isSelected
+                      className={`flex items-center gap-3 p-3.5 rounded-2xl border text-left transition-all active:scale-[0.99] cursor-pointer ${isSelected
                           ? "border-emerald-500 bg-emerald-500/10 text-text-primary shadow-sm ring-1 ring-emerald-500"
                           : "border-border-button-default bg-background-secondary-default hover:bg-background-secondary-hover text-text-secondary"
-                      }`}
+                        }`}
                     >
                       <Icon className="w-8 h-8 shrink-0" />
                       <div className="min-w-0 flex-1">
@@ -623,10 +621,10 @@ export default function PaymentPageContent({
               {step === "paid" || step === "confirmed"
                 ? "Paid to Artisan"
                 : step === "awaiting"
-                ? "Pending Verification"
-                : paymentStatus === "held"
-                ? "Chapa Payment Initiated"
-                : "Ready to Settle"}
+                  ? "Pending Verification"
+                  : paymentStatus === "held"
+                    ? "Chapa Payment Initiated"
+                    : "Ready to Settle"}
             </p>
           </div>
 

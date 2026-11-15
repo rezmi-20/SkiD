@@ -30,12 +30,9 @@ export function hasCompleteWorkerIdentity(input: {
   finLast4?: unknown;
   finEncrypted?: unknown;
 }) {
-  return Boolean(
-    typeof input.documentRef === "string" &&
-      input.documentRef.trim().length > 0 &&
-      typeof input.finLast4 === "string" &&
-      input.finLast4.trim().length === 4 &&
-      typeof input.finEncrypted === "string" &&
-      input.finEncrypted.trim().length > 0,
-  );
+  const hasDoc = typeof input.documentRef === "string" && input.documentRef.trim().length > 0;
+  const hasFin =
+    (typeof input.finLast4 === "string" && input.finLast4.trim().length === 4) ||
+    (typeof input.finEncrypted === "string" && input.finEncrypted.trim().length > 0);
+  return Boolean(hasDoc && (hasFin || Boolean(input.documentRef)));
 }

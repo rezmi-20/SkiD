@@ -32,6 +32,19 @@ export interface GovernanceReportData {
     pagePath: string;
     createdAt: string;
   }>;
+  auditLogs?: Array<{
+    action: string;
+    module?: string | null;
+    created_at: string;
+    target_id?: string | null;
+    reason?: string | null;
+  }>;
+  staffSummary?: {
+    role?: string;
+    decisionsCount?: number;
+    ticketsCount?: number;
+    disputesCount?: number;
+  };
 }
 
 export async function generateGovernancePdfBuffer(data: GovernanceReportData): Promise<Buffer> {
@@ -471,6 +484,68 @@ export async function generateGovernancePdfBuffer(data: GovernanceReportData): P
         doc.fillColor("#94a3b8").fontSize(6.5).font(fontRegular()).text(authorMeta, 50, p2Y + 44);
         p2Y += 64;
       });
+
+      // ─────────────────────────────────────────────────────────────────
+      // 7.5. STAFF AUDIT LOGS & ACTION DOSSIER (IF INCLUDED)
+      // ─────────────────────────────────────────────────────────────────
+      if (data.auditLogs && data.auditLogs.length > 0) {
+        doc.addPage();
+        let aY = 40;
+        doc.rect(40, aY, pageWidth, 3).fill("#0284c7");
+        aY += 12;
+
+        doc.fillColor("#0f172a").fontSize(10).font(fontBold()).text("STAFF AUDIT LOGS & ACTION DOSSIER", 40, aY);
+        doc.strokeColor("#94a3b8").lineWidth(0.8).moveTo(40, aY + 13).lineTo(40 + pageWidth, aY + 13).stroke();
+        aY += 20;
+
+        doc.fillColor("#475569").fontSize(7.5).font(fontRegular()).text(
+          `Official record of administrative operations, decisions, and security events performed by ${data.author} during period ${data.period}. Filtered logs count: ${data.auditLogs.length}.`,
+          40,
+          aY,
+          { width: pageWidth }
+        );
+        aY += 18;
+
+        // Table Header
+        doc.rect(40, aY, pageWidth, 16).fillColor("#0f172a").fill();
+        doc.fillColor("#ffffff").fontSize(7).font(fontBold());
+        doc.text("TIMESTAMP", 48, aY + 4);
+        doc.text("ACTION / EVENT", 140, aY + 4);
+        doc.text("MODULE", 280, aY + 4);
+        doc.text("TARGET / DETAILS", 360, aY + 4);
+        aY += 16;
+
+        data.auditLogs.slice(0, 24).forEach((log, idx) => {
+          if (aY > 740) {
+            doc.addPage();
+            aY = 40;
+            doc.rect(40, aY, pageWidth, 3).fill("#0284c7");
+            aY += 16;
+          }
+          if (idx % 2 === 1) doc.rect(40, aY, pageWidth, 18).fillColor("#f8fafc").fill();
+          doc.fillColor("#64748b").fontSize(6.5).font(fontRegular()).text(
+            log.created_at ? new Date(log.created_at).toLocaleString().slice(0, 17) : "-",
+            48,
+            aY + 4
+          );
+          doc.fillColor("#0f172a").fontSize(7).font(fontBold()).text(
+            log.action.replace(/_/g, " ").slice(0, 25),
+            140,
+            aY + 4
+          );
+          doc.fillColor("#0284c7").fontSize(6.5).font(fontBold()).text(
+            (log.module || "SYSTEM").toUpperCase(),
+            280,
+            aY + 4
+          );
+          doc.fillColor("#475569").fontSize(6.5).font(fontRegular()).text(
+            (log.reason || log.target_id || "Standard staff action").slice(0, 32),
+            360,
+            aY + 4
+          );
+          aY += 18;
+        });
+      }
 
       // ─────────────────────────────────────────────────────────────────
       // 8. LEGAL ATTESTATION & SIGNATURE BLOCK

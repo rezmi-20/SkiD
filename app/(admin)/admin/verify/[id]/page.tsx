@@ -6,8 +6,15 @@ import { hasAdminPermission, requireAdminPermission } from "@/lib/admin-authoriz
 import { ensureCurrentVerificationAttempt, getVerificationHistory } from "@/lib/verification-operations";
 import { hasCompleteWorkerIdentity, toWorkerDisplayStatus } from "@/lib/worker-verification";
 
-export default async function WorkerVerificationPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function WorkerVerificationPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<{ error?: string }>;
+}) {
   const admin = await requireAdminPermission("verification.read");
+  const queryParams = searchParams ? await searchParams : {};
   const capabilities = {
     canReview: hasAdminPermission(admin, "verification.review"),
     canApprove: hasAdminPermission(admin, "verification.approve"),
@@ -71,40 +78,47 @@ export default async function WorkerVerificationPage({ params }: { params: Promi
   const history = await getVerificationHistory("worker", worker.user_id);
   const canRevealDocument = Boolean(
     capabilities.canReview &&
-      admin.role === "content_verification_admin" &&
+      (admin.role === "content_verification_admin" || admin.role === "super_admin") &&
       attempt?.id &&
       attempt.status === "pending" &&
       displayStatus === "pending" &&
       !worker.is_suspended &&
-      !worker.is_verified &&
-      !(history || []).some((event: any) => event.action === "viewed_document" && event.reason === "one-time Fayda document reveal"),
+      !worker.is_verified
   );
 
   const handleApprove = async () => {
     "use server";
     const result = await updateWorkerVerificationStatus(worker.user_id, "approved", undefined, attempt?.id ?? null);
-    if (!result.success) throw new Error(result.error || "Failed to approve worker.");
+    if (!result.success) {
+      redirect(`/admin/verify/${worker.user_id}?error=${encodeURIComponent(result.error || "Failed to approve worker.")}`);
+    }
     redirect("/admin/verify");
   };
 
   const handleReject = async (reason: string) => {
     "use server";
     const result = await updateWorkerVerificationStatus(worker.user_id, "rejected", reason, attempt?.id ?? null);
-    if (!result.success) throw new Error(result.error || "Failed to reject worker.");
+    if (!result.success) {
+      redirect(`/admin/verify/${worker.user_id}?error=${encodeURIComponent(result.error || "Failed to reject worker.")}`);
+    }
     redirect("/admin/verify");
   };
 
   const handleRevoke = async (reason: string) => {
     "use server";
     const result = await updateWorkerVerificationStatus(worker.user_id, "revoked", reason, attempt?.id ?? null);
-    if (!result.success) throw new Error(result.error || "Failed to revoke worker verification.");
+    if (!result.success) {
+      redirect(`/admin/verify/${worker.user_id}?error=${encodeURIComponent(result.error || "Failed to revoke worker verification.")}`);
+    }
     redirect("/admin/verify");
   };
 
   const handlePending = async (reason: string) => {
     "use server";
     const result = await updateWorkerVerificationStatus(worker.user_id, "pending", reason, attempt?.id ?? null);
-    if (!result.success) throw new Error(result.error || "Failed to mark worker pending.");
+    if (!result.success) {
+      redirect(`/admin/verify/${worker.user_id}?error=${encodeURIComponent(result.error || "Failed to mark worker pending.")}`);
+    }
     redirect("/admin/verify");
   };
 
@@ -157,6 +171,7 @@ export default async function WorkerVerificationPage({ params }: { params: Promi
       onReject={handleReject}
       onRevoke={handleRevoke}
       onPending={handlePending}
+      errorMessage={queryParams.error || null}
     />
   );
 }

@@ -134,7 +134,7 @@ export default function RatingPageContent({
   };
 
   return (
-    <div className="min-h-screen bg-background-primary-default pb-28 text-text-primary font-['Inter',system-ui,sans-serif]">
+    <div className="min-h-screen bg-background-primary-default pb-10 sm:pb-14 text-text-primary font-['Inter',system-ui,sans-serif]">
       {/* ── Demo / Preview Interactive Mode Banner ── */}
       {isDemoMode && (
         <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 text-xs text-amber-700 dark:text-amber-400 font-bold">

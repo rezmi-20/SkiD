@@ -86,7 +86,7 @@ export default function ContractSetupContent({ role, completed, completedAt }: P
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 pb-28 pt-2 px-4 sm:px-6 font-['Inter',system-ui,sans-serif] text-text-primary">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 pb-10 sm:pb-14 pt-2 px-4 sm:px-6 font-['Inter',system-ui,sans-serif] text-text-primary">
       {/* ── Top Header ── */}
       <header className="flex items-center justify-between pb-4 border-b border-border-button-default">
         <div className="flex items-center gap-3">

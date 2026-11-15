@@ -144,16 +144,25 @@ export default function LoginPage() {
             setError(t("auth.login.errSuspended"));
             return;
           }
-          if (role === "client") router.replace("/client/search");
+          const isNewlyRegistered = searchParams.get("registered") === "true" || searchParams.get("onboarding") === "1";
+          if (isNewlyRegistered) {
+            try {
+              sessionStorage.setItem("direskill_force_onboarding", "true");
+            } catch {}
+          }
+          if (role === "client") router.replace(isNewlyRegistered ? "/client/search?onboarding=1" : "/client/search");
           else if (role === "worker") {
+            const targetRoute = getWorkerAccessRoute({
+              role,
+              verificationStatus: workerVerificationStatus,
+              isSuspended: workerIsSuspended,
+              isVerified: workerIsVerified,
+              identityComplete: workerIdentityComplete,
+            });
             router.replace(
-              getWorkerAccessRoute({
-                role,
-                verificationStatus: workerVerificationStatus,
-                isSuspended: workerIsSuspended,
-                isVerified: workerIsVerified,
-                identityComplete: workerIdentityComplete,
-              })
+              isNewlyRegistered
+                ? `${targetRoute}${targetRoute.includes("?") ? "&" : "?"}onboarding=1`
+                : targetRoute
             );
           }
         } else if (res.status >= 500) {
@@ -224,19 +233,39 @@ export default function LoginPage() {
           return;
         }
 
+        const isNewlyRegistered =
+          searchParams.get("registered") === "true" ||
+          searchParams.get("onboarding") === "1" ||
+          (typeof window !== "undefined" && window.sessionStorage?.getItem("direskill_just_registered") === "true");
+
+        if (isNewlyRegistered) {
+          try {
+            window.sessionStorage?.removeItem("direskill_just_registered");
+            window.sessionStorage?.setItem("direskill_first_login_onboarding", "true");
+            window.sessionStorage?.setItem("direskill_force_onboarding", "true");
+            const userPart = identifier.includes("@") ? identifier.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "_") : null;
+            if (userPart) {
+              window.localStorage?.removeItem(`skid_onboarding_completed_${userPart}`);
+            }
+          } catch {}
+        }
+
         if (session.role === "client") {
-          window.location.href = "/client/search";
+          window.location.href = isNewlyRegistered ? "/client/search?onboarding=1" : "/client/search";
           return;
         }
 
         if (session.role === "worker") {
-          window.location.href = getWorkerAccessRoute({
+          const targetRoute = getWorkerAccessRoute({
             role: session.role,
             verificationStatus: session.workerVerificationStatus,
             isSuspended: session.workerIsSuspended,
             isVerified: session.workerIsVerified,
             identityComplete: session.workerIdentityComplete,
           });
+          window.location.href = isNewlyRegistered
+            ? `${targetRoute}${targetRoute.includes("?") ? "&" : "?"}onboarding=1`
+            : targetRoute;
           return;
         }
 

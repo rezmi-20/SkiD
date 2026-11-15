@@ -74,23 +74,7 @@ const ADMIN_ROLE_SET = new Set<string>(ADMIN_ROLES);
 const ADMIN_STATUS_SET = new Set<string>(ADMIN_STATUSES);
 
 export const ADMIN_ROLE_PERMISSIONS: Record<AdminRole, AdminPermission[]> = {
-  super_admin: [
-    "admin_accounts.create",
-    "admin_accounts.read",
-    "admin_accounts.assign_role",
-    "admin_accounts.suspend",
-    "admin_accounts.reactivate",
-    "audit.read",
-    "reports.read",
-    "appeals.read",
-    "appeals.resolve",
-    "admin_misconduct.review",
-    "verification.read",
-    "content.read",
-    "disputes.read",
-    "payment_cases.read",
-    "support.read",
-  ],
+  super_admin: [...ADMIN_PERMISSIONS],
   content_verification_admin: [
     "verification.read",
     "verification.review",
@@ -100,6 +84,8 @@ export const ADMIN_ROLE_PERMISSIONS: Record<AdminRole, AdminPermission[]> = {
     "verification.revoke",
     "content.read",
     "content.moderate",
+    "reports.read",
+    "audit.read",
   ],
   dispute_payment_admin: [
     "disputes.read",
@@ -109,6 +95,8 @@ export const ADMIN_ROLE_PERMISSIONS: Record<AdminRole, AdminPermission[]> = {
     "disputes.escalate",
     "payment_cases.read",
     "payment_cases.review",
+    "reports.read",
+    "audit.read",
   ],
   user_support_admin: [
     "support.read",
@@ -120,6 +108,8 @@ export const ADMIN_ROLE_PERMISSIONS: Record<AdminRole, AdminPermission[]> = {
     "support.resolve",
     "support.escalate",
     "users.read_limited",
+    "reports.read",
+    "audit.read",
   ],
 };
 
@@ -156,6 +146,7 @@ export function hasAdminPermission(
   permission: AdminPermission,
 ) {
   if (!admin || admin.status !== "active") return false;
+  if (admin.role === "super_admin") return true;
   return ADMIN_ROLE_PERMISSIONS[admin.role]?.includes(permission) ?? false;
 }
 

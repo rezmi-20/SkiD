@@ -75,7 +75,10 @@ export default function AppShell({
 
   if (!mounted) return null;
 
-  const isFullBleedPage = /^\/(client\/worker\/|client\/messages(\/|$)|worker\/messages(\/|$)|contracts\/|client\/search(\/|$))/.test(pathname);
+  const isProfilePage = pathname === "/client/profile" || pathname === "/worker/profile";
+  const isFullBleedPage =
+    isProfilePage ||
+    /^\/(client\/worker\/|client\/messages(\/|$)|worker\/messages(\/|$)|contracts\/|client\/search(\/|$))/.test(pathname);
 
   // Derive localized current page title for mobile header
   const getPageTitle = () => {
@@ -129,24 +132,24 @@ export default function AppShell({
           )}
         >
           {/* Mobile Top Navigation (< lg): Left: Logo | Center: Redesigned Bold Title | Right: NotificationBell */}
-          <div className="lg:hidden flex items-center justify-between h-14 px-3 sm:px-4">
-            <div className="w-10 flex items-center justify-start shrink-0">
-              <DireSkillLogo variant="color" iconSize={28} href={`/${role}/dashboard`} showWordmark={false} />
+          <div className="lg:hidden flex items-center justify-between h-10 px-3">
+            <div className="w-8 flex items-center justify-start shrink-0">
+              <DireSkillLogo variant="color" iconSize={26} href={`/${role}/dashboard`} showWordmark={false} />
             </div>
 
             <div className="flex-1 flex items-center justify-center min-w-0 px-2 text-center">
-              <h1 className="text-lg sm:text-xl font-black text-foreground tracking-tight truncate">
+              <h1 className="text-base sm:text-lg font-black text-foreground tracking-tight truncate">
                 {pageTitle}
               </h1>
             </div>
 
-            <div className="w-10 flex items-center justify-end shrink-0">
+            <div className="w-8 flex items-center justify-end shrink-0">
               <NotificationBell role={role} />
             </div>
           </div>
 
           {/* Desktop Top Navigation (>= lg) */}
-          <div className="hidden lg:flex items-center justify-between h-16 px-6">
+          <div className="hidden lg:flex items-center justify-between h-14 px-6">
             {/* Left: Brand & Desktop Title / Breadcrumb */}
             <div className="flex items-center gap-3 min-w-0">
               <div className="shrink-0 flex items-center">
@@ -226,11 +229,11 @@ export default function AppShell({
         {/* ── Main Content ── */}
         <main className="flex-1 w-full overflow-x-clip flex flex-col">
           {isFullBleedPage ? (
-            <div className="w-full flex-1 flex flex-col">
+            <div className="w-full flex-1 flex flex-col pb-14 sm:pb-16 lg:pb-0">
               {children}
             </div>
           ) : (
-            <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 py-6 md:py-8">
+            <div className="w-full px-3.5 sm:px-6 lg:px-8 xl:px-10 pt-1.5 pb-14 sm:py-6 md:py-8">
               {children}
             </div>
           )}

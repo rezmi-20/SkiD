@@ -225,7 +225,7 @@ export default function NotificationsContent({
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto px-4 sm:px-6 pb-28 pt-2 font-['Inter',system-ui,sans-serif]">
+    <div className="w-full max-w-xl mx-auto px-4 sm:px-6 pb-10 sm:pb-14 pt-1 font-['Inter',system-ui,sans-serif]">
       {/* ── 1. TOP UTILITY BAR (Back button on left, Chime & Mark All Read on right; Title is in top nav bar) ── */}
       <div className="flex items-center justify-between py-2 mb-4">
         {/* Rounded square back button on left */}

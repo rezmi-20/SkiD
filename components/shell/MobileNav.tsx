@@ -107,8 +107,8 @@ export default function MobileNav({ role }: MobileNavProps) {
   ];
 
   return (
-    <nav className="lg:hidden fixed bottom-0 inset-x-0 w-full z-50 select-none bg-white/98 dark:bg-[#12171e]/98 backdrop-blur-xl border-t border-zinc-200/80 dark:border-zinc-800/80 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.4)] pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-      <div className="relative w-full max-w-lg mx-auto h-[62px] sm:h-[66px] px-2 flex items-center justify-between">
+    <nav className="lg:hidden fixed bottom-0 inset-x-0 w-full z-50 select-none bg-white/98 dark:bg-[#12171e]/98 backdrop-blur-xl border-t border-zinc-200/80 dark:border-zinc-800/80 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.4)] pb-[max(0.1rem,env(safe-area-inset-bottom))]">
+      <div className="relative w-full max-w-lg mx-auto h-[48px] sm:h-[50px] px-2 flex items-center justify-between">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = item.isActive;
@@ -122,15 +122,15 @@ export default function MobileNav({ role }: MobileNavProps) {
                 className="relative flex-1 h-full flex flex-col items-center justify-center group active:scale-95 transition-transform touch-manipulation"
               >
                 {/* ── Active Tab Indicator: Elevated Dark Green Circular Badge ── */}
-                <div className="relative -top-4 sm:-top-5 flex flex-col items-center">
+                <div className="relative -top-2 sm:-top-2.5 flex flex-col items-center">
                   <motion.div
                     layoutId="activeNavElevatedCircle"
                     transition={{ type: "spring", damping: 26, stiffness: 340 }}
-                    className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-[#134e27] border-[4px] border-white dark:border-[#12171e] text-[#a4fe47] flex items-center justify-center shadow-[0_8px_20px_rgba(19,78,39,0.45)]"
+                    className="w-10 h-10 rounded-full bg-[#134e27] border-[2.5px] border-white dark:border-[#12171e] text-[#a4fe47] flex items-center justify-center shadow-[0_4px_14px_rgba(19,78,39,0.45)]"
                   >
-                    <Icon className="h-6 w-6 text-[#a4fe47] stroke-[2.2]" />
+                    <Icon className="h-5 w-5 text-[#a4fe47] stroke-[2.2]" />
                   </motion.div>
-                  <span className="text-[10px] font-black text-zinc-950 dark:text-white mt-0.5 tracking-tight">
+                  <span className="text-[9px] font-black text-zinc-950 dark:text-white mt-0.5 tracking-tight">
                     {item.label}
                   </span>
                 </div>
@@ -143,17 +143,17 @@ export default function MobileNav({ role }: MobileNavProps) {
               key={item.id}
               href={item.href}
               aria-label={item.label}
-              className="relative flex-1 h-full flex flex-col items-center justify-center py-1 group active:scale-90 transition-transform touch-manipulation"
+              className="relative flex-1 h-full flex flex-col items-center justify-center py-0.5 group active:scale-90 transition-transform touch-manipulation"
             >
               <div className="relative">
-                <Icon className="h-5 w-5 text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 stroke-[1.8] transition-colors" />
+                <Icon className="h-5 w-5 text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-800 dark:group-hover:text-zinc-200 stroke-[1.8] transition-colors" />
                 {Boolean(item.badge && item.badge > 0) && (
-                  <span className="absolute -top-1 -right-2 min-w-[15px] h-[15px] px-0.5 rounded-full bg-rose-500 text-white font-black text-[8px] flex items-center justify-center shadow-xs">
+                  <span className="absolute -top-1 -right-2 min-w-[14px] h-[14px] px-0.5 rounded-full bg-rose-500 text-white font-black text-[8px] flex items-center justify-center shadow-xs">
                     {(item.badge ?? 0) > 99 ? "99+" : item.badge}
                   </span>
                 )}
               </div>
-              <span className="text-[10px] mt-1 font-medium text-zinc-400 dark:text-zinc-500 tracking-tight">
+              <span className="text-[9px] mt-0.5 font-medium text-zinc-500 dark:text-zinc-400 tracking-tight">
                 {item.label}
               </span>
             </Link>

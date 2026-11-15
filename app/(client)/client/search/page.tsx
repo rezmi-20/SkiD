@@ -27,7 +27,8 @@ import {
   RiStarFill,
   RiShieldCheckFill,
   RiChat1Line,
-  RiEyeLine
+  RiEyeLine,
+  RiFocus3Line
 } from "@remixicon/react";
 import { cx } from "@/utils/cx";
 import { resolveTradeBanner } from "@/lib/trade-banners";
@@ -74,6 +75,7 @@ function SearchPageContent() {
   const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null);
   const [previewWorker, setPreviewWorker] = useState<Worker | null>(null);
   const [messagingWorkerId, setMessagingWorkerId] = useState<string | null>(null);
+  const [recenterSignal, setRecenterSignal] = useState(0);
 
   useEffect(() => {
     setMounted(true);
@@ -494,14 +496,19 @@ function SearchPageContent() {
                           <span>List</span>
                         </button>
 
-                        {/* GPS Button */}
+                        {/* Recenter / GPS Button */}
                         <button
                           type="button"
-                          onClick={refreshLocation}
-                          className="h-9 w-9 rounded-xl text-xs font-bold bg-[#134e27]/20 text-[#45BA50] border border-[#45BA50]/35 flex items-center justify-center active:scale-95 transition-all shrink-0"
-                          title="Refresh GPS"
+                          onClick={() => {
+                            refreshLocation();
+                            setRecenterSignal((s) => s + 1);
+                          }}
+                          className="h-9 px-2.5 rounded-xl text-xs font-bold bg-[#134e27]/25 hover:bg-[#134e27]/40 text-[#45BA50] border border-[#45BA50]/40 flex items-center gap-1.5 active:scale-95 transition-all shrink-0 cursor-pointer shadow-sm"
+                          title="Center on My Real-Time Location"
+                          aria-label="Center on My Real-Time Location"
                         >
-                          <RiRestartLine className={cx("w-3.5 h-3.5", locLoading ? "animate-spin" : "")} />
+                          <RiFocus3Line className={cx("w-4 h-4 text-[#45BA50]", locLoading ? "animate-spin" : "")} />
+                          <span className="hidden sm:inline text-[11px]">My GPS</span>
                         </button>
                       </div>
                     </div>
@@ -512,6 +519,7 @@ function SearchPageContent() {
                       selectedWorkerId={selectedWorker?.id}
                       onSelectWorker={(w) => setSelectedWorker(w)}
                       onMapClick={() => setSelectedWorker(null)}
+                      recenterSignal={recenterSignal}
                       className="h-full w-full"
                     />
 

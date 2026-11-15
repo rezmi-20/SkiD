@@ -92,7 +92,10 @@ export default function OTPVerificationPage() {
         setError(verifyError.message || t("auth.otp.invalid"));
       } else {
         if (phone) window.sessionStorage.removeItem("pendingPhoneVerification");
-        router.push("/login?verified=true");
+        if (typeof window !== "undefined") {
+          window.sessionStorage.setItem("direskill_just_registered", "true");
+        }
+        router.push("/login?verified=true&registered=true");
       }
     } catch (err: any) {
       console.error("Verification Error:", err);

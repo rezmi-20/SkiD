@@ -80,10 +80,10 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
   };
 
   return (
-    <div className="w-full max-w-md md:max-w-4xl mx-auto px-3 sm:px-6 pb-32 animate-in fade-in duration-300">
+    <div className="w-full max-w-md md:max-w-4xl mx-auto px-0 sm:px-6 pb-10 sm:pb-14 animate-in fade-in duration-300">
       
-      {/* ── COVER PROFILE HERO (Clean Banner, Overlapping Avatar, Trade Pill, Name & Total Jobs) ── */}
-      <div className="mb-6 pt-1 sm:pt-2">
+      {/* ── COVER PROFILE HERO (Full-bleed flush on mobile, rounded card on desktop) ── */}
+      <div className="mb-6 pt-0">
         <WorkerTradeHeroBanner
           user={user}
           skills={skills}
@@ -92,7 +92,7 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
         />
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-6 px-3.5 sm:px-0">
           
           {/* 1. "Work & Contracts" Domain Capsule */}
           <div>

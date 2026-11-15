@@ -92,19 +92,56 @@ export default function FirstTimeOnboardingModal({
   const [isDesktop, setIsDesktop] = useState(false);
   const [spotlightRect, setSpotlightRect] = useState<DOMRect | null>(null);
 
+  const userStorageKey = userName
+    ? `skid_onboarding_completed_${userName.toLowerCase().replace(/[^a-z0-9]/g, "_")}`
+    : STORAGE_KEY;
+
   useEffect(() => {
     setMounted(true);
     if (!isDemo) {
       try {
-        const completed = localStorage.getItem(STORAGE_KEY);
-        if (!completed) {
+        const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+        const hasSessionForce = typeof window !== "undefined" && (
+          window.sessionStorage?.getItem("direskill_force_onboarding") === "true" ||
+          window.sessionStorage?.getItem("direskill_first_login_onboarding") === "true"
+        );
+        if (hasSessionForce) {
+          window.sessionStorage?.removeItem("direskill_force_onboarding");
+          window.sessionStorage?.removeItem("direskill_first_login_onboarding");
+        }
+        const isFirstLoginAfterRegistration = Boolean(
+          urlParams?.get("onboarding") === "1" ||
+          urlParams?.get("tour") === "1" ||
+          urlParams?.get("registered") === "true" ||
+          hasSessionForce
+        );
+
+        const completed = localStorage.getItem(userStorageKey);
+        // The onboarding guide ONLY triggers when a user registers and logs in for the FIRST time!
+        // It does NOT trigger on subsequent normal logins once completed.
+        if (isFirstLoginAfterRegistration && !completed) {
           setModalOpen(true);
+          if (typeof window !== "undefined" && window.history?.replaceState && urlParams?.has("onboarding")) {
+            const cleanUrl = new URL(window.location.href);
+            cleanUrl.searchParams.delete("onboarding");
+            cleanUrl.searchParams.delete("registered");
+            cleanUrl.searchParams.delete("tour");
+            window.history.replaceState({}, "", cleanUrl.toString());
+          }
         }
       } catch {}
     } else {
       setModalOpen(isOpen);
     }
-  }, [isOpen, isDemo]);
+
+    const handleStartTour = () => {
+      setModalOpen(true);
+      setPhase("setup");
+      setTourIndex(0);
+    };
+    window.addEventListener("onboarding:start", handleStartTour);
+    return () => window.removeEventListener("onboarding:start", handleStartTour);
+  }, [isOpen, isDemo, userStorageKey]);
 
   useEffect(() => {
     if (resolvedTheme === "light" || resolvedTheme === "dark") {
@@ -225,24 +262,24 @@ export default function FirstTimeOnboardingModal({
       icon: <CreditCard className="w-4 h-4" />,
       content: {
         en: {
-          badge: "Chapa Escrow",
-          title: "4. Escrow Protected Payments",
+          badge: "Milestone Protection",
+          title: "4. Milestone Protected Payments",
           description:
-            "Never pay cash blindly. Funds are safely held in digital escrow via Chapa and mobile money (Telebirr/CBE). Funds release only after you inspect and approve the job.",
-          guideQuote: "If work isn't completed to standard, funds remain safely protected in escrow.",
+            "Never pay cash blindly. Funds are safely deposited into DireSkill Milestone Protection via Chapa and mobile money (Telebirr/CBE). Funds release only after you inspect and approve the job.",
+          guideQuote: "If work isn't completed to standard, funds remain safely protected in milestone custody.",
         },
         am: {
-          badge: "የቻፓ ዋስትና",
-          title: "4. በእስክሮው (Escrow) የተጠበቁ ክፍያዎች",
+          badge: "የማይልስቶን ዋስትና",
+          title: "4. በማይልስቶን የተጠበቁ ክፍያዎች",
           description:
-            "በጭፍን በጥሬ ገንዘብ አይክፈሉ። ገንዘብዎ በቻፓ እና በቴሌብር ዋስትና ተይዞ ይቆያል። ገንዘቡ የሚለቀቀው ስራውን አይተው ሲያጸድቁ ብቻ ነው።",
-          guideQuote: "ስራው በሚፈለገው ደረጃ ካልተሰራ፣ ገንዘብዎ በዋስትና ተጠብቆ ይቆያል።",
+            "በጭፍን በጥሬ ገንዘብ አይክፈሉ። ገንዘብዎ በቻፓ እና በቴሌብር የዲሬስኪል ማይልስቶን ጥበቃ ተይዞ ይቆያል። ገንዘቡ የሚለቀቀው ስራውን አይተው ሲያጸድቁ ብቻ ነው።",
+          guideQuote: "ስራው በሚፈለገው ደረጃ ካልተሰራ፣ ገንዘብዎ በማይልስቶን ጥበቃ ውስጥ ይቆያል።",
         },
         om: {
-          badge: "Wabiin Kaffaltii",
-          title: "4. Kaffaltii Wabii Dijitaalaatiin Eegame",
+          badge: "Wabii Kaffaltii",
+          title: "4. Kaffaltii Wabii Maayilistoonitiin Eegame",
           description:
-            "Garaa laafinaan harkaan kaffaltii hin raawwatinaa. Qarshiin keessan karaa Chapa fi Telebirr qabamee tura. Hojiin sirriitti xumuramee yoo mirkanaa'e qofa kaffalama.",
+            "Garaa laafinaan harkaan kaffaltii hin raawwatinaa. Qarshiin keessan karaa Chapa fi Telebirr wabii Maayilistoonii DireSkill qabamee tura. Hojiin sirriitti xumuramee yoo mirkanaa'e qofa kaffalama.",
           guideQuote: "Hojiin qulqullinaan yoo xumuramuu baate, qarshiin keessan wabiidhaan eegamee tura.",
         },
       },
@@ -418,6 +455,7 @@ export default function FirstTimeOnboardingModal({
 
   const handleFinish = () => {
     try {
+      localStorage.setItem(userStorageKey, "true");
       localStorage.setItem(STORAGE_KEY, "true");
     } catch {}
     if (onComplete) {

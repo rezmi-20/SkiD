@@ -430,7 +430,7 @@ export default function ClientDashboardContent({
   }, [timeFilter, userData.totalSpent, payments, filterCutoff, filteredContracts, totalBudget]);
 
   return (
-    <div className="w-full max-w-lg mx-auto lg:max-w-none lg:mx-0 space-y-6 lg:space-y-8 pb-20 select-none">
+    <div className="w-full max-w-lg mx-auto lg:max-w-none lg:mx-0 space-y-6 lg:space-y-8 pb-10 lg:pb-12 select-none">
       
       {/* ── 1. TOTAL SPEND HEADER ── */}
       {/* 1A. Mobile View: Exact Sixpay Visual Match with Dynamic Time Filter (< lg) */}

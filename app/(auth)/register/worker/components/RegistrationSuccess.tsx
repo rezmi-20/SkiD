@@ -27,7 +27,12 @@ export default function RegistrationSuccess() {
            </p>
         </div>
         <button 
-          onClick={() => router.push("/login")}
+          onClick={() => {
+            if (typeof window !== "undefined") {
+              window.sessionStorage.setItem("direskill_just_registered", "true");
+            }
+            router.push("/login?registered=true");
+          }}
           className="w-full h-14 bg-green-400 text-black rounded-full font-bold text-sm uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-green-400/20"
         >
           {t("register.success.button")}

@@ -612,7 +612,7 @@ export default function CommunityFeedContent({ initialPosts }: { initialPosts: a
   }, [formattedDbPosts, selectedCategory, searchQuery]);
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-8 pb-32">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-6 pb-10 sm:pb-12">
       {/* ── 1. Top Bar / Editorial Header ── */}
       <header className="flex items-center justify-between gap-4 pt-1">
         {/* Left: Brand Identity Wordmark */}
