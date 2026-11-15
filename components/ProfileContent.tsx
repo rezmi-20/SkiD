@@ -82,12 +82,13 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
   return (
     <div className="w-full max-w-md md:max-w-4xl mx-auto px-3 sm:px-6 pb-32 animate-in fade-in duration-300">
       
-      {/* ── COVER PROFILE HERO (Clean Banner, Overlapping Avatar, Trade Pill & Name) ── */}
+      {/* ── COVER PROFILE HERO (Clean Banner, Overlapping Avatar, Trade Pill, Name & Total Jobs) ── */}
       <div className="mb-6 pt-1 sm:pt-2">
         <WorkerTradeHeroBanner
           user={user}
           skills={skills}
           bio={user.bio}
+          totalJobs={stats[0]?.value || "0"}
         />
       </div>
 

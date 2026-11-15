@@ -32,6 +32,7 @@ interface WorkerTradeHeroBannerProps {
   };
   skills?: string[] | string | null;
   bio?: string | null;
+  totalJobs?: number | string;
   initialTradeKey?: WorkerTradeKey;
   onTradeChange?: (trade: TradeBannerMeta) => void;
   className?: string;
@@ -41,6 +42,7 @@ export default function WorkerTradeHeroBanner({
   user,
   skills,
   bio,
+  totalJobs = "0",
   initialTradeKey,
   onTradeChange,
   className = "",
@@ -188,8 +190,18 @@ export default function WorkerTradeHeroBanner({
           {user.name}
         </h1>
 
+        {/* ── Total Jobs Counter (Only Total Jobs kept; followers, likes, follow button, and chat removed) ── */}
+        <div className="flex flex-col items-center justify-center pt-2">
+          <span className="text-xl sm:text-2xl font-black text-text-primary tracking-tight">
+            {totalJobs}
+          </span>
+          <span className="text-[11px] font-bold text-text-secondary">
+            Total Jobs
+          </span>
+        </div>
+
         {user.is_verified && (
-          <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+          <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 pt-1">
             <RiShieldCheckFill className="size-3.5" />
             <span>Fayda Biometric Verified</span>
           </div>
