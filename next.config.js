@@ -5,6 +5,7 @@ const nextConfig = {
   // by resolving __dirname to C:\ROOT. Marking it as external fixes the path.
   serverExternalPackages: ['pdfkit'],
   experimental: {
+    agentUpgrade: 'security',
     // Re-verification sends a validated, <=3 MB Fayda document as a data URL
     // directly to the server action so it can be encrypted before persistence.
     serverActions: { bodySizeLimit: '5mb' },
