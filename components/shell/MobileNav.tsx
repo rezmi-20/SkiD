@@ -9,7 +9,6 @@ import {
   Home,
   Search,
   Briefcase,
-  FileText,
   User,
   Users,
   MessageSquare,
@@ -53,8 +52,8 @@ export default function MobileNav({ role }: MobileNavProps) {
   }, []);
 
   const isHome = pathname === `/${role}/dashboard`;
-  const isSearch = pathname?.includes("/search") || pathname?.includes("/gigs");
   const isCommunity = pathname?.includes("/community");
+  const isSearch = pathname?.includes("/search") || pathname?.includes("/gigs");
   const isMessages = pathname === `/${role}/messages`;
   const isProfile = pathname?.includes("/profile");
 
@@ -70,58 +69,101 @@ export default function MobileNav({ role }: MobileNavProps) {
   const navItems = [
     {
       id: "home",
+      tourId: "tour-home",
       label: t("nav.home") || "Home",
       href: `/${role}/dashboard`,
       icon: Home,
       isActive: isHome,
-    },
-    {
-      id: "search",
-      label: role === "worker" ? t("nav.mygigs") || "Gigs" : t("nav.search") || "Search",
-      href: role === "worker" ? "/worker/gigs" : "/client/search",
-      icon: role === "worker" ? Briefcase : Search,
-      isActive: isSearch,
+      isCenter: false,
     },
     {
       id: "community",
+      tourId: "tour-community",
       label: t("nav.community") || "Community",
       href: `/${role}/community`,
       icon: Users,
       isActive: isCommunity,
+      isCenter: false,
+    },
+    {
+      id: "search",
+      tourId: role === "worker" ? "tour-gigs" : "tour-search",
+      label: role === "worker" ? t("nav.mygigs") || "Gigs" : t("nav.search") || "Search",
+      href: role === "worker" ? "/worker/gigs" : "/client/search",
+      icon: role === "worker" ? Briefcase : Search,
+      isActive: isSearch,
+      isCenter: true,
     },
     {
       id: "messages",
+      tourId: "tour-chat",
       label: t("nav.chat") || "Messages",
       href: `/${role}/messages`,
       icon: MessageSquare,
       isActive: isMessages,
       badge: unreadCount,
+      isCenter: false,
     },
     {
       id: "profile",
+      tourId: "tour-profile",
       label: t("nav.profile") || "Profile",
       href: `/${role}/profile`,
       icon: User,
       isActive: isProfile,
+      isCenter: false,
     },
   ];
 
   return (
     <nav className="lg:hidden fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] inset-x-0 z-50 flex justify-center pointer-events-none select-none px-3">
-      <div className="pointer-events-auto relative w-full max-w-[360px] sm:max-w-[410px] h-[56px] sm:h-[60px] px-2.5 py-2 rounded-full bg-[#121316]/95 dark:bg-[#0c0d10]/95 backdrop-blur-2xl border border-white/10 dark:border-white/10 shadow-[0_12px_36px_rgba(0,0,0,0.45)] dark:shadow-[0_16px_44px_rgba(0,0,0,0.7)] flex items-center justify-between">
+      <div className="pointer-events-auto relative w-full max-w-[365px] sm:max-w-[410px] h-[58px] sm:h-[62px] px-2 sm:px-2.5 rounded-full bg-[#121316]/95 dark:bg-[#0c0d10]/95 backdrop-blur-2xl border border-white/10 dark:border-white/10 shadow-[0_14px_40px_rgba(0,0,0,0.45)] dark:shadow-[0_18px_48px_rgba(0,0,0,0.7)] flex items-center justify-between">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = item.isActive;
 
+          // ── Pattern B: Elevated Circular Center Hero Button ──
+          if (item.isCenter) {
+            return (
+              <Link
+                key={item.id}
+                id={item.tourId}
+                href={item.href}
+                aria-label={item.label}
+                title={item.label}
+                className="relative -top-3 sm:-top-3.5 flex flex-col items-center justify-center shrink-0 transition-transform active:scale-90 touch-manipulation select-none group"
+              >
+                <div
+                  className={cx(
+                    "w-12 h-12 sm:w-13 sm:h-13 rounded-full flex items-center justify-center transition-all duration-300 border-[3.5px] border-[#121316] dark:border-[#0c0d10]",
+                    isActive
+                      ? "bg-[#134e27] text-[#a4fe47] shadow-[0_8px_24px_rgba(19,78,39,0.55)] ring-2 ring-[#a4fe47]/40 scale-105"
+                      : "bg-white text-zinc-950 hover:bg-zinc-100 shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
+                  )}
+                >
+                  <Icon
+                    className={cx(
+                      "h-5 w-5 sm:h-5.5 sm:w-5.5 transition-colors",
+                      isActive ? "stroke-[2.4]" : "stroke-[2.2]"
+                    )}
+                  />
+                </div>
+              </Link>
+            );
+          }
+
+          // ── Pattern A: Standard Tabs with Active Pill Expansion ──
           return (
             <Link
               key={item.id}
+              id={item.tourId}
               href={item.href}
               aria-label={item.label}
+              title={item.label}
               className={cx(
-                "relative flex items-center justify-center rounded-full transition-all touch-manipulation select-none",
+                "relative flex items-center justify-center rounded-full transition-all touch-manipulation select-none group",
                 isActive
-                  ? "px-3.5 sm:px-4 py-2 sm:py-2.5 text-white"
+                  ? "px-3 sm:px-3.5 py-1.5 sm:py-2 text-white"
                   : "w-10 h-10 sm:w-11 sm:h-11 text-zinc-400 hover:text-zinc-100 active:scale-95"
               )}
             >
@@ -133,11 +175,11 @@ export default function MobileNav({ role }: MobileNavProps) {
                 />
               )}
 
-              <div className="relative z-10 flex items-center gap-2">
+              <div className="relative z-10 flex items-center gap-1.5 sm:gap-2">
                 <Icon
                   className={cx(
                     "h-5 w-5 shrink-0 transition-colors",
-                    isActive ? "text-white stroke-[2.2]" : "text-zinc-400 stroke-[1.8]"
+                    isActive ? "text-white stroke-[2.2]" : "text-zinc-400 group-hover:text-zinc-100 stroke-[1.8]"
                   )}
                 />
                 {isActive && (
