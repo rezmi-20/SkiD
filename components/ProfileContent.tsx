@@ -67,7 +67,7 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
 
   const isWorker = user.role === "worker";
   const contractsHref = isWorker ? "/worker/contracts" : "/client/contracts";
-  const ongoingJobsHref = isWorker ? "/worker/jobs" : "/client/dashboard";
+  const ongoingJobsHref = isWorker ? "/worker/jobs" : "/client/contracts";
   const ratingsHref = isWorker ? "/worker/rate" : "/client/rate";
   const paymentsHref = isWorker ? "/worker/earnings" : "/client/payments";
   const settingsHref = isWorker ? "/worker/profile/settings" : "/client/profile/settings";
@@ -199,6 +199,21 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
                 <div className="flex-1 min-w-0 ml-3.5">
                   <p className="text-xs sm:text-sm font-bold text-foreground truncate">{t("profile.menu.securityPin")}</p>
                   <p className="text-[10px] text-muted-foreground truncate">{t("profile.menu.securityPinDesc")}</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-foreground/70 shrink-0" />
+              </Link>
+
+              {/* Row 4: Account & Profile Settings */}
+              <Link
+                href={settingsHref}
+                className="rounded-[1.75rem] bg-slate-100/90 dark:bg-zinc-900/90 hover:bg-slate-200/70 dark:hover:bg-zinc-800/80 p-3.5 sm:p-4 flex items-center justify-between shadow-sm hover:border-primary/30 border border-slate-200/70 dark:border-zinc-800 active:scale-[0.99] transition-all touch-manipulation group"
+              >
+                <div className="h-11 w-11 rounded-full bg-slate-900 dark:bg-zinc-800 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <Settings className="h-4 w-4 stroke-[2]" />
+                </div>
+                <div className="flex-1 min-w-0 ml-3.5">
+                  <p className="text-xs sm:text-sm font-bold text-foreground truncate">Profile & Account Settings</p>
+                  <p className="text-[10px] text-muted-foreground truncate">Personal information, security & preferences</p>
                 </div>
                 <ArrowRight className="h-4 w-4 text-foreground/70 shrink-0" />
               </Link>

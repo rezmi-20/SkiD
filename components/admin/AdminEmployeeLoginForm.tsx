@@ -283,12 +283,12 @@ export function AdminEmployeeLoginForm() {
           {/* Bottom Footer Note */}
           <div className="text-center mt-7 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
             <span>Don&apos;t have an administrative account? </span>
-            <Link
-              href="/support"
+            <a
+              href="mailto:superadmin@direskill.com"
               className="font-medium text-emerald-600 dark:text-emerald-400 hover:underline"
             >
               Contact Super Admin
-            </Link>
+            </a>
           </div>
 
         </div>

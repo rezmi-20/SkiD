@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { completeContractSetup } from "@/lib/actions/contract-setup";
 import {
   RiCheckDoubleLine,
@@ -11,7 +11,8 @@ import {
   RiArrowLeftSLine,
   RiCheckboxCircleFill,
   RiKeyLine,
-  RiPencilLine
+  RiPencilLine,
+  RiArrowRightLine
 } from "@remixicon/react";
 
 /* ── draw-svg Skill: Digital Biometric Contract Seal ── */
@@ -40,10 +41,14 @@ interface Props {
   role: "client" | "worker";
   completed: boolean;
   completedAt?: string | null;
+  returnTo?: string;
 }
 
-export default function ContractSetupContent({ role, completed, completedAt }: Props) {
+export default function ContractSetupContent({ role, completed, completedAt, returnTo }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const effectiveReturnTo = returnTo || searchParams.get("returnTo") || null;
+
   const [acceptedPolicy, setAcceptedPolicy] = useState(false);
   const [acceptedSignatureUse, setAcceptedSignatureUse] = useState(false);
   const [pin, setPin] = useState("");
@@ -53,6 +58,7 @@ export default function ContractSetupContent({ role, completed, completedAt }: P
   const [success, setSuccess] = useState(completed);
 
   const dashboardHref = role === "worker" ? "/worker/dashboard" : "/client/dashboard";
+  const backHref = effectiveReturnTo || dashboardHref;
 
   const canSubmit = useMemo(() => {
     return acceptedPolicy && acceptedSignatureUse && /^\d{4}$/.test(pin) && pin === confirmPin && !submitting;
@@ -78,6 +84,12 @@ export default function ContractSetupContent({ role, completed, completedAt }: P
 
       setSuccess(true);
       router.refresh();
+
+      if (effectiveReturnTo) {
+        setTimeout(() => {
+          router.push(effectiveReturnTo);
+        }, 1200);
+      }
     } catch {
       setError("Unable to complete Contract Setup. Please try again.");
     } finally {
@@ -92,9 +104,9 @@ export default function ContractSetupContent({ role, completed, completedAt }: P
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => router.push(dashboardHref)}
+            onClick={() => router.push(backHref)}
             className="w-10 h-10 rounded-2xl border border-border-button-default bg-background-secondary-default hover:bg-background-secondary-hover text-text-primary flex items-center justify-center shadow-xs transition active:scale-95 cursor-pointer"
-            aria-label="Back to dashboard"
+            aria-label={effectiveReturnTo ? "Back to previous page" : "Back to dashboard"}
           >
             <RiArrowLeftSLine className="w-6 h-6" />
           </button>
@@ -268,13 +280,24 @@ export default function ContractSetupContent({ role, completed, completedAt }: P
             <span>{submitting ? "Configuring PIN…" : success ? "Update Contract PIN" : "Set Contract PIN"}</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => router.push(dashboardHref)}
-            className="flex h-13 sm:h-14 sm:w-48 items-center justify-center rounded-full border border-border-button-default bg-background-secondary-default text-text-primary hover:bg-background-secondary-hover text-xs font-black uppercase tracking-wider transition active:scale-[0.98] cursor-pointer"
-          >
-            Dashboard
-          </button>
+          {effectiveReturnTo ? (
+            <button
+              type="button"
+              onClick={() => router.push(effectiveReturnTo)}
+              className="flex h-13 sm:h-14 sm:w-56 items-center justify-center gap-1.5 rounded-full bg-[#134e27] text-[#a4fe47] hover:bg-[#134e27]/90 text-xs font-black uppercase tracking-wider transition active:scale-[0.98] cursor-pointer"
+            >
+              <span>Return to Contract</span>
+              <RiArrowRightLine className="w-4 h-4" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => router.push(dashboardHref)}
+              className="flex h-13 sm:h-14 sm:w-48 items-center justify-center rounded-full border border-border-button-default bg-background-secondary-default text-text-primary hover:bg-background-secondary-hover text-xs font-black uppercase tracking-wider transition active:scale-[0.98] cursor-pointer"
+            >
+              Dashboard
+            </button>
+          )}
         </div>
       </form>
     </div>

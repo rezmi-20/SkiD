@@ -68,11 +68,7 @@ export default function NewContractPage() {
     }
 
     getContractSetupStatus(undefined, `/client/contract/new${window.location.search}`)
-      .then((status) => {
-        if (!status.completed) {
-          router.replace(status.setupHref);
-          return;
-        }
+      .then(() => {
         setCheckingSetup(false);
       })
       .catch(() => setCheckingSetup(false));
@@ -137,7 +133,8 @@ export default function NewContractPage() {
         }, 1500);
       } else {
         if (result.code === "CONTRACT_SETUP_REQUIRED") {
-          router.push("/client/profile/settings?verify=1&returnTo=/client/contract/new");
+          const target = (result as any).setupHref || `/client/contract-setup?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+          router.push(target);
           return;
         }
         setError(result.error || "Failed to create contract proposal.");

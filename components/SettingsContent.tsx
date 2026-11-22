@@ -81,7 +81,18 @@ export default function SettingsContent({ initialData, role }: Props) {
     bankName: initialData.bank_name || "",
   });
 
-  const [activeSection, setActiveSection] = useState("personal");
+  const [activeSection, setActiveSection] = useState(() => {
+    const sec = searchParams.get("section");
+    if (sec && ["personal", "security", "payments", "preferences"].includes(sec)) return sec;
+    return "personal";
+  });
+
+  useEffect(() => {
+    const sec = searchParams.get("section");
+    if (sec && ["personal", "security", "payments", "preferences"].includes(sec)) {
+      setActiveSection(sec);
+    }
+  }, [searchParams]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [avatarRequestStatus, setAvatarRequestStatus] = useState<string | null>(initialData.avatar_change_request_status || null);

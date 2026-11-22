@@ -20,8 +20,12 @@ type VerifyPinResult =
   | { success: true }
   | { success: false; error: string; code?: "UNAUTHORIZED" | "SETUP_REQUIRED" | "INVALID_PIN" | "UNKNOWN" };
 
-function getSetupHref(role?: string | null) {
-  return role === "worker" ? "/worker/contract-setup" : "/client/contract-setup";
+function getSetupHref(role?: string | null, returnTo?: string | null) {
+  const base = role === "worker" ? "/worker/contract-setup" : "/client/contract-setup";
+  if (returnTo && returnTo !== base && !returnTo.startsWith("/client/contract-setup") && !returnTo.startsWith("/worker/contract-setup")) {
+    return `${base}?returnTo=${encodeURIComponent(returnTo)}`;
+  }
+  return base;
 }
 
 export async function getClientIdentityVerificationStatus(userId?: string) {
@@ -71,22 +75,6 @@ export async function getContractSetupStatus(userId?: string, returnTo?: string)
   }
 
   try {
-    if (session.user.role === "client" && targetUserId === session.user.id) {
-      const identity = await getClientIdentityVerificationStatus(targetUserId);
-      if (!identity.verified) {
-        return {
-          completed: false,
-          completedAt: null,
-          setupHref: getClientVerificationHref(
-            returnTo,
-            returnTo === "/client/contract-setup" ? CLIENT_PIN_VERIFICATION_MESSAGE : CLIENT_CONTRACT_VERIFICATION_MESSAGE,
-          ),
-          identityVerified: false,
-          error: returnTo === "/client/contract-setup" ? CLIENT_PIN_VERIFICATION_MESSAGE : CLIENT_CONTRACT_VERIFICATION_MESSAGE,
-        };
-      }
-    }
-
     if (session.user.role === "worker" && targetUserId === session.user.id) {
       const workerAccess = await assertActiveVerifiedWorker(targetUserId);
       if (!workerAccess.allowed) {
@@ -110,12 +98,12 @@ export async function getContractSetupStatus(userId?: string, returnTo?: string)
     return {
       completed: rows.length > 0 && !!rows[0].completed_at,
       completedAt: rows[0]?.completed_at ?? null,
-      setupHref: getSetupHref(session.user.role),
+      setupHref: getSetupHref(session.user.role, returnTo),
       identityVerified: true,
     };
   } catch (error) {
     console.error("[GET_CONTRACT_SETUP_STATUS_ERROR]", error);
-    return { completed: false, completedAt: null, setupHref: getSetupHref(session.user.role) };
+    return { completed: false, completedAt: null, setupHref: getSetupHref(session.user.role, returnTo) };
   }
 }
 

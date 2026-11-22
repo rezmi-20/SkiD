@@ -71,6 +71,7 @@ export async function createJob(data: CreateJobInput) {
       success: false,
       error: setup.error || "Complete Contract Setup before creating a hiring request.",
       code: "CONTRACT_SETUP_REQUIRED",
+      setupHref: setup.setupHref,
     };
   }
 
