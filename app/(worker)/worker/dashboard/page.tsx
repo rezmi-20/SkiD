@@ -61,8 +61,8 @@ export default async function WorkerDashboardPage() {
   let monthlyEarned = 0;
   let activeContracts: any[] = [];
   let completedJobsCount = 0;
-  let unreadNotificationsCount = 2;
-  let avgRating = 4.8;
+  let unreadNotificationsCount = 0;
+  let avgRating = 0;
   let reviewCount = 0;
   let latestReviews: any[] = [];
 
@@ -114,7 +114,7 @@ export default async function WorkerDashboardPage() {
       `,
       sql`
         SELECT 
-          COALESCE(ROUND(AVG(score)::numeric, 1), 4.8) AS avg_score,
+          COALESCE(ROUND(AVG(score)::numeric, 1), 0) AS avg_score,
           COUNT(*)::int AS count
         FROM ratings
         WHERE rated_id = ${session.user.id}
@@ -145,8 +145,8 @@ export default async function WorkerDashboardPage() {
     if (results[7].status === "fulfilled") {
       const ratingRow = (results[7].value as any[])[0];
       if (ratingRow) {
-        avgRating = Number(ratingRow.avg_score || 4.8);
         reviewCount = Number(ratingRow.count || 0);
+        avgRating = reviewCount > 0 ? Number(ratingRow.avg_score || 0) : 0;
       }
     }
     if (results[8].status === "fulfilled") latestReviews = results[8].value as any[];
@@ -168,7 +168,7 @@ export default async function WorkerDashboardPage() {
     hourlyRate: worker?.hourly_rate || null,
     availability: worker?.availability || "available",
     unreadNotificationsCount,
-    monthlyEarned: monthlyEarned > 0 ? monthlyEarned : (totalEarned > 0 ? totalEarned : 9500),
+    monthlyEarned,
     avgRating,
     reviewCount,
     latestReviews,

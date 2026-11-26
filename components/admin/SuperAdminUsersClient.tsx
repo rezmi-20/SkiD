@@ -32,6 +32,7 @@ import {
   resetAdminEmployeePassword,
 } from "@/lib/actions/admin-account";
 import type { AdminRole } from "@/lib/admin-authorization";
+import { useFeedback } from "@/components/ui/feedback";
 
 type UserRole = "client" | "worker" | "admin";
 
@@ -530,6 +531,7 @@ function RoleBadge({ role }: { role: UserRole }) {
 // ─── MAIN USER MANAGEMENT CLIENT ──────────────────────────────────────────────
 export function SuperAdminUsersClient({ initialUsers }: Props) {
   const { t } = useLanguage();
+  const { toast } = useFeedback();
   const [users, setUsers] = useState<UserRow[]>(initialUsers);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"all" | "client" | "worker" | "admin">("all");
@@ -567,7 +569,8 @@ export function SuperAdminUsersClient({ initialUsers }: Props) {
         setUsers((prev) =>
           prev.map((u) => (u.id === userId ? { ...u, isSuspended: !current } : u))
         );
-      } else alert(res.error || "Failed to update suspension status.");
+        toast.success(!current ? "User suspended." : "User suspension lifted.");
+      } else toast.error(res.error || "Failed to update suspension status.");
     });
   };
 
@@ -577,7 +580,8 @@ export function SuperAdminUsersClient({ initialUsers }: Props) {
       if (res.success) {
         setUsers((prev) => prev.filter((u) => u.id !== userId));
         setConfirmDelete(null);
-      } else alert(res.error || "Failed to delete user.");
+        toast.success("User deleted.");
+      } else toast.error(res.error || "Failed to delete user.");
     });
   };
 
@@ -593,7 +597,8 @@ export function SuperAdminUsersClient({ initialUsers }: Props) {
               : u
           )
         );
-      } else alert(res.error || "Failed to reset password.");
+        toast.success("Temporary credentials generated.");
+      } else toast.error(res.error || "Failed to reset password.");
     });
   };
 

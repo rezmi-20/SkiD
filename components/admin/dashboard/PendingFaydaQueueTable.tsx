@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { WorkerReviewDrawer, WorkerQueueItem } from "./WorkerReviewDrawer";
 import { toggleWorkerVerification } from "@/lib/actions/admin";
+import { useFeedback } from "@/components/ui/feedback";
 
 interface PendingFaydaQueueTableProps {
   workers: WorkerQueueItem[];
@@ -39,6 +40,7 @@ export function PendingFaydaQueueTable({
   canReject = true,
 }: PendingFaydaQueueTableProps) {
   const router = useRouter();
+  const { toast, promptDialog } = useFeedback();
   const [workers, setWorkers] = useState<WorkerQueueItem[]>(initialWorkers);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTrade, setSelectedTrade] = useState("All");
@@ -46,17 +48,28 @@ export function PendingFaydaQueueTable({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const handleQuickAction = (userId: string, approve: boolean) => {
-    const reason = approve ? undefined : window.prompt("Enter rejection reason for worker:") || undefined;
-    if (!approve && reason === undefined) return;
+  const handleQuickAction = async (userId: string, approve: boolean) => {
+    let reason: string | undefined;
+    if (!approve) {
+      const input = await promptDialog({
+        title: "Reject Worker Verification",
+        placeholder: "Enter rejection reason for worker...",
+        confirmLabel: "Reject",
+        variant: "danger",
+        required: true,
+      });
+      if (!input) return;
+      reason = input;
+    }
 
     startTransition(async () => {
       const result = await toggleWorkerVerification(userId, approve, reason);
       if (result.success) {
         setWorkers((prev) => prev.filter((w) => w.user_id !== userId));
+        toast.success(approve ? "Worker approved." : "Worker rejected.");
         router.refresh();
       } else {
-        alert(result.error || "Action failed.");
+        toast.error(result.error || "Action failed.");
       }
     });
   };

@@ -18,8 +18,8 @@ export const BrandOS: React.FC<BrandOSProps> = ({ onOpenContract, onFindWorker }
       tag: t.howItWorks.steps.step1.tag,
       title: t.howItWorks.steps.step1.title,
       desc: t.howItWorks.steps.step1.desc,
-      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTyCMUUsCVn0iP3IpEC0Uyqrrz1kCetYocyS5tkXJE7cg&s=10',
-      fallback: '/images/user_location_card.jpg',
+      image: '/images/user_location_card.jpg',
+      fallback: '/images/diredawa_city.jpg',
       footerAction: t.howItWorks.steps.step1.action,
       actionType: 'find'
     },
@@ -28,8 +28,8 @@ export const BrandOS: React.FC<BrandOSProps> = ({ onOpenContract, onFindWorker }
       tag: t.howItWorks.steps.step2.tag,
       title: t.howItWorks.steps.step2.title,
       desc: t.howItWorks.steps.step2.desc,
-      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4SlQN6JXWJVlQC2mmWu_qvy2-QWQOXRnLvQpgry-XDw&s=10',
-      fallback: '/images/user_contract_card.jpg',
+      image: '/images/user_contract_card.jpg',
+      fallback: '/images/diredawa_street.jpg',
       footerAction: t.howItWorks.steps.step2.action,
       actionType: 'contract'
     },
@@ -38,8 +38,8 @@ export const BrandOS: React.FC<BrandOSProps> = ({ onOpenContract, onFindWorker }
       tag: t.howItWorks.steps.step3.tag,
       title: t.howItWorks.steps.step3.title,
       desc: t.howItWorks.steps.step3.desc,
-      image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=1200&auto=format&fit=crop',
-      fallback: '/images/diredawa_street.jpg',
+      image: '/images/diredawa_street.jpg',
+      fallback: '/images/worker_workbench_hero.jpg',
       footerAction: t.howItWorks.steps.step3.action,
       actionType: 'info'
     },
@@ -48,8 +48,8 @@ export const BrandOS: React.FC<BrandOSProps> = ({ onOpenContract, onFindWorker }
       tag: t.howItWorks.steps.step4.tag,
       title: t.howItWorks.steps.step4.title,
       desc: t.howItWorks.steps.step4.desc,
-      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTaukVC76TqnKuvpMbYJb4EoWhm6Vill9uT_idSQ1kUbg&s=10',
-      fallback: '/images/user_chapa_card.jpg',
+      image: '/images/user_chapa_card.jpg',
+      fallback: '/images/user_fayda_card.jpg',
       footerAction: t.howItWorks.steps.step4.action,
       actionType: 'info'
     }

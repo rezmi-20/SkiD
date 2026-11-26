@@ -15,7 +15,7 @@ export default function StatsBento({ t: propT }) {
       </div>
 
       <div className="max-w-7xl mx-auto relative z-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-5 h-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5 h-auto">
 
           {/* CARD 1: MODERNIZING SKILLS - Server-side rendered inline SVG trade blueprint graphic */}
           <motion.div
@@ -23,7 +23,7 @@ export default function StatsBento({ t: propT }) {
             whileInView={{ opacity: 1, y: 0 }}
             whileHover={{ y: -4, borderColor: "rgba(74, 222, 128, 0.35)" }}
             viewport={{ once: true }}
-            className="col-span-2 md:col-span-2 lg:col-span-3 lg:row-span-2 p-5 sm:p-8 md:p-10 xl:p-12 rounded-3xl sm:rounded-[2.5rem] bg-zinc-900/60 border border-white/10 backdrop-blur-3xl flex flex-col justify-center space-y-4 sm:space-y-6 relative overflow-hidden group text-left min-h-[270px] sm:min-h-[360px]"
+            className="col-span-2 md:col-span-2 md:row-span-2 p-5 sm:p-8 md:p-10 xl:p-12 rounded-3xl sm:rounded-[2.5rem] bg-zinc-900/60 border border-white/10 backdrop-blur-3xl flex flex-col justify-center space-y-4 sm:space-y-6 relative overflow-hidden group text-left min-h-[270px] sm:min-h-[360px]"
           >
             {/* SERVER-SIDE RENDERED BACKGROUND GRAPHIC: Dire Dawa Skilled Labor Blueprint */}
             <div className="absolute inset-0 pointer-events-none opacity-40 group-hover:opacity-60 transition-opacity duration-700">
@@ -122,7 +122,7 @@ export default function StatsBento({ t: propT }) {
             whileInView={{ opacity: 1, scale: 1 }}
             whileHover={{ y: -4, borderColor: "rgba(74, 222, 128, 0.4)" }}
             viewport={{ once: true }}
-            className="col-span-1 md:col-span-2 lg:col-span-1.5 p-4 sm:p-7 xl:p-8 rounded-2xl sm:rounded-[2rem] bg-zinc-900/50 border border-white/10 backdrop-blur-2xl flex flex-col justify-between hover:border-green-400/30 transition-all text-left min-h-[150px] sm:min-h-[190px] relative overflow-hidden group"
+            className="col-span-1 p-4 sm:p-7 xl:p-8 rounded-2xl sm:rounded-[2rem] bg-zinc-900/50 border border-white/10 backdrop-blur-2xl flex flex-col justify-between hover:border-green-400/30 transition-all text-left min-h-[150px] sm:min-h-[190px] relative overflow-hidden group"
           >
             {/* SERVER-SIDE RENDERED BACKGROUND GRAPHIC: Fayda Biometric & National ID Shield */}
             <div className="absolute -right-4 -bottom-4 w-28 sm:w-36 h-28 sm:h-36 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity duration-500">
@@ -158,7 +158,7 @@ export default function StatsBento({ t: propT }) {
             whileHover={{ y: -4, borderColor: "rgba(56, 189, 248, 0.4)" }}
             viewport={{ once: true }}
             transition={{ delay: 0.05 }}
-            className="col-span-1 md:col-span-2 lg:col-span-1.5 p-4 sm:p-7 xl:p-8 rounded-2xl sm:rounded-[2rem] bg-zinc-900/50 border border-white/10 backdrop-blur-2xl flex flex-col justify-between hover:border-blue-400/30 transition-all text-left min-h-[150px] sm:min-h-[190px] relative overflow-hidden group"
+            className="col-span-1 p-4 sm:p-7 xl:p-8 rounded-2xl sm:rounded-[2rem] bg-zinc-900/50 border border-white/10 backdrop-blur-2xl flex flex-col justify-between hover:border-blue-400/30 transition-all text-left min-h-[150px] sm:min-h-[190px] relative overflow-hidden group"
           >
             {/* SERVER-SIDE RENDERED BACKGROUND GRAPHIC: High-Precision Dial & Gauge */}
             <div className="absolute -right-4 -bottom-4 w-28 sm:w-36 h-28 sm:h-36 pointer-events-none opacity-20 group-hover:opacity-40 transition-opacity duration-500">
@@ -193,7 +193,7 @@ export default function StatsBento({ t: propT }) {
             whileInView={{ opacity: 1, x: 0 }}
             whileHover={{ y: -4, borderColor: "rgba(74, 222, 128, 0.35)" }}
             viewport={{ once: true }}
-            className="col-span-2 md:col-span-4 lg:col-span-3 lg:row-span-1 rounded-3xl sm:rounded-[2.5rem] relative overflow-hidden border border-white/10 bg-zinc-900/60 p-5 sm:p-7 xl:p-8 flex flex-col justify-between text-left min-h-[130px] sm:min-h-[190px] group"
+            className="col-span-2 md:col-span-2 rounded-3xl sm:rounded-[2.5rem] relative overflow-hidden border border-white/10 bg-zinc-900/60 p-5 sm:p-7 xl:p-8 flex flex-col justify-between text-left min-h-[130px] sm:min-h-[190px] group"
           >
             {/* SERVER-SIDE RENDERED BACKGROUND GRAPHIC: Guilloche Security Lattice */}
             <div className="absolute inset-0 pointer-events-none opacity-25 group-hover:opacity-40 transition-opacity duration-700">

@@ -40,20 +40,20 @@ const STAR_DETAILS = [
 ];
 
 const WORKER_COMPLIMENT_TAGS = [
-  "⚡ Punctual & On Time",
-  "🛠️ Expert Craftsmanship",
-  "💬 Great Communication",
-  "🤝 Respectful & Professional",
-  "✨ Clean Worksite",
-  "🎯 Fair Pricing",
+  "Punctual & On Time",
+  "Expert Craftsmanship",
+  "Great Communication",
+  "Respectful & Professional",
+  "Clean Worksite",
+  "Fair Pricing",
 ];
 
 const CLIENT_COMPLIMENT_TAGS = [
-  "⚡ Prompt Milestone Release",
-  "📋 Clear Specifications",
-  "💬 Highly Responsive",
-  "🤝 Respectful Host",
-  "🌟 Great Collaboration",
+  "Prompt Milestone Release",
+  "Clear Specifications",
+  "Highly Responsive",
+  "Respectful Host",
+  "Great Collaboration",
 ];
 
 export default function RatingPageContent({

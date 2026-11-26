@@ -27,6 +27,7 @@ import DisputeEvidenceUploadForm from "@/components/disputes/DisputeEvidenceUplo
 import { addDisputeEvidence, submitDisputeResponse } from "@/lib/actions/disputes";
 import { MOCK_DISPUTE_SCENARIOS } from "@/lib/mock-dispute";
 import { cx } from "@/utils/cx";
+import { useFeedback } from "@/components/ui/feedback";
 
 /* ── draw-svg Skill: Justice Scale Platform Emblem ────────────────────────── */
 function DisputeJusticeSeal({ className = "size-7" }: { className?: string }) {
@@ -79,6 +80,7 @@ export default function UserDisputeDetails({
   role: "client" | "worker";
   isDemoMode?: boolean;
 }) {
+  const { toast } = useFeedback();
   const [selectedScenarioKey, setSelectedScenarioKey] = useState<string>("under_review");
   const activeData = isDemoMode
     ? MOCK_DISPUTE_SCENARIOS[selectedScenarioKey]?.data || initialData
@@ -94,7 +96,7 @@ export default function UserDisputeDetails({
 
   async function handleResponseAction(formData: FormData) {
     if (isDemoMode) {
-      alert("Demo Mode: In live mode, your response would be logged to the governance ledger.");
+      toast.info("Demo Mode: In live mode, your response would be logged to the governance ledger.");
       return;
     }
     const responseId = String(formData.get("responseId") || "");
@@ -105,7 +107,7 @@ export default function UserDisputeDetails({
 
   async function handleUploadEvidenceAction(formData: FormData) {
     if (isDemoMode) {
-      alert("Demo Mode: Evidence upload recorded successfully.");
+      toast.info("Demo Mode: Evidence upload recorded successfully.");
       return { success: true };
     }
     const url = String(formData.get("evidenceUrl") || "").trim();

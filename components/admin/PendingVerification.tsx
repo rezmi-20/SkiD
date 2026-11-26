@@ -7,6 +7,7 @@ import { CheckCircle2, XCircle, ExternalLink, Clock, ShieldCheck, User } from "l
 import { useLanguage } from "@/context/LanguageContext";
 import { toggleWorkerVerification } from "@/lib/actions/admin";
 import { toWorkerDisplayStatus } from "@/lib/worker-verification";
+import { useFeedback } from "@/components/ui/feedback";
 
 interface Worker {
   user_id: string;
@@ -50,6 +51,7 @@ export function PendingVerification({
   canReject = true,
 }: PendingVerificationProps) {
   const { t } = useLanguage();
+  const { toast, promptDialog } = useFeedback();
   const router = useRouter();
   const [visibleWorkers, setVisibleWorkers] = useState(workers);
   const [isPending, startTransition] = useTransition();
@@ -58,16 +60,29 @@ export function PendingVerification({
     setVisibleWorkers(workers);
   }, [workers]);
 
-  const handleAction = (userId: string, approve: boolean) => {
-    const reason = approve ? undefined : window.prompt(t("admin.verification.rejectReasonPrompt" as any)) || undefined;
+  const handleAction = async (userId: string, approve: boolean) => {
+    let reason: string | undefined;
+    if (!approve) {
+      const input = await promptDialog({
+        title: "Reject Worker Verification",
+        description: t("admin.verification.rejectReasonPrompt" as any) || "Provide a clear rejection reason for the worker.",
+        placeholder: "Enter rejection reason...",
+        confirmLabel: "Reject Worker",
+        variant: "danger",
+        required: true,
+      });
+      if (!input) return;
+      reason = input;
+    }
     startTransition(async () => {
       const result = await toggleWorkerVerification(userId, approve, reason);
       if (result.success) {
         setVisibleWorkers((prev) => prev.filter((worker) => worker.user_id !== userId));
         onAction?.(userId, approve);
+        toast.success(approve ? "Worker approved." : "Worker rejected.");
         router.refresh();
       } else {
-        alert(result.error || t("admin.verification.updateFailed" as any));
+        toast.error(result.error || t("admin.verification.updateFailed" as any));
       }
     });
   };

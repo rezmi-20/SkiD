@@ -3,6 +3,7 @@
 import { useState, useTransition, useRef } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
+import { useFeedback } from "@/components/ui/feedback";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -160,6 +161,7 @@ interface AdminProfile {
 }
 
 export function AdminProfileForm({ profile }: { profile: AdminProfile }) {
+  const { toast } = useFeedback();
   const [activeTab, setActiveTab] = useState("profile");
   const [notifications, setNotifications] = useState(initialNotificationSettings);
   const [integrations, setIntegrations] = useState(initialIntegrationsList);
@@ -220,7 +222,7 @@ export function AdminProfileForm({ profile }: { profile: AdminProfile }) {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        alert("File size exceeds 2MB limit.");
+        toast.error("File size exceeds 2MB limit.");
         return;
       }
       const reader = new FileReader();

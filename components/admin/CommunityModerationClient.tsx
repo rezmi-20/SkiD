@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Search, Megaphone, Flag, ThumbsUp, Eye, EyeOff, MessageSquare } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { removeCommunityPost } from "@/lib/actions/community";
+import { useFeedback } from "@/components/ui/feedback";
 
 interface PostData {
   id: string;
@@ -23,27 +24,34 @@ interface Props {
 
 export function CommunityModerationClient({ initialPosts, canModerate }: Props) {
   const { t } = useLanguage();
+  const { toast, promptDialog } = useFeedback();
   const [posts, setPosts] = useState<PostData[]>(initialPosts);
   const [search, setSearch] = useState("");
   const [filterRemoved, setFilterRemoved] = useState<"all" | "active" | "hidden">("all");
   const [isPending, startTransition] = useTransition();
 
-  const handleToggleRemove = (postId: string, currentRemoved: boolean) => {
+  const handleToggleRemove = async (postId: string, currentRemoved: boolean) => {
     const nextStatus = !currentRemoved;
-    const promptText = nextStatus ? "Reason for hiding post:" : "Reason for restoring post:";
-    const reason = window.prompt(promptText)?.trim();
-    if (!reason) {
-      alert("Reason is required to moderate content.");
-      return;
-    }
+    const reason = await promptDialog({
+      title: nextStatus ? "Hide Community Post" : "Restore Community Post",
+      description: "Reason is required to moderate content.",
+      placeholder: nextStatus ? "Reason for hiding post..." : "Reason for restoring post...",
+      confirmLabel: nextStatus ? "Hide Post" : "Restore Post",
+      variant: nextStatus ? "danger" : "primary",
+      required: true,
+      requiredError: "Reason is required to moderate content.",
+    });
+    if (!reason) return;
+
     startTransition(async () => {
       const res = await removeCommunityPost(postId, nextStatus, reason);
       if (res.success) {
         setPosts((prev) =>
           prev.map((p) => (p.id === postId ? { ...p, isRemoved: nextStatus } : p))
         );
+        toast.success(nextStatus ? "Post hidden from feed." : "Post restored.");
       } else {
-        alert(res.error || "Failed to update post status.");
+        toast.error(res.error || "Failed to update post status.");
       }
     });
   };

@@ -3,6 +3,7 @@ import { ThemeProvider } from "next-themes";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { LocationProvider } from "@/context/LocationContext";
 import { MessagingProvider } from "@/context/MessagingContext";
+import { FeedbackProvider } from "@/components/ui/feedback";
 import { useState, useEffect } from "react";
 import { authClient } from "@/lib/auth/client";
 import { NeonAuthUIProvider } from "@neondatabase/auth/react";
@@ -46,7 +47,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       <LanguageProvider>
         <LocationProvider>
           <MessagingProvider>
-            {children}
+            <FeedbackProvider>
+              {children}
+            </FeedbackProvider>
           </MessagingProvider>
         </LocationProvider>
       </LanguageProvider>

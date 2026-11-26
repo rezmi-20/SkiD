@@ -1,9 +1,11 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, MessageSquare, CheckCircle2, ChevronRight, Check, CheckCheck } from "lucide-react";
+import { Search, MessageSquare, CheckCircle2, ChevronRight, Check, CheckCheck, X } from "lucide-react";
+import EmptyStateIllustration from "@/components/illustrations/EmptyStateIllustration";
 
 interface Conversation {
   id: string;
@@ -37,6 +39,18 @@ function timeAgo(dateStr: string | null, nowLabel: string): string {
 export default function MessagesContent({ conversations, loading, role }: MessagesContentProps) {
   const { t } = useLanguage();
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredConversations = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return conversations;
+    return conversations.filter(
+      (c) =>
+        (c.other_name || "").toLowerCase().includes(q) ||
+        (c.other_skill || "").toLowerCase().includes(q) ||
+        (c.last_body || "").toLowerCase().includes(q)
+    );
+  }, [conversations, searchQuery]);
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full max-w-full pb-16">
@@ -63,10 +77,22 @@ export default function MessagesContent({ conversations, loading, role }: Messag
       <div className="relative group mx-1">
          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-on-surface-variant opacity-60 group-focus-within:text-primary group-focus-within:opacity-100 transition-all" />
          <input 
-           type="text" 
+           type="text"
+           value={searchQuery}
+           onChange={(e) => setSearchQuery(e.target.value)}
            placeholder={t("messages.searchPlaceholder")} 
-           className="w-full h-12 pl-11 pr-4 bg-surface-container-lowest border border-surface-container-highest rounded-2xl text-on-surface text-xs placeholder:text-on-surface-variant/40 focus:outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all touch-manipulation"
+           className="w-full h-12 pl-11 pr-10 bg-surface-container-lowest border border-surface-container-highest rounded-2xl text-on-surface text-xs placeholder:text-on-surface-variant/40 focus:outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/5 transition-all touch-manipulation"
          />
+         {searchQuery && (
+           <button
+             type="button"
+             onClick={() => setSearchQuery("")}
+             aria-label="Clear message search"
+             className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-on-surface-variant hover:text-on-surface cursor-pointer"
+           >
+             <X className="h-3.5 w-3.5" />
+           </button>
+         )}
       </div>
 
       {/* Conversations List */}
@@ -77,9 +103,7 @@ export default function MessagesContent({ conversations, loading, role }: Messag
           ))
         ) : conversations.length === 0 ? (
           <div className="py-16 flex flex-col items-center justify-center text-center gap-3">
-             <div className="w-14 h-14 bg-surface-container rounded-2xl flex items-center justify-center border border-surface-container-highest">
-                <MessageSquare className="h-6 w-6 text-on-surface-variant opacity-40" />
-             </div>
+             <EmptyStateIllustration kind="messages" className="w-24 h-18 text-on-surface-variant" />
              <div className="flex flex-col gap-0.5">
                 <h3 className="text-sm font-bold text-on-surface">{t("messages.emptyTitle")}</h3>
                 <p className="text-xs text-on-surface-variant max-w-[260px]">
@@ -92,8 +116,22 @@ export default function MessagesContent({ conversations, loading, role }: Messag
                 </Link>
              )}
           </div>
+        ) : filteredConversations.length === 0 ? (
+          <div className="py-12 flex flex-col items-center justify-center text-center gap-2 mx-1 rounded-2xl border border-dashed border-surface-container-highest bg-surface-container-lowest">
+            <p className="text-sm font-bold text-on-surface">No matching conversations</p>
+            <p className="text-xs text-on-surface-variant">
+              Nothing found for &ldquo;{searchQuery}&rdquo;.
+            </p>
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="mt-1 px-4 py-1.5 rounded-full bg-surface-container-high text-xs font-bold text-on-surface cursor-pointer"
+            >
+              Clear Search
+            </button>
+          </div>
         ) : (
-          conversations.map((conv) => (
+          filteredConversations.map((conv) => (
             <button
               key={conv.id}
               onClick={() => router.push(`/${role}/messages/${conv.id}`)}

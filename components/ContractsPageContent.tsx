@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
+import { useFeedback } from "@/components/ui/feedback";
 import { motion, AnimatePresence } from "framer-motion";
 import { cx } from "@/utils/cx";
 import {
@@ -153,6 +154,7 @@ function getStatusChip(contract: any) {
 
 export default function ContractsPageContent({ contracts = [], role }: Props) {
   const { t } = useLanguage();
+  const { toast } = useFeedback();
   const [activeTab, setActiveTab] = useState<"all" | "active" | "pending" | "completed" | "disputed">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -165,7 +167,7 @@ export default function ContractsPageContent({ contracts = [], role }: Props) {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        alert(data?.error || "Contract PDF is not available yet.");
+        toast.error(data?.error || "Contract PDF is not available yet.");
         return;
       }
 
@@ -179,7 +181,7 @@ export default function ContractsPageContent({ contracts = [], role }: Props) {
       link.remove();
       URL.revokeObjectURL(objectUrl);
     } catch {
-      alert("Failed to download agreement PDF. Please retry in a moment.");
+      toast.error("Failed to download agreement PDF. Please retry in a moment.");
     }
   };
 

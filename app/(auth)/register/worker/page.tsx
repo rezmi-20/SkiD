@@ -353,7 +353,7 @@ export default function WorkerRegisterPage() {
             
             <div className="text-center space-y-1.5">
               <h1 className="text-[28px] font-bold tracking-tight text-white flex items-center justify-center gap-2">
-                {stepTitles[step - 1]} <span>💼</span>
+                {stepTitles[step - 1]}
               </h1>
               <div className="flex items-center justify-center gap-3">
                   <div className="text-zinc-500 text-[13px] font-black uppercase tracking-widest">

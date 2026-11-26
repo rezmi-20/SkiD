@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
+import { useFeedback } from "@/components/ui/feedback";
 import {
   ShieldCheck,
   Search,
@@ -84,6 +85,7 @@ export function AdminAuditClient({
   params,
 }: AdminAuditClientProps) {
   const { t } = useLanguage();
+  const { toast } = useFeedback();
   const [isExporting, setIsExporting] = useState(false);
 
   const isMyLogs = params.myLogs === "true";
@@ -144,7 +146,7 @@ export function AdminAuditClient({
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error(err);
-      alert("Failed to export staff work report. Please try again.");
+      toast.error("Failed to export staff work report. Please try again.");
     } finally {
       setIsExporting(false);
     }

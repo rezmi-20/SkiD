@@ -6,6 +6,7 @@ import { useState, useMemo } from "react";
 import CountUp from "@/components/ui/count-up";
 import { cx } from "@/utils/cx";
 import { Chip } from "@/components/base/badges/chip";
+import EmptyStateIllustration from "@/components/illustrations/EmptyStateIllustration";
 import {
   RiFlashlightFill,
   RiDropFill,
@@ -722,6 +723,7 @@ export default function ClientDashboardContent({
             </div>
           ) : (
             <div className="rounded-3xl bg-background-secondary-default border border-border-button-default p-6 text-center space-y-2">
+              <EmptyStateIllustration kind="contracts" className="w-24 h-18 mx-auto text-text-tertiary" />
               <p className="text-body-medium font-bold text-text-primary">No contracts found</p>
               <p className="text-caption-1-semibold text-text-tertiary text-xs">
                 {timeFilter === "all"

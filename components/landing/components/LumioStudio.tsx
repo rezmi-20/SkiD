@@ -53,12 +53,12 @@ export const LumioStudio: React.FC<LumioStudioProps> = ({ customFaqs = [] }) => 
   ];
 
   const images = [
-    { image: '/images/user_fayda_card.jpg', fallback: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQIQdo3UzHSi3p4vcS88ZFpwEyVWatJA5oPoj_oqOG1Q&s=10' },
-    { image: '/images/user_contract_card.jpg', fallback: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4SlQN6JXWJVlQC2mmWu_qvy2-QWQOXRnLvQpgry-XDw&s=10' },
-    { image: '/images/user_chapa_card.jpg', fallback: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTaukVC76TqnKuvpMbYJb4EoWhm6Vill9uT_idSQ1kUbg&s=10' },
-    { image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=800&auto=format&fit=crop', fallback: '/images/diredawa_street.jpg' },
-    { image: 'https://images.unsplash.com/photo-1450133064473-71024230f91b?q=80&w=800&auto=format&fit=crop', fallback: '/images/user_location_card.jpg' },
-    { image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?q=80&w=800&auto=format&fit=crop', fallback: '/images/user_review_card.jpg' }
+    { image: '/images/user_fayda_card.jpg', fallback: '/images/diredawa_city.jpg' },
+    { image: '/images/user_contract_card.jpg', fallback: '/images/diredawa_street.jpg' },
+    { image: '/images/user_chapa_card.jpg', fallback: '/images/diredawa_station.jpg' },
+    { image: '/images/diredawa_street.jpg', fallback: '/images/worker_workbench_hero.jpg' },
+    { image: '/images/user_location_card.jpg', fallback: '/images/diredawa_city.jpg' },
+    { image: '/images/user_review_card.jpg', fallback: '/images/client_project_hero.jpg' }
   ];
 
   // Filter custom database FAQs matching current language (or English fallback)

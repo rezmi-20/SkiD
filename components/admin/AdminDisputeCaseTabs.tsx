@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
+import { useFeedback } from "@/components/ui/feedback";
 import {
   FileText,
   ShieldCheck,
@@ -94,6 +95,7 @@ export default function AdminDisputeCaseTabs({
   reclassify,
 }: Props) {
   const { t } = useLanguage();
+  const { toast } = useFeedback();
   const [activeTab, setActiveTab] = useState<LeftStudioTab>("case");
 
   const canRequestInCurrentState =
@@ -109,7 +111,7 @@ export default function AdminDisputeCaseTabs({
     const reason = String(formData.get("reason") || "").trim();
     if (!reason) {
       event.preventDefault();
-      alert("A reason is mandatory when reassigning a dispute away from another admin.");
+      toast.error("A reason is mandatory when reassigning a dispute away from another admin.");
     }
   };
 

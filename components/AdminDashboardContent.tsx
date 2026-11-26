@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useTransition } from "react";
 import { toggleWorkerVerification } from "@/lib/actions/admin";
 import { authClient } from "@/lib/auth/client";
+import { useFeedback } from "@/components/ui/feedback";
 
 interface AdminDashboardContentProps {
   adminName: string;
@@ -27,6 +28,7 @@ export default function AdminDashboardContent({
   activityFeed 
 }: AdminDashboardContentProps) {
   const { t } = useLanguage();
+  const { toast } = useFeedback();
   const [workers, setWorkers] = useState(initialWorkers);
   const [isPending, startTransition] = useTransition();
   const [currentDate, setCurrentDate] = useState("");
@@ -45,8 +47,9 @@ export default function AdminDashboardContent({
       const result = await toggleWorkerVerification(userId, approve);
       if (result.success) {
         setWorkers(prev => prev.filter(w => w.user_id !== userId));
+        toast.success(approve ? "Worker verification approved." : "Worker verification updated.");
       } else {
-        alert(t("admin.dashboard.updateStatusFailed" as any));
+        toast.error(t("admin.dashboard.updateStatusFailed" as any));
       }
     });
   };

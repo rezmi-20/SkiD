@@ -421,7 +421,7 @@ export default function LoginPage() {
 
               <div className="text-center">
                 <h1 className="text-[28px] font-bold tracking-tight text-white flex items-center justify-center gap-2">
-                  {t("auth.login.title")} <span>👋</span>
+                  {t("auth.login.title")}
                 </h1>
               </div>
             </div>

@@ -9,6 +9,7 @@ import { TrustMarquee } from "./landing/components/TrustMarquee";
 import { VisualCollage } from "./landing/components/VisualCollage";
 import { Manifesto } from "./landing/components/Manifesto";
 import { BrandOS } from "./landing/components/BrandOS";
+import { StageshowTrustDemo } from "./landing/components/StageshowTrustDemo";
 import { LumioStudio } from "./landing/components/LumioStudio";
 import { ExploreCategories } from "./landing/components/ExploreCategories";
 import { TeamUseCases } from "./landing/components/TeamUseCases";
@@ -175,6 +176,9 @@ function LandingView({ userRole, initialFaqs = [], initialTestimonials = [] }) {
           onOpenContract={() => handleFindWorker()}
           onFindWorker={() => handleFindWorker()}
         />
+
+        {/* 5b. Interactive Stageshow Product Walkthrough */}
+        <StageshowTrustDemo onTrySearch={() => handleFindWorker()} />
 
         {/* 6. Frequently Asked Questions (FAQ) */}
         <LumioStudio customFaqs={initialFaqs} />

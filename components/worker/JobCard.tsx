@@ -15,6 +15,8 @@ import {
   RiMessage3Line,
   RiFileTextLine,
   RiBuilding2Line,
+  RiCoinsLine,
+  RiEditLine,
 } from "@remixicon/react";
 
 export interface WorkerJobCardData {
@@ -112,11 +114,11 @@ export default function JobCard({
     .toUpperCase();
 
   const declineReasons = [
-    { key: "worker.jobs.reason_onsite", icon: "🏗️" },
-    { key: "worker.jobs.reason_budget", icon: "💰" },
-    { key: "worker.jobs.reason_location", icon: "📍" },
-    { key: "worker.jobs.reason_schedule", icon: "📅" },
-    { key: "worker.jobs.reason_other", icon: "✏️" },
+    { key: "worker.jobs.reason_onsite", Icon: RiBuilding2Line },
+    { key: "worker.jobs.reason_budget", Icon: RiCoinsLine },
+    { key: "worker.jobs.reason_location", Icon: RiMapPin2Line },
+    { key: "worker.jobs.reason_schedule", Icon: RiCalendarLine },
+    { key: "worker.jobs.reason_other", Icon: RiEditLine },
   ];
 
   return (
@@ -385,7 +387,9 @@ export default function JobCard({
               </p>
 
               <div className="space-y-2">
-                {declineReasons.map((reason) => (
+                {declineReasons.map((reason) => {
+                  const ReasonIcon = reason.Icon;
+                  return (
                   <button
                     key={reason.key}
                     type="button"
@@ -396,10 +400,11 @@ export default function JobCard({
                         : "border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800/40 text-zinc-700 dark:text-zinc-300"
                     }`}
                   >
-                    <span>{reason.icon}</span>
+                    <ReasonIcon className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
                     <span>{(t as any)(reason.key) || reason.key}</span>
                   </button>
-                ))}
+                  );
+                })}
               </div>
 
               {selectedReasonKey === "worker.jobs.reason_other" && (

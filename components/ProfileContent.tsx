@@ -109,9 +109,11 @@ export default function ProfileContent({ user, stats = [], skills = [] }: Profil
               >
                 <div className="relative">
                   <FileCheck className="h-6 w-6 text-white stroke-[1.75]" />
-                  <span className="absolute -top-1.5 -right-2 bg-[#ef4444] text-white text-[9px] font-black h-4 w-4 rounded-full flex items-center justify-center shadow-sm">
-                    {stats[0]?.value || "1"}
-                  </span>
+                  {Number(stats[0]?.value || 0) > 0 && (
+                    <span className="absolute -top-1.5 -right-2 bg-[#ef4444] text-white text-[9px] font-black h-4 min-w-4 px-1 rounded-full flex items-center justify-center shadow-sm">
+                      {stats[0]?.value}
+                    </span>
+                  )}
                 </div>
                 <span className="text-xs font-bold text-white/90 mt-2 text-center">
                   {t("profile.hub.activeContracts")}

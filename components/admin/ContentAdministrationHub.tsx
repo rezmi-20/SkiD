@@ -12,6 +12,7 @@ import {
   createOfficialAnnouncement 
 } from "@/lib/actions/content-management";
 import { removeCommunityPost } from "@/lib/actions/community";
+import { useFeedback } from "@/components/ui/feedback";
 
 interface FaqItem {
   id: string;
@@ -61,6 +62,7 @@ export function ContentAdministrationHub({
   initialPosts,
   canModerate
 }: Props) {
+  const { toast, confirmDialog, promptDialog } = useFeedback();
   const [activeTab, setActiveTab] = useState<"faqs" | "testimonials" | "feed" | "broadcast">("faqs");
 
   // FAQ State
@@ -216,8 +218,14 @@ export function ContentAdministrationHub({
     });
   };
 
-  const handleDeleteFaq = (id: string) => {
-    if (!confirm("Are you sure you want to permanently delete this FAQ?")) return;
+  const handleDeleteFaq = async (id: string) => {
+    const confirmed = await confirmDialog({
+      title: "Delete FAQ?",
+      description: "Are you sure you want to permanently delete this FAQ?",
+      confirmLabel: "Delete FAQ",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     startTransition(async () => {
       const res = await deleteLandingFaq(id);
       if (res.success) {
@@ -344,8 +352,14 @@ export function ContentAdministrationHub({
     });
   };
 
-  const handleDeleteTestimonial = (id: string) => {
-    if (!confirm("Are you sure you want to delete this testimonial?")) return;
+  const handleDeleteTestimonial = async (id: string) => {
+    const confirmed = await confirmDialog({
+      title: "Delete Testimonial?",
+      description: "Are you sure you want to delete this testimonial?",
+      confirmLabel: "Delete Testimonial",
+      variant: "danger",
+    });
+    if (!confirmed) return;
     startTransition(async () => {
       const res = await deleteLandingTestimonial(id);
       if (res.success) {
@@ -357,13 +371,18 @@ export function ContentAdministrationHub({
 
   // ── Feed Post Moderation ────────────────────────────────────────────────────
 
-  const handleTogglePostRemove = (postId: string, currentRemoved: boolean) => {
+  const handleTogglePostRemove = async (postId: string, currentRemoved: boolean) => {
     const next = !currentRemoved;
-    const reason = window.prompt(next ? "Reason for hiding this post:" : "Reason for restoring this post:")?.trim();
-    if (!reason) {
-      alert("A moderation reason is required for audit logs.");
-      return;
-    }
+    const reason = await promptDialog({
+      title: next ? "Hide Community Post" : "Restore Community Post",
+      description: "A moderation reason is required for the audit log.",
+      placeholder: next ? "Reason for hiding this post..." : "Reason for restoring this post...",
+      confirmLabel: next ? "Hide Post" : "Restore Post",
+      variant: next ? "danger" : "primary",
+      required: true,
+      requiredError: "A moderation reason is required for audit logs.",
+    });
+    if (!reason) return;
 
     startTransition(async () => {
       const res = await removeCommunityPost(postId, next, reason);
@@ -371,7 +390,7 @@ export function ContentAdministrationHub({
         setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, isRemoved: next } : p)));
         showStatus(`Post ${next ? "hidden" : "restored"}.`);
       } else {
-        alert(res.error || "Failed to update post status.");
+        toast.error(res.error || "Failed to update post status.");
       }
     });
   };

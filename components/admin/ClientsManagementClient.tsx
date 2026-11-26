@@ -32,6 +32,7 @@ import { sendClientVerificationReminder } from "@/lib/client-verification-remind
 import { setSuspendedStatus } from "@/lib/actions/super-admin";
 import FadeContent from "@/components/ui/fade-content";
 import { ClientDetailDrawer, ClientDrawerItem } from "./clients/ClientDetailDrawer";
+import { useFeedback } from "@/components/ui/feedback";
 
 interface ClientData {
   userId: string;
@@ -66,6 +67,7 @@ export function ClientsManagementClient({
   canReactivateAccount,
 }: Props) {
   const { t } = useLanguage();
+  const { confirmDialog } = useFeedback();
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
@@ -138,8 +140,16 @@ export function ClientsManagementClient({
     });
   };
 
-  const handleSuspension = (clientUserId: string, suspended: boolean) => {
-    if (!window.confirm(suspended ? "Suspend this client from posting jobs and funding escrow?" : "Restore this client account?")) {
+  const handleSuspension = async (clientUserId: string, suspended: boolean) => {
+    const confirmed = await confirmDialog({
+      title: suspended ? "Suspend Client Account?" : "Restore Client Account?",
+      description: suspended
+        ? "Suspend this client from posting jobs and funding escrow?"
+        : "Restore this client account to active standing?",
+      confirmLabel: suspended ? "Suspend Client" : "Restore Account",
+      variant: suspended ? "danger" : "primary",
+    });
+    if (!confirmed) {
       return;
     }
     setMessage(null);

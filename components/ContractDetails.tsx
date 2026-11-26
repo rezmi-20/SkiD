@@ -40,6 +40,7 @@ import {
   RiCheckLine,
 } from "@remixicon/react";
 import { useLanguage } from "@/context/LanguageContext";
+import { useFeedback } from "@/components/ui/feedback";
 import dynamic from "next/dynamic";
 import ParticipantEvidenceExportButton from "@/components/contract/ParticipantEvidenceExportButton";
 import { cx } from "@/utils/cx";
@@ -446,6 +447,7 @@ function ContractWorkflowStepper({ currentStep }: { currentStep: number }) {
 export default function ContractDetails({ contract, userId }: Props) {
   const router = useRouter();
   const { t } = useLanguage();
+  const { toast } = useFeedback();
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [isSigning, setIsSigning] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
@@ -546,7 +548,7 @@ export default function ContractDetails({ contract, userId }: Props) {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        alert(data?.error || "Contract PDF is not available yet.");
+        toast.error(data?.error || "Contract PDF is not available yet.");
         return;
       }
 
@@ -757,7 +759,7 @@ export default function ContractDetails({ contract, userId }: Props) {
           router.push(isClient ? "/client/contract-setup" : "/worker/contract-setup");
           return;
         }
-        alert(result.error);
+        toast.error(result.error || "Unable to sign contract.");
         return;
       }
       if (!isClient) {
@@ -766,7 +768,7 @@ export default function ContractDetails({ contract, userId }: Props) {
         router.push("/client/contracts");
       }
     } catch {
-      alert("An error occurred during signing.");
+      toast.error("An error occurred during signing.");
     } finally {
       setIsSigning(false);
     }

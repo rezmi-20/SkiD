@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { completeJob, getWorkerJobs, startJob } from "@/lib/actions/jobs";
 import { useLanguage } from "@/context/LanguageContext";
+import { useFeedback } from "@/components/ui/feedback";
 import {
   RiBriefcaseLine,
   RiPlayFill,
@@ -63,6 +64,7 @@ function formatBudget(value: number | null | undefined) {
 
 export default function GigsPage() {
   const { t } = useLanguage();
+  const { toast } = useFeedback();
   const [gigs, setGigs] = useState<Gig[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -104,11 +106,13 @@ export default function GigsPage() {
           prev.map((g) => (g.id === jobId ? { ...g, status: "in_progress" } : g))
         );
         setSelectedGigDetails(null);
+        toast.success("Job marked as in progress.");
       } else {
-        alert(result.error);
+        toast.error(result.error || "Unable to start job.");
       }
     } catch (err) {
       console.error("Failed to start job", err);
+      toast.error("Unable to start job right now.");
     } finally {
       setActionLoading(null);
     }
@@ -123,11 +127,13 @@ export default function GigsPage() {
           prev.map((g) => (g.id === jobId ? { ...g, status: "completion_requested" } : g))
         );
         setSelectedGigDetails(null);
+        toast.success("Completion request sent to client.");
       } else {
-        alert(result.error);
+        toast.error(result.error || "Unable to request job completion.");
       }
     } catch (err) {
       console.error("Failed to complete job", err);
+      toast.error("Unable to request job completion right now.");
     } finally {
       setActionLoading(null);
     }

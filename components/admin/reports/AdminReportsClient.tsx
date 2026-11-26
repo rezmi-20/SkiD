@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
+import { useFeedback } from "@/components/ui/feedback";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -256,6 +257,7 @@ export function AdminReportsClient({
   indicators: MisuseIndicator[];
 }) {
   const { t, language } = useLanguage();
+  const { toast } = useFeedback();
   const [timeframe, setTimeframe] = useState("quarterly");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -355,7 +357,7 @@ export function AdminReportsClient({
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error("Error downloading report PDF:", err);
-      alert("Failed to generate PDF report. Please try again.");
+      toast.error("Failed to generate PDF report. Please try again.");
     } finally {
       if (reportId) setDownloadingId(null);
     }
@@ -786,7 +788,7 @@ export function AdminReportsClient({
                 </span>
                 <button
                   type="button"
-                  onClick={() => alert(`Ping test verified for ${item.name}: 200 OK (${item.latency})`)}
+                  onClick={() => toast.success(`Ping test verified for ${item.name}: 200 OK (${item.latency})`)}
                   className="text-xs text-accent hover:underline font-semibold cursor-pointer"
                 >
                   Test Ping

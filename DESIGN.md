@@ -149,9 +149,7 @@ components:
 
 ## Overview
 
-<!-- write: 3–5 sentences on the feel, in concrete terms (light or dark, dense or airy, sharp or soft, quiet or loud), what makes it recognisable, and the one bold thing. Describe what you see in the screenshots. -->
-
-What was measured: a dark interface on `#020202`, headings in `#ffffff`, body text in `#ffffffe6`, and `#00e575` for the main action. Type is Plus Jakarta Sans and IBM Plex Mono. Space runs on a 4px grid. Corners are 22px, 44.8px, and pills where the site uses them.
+DireSkill pairs a high-contrast warm-stone and obsidian editorial landing surface (`#faf9f5` alternating with `#020202` / `#0a0b0d`) with a calm BoardUI semantic token app shell that switches cleanly between light and dark modes. Emerald (`#00e575` on dark bands, `#006e2a` / `#45ba50` on app surfaces) is reserved strictly for verified trust signals and primary actions. Typography pairs Plus Jakarta Sans / Inter with Noto Sans Ethiopic for English, Amharic, and Afaan Oromo legibility. Depth relies on crisp 1px borders and restrained shadows rather than heavy drop-shadow clutter.
 
 ## Colors
 
@@ -173,7 +171,7 @@ The full palette (48 colours, most used first) is in `design-system/tokens.css` 
 
 Gradients the site paints: `linear-gradient(to top, oklab(0 0 0 / 0.6) 0%, oklab(0 0 0 / 0.2) 50%, rgba(0, 0, 0, 0) 100%)`; `linear-gradient(to top, rgb(0, 0, 0) 0%, oklab(0 0 0 / 0.75) 50%, oklab(0 0 0 / 0.45) 100%)`; `linear-gradient(to right bottom, lab(5.55256 -3.58823 1.21086 / 0.8) 0%, lab(2.74366 -1.30288 0.379351 / 0.9) 50%, rgba(0, 0, 0, 0) 100%)`.
 
-<!-- write: when to use each colour and when not to (e.g. primary only for the one main action per view). -->
+Use `{colors.primary}` exclusively on the primary CTA per screen, active location lock, and verified trust markers (`Fayda Verified`, `Chapa Escrow`). Use `{colors.surface}` for elevated cards and panels; keep `{colors.background}` as the underlying canvas. Never use alert/error colors (`#ff416c` / `text-text-error-primary`) as decoration, and never put `{colors.text-subtle}` on small body copy where contrast drops below WCAG AA.
 
 ## Typography
 
@@ -196,7 +194,7 @@ Gradients the site paints: `linear-gradient(to top, oklab(0 0 0 / 0.6) 0%, oklab
 
 Weights in use: 400 (64.6%), 700 (22.3%), 500 (6.4%), 600 (4.5%), 900 (1.2%). Steps grow by about ×1.2. Text is antialiased (`-webkit-font-smoothing: antialiased`).
 
-<!-- write: the principles you see (e.g. light weights at large sizes, tight tracking on headlines, sentence case). -->
+Headlines use tight tracking (`-0.025em` to `-0.04em`) and compact line-height (`1.0`–`1.2`), while running copy and form helper text stay at `1.5`–`1.625` line-height in sentence case. Numeric counters, ETB amounts, PIN digits, and contract IDs use `tabular-nums` / `{typography.code}` for vertical alignment. Inside the authenticated app shell, prefer BoardUI composite text utilities (`text-title-2-medium`, `text-body-medium`, `text-caption-1-semibold`) rather than stacking raw size/weight classes.
 
 ## Layout
 
@@ -206,7 +204,7 @@ Weights in use: 400 (64.6%), 700 (22.3%), 500 (6.4%), 600 (4.5%), 900 (1.2%). St
 - Grids: 4 columns, 12 columns, 2 columns, 3 columns.
 - The home page alternates bands: `#faf9f5` → `#0a0b0d` → `#faf9f5` → `#000000`.
 
-<!-- write: how much whitespace, how sections are separated, alignment habits. -->
+Sections breathe with generous vertical separation (`py-14` to `py-28` on landing bands; `space-y-6` in dashboards) and clear left-aligned headers (`text-start`) inside logical RTL-ready spacing (`ms`, `me`, `ps`, `pe`). Cards use consistent internal padding (`p-4` to `p-6`) and avoid nested card borders when whitespace or a `1px` hairline (`border-separator-border`) already separates groups.
 
 ## Elevation & Depth
 
@@ -221,7 +219,7 @@ Weights in use: 400 (64.6%), 700 (22.3%), 500 (6.4%), 600 (4.5%), 900 (1.2%). St
 
 Effects: `filter: drop-shadow(rgba(0, 0, 0, 0.12) 0px 3px 3px)`, `filter: blur(1.1px) drop-shadow(rgba(0, 229, 117, 0.5) 0px 0px 10px)`, `backdrop-filter: blur(12px)`, `backdrop-filter: blur(8px)`.
 
-<!-- write: what lifts and what stays flat (cards, menus, dialogs). -->
+Base cards, list rows, and inputs stay flat on the page ground with a `1px` border and subtle contact shadow (`--shadow-card`). Only floating chrome — the mobile floating pill nav, map locate controls, dropdown menus, dialogs, and confirmation sheets — lifts with stronger elevation and backdrop blur.
 
 ## Shapes
 
@@ -249,7 +247,7 @@ Radius scale: `{rounded.2xl}` 22px, `{rounded.3xl}` 44.8px, `{rounded.full}` pil
 - “From ETB 4,500”: `#00000099`, text `#ffffffcc`, pill, 9px.
 - “Verified Job”: `#ecfdf5`, text `#007a55`, pill, 10px.
 
-<!-- write: the site's signature components you can see in the screenshots, and how to build each from the tokens. -->
+Signature components: the floating dark capsule mobile nav with its elevated center action button, tall editorial artisan search cards with trade-specific cover photography, the PIN-protected milestone contract stepper, and biometric Fayda verification review drawers. Build all buttons, switches, text inputs, and scrollable containers from `@/components/base/*` and `@/components/foundations/scroll-fade/scroll-fade` instead of raw HTML elements.
 
 ## Do's and Don'ts
 
@@ -258,12 +256,16 @@ Radius scale: `{rounded.2xl}` 22px, `{rounded.3xl}` 44.8px, `{rounded.full}` pil
 - Use the tokens for every colour, size, space, radius and shadow. If a value is missing, add a token; don't hard-code it.
 - Keep `{colors.primary}` for the one main action on a screen.
 - Headings in `{colors.heading}`, running text in `{colors.text}`.
-<!-- write: the habits that make it look like the site (from the screenshots). -->
+- Anchor every multi-lingual label through `useLanguage()` (`en`, `am`, `om`) and test Ethiopic script wrapping on 360px mobile viewports.
+- Replace blocking native browser dialogs (`alert`/`confirm`/`prompt`) with semantic `useFeedback()` toasts and accessible dialogs.
+- Use real database metrics and honest empty states with clear next actions everywhere inside authenticated portals.
 
 ### Don't
 
 - Don't use dire-skill.vercel.app's logo, illustrations, photos, icons or copy. Draw your own.
-<!-- write: the mistakes that would break the look. -->
+- Don't hardcode raw hex/slate/zinc classes inside semantic app surfaces where light/dark tokens (`bg-background-primary-default`, `text-text-primary`) are expected.
+- Don't mix multiple icon stroke styles or OS emojis inside UI chrome, map pins, or badges.
+- Don't hotlink fragile external thumbnail URLs (`encrypted-tbn0.gstatic.com`) or inject synthetic placeholder records into live user dashboards.
 
 ## Motion
 
@@ -273,7 +275,7 @@ Radius scale: `{rounded.2xl}` 22px, `{rounded.3xl}` 44.8px, `{rounded.full}` pil
 
 - Icons: line icons, strokes ≈ 1.75px at a 24px grid, round caps, round joins, drawn at 39px/16px/14px/13px (by size: 39px line 1.75px, 16px line 1.75px, 14px line 1.75px, 13px line 1.75px). They take the text colour (`currentColor`). See `design-system/source/screens/icons.png`.
 - Chart colours, in order: `{colors.chart-1}` `#00e575`, `{colors.chart-2}` `#ffa1ad`, `{colors.chart-3}` `#007a55`, `{colors.chart-4}` `#ff416c` (`--color-chart-<n>`; the first is the highlight, the rest are context or more series). Gridlines in `#e2e0d8`, labels in `#8c8880`.
-<!-- write: illustration style (flat, gradient, line, isometric, photo), how graphics sit on the page, and what to avoid. The draw-svg skill reads this section. -->
+Custom spot illustrations, empty states, and decorative topographic contours use clean vector primitives (`rect`, `circle`, `line`, `path`) on an 8px-aligned viewBox with `1.75px`–`2px` rounded strokes, `currentColor` for monochrome UI graphics, and `var(--token, #hex)` fallbacks for accented shapes so dark and light modes adapt automatically. Avoid heavy gradients, drop-shadowed SVG text, or external raster thumbnails for icons.
 
 ## Responsive Behavior
 
@@ -286,7 +288,7 @@ Radius scale: `{rounded.2xl}` 22px, `{rounded.3xl}` 44.8px, `{rounded.full}` pil
 - The site looks the same with dark mode on, so there's no dark theme to extract (it may switch with a toggle instead; see css.darkSelectors).
 - The CSS has dark-mode selectors (.dark, [data-sonner-theme="dark"]) but the page didn't switch with the system setting: dark mode is a toggle, or a class for dark sections only. Check the screenshots before adding a dark theme.
 - Hover and focus states were measured on the most common buttons, links and fields only.
-<!-- write: anything you couldn't see or confirm. -->
+Authenticated dashboards, admin governance drawers, and real-time Leaflet map screens operate under `ThemeProvider` (`next-themes` `.dark` class), complementing the landing-page measurements above.
 
 ## Files
 

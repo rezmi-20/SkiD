@@ -13,8 +13,8 @@ interface LiquidWaveGaugeProps {
 export function LiquidWaveGauge({
   percentage = 50,
   size = 180,
-  color = "#0284c7",
-  bgColor = "oklch(0.18 0.005 260)",
+  color = "var(--admin-accent, #0284c7)",
+  bgColor = "var(--color-background-secondary-default, oklch(0.18 0.005 260))",
   label = "Verified",
 }: LiquidWaveGaugeProps) {
   const clipId = useId();
@@ -25,7 +25,6 @@ export function LiquidWaveGauge({
   const innerR = r - 4; // stroke width 4
 
   // Water level Y from top: 0% => size - stroke, 100% => stroke
-  // Height from bottom = (clampedPercent / 100) * (innerR * 2)
   const waterY = size - (size * clampedPercent) / 100;
 
   // Wave amplitude and wavelength
@@ -62,8 +61,12 @@ export function LiquidWaveGauge({
         width={size}
         height={size}
         viewBox={`0 0 ${size} ${size}`}
+        role="img"
+        aria-label={`${label}: ${clampedPercent}%`}
         className="overflow-visible"
       >
+        <title>{`${label}: ${clampedPercent}%`}</title>
+        <desc>{`Completion gauge showing ${clampedPercent} percent for ${label}`}</desc>
         <defs>
           {/* Clip path inside the circle */}
           <clipPath id={clipId}>
@@ -72,19 +75,19 @@ export function LiquidWaveGauge({
 
           {/* Liquid gradient */}
           <linearGradient id={`liquid-grad-${clipId}`} x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#38bdf8" />
-            <stop offset="100%" stopColor="#0284c7" />
+            <stop offset="0%" stopColor={color} stopOpacity="0.82" />
+            <stop offset="100%" stopColor={color} stopOpacity="1" />
           </linearGradient>
 
           {/* Background liquid tint */}
           <linearGradient id={`bg-liquid-${clipId}`} x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#7dd3fc" stopOpacity="0.45" />
-            <stop offset="100%" stopColor="#0369a1" stopOpacity="0.5" />
+            <stop offset="0%" stopColor={color} stopOpacity="0.35" />
+            <stop offset="100%" stopColor={color} stopOpacity="0.55" />
           </linearGradient>
         </defs>
 
         {/* Base background circle */}
-        <circle cx={r} cy={r} r={innerR} fill="currentColor" className="text-secondary/60" />
+        <circle cx={r} cy={r} r={innerR} fill={bgColor} className="opacity-70" />
 
         {/* Liquid Waves clipped inside circle */}
         <g clipPath={`url(#${clipId})`}>
@@ -108,13 +111,13 @@ export function LiquidWaveGauge({
           />
         </g>
 
-        {/* Outer Circular Ring matching reference */}
+        {/* Outer Circular Ring matching active accent token */}
         <circle
           cx={r}
           cy={r}
           r={innerR}
           fill="none"
-          stroke="#0284c7"
+          stroke={color}
           strokeWidth="3.5"
           className="transition-colors duration-300"
         />

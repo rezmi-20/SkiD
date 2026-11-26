@@ -23,8 +23,11 @@ const createJobSiteIcon = () => {
       <div style="cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translate(-50%, -100%);">
         <div style="position: relative; display: flex; align-items: center; justify-content: center;">
           <div style="position: absolute; width: 36px; height: 36px; background-color: #10b981; border-radius: 9999px; opacity: 0.35; animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
-          <div style="background: linear-gradient(135deg, #047857 0%, #10b981 100%); color: #ffffff; border: 2px solid #ffffff; box-shadow: 0 4px 14px rgba(4, 120, 87, 0.5); width: 32px; height: 32px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-size: 16px;">
-            📍
+          <div style="background: linear-gradient(135deg, #047857 0%, #10b981 100%); color: #ffffff; border: 2px solid #ffffff; box-shadow: 0 4px 14px rgba(4, 120, 87, 0.5); width: 32px; height: 32px; border-radius: 9999px; display: flex; align-items: center; justify-content: center;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10z"/>
+              <circle cx="12" cy="11" r="2.2"/>
+            </svg>
           </div>
         </div>
         <div style="width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid #047857; margin-top: -1px;"></div>

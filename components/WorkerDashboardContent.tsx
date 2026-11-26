@@ -7,6 +7,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { acceptJob, rejectJob } from "@/lib/actions/jobs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useLanguage } from "@/context/LanguageContext";
+import { useFeedback } from "@/components/ui/feedback";
+import EmptyStateIllustration from "@/components/illustrations/EmptyStateIllustration";
 import {
   RiNotification3Line,
   RiCheckLine,
@@ -140,6 +142,7 @@ export default function WorkerDashboardContent({
 }: WorkerDashboardContentProps) {
   const router = useRouter();
   const { t } = useLanguage();
+  const { toast } = useFeedback();
   const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null);
   const [accepting, setAccepting] = useState<string | null>(null);
   const [rejecting, setRejecting] = useState<string | null>(null);
@@ -157,13 +160,14 @@ export default function WorkerDashboardContent({
     setAccepting(jobId);
     try {
       const result = await acceptJob(jobId);
-      if (!result.success) alert(result.error);
+      if (!result.success) toast.error(result.error || "Failed to accept job");
       else {
         setActiveTabJob(null);
+        toast.success("Gig offer accepted. Contract is ready.");
         router.refresh();
       }
     } catch (err: any) {
-      alert(err.message || "Failed to accept job");
+      toast.error(err.message || "Failed to accept job");
     } finally {
       setAccepting(null);
     }
@@ -174,125 +178,67 @@ export default function WorkerDashboardContent({
     setRejecting(jobId);
     try {
       const result = await rejectJob(jobId);
-      if (!result.success) alert(result.error);
+      if (!result.success) toast.error(result.error || "Failed to decline job");
       else {
         setActiveTabJob(null);
+        toast.info("Gig offer declined.");
         router.refresh();
       }
     } catch (err: any) {
-      alert(err.message || "Failed to decline job");
+      toast.error(err.message || "Failed to decline job");
     } finally {
       setRejecting(null);
     }
   };
 
-  /* ── 4. Synthesize Marketplace Gigs for Live Display (fallback if queue is empty) ── */
-  const displayOffers =
-    pendingJobs.length > 0
-      ? pendingJobs.map((j, idx) => ({
-          id: j.id,
-          dateLabel: idx === 0 ? "Tomorrow" : idx === 1 ? "22 Apr" : "24-26 Apr",
-          timeLabel: j.requested_date ? new Date(j.requested_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "9:00 AM - 5:00 PM",
-          budgetDisplay: `${Number(j.budget || 850).toLocaleString()} ETB`,
-          tradeLabel: worker.skills[0] || "Artisan Craft",
-          location: j.location || "Kebele 02, Dire Dawa",
-          clientName: j.client_name || "Dire Dawa Client",
-          countdown: idx === 0 ? "4h : 23m" : idx === 1 ? "23h : 35m" : "2 days",
-          rawJob: j,
-        }))
-      : [
-          {
-            id: "offer-mock-1",
-            dateLabel: "Tomorrow",
-            timeLabel: "9:00 AM - 5:00 PM",
-            budgetDisplay: "850 ETB / hr",
-            tradeLabel: worker.skills[0] || "Painter",
-            location: "Blainville, Kebele 02",
-            clientName: "Venex Construction",
-            countdown: "4h : 23m",
-            rawJob: null,
-          },
-          {
-            id: "offer-mock-2",
-            dateLabel: "22 Apr",
-            timeLabel: "11:00 AM - 7:00 PM",
-            budgetDisplay: "950 ETB / hr",
-            tradeLabel: worker.skills[1] || "Electrical Wiring",
-            location: "Laval, Megala District",
-            clientName: "Ascent Constructions",
-            countdown: "23h : 35m",
-            rawJob: null,
-          },
-          {
-            id: "offer-mock-3",
-            dateLabel: "24-26 Apr",
-            timeLabel: "22 Hours in Total",
-            budgetDisplay: "1,200 ETB / hr",
-            tradeLabel: worker.skills[2] || "Mason & Tiler",
-            location: "Gende Kore, Dire Dawa",
-            clientName: "Selam Engineering",
-            countdown: "2 days",
-            rawJob: null,
-          },
-        ];
+  /* ── 4. Live Marketplace Gig Offers (No synthetic mock fallbacks) ─────────── */
+  const displayOffers = pendingJobs.map((j) => ({
+    id: j.id,
+    dateLabel: j.requested_date
+      ? new Date(j.requested_date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })
+      : "Flexible Date",
+    timeLabel: j.requested_date
+      ? new Date(j.requested_date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      : "Flexible Schedule",
+    budgetDisplay: j.budget ? `${Number(j.budget).toLocaleString()} ETB` : "Negotiable",
+    tradeLabel: j.title || worker.skills[0] || "Artisan Craft",
+    location: j.location || worker.district || "Dire Dawa",
+    clientName: j.client_name || "Dire Dawa Client",
+    countdown: j.created_at
+      ? new Date(j.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })
+      : "Pending",
+    rawJob: j,
+  }));
 
-  // Set default selected row to index 1 (as seen in the reference photo)
-  const activeOfferId = selectedOfferId || displayOffers[1]?.id || displayOffers[0]?.id;
+  const activeOfferId = selectedOfferId || displayOffers[0]?.id || null;
 
-  /* ── 5. Synthesize Scheduled Upcoming Jobs (Cards 1..5) ──────────────────── */
-  const upcomingCards = [
-    {
-      id: "up-1",
-      isHeroDark: true,
-      dayLabel: "Tomorrow",
-      timeLabel: "8:00 AM - 6:00 PM",
-      location: "Kebele 02, Dire Dawa",
-      tradeLabel: worker.skills[0] || "Painter",
-    },
-    {
-      id: "up-2",
-      isHeroDark: false,
-      dayLabel: "Thursday",
-      timeLabel: "7:00 AM - 4:00 PM",
-      location: "Gende Kore, Dire Dawa",
-      tradeLabel: "Construction Worker",
-    },
-    {
-      id: "up-3",
-      isHeroDark: false,
-      dayLabel: "Friday",
-      timeLabel: "8:00 AM - 8:00 PM",
-      location: "Megala Commercial",
-      tradeLabel: worker.skills[1] || "Painter",
-    },
-    {
-      id: "up-4",
-      isHeroDark: false,
-      dayLabel: "19 Apr",
-      timeLabel: "8:00 AM - 6:00 PM",
-      location: "Sabian District, DD",
-      tradeLabel: worker.skills[0] || "Painter",
-    },
-    {
-      id: "up-5",
-      isHeroDark: false,
-      dayLabel: "20 Apr",
-      timeLabel: "8:00 AM - 6:00 PM",
-      location: "Melka Jebdu, Dire Dawa",
-      tradeLabel: worker.skills[2] || "Plumber",
-    },
-  ];
+  /* ── 5. Live Scheduled Upcoming Jobs (From active contracts & accepted jobs) */
+  const upcomingSource =
+    activeContracts.length > 0
+      ? activeContracts
+      : recentJobs.filter((j) => ["accepted", "active", "in_progress"].includes(j.status));
 
-  /* ── 6. Synthesize Latest Reviews ────────────────────────────────────────── */
-  const displayReview = worker.latestReviews && worker.latestReviews.length > 0
-    ? worker.latestReviews[0]
-    : {
-        clientName: "Ascent Construction",
-        clientSub: "Devon Lane",
-        score: 5,
-        comment:
-          "Professional execution on all site milestones. Clean finishes, punctual arrival, and verified milestone release without delay.",
-      };
+  const upcomingCards = upcomingSource.slice(0, 5).map((item: any, idx: number) => {
+    const dt = item.contract_created_at || item.job_created_at || item.requested_date || item.created_at;
+    const parsedDate = dt ? new Date(dt) : null;
+    return {
+      id: item.contract_id || item.id || `up-${idx}`,
+      href: item.contract_id ? `/contracts/${item.contract_id}` : "/worker/gigs",
+      isHeroDark: idx === 0,
+      dayLabel: parsedDate && !Number.isNaN(parsedDate.getTime())
+        ? parsedDate.toLocaleDateString("en-GB", { day: "numeric", month: "short" })
+        : "Scheduled",
+      timeLabel: item.job_status
+        ? String(item.job_status).replace(/_/g, " ")
+        : String(item.status || "Active").replace(/_/g, " "),
+      location: item.location || worker.district || "Dire Dawa",
+      tradeLabel: item.job_title || item.title || worker.skills[0] || "Artisan Service",
+    };
+  });
+
+  /* ── 6. Live Latest Review (No fake fallback review) ──────────────────────── */
+  const displayReview =
+    worker.latestReviews && worker.latestReviews.length > 0 ? worker.latestReviews[0] : null;
 
   return (
     <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-2 pb-10 sm:py-6 space-y-6 md:space-y-8 font-['Inter',system-ui,sans-serif] text-zinc-900 dark:text-zinc-100">
@@ -314,8 +260,8 @@ export default function WorkerDashboardContent({
               Welcome back {worker.firstName}!
             </h1>
             <p className="text-xs sm:text-sm text-zinc-400 mt-1.5 leading-relaxed font-normal">
-              You have <span className="text-emerald-400 font-semibold">{worker.unreadNotificationsCount ?? 2} unread notifications</span> and{" "}
-              <span className="text-white font-semibold">{displayOffers.length} new offers</span> matching your criteria
+              You have <span className="text-emerald-400 font-semibold">{worker.unreadNotificationsCount ?? 0} unread notification{(worker.unreadNotificationsCount ?? 0) === 1 ? "" : "s"}</span> and{" "}
+              <span className="text-white font-semibold">{displayOffers.length} new offer{displayOffers.length === 1 ? "" : "s"}</span> awaiting your response
             </p>
           </div>
 
@@ -358,13 +304,13 @@ export default function WorkerDashboardContent({
             <div className="min-w-0">
               <div className="flex items-center gap-1 text-xs font-bold text-zinc-900 dark:text-white">
                 <RiStarFill className="size-3.5 text-amber-500 fill-amber-500" />
-                <span>{worker.avgRating || 4.8}</span>
+                <span>{worker.reviewCount && worker.reviewCount > 0 ? worker.avgRating : "New"}</span>
               </div>
               <p className="text-[11px] text-zinc-400 font-medium leading-none mt-1">
                 Earnings This Month
               </p>
               <p className="text-sm sm:text-base font-extrabold text-zinc-900 dark:text-white leading-tight mt-0.5">
-                {Number(worker.monthlyEarned || 9500).toLocaleString()} ETB
+                {Number(worker.monthlyEarned ?? 0).toLocaleString()} ETB
               </p>
             </div>
           </Link>
@@ -376,9 +322,9 @@ export default function WorkerDashboardContent({
             aria-label="Notifications"
           >
             <RiNotification3Line className="size-5" />
-            {(worker.unreadNotificationsCount ?? 2) > 0 && (
+            {(worker.unreadNotificationsCount ?? 0) > 0 && (
               <span className="absolute -top-1 -right-1 size-5 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center ring-2 ring-white dark:ring-zinc-900">
-                {worker.unreadNotificationsCount ?? 2}
+                {worker.unreadNotificationsCount}
               </span>
             )}
           </Link>
@@ -404,7 +350,30 @@ export default function WorkerDashboardContent({
 
         {/* Stacked Container */}
         <div className="rounded-[2rem] bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 p-3 sm:p-5 shadow-sm space-y-2.5">
-          {displayOffers.map((offer) => {
+          {displayOffers.length === 0 ? (
+            <div className="py-10 px-4 text-center space-y-2">
+              <EmptyStateIllustration kind="offers" className="w-24 h-18 mx-auto text-zinc-500" />
+              <p className="text-sm font-bold text-zinc-900 dark:text-white">No pending gig offers right now</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
+                Keep your availability active and profile updated so Dire Dawa clients can send direct job offers.
+              </p>
+              <div className="pt-2 flex items-center justify-center gap-2">
+                <Link
+                  href="/worker/gigs"
+                  className="px-4 py-2 rounded-full bg-[#45BA50] text-zinc-950 text-xs font-bold hover:opacity-90 transition"
+                >
+                  Open My Gigs
+                </Link>
+                <Link
+                  href="/worker/profile/settings"
+                  className="px-4 py-2 rounded-full border border-slate-200 dark:border-zinc-700 text-xs font-bold text-zinc-700 dark:text-zinc-200 hover:bg-slate-50 dark:hover:bg-zinc-800 transition"
+                >
+                  Update Profile
+                </Link>
+              </div>
+            </div>
+          ) : (
+            displayOffers.map((offer) => {
             const isSelected = activeOfferId === offer.id;
 
             return (
@@ -493,11 +462,8 @@ export default function WorkerDashboardContent({
                     {/* Accept Button */}
                     <button
                       type="button"
-                      onClick={(e) => {
-                        if (offer.rawJob) handleAccept(offer.rawJob.id, e);
-                        else handleAccept("mock", e);
-                      }}
-                      disabled={accepting === (offer.rawJob?.id || "mock")}
+                      onClick={(e) => handleAccept(offer.rawJob.id, e)}
+                      disabled={accepting === offer.rawJob.id}
                       aria-label="Accept Gig Offer"
                       className={`flex-1 md:flex-initial h-10 px-4 sm:px-0 sm:size-10.5 rounded-xl flex items-center justify-center gap-1.5 font-bold text-xs transition-all cursor-pointer ${
                         isSelected
@@ -505,7 +471,7 @@ export default function WorkerDashboardContent({
                           : "bg-emerald-100/80 hover:bg-emerald-200 dark:bg-emerald-950/60 dark:hover:bg-emerald-900 text-emerald-800 dark:text-emerald-300 border border-emerald-300/40 dark:border-emerald-700/40"
                       }`}
                     >
-                      {accepting === (offer.rawJob?.id || "mock") ? (
+                      {accepting === offer.rawJob.id ? (
                         <div className="size-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                       ) : (
                         <>
@@ -518,11 +484,8 @@ export default function WorkerDashboardContent({
                     {/* Decline Button */}
                     <button
                       type="button"
-                      onClick={(e) => {
-                        if (offer.rawJob) handleReject(offer.rawJob.id, e);
-                        else handleReject("mock", e);
-                      }}
-                      disabled={rejecting === (offer.rawJob?.id || "mock")}
+                      onClick={(e) => handleReject(offer.rawJob.id, e)}
+                      disabled={rejecting === offer.rawJob.id}
                       aria-label="Decline Gig Offer"
                       className={`flex-1 md:flex-initial h-10 px-4 sm:px-0 sm:size-10.5 rounded-xl flex items-center justify-center gap-1.5 font-bold text-xs transition-all cursor-pointer ${
                         isSelected
@@ -530,7 +493,7 @@ export default function WorkerDashboardContent({
                           : "bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700"
                       }`}
                     >
-                      {rejecting === (offer.rawJob?.id || "mock") ? (
+                      {rejecting === offer.rawJob.id ? (
                         <div className="size-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                       ) : (
                         <>
@@ -543,7 +506,8 @@ export default function WorkerDashboardContent({
                 </div>
               </div>
             );
-          })}
+          })
+          )}
         </div>
 
       </section>
@@ -567,68 +531,79 @@ export default function WorkerDashboardContent({
         </div>
 
         {/* 5-Card Responsive Grid (Desktop Grid, Mobile Smooth Swipe) */}
-        <div className="flex sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-2 sm:pb-0">
-          {upcomingCards.map((card) => {
-            if (card.isHeroDark) {
-              return (
-                <div
-                  key={card.id}
-                  className="min-w-[240px] sm:min-w-0 snap-start flex-1 relative rounded-2xl bg-[#111216] dark:bg-zinc-950 text-white p-5 overflow-hidden border border-zinc-800 flex flex-col justify-between min-h-[175px] shadow-sm"
-                >
-                  {/* Topographic Contour Texture on Dark Card */}
-                  <TopographicContourSvg className="absolute inset-0 w-full h-full pointer-events-none opacity-20 text-white" />
+        {upcomingCards.length === 0 ? (
+          <div className="rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 p-6 text-center space-y-2 shadow-xs">
+            <p className="text-sm font-bold text-zinc-900 dark:text-white">No upcoming scheduled jobs yet</p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              Accepted contracts and active site schedules will appear here.
+            </p>
+          </div>
+        ) : (
+          <div className="flex sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-2 sm:pb-0">
+            {upcomingCards.map((card) => {
+              if (card.isHeroDark) {
+                return (
+                  <Link
+                    key={card.id}
+                    href={card.href}
+                    className="min-w-[240px] sm:min-w-0 snap-start flex-1 relative rounded-2xl bg-[#111216] dark:bg-zinc-950 text-white p-5 overflow-hidden border border-zinc-800 flex flex-col justify-between min-h-[175px] shadow-sm hover:border-emerald-500/40 transition"
+                  >
+                    {/* Topographic Contour Texture on Dark Card */}
+                    <TopographicContourSvg className="absolute inset-0 w-full h-full pointer-events-none opacity-20 text-white" />
 
+                    {/* Top: Day and Time */}
+                    <div className="relative z-10">
+                      <p className="text-base sm:text-lg font-bold text-white leading-tight">
+                        {card.dayLabel}
+                      </p>
+                      <p className="text-xs text-zinc-400 mt-0.5 capitalize">
+                        {card.timeLabel}
+                      </p>
+                    </div>
+
+                    {/* Bottom: Location and Trade */}
+                    <div className="relative z-10 pt-4">
+                      <p className="text-xs font-semibold text-zinc-200 leading-tight truncate">
+                        {card.location}
+                      </p>
+                      <p className="text-xs text-zinc-400 font-medium mt-0.5 truncate">
+                        {card.tradeLabel}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              }
+
+              return (
+                <Link
+                  key={card.id}
+                  href={card.href}
+                  className="min-w-[240px] sm:min-w-0 snap-start flex-1 rounded-2xl bg-[#dcfce7] dark:bg-[#064e3b]/30 text-[#064e3b] dark:text-[#a7f3d0] p-5 border border-emerald-200/70 dark:border-emerald-800/40 flex flex-col justify-between min-h-[175px] transition-transform hover:-translate-y-0.5"
+                >
                   {/* Top: Day and Time */}
-                  <div className="relative z-10">
-                    <p className="text-base sm:text-lg font-bold text-white leading-tight">
+                  <div>
+                    <p className="text-base sm:text-lg font-bold leading-tight">
                       {card.dayLabel}
                     </p>
-                    <p className="text-xs text-zinc-400 mt-0.5">
+                    <p className="text-xs opacity-75 mt-0.5 capitalize">
                       {card.timeLabel}
                     </p>
                   </div>
 
                   {/* Bottom: Location and Trade */}
-                  <div className="relative z-10 pt-4">
-                    <p className="text-xs font-semibold text-zinc-200 leading-tight truncate">
+                  <div className="pt-4">
+                    <p className="text-xs font-semibold leading-tight truncate">
                       {card.location}
                     </p>
-                    <p className="text-xs text-zinc-400 font-medium mt-0.5">
+                    <p className="text-xs opacity-70 font-medium mt-0.5 truncate">
                       {card.tradeLabel}
                     </p>
                   </div>
-                </div>
+                </Link>
               );
-            }
-
-            return (
-              <div
-                key={card.id}
-                className="min-w-[240px] sm:min-w-0 snap-start flex-1 rounded-2xl bg-[#dcfce7] dark:bg-[#064e3b]/30 text-[#064e3b] dark:text-[#a7f3d0] p-5 border border-emerald-200/70 dark:border-emerald-800/40 flex flex-col justify-between min-h-[175px] transition-transform hover:-translate-y-0.5"
-              >
-                {/* Top: Day and Time */}
-                <div>
-                  <p className="text-base sm:text-lg font-bold leading-tight">
-                    {card.dayLabel}
-                  </p>
-                  <p className="text-xs opacity-75 mt-0.5">
-                    {card.timeLabel}
-                  </p>
-                </div>
-
-                {/* Bottom: Location and Trade */}
-                <div className="pt-4">
-                  <p className="text-xs font-semibold leading-tight truncate">
-                    {card.location}
-                  </p>
-                  <p className="text-xs opacity-70 font-medium mt-0.5">
-                    {card.tradeLabel}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+            })}
+          </div>
+        )}
 
       </section>
 
@@ -685,34 +660,49 @@ export default function WorkerDashboardContent({
             </Link>
           </div>
 
-          <div className="rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 p-5 space-y-3 shadow-sm">
-            {/* Header: Client & 5 Stars */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="size-8 rounded-lg bg-amber-500/10 text-amber-500 font-black text-xs flex items-center justify-center">
-                  AC
+          {displayReview ? (
+            <div className="rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 p-5 space-y-3 shadow-sm">
+              {/* Header: Client & 5 Stars */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="size-8 rounded-lg bg-amber-500/10 text-amber-500 font-black text-xs flex items-center justify-center">
+                    {(displayReview.client_name || displayReview.clientName || "DC")
+                      .split(" ")
+                      .map((p: string) => p[0])
+                      .join("")
+                      .slice(0, 2)
+                      .toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-zinc-900 dark:text-white leading-tight">
+                      {displayReview.client_name || displayReview.clientName || "Dire Dawa Client"}
+                    </p>
+                    <p className="text-[11px] text-zinc-400 font-medium">
+                      Verified Client Review
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-bold text-zinc-900 dark:text-white leading-tight">
-                    {displayReview.clientName}
-                  </p>
-                  <p className="text-[11px] text-zinc-400 font-medium">
-                    {displayReview.clientSub || "Verified Client"}
-                  </p>
+
+                <div className="flex items-center gap-1 text-xs font-bold text-zinc-900 dark:text-white">
+                  <span>{displayReview.score || 5}</span>
+                  <RiStarFill className="size-3.5 text-amber-500 fill-amber-500" />
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 text-xs font-bold text-zinc-900 dark:text-white">
-                <span>{displayReview.score || 5}</span>
-                <RiStarFill className="size-3.5 text-amber-500 fill-amber-500" />
-              </div>
+              {/* Testimonial Quote */}
+              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed italic line-clamp-2">
+                &ldquo;{displayReview.comment || "Completed work approved by client."}&rdquo;
+              </p>
             </div>
-
-            {/* Testimonial Quote */}
-            <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed italic line-clamp-2">
-              &ldquo;{displayReview.comment}&rdquo;
-            </p>
-          </div>
+          ) : (
+            <div className="rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 p-5 text-center space-y-2 shadow-sm">
+              <EmptyStateIllustration kind="reviews" className="w-24 h-18 mx-auto text-zinc-500" />
+              <p className="text-sm font-bold text-zinc-900 dark:text-white">No client reviews yet</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                Completed contract milestones earn verified ratings from Dire Dawa clients.
+              </p>
+            </div>
+          )}
         </section>
 
       </div>

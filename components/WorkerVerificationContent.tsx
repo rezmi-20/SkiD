@@ -30,6 +30,7 @@ import {
 import ProtectedVerificationDocumentViewer from "@/components/admin/ProtectedVerificationDocumentViewer";
 import VerificationFinReveal from "@/components/admin/VerificationFinReveal";
 import { toWorkerDisplayStatus } from "@/lib/worker-verification";
+import { useFeedback } from "@/components/ui/feedback";
 
 interface WorkerVerificationContentProps {
   worker: {
@@ -105,6 +106,7 @@ export default function WorkerVerificationContent({
   onPending,
   errorMessage,
 }: WorkerVerificationContentProps) {
+  const { toast, confirmDialog } = useFeedback();
   const [rejectReason, setRejectReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [photoMatchStatus, setPhotoMatchStatus] = useState<"unconfirmed" | "matched" | "mismatch">("unconfirmed");
@@ -137,16 +139,17 @@ export default function WorkerVerificationContent({
   ) => {
     const reason = rejectReason.trim();
     if (!reason) {
-      alert("Please provide a reason before proceeding with this decision.");
+      toast.error("Please provide a reason before proceeding with this decision.");
       return;
     }
-    if (
-      options?.confirmRevocation &&
-      !window.confirm(
-        "Revoke this approved worker? The worker will immediately lose verified standing until reverified."
-      )
-    ) {
-      return;
+    if (options?.confirmRevocation) {
+      const confirmed = await confirmDialog({
+        title: "Revoke Verified Status?",
+        description: "Revoke this approved worker? The worker will immediately lose verified standing until reverified.",
+        confirmLabel: "Revoke Standing",
+        variant: "danger",
+      });
+      if (!confirmed) return;
     }
     setIsSubmitting(true);
     try {
