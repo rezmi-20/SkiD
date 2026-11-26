@@ -7,6 +7,7 @@ export async function GET(req: NextRequest) {
     const session = await auth();
     const { searchParams } = new URL(req.url);
     const queryStr = searchParams.get("query") || "";
+    const neighborhood = searchParams.get("neighborhood") || "";
     const category = searchParams.get("category") || "";
     const userLat = parseFloat(searchParams.get("lat") || "");
     const userLng = parseFloat(searchParams.get("lng") || "");
@@ -44,6 +45,7 @@ export async function GET(req: NextRequest) {
         wp.full_name,
         wp.bio,
         wp.skills,
+        wp.district,
         CASE WHEN u.id = $VIEWER_ID$ OR EXISTS (
           SELECT 1 FROM jobs location_job
           WHERE location_job.worker_id = u.id
@@ -80,15 +82,26 @@ export async function GET(req: NextRequest) {
         AND length(wp.fin_encrypted) > 0
     `;
 
-    // Query filtering (Name OR Skill)
+    // Query filtering (Name, Skill, District/Kebele, or Bio)
     if (queryStr && queryStr.trim() !== "") {
-      params.push(`%${queryStr.toLowerCase()}%`);
+      params.push(`%${queryStr.trim().toLowerCase()}%`);
       query += ` AND (
-        LOWER(wp.full_name) LIKE $${params.length} 
+        LOWER(wp.full_name) LIKE $${params.length}
+        OR LOWER(COALESCE(wp.district, '')) LIKE $${params.length}
+        OR LOWER(COALESCE(wp.bio, '')) LIKE $${params.length}
         OR EXISTS (
           SELECT 1 FROM unnest(wp.skills) s 
           WHERE LOWER(s) LIKE $${params.length}
         )
+      )`;
+    }
+
+    // Kebele / Neighborhood filtering
+    if (neighborhood && neighborhood.trim() !== "" && neighborhood.trim().toLowerCase() !== "all dire dawa") {
+      params.push(`%${neighborhood.trim().toLowerCase()}%`);
+      query += ` AND (
+        LOWER(COALESCE(wp.district, '')) LIKE $${params.length}
+        OR LOWER(COALESCE(wp.bio, '')) LIKE $${params.length}
       )`;
     }
 

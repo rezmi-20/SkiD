@@ -60,10 +60,10 @@ function SearchPageContent() {
   const { t } = useLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { location, loading: locLoading, accuracy, isLive, refreshLocation } = useLocation();
+  const { location, error: locError, loading: locLoading, accuracy, isLive, refreshLocation } = useLocation();
 
   const initialView = searchParams.get("view") === "map" ? "map" : "list";
-  const initialCategory = searchParams.get("category") || "";
+  const initialCategory = searchParams.get("category") || searchParams.get("trade") || "";
   const initialQuery = searchParams.get("q") || searchParams.get("query") || "";
 
   const [mounted, setMounted] = useState(false);
@@ -161,18 +161,31 @@ function SearchPageContent() {
     ].filter(Boolean).length;
   }, [filters]);
 
+  const lastFilterSignatureRef = useRef<string>("");
+
   useEffect(() => {
     let isCancelled = false;
 
     const fetchWorkers = async () => {
-      setLoading(true);
-      try {
-        const queryWithNeighborhood = filters.neighborhood && filters.neighborhood !== "All Dire Dawa"
-          ? `${debouncedQuery} ${filters.neighborhood}`.trim()
-          : debouncedQuery;
+      const filterSignature = JSON.stringify({
+        q: debouncedQuery,
+        c: filters.category,
+        n: filters.neighborhood,
+        r: filters.minRating,
+        d: filters.maxDistance,
+        v: filters.verifiedOnly,
+      });
+      const filtersChanged = lastFilterSignatureRef.current !== filterSignature;
+      lastFilterSignatureRef.current = filterSignature;
 
+      if (filtersChanged || workers.length === 0) {
+        setLoading(true);
+      }
+
+      try {
         const params = new URLSearchParams({
-          query: queryWithNeighborhood || "",
+          query: debouncedQuery || "",
+          neighborhood: filters.neighborhood && filters.neighborhood !== "All Dire Dawa" ? filters.neighborhood : "",
           category: filters.category === "All" ? "" : (filters.category || ""),
           minRating: filters.minRating.toString(),
           maxDistance: filters.maxDistance.toString(),
@@ -235,7 +248,7 @@ function SearchPageContent() {
               lng,
               photo: w.avatar_url || null,
               isVerified: w.is_verified,
-              district: "Kezira",
+              district: w.district || "Dire Dawa",
               skills: w.skills,
               bio: w.bio,
               hourlyRate: w.hourly_rate || "450",
@@ -371,15 +384,29 @@ function SearchPageContent() {
           {/* 4. Live GPS Button */}
           <button
             type="button"
-            onClick={refreshLocation}
-            className="inline-flex items-center gap-1.5 px-3.5 h-11 rounded-full text-xs font-bold bg-[#134e27]/20 text-[#45BA50] border border-[#45BA50]/35 hover:bg-[#134e27]/30 active:scale-95 transition-all cursor-pointer shadow-xs"
-            title="Refresh Real-Time GPS Location in Dire Dawa"
+            onClick={() => {
+              refreshLocation();
+              setRecenterSignal((s) => s + 1);
+            }}
+            className={cx(
+              "inline-flex items-center gap-1.5 px-3.5 h-11 rounded-full text-xs font-bold border active:scale-95 transition-all cursor-pointer shadow-xs",
+              isLive
+                ? "bg-[#134e27]/20 text-[#45BA50] border-[#45BA50]/35 hover:bg-[#134e27]/30"
+                : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/20"
+            )}
+            title={locError || (isLive ? "Real-time GPS active in Dire Dawa. Tap to refresh." : "Using Dire Dawa default location. Tap to enable GPS.")}
           >
             <span className={cx(
               "w-2 h-2 rounded-full",
-              locLoading ? "bg-amber-400 animate-pulse" : isLive ? "bg-[#45BA50] animate-ping" : "bg-[#45BA50]"
+              locLoading ? "bg-amber-400 animate-pulse" : isLive ? "bg-[#45BA50] animate-ping" : "bg-amber-500"
             )} />
-            <span className="hidden sm:inline">GPS (±{accuracy || 18}m)</span>
+            <span className="hidden sm:inline">
+              {locLoading
+                ? "Locating..."
+                : isLive
+                  ? `GPS (${accuracy ? `±${accuracy}m` : "Live"})`
+                  : "Enable GPS"}
+            </span>
             <RiRestartLine className={cx("w-3.5 h-3.5", locLoading ? "animate-spin" : "")} />
           </button>
         </div>
@@ -503,12 +530,19 @@ function SearchPageContent() {
                             refreshLocation();
                             setRecenterSignal((s) => s + 1);
                           }}
-                          className="h-9 px-2.5 rounded-xl text-xs font-bold bg-[#134e27]/25 hover:bg-[#134e27]/40 text-[#45BA50] border border-[#45BA50]/40 flex items-center gap-1.5 active:scale-95 transition-all shrink-0 cursor-pointer shadow-sm"
-                          title="Center on My Real-Time Location"
+                          className={cx(
+                            "h-9 px-2.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 active:scale-95 transition-all shrink-0 cursor-pointer shadow-sm",
+                            isLive
+                              ? "bg-[#134e27]/25 hover:bg-[#134e27]/40 text-[#45BA50] border-[#45BA50]/40"
+                              : "bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-400 border-amber-500/40"
+                          )}
+                          title={locError || (isLive ? "Center on My Real-Time Location" : "Tap to enable real-time GPS")}
                           aria-label="Center on My Real-Time Location"
                         >
-                          <RiFocus3Line className={cx("w-4 h-4 text-[#45BA50]", locLoading ? "animate-spin" : "")} />
-                          <span className="hidden sm:inline text-[11px]">My GPS</span>
+                          <RiFocus3Line className={cx("w-4 h-4", isLive ? "text-[#45BA50]" : "text-amber-500", locLoading ? "animate-spin" : "")} />
+                          <span className="hidden sm:inline text-[11px]">
+                            {locLoading ? "Locating..." : isLive ? `GPS${accuracy ? ` ±${accuracy}m` : ""}` : "Enable GPS"}
+                          </span>
                         </button>
                       </div>
                     </div>

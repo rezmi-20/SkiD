@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -74,19 +74,24 @@ const userLocationIcon = () => L.divIcon({
 const MapController = ({
   workers,
   center,
+  isLive,
   selectedWorker,
   onMapClick,
   recenterSignal,
 }: {
   workers: Worker[];
   center: [number, number];
+  isLive: boolean;
   selectedWorker?: Worker | null;
   onMapClick?: () => void;
   recenterSignal?: number;
 }) => {
   const map = useMap();
   const initialFittedRef = useRef(false);
+  const hasCenteredLiveRef = useRef(false);
+  const pendingLocateRef = useRef(false);
   const prevRecenterSignal = useRef(recenterSignal);
+  const prevCenterRef = useRef<[number, number]>(center);
 
   useEffect(() => {
     if (!map) return;
@@ -103,11 +108,46 @@ const MapController = ({
   useEffect(() => {
     if (recenterSignal !== undefined && recenterSignal !== prevRecenterSignal.current) {
       prevRecenterSignal.current = recenterSignal;
+      pendingLocateRef.current = true;
       try {
         map.flyTo(center, 16, { duration: 0.9 });
       } catch {}
     }
   }, [recenterSignal, center, map]);
+
+  // Fly to updated center once live GPS resolves after initial fallback or after clicking My GPS
+  useEffect(() => {
+    const centerMoved =
+      Math.abs(prevCenterRef.current[0] - center[0]) > 0.0001 ||
+      Math.abs(prevCenterRef.current[1] - center[1]) > 0.0001;
+    prevCenterRef.current = center;
+
+    if (!map || selectedWorker) return;
+
+    if (pendingLocateRef.current && centerMoved) {
+      pendingLocateRef.current = false;
+      try {
+        map.flyTo(center, 16, { duration: 0.9 });
+      } catch {}
+      return;
+    }
+
+    if (isLive && !hasCenteredLiveRef.current) {
+      hasCenteredLiveRef.current = true;
+      try {
+        const validWorkers = workers.filter(w => isValidCoord(w.lat) && isValidCoord(w.lng));
+        if (validWorkers.length > 0) {
+          const bounds = L.latLngBounds([center]);
+          validWorkers.forEach(w => bounds.extend([Number(w.lat), Number(w.lng)]));
+          if (bounds.isValid()) {
+            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+            return;
+          }
+        }
+        map.flyTo(center, 15, { duration: 0.9 });
+      } catch {}
+    }
+  }, [center, isLive, workers, selectedWorker, map]);
 
   useEffect(() => {
     try {
@@ -143,20 +183,29 @@ const MapController = ({
 };
 
 // Floating Locate Me button component that uses useMap hook
-const LocateMeControl = ({ center, onLocate }: { center: [number, number]; onLocate: () => void }) => {
+const LocateMeControl = ({
+  center,
+  onLocate,
+  onTriggerRecenter,
+}: {
+  center: [number, number];
+  onLocate: () => void;
+  onTriggerRecenter: () => void;
+}) => {
   const map = useMap();
 
   const handleLocate = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
     onLocate();
+    onTriggerRecenter();
     try {
       map.flyTo(center, 16, { duration: 0.9 });
     } catch { }
-  }, [center, map, onLocate]);
+  }, [center, map, onLocate, onTriggerRecenter]);
 
   return (
-    <div className="leaflet-top leaflet-right" style={{ marginTop: "64px", marginRight: "12px", zIndex: 900 }}>
+    <div className="leaflet-top leaflet-right mt-[68px] lg:mt-3 mr-3 z-[900]">
       <div className="leaflet-control">
         <button
           type="button"
@@ -208,6 +257,7 @@ export default function MapComponent({
   className = "",
 }: MapComponentProps) {
   const [isMounted, setIsMounted] = useState(false);
+  const [internalRecenter, setInternalRecenter] = useState(0);
   const { theme } = useTheme();
   const { location, accuracy, isLive, refreshLocation } = useLocation();
 
@@ -215,6 +265,38 @@ export default function MapComponent({
     fixLeafletIcons();
     setIsMounted(true);
   }, []);
+
+  // Spread overlapping markers that share identical privacy-rounded coordinates
+  const displayWorkers = useMemo(() => {
+    const valid = workers.filter(w => isValidCoord(w.lat) && isValidCoord(w.lng));
+    const buckets = new Map<string, Worker[]>();
+    for (const w of valid) {
+      const key = `${Number(w.lat).toFixed(4)}:${Number(w.lng).toFixed(4)}`;
+      const list = buckets.get(key) || [];
+      list.push(w);
+      buckets.set(key, list);
+    }
+
+    const positioned: Array<Worker & { displayLat: number; displayLng: number }> = [];
+    for (const group of buckets.values()) {
+      group.forEach((w, idx) => {
+        const baseLat = Number(w.lat);
+        const baseLng = Number(w.lng);
+        if (group.length === 1) {
+          positioned.push({ ...w, displayLat: baseLat, displayLng: baseLng });
+        } else {
+          const angle = (2 * Math.PI * idx) / group.length;
+          const radius = 0.00045; // ~50m visual separation for stacked markers
+          positioned.push({
+            ...w,
+            displayLat: baseLat + radius * Math.sin(angle),
+            displayLng: baseLng + radius * Math.cos(angle),
+          });
+        }
+      });
+    }
+    return positioned;
+  }, [workers]);
 
   if (!isMounted) return <div className="h-full w-full bg-background-secondary-default animate-pulse" />;
 
@@ -225,6 +307,7 @@ export default function MapComponent({
   const selectedWorker = workers.find(w => w.id === selectedWorkerId) || null;
   const isLight = theme === 'light';
   const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+  const combinedRecenterSignal = (recenterSignal || 0) + internalRecenter;
 
   return (
     <MapErrorBoundary>
@@ -238,9 +321,10 @@ export default function MapComponent({
           <MapController
             workers={workers}
             center={center}
+            isLive={isLive}
             selectedWorker={selectedWorker}
             onMapClick={onMapClick}
-            recenterSignal={recenterSignal}
+            recenterSignal={combinedRecenterSignal}
           />
 
           <TileLayer
@@ -269,19 +353,19 @@ export default function MapComponent({
               <div className="p-1 font-sans text-center">
                 <p className="font-black text-xs text-white">Your Location</p>
                 <p className="text-[10px] text-[#a4fe47] font-bold">
-                  {isLive ? `Live GPS (±${accuracy || 20}m)` : "Dire Dawa"}
+                  {isLive ? `Live GPS (±${accuracy || 20}m)` : "Dire Dawa (Default)"}
                 </p>
               </div>
             </Popup>
           </Marker>
 
           {/* Workers Pins with Rating Bubbles - Clicking selects artisan in ride-hailing bottom sheet */}
-          {workers.filter(w => isValidCoord(w.lat) && isValidCoord(w.lng)).map((worker) => {
+          {displayWorkers.map((worker) => {
             const isSelected = selectedWorkerId === worker.id;
             return (
               <Marker
                 key={worker.id}
-                position={[Number(worker.lat), Number(worker.lng)]}
+                position={[worker.displayLat, worker.displayLng]}
                 icon={createWorkerIcon(worker.rating, isSelected)}
                 eventHandlers={{
                   click: () => {
@@ -292,7 +376,11 @@ export default function MapComponent({
             );
           })}
 
-          <LocateMeControl center={center} onLocate={refreshLocation} />
+          <LocateMeControl
+            center={center}
+            onLocate={refreshLocation}
+            onTriggerRecenter={() => setInternalRecenter((s) => s + 1)}
+          />
         </MapContainer>
 
         <style jsx global>{`

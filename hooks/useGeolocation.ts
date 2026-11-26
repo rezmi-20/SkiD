@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 interface GeolocationState {
   latitude: number | null;
@@ -19,6 +19,12 @@ interface UseGeolocationOptions {
   positionOptions?: PositionOptions;
 }
 
+const DEFAULT_POSITION_OPTIONS: PositionOptions = {
+  enableHighAccuracy: true,
+  timeout: 10000,
+  maximumAge: 30000,
+};
+
 /**
  * useGeolocation
  * Wraps the browser Geolocation API for requesting and watching the user's position.
@@ -27,8 +33,11 @@ interface UseGeolocationOptions {
 export function useGeolocation({
   autoRequest = false,
   watch = false,
-  positionOptions = { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 },
+  positionOptions = DEFAULT_POSITION_OPTIONS,
 }: UseGeolocationOptions = {}) {
+  const optionsRef = useRef(positionOptions);
+  optionsRef.current = positionOptions;
+
   const [state, setState] = useState<GeolocationState>({
     latitude: null,
     longitude: null,
@@ -65,8 +74,8 @@ export function useGeolocation({
       return;
     }
     setState((prev) => ({ ...prev, loading: true, error: null }));
-    navigator.geolocation.getCurrentPosition(onSuccess, onError, positionOptions);
-  }, [onSuccess, onError, positionOptions]);
+    navigator.geolocation.getCurrentPosition(onSuccess, onError, optionsRef.current);
+  }, [onSuccess, onError]);
 
   useEffect(() => {
     if (autoRequest) {
@@ -76,9 +85,9 @@ export function useGeolocation({
 
   useEffect(() => {
     if (!watch || !navigator.geolocation) return;
-    const watchId = navigator.geolocation.watchPosition(onSuccess, onError, positionOptions);
+    const watchId = navigator.geolocation.watchPosition(onSuccess, onError, optionsRef.current);
     return () => navigator.geolocation.clearWatch(watchId);
-  }, [watch, onSuccess, onError, positionOptions]);
+  }, [watch, onSuccess, onError]);
 
   return { ...state, requestLocation };
 }
