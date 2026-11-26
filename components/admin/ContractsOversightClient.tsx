@@ -23,6 +23,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import FadeContent from "@/components/ui/fade-content";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { computeContractsSummary, filterContracts, triggerCsvDownload } from "@/lib/admin-analytics";
 import { ContractDetailDrawer, ContractDrawerItem } from "./contracts/ContractDetailDrawer";
 import { AdminUnauthorizedNoticeModal, UnauthorizedNoticeData } from "@/components/admin/modals/AdminUnauthorizedNoticeModal";
 
@@ -114,36 +115,38 @@ export function ContractsOversightClient({ initialContracts }: Props) {
   };
 
   const counts = useMemo(() => {
+    const s = computeContractsSummary(contracts);
     return {
-      all: contracts.length,
-      executed: contracts.filter((c) => Boolean(c.signedAt)).length,
-      pending: contracts.filter((c) => !c.signedAt).length,
+      all: s.total,
+      executed: s.executed,
+      pending: s.pending,
     };
   }, [contracts]);
 
-  const totalEscrow = useMemo(() => {
-    return contracts.reduce((sum, c) => sum + Number(c.amount || 0), 0);
-  }, [contracts]);
+  const totalEscrow = useMemo(() => computeContractsSummary(contracts).totalValue, [contracts]);
 
-  const filtered = useMemo(() => {
-    const query = search.toLowerCase().trim();
-    return contracts.filter((c) => {
-      const isExecuted = Boolean(c.signedAt);
-      const matchesFilter =
-        filter === "all" ||
-        (filter === "executed" && isExecuted) ||
-        (filter === "pending" && !isExecuted);
+  const filtered = useMemo(
+    () => filterContracts(contracts, { filter, query: search }),
+    [contracts, search, filter],
+  );
 
-      const matchesSearch =
-        !query ||
-        c.jobTitle.toLowerCase().includes(query) ||
-        c.clientName.toLowerCase().includes(query) ||
-        c.workerName.toLowerCase().includes(query) ||
-        c.id.toLowerCase().includes(query);
-
-      return matchesFilter && matchesSearch;
-    });
-  }, [contracts, search, filter]);
+  const handleExportContractsCsv = () => {
+    triggerCsvDownload(
+      `DireSkill_Contracts_${new Date().toISOString().slice(0, 10)}.csv`,
+      ["Contract ID", "Job Title", "Client", "Worker", "Status", "Terms Status", "Location", "Signed At", "Created At"],
+      filtered.map((c) => [
+        c.id,
+        c.jobTitle,
+        c.clientName,
+        c.workerName,
+        c.signedAt ? "Executed" : c.status || "Pending",
+        c.termsStatus || "",
+        c.workLocation || "",
+        c.signedAt || "",
+        c.createdAt || "",
+      ]),
+    );
+  };
 
   const handleOpenDrawer = (c: ContractData) => {
     setDrawerContract(c);
@@ -163,38 +166,51 @@ export function ContractsOversightClient({ initialContracts }: Props) {
           </p>
         </div>
 
-        {/* View Mode Switcher */}
-        <div className="flex items-center gap-1 bg-card p-1 rounded-xl border border-border shadow-xs self-start sm:self-auto">
+        {/* View Mode Switcher & CSV Export */}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
           <button
             type="button"
-            onClick={() => setViewMode("grid")}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-              viewMode === "grid"
-                ? "bg-secondary text-foreground shadow-xs font-bold"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            onClick={handleExportContractsCsv}
+            disabled={filtered.length === 0}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border bg-card hover:bg-secondary text-foreground text-xs font-semibold transition shadow-xs disabled:opacity-40 cursor-pointer"
           >
-            <LayoutGrid className="w-3.5 h-3.5" />
-            <span>{t("admin.contracts.view.agreements")}</span>
+            <Download className="w-3.5 h-3.5" />
+            <span>Export CSV</span>
           </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("table")}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-              viewMode === "table"
-                ? "bg-secondary text-foreground shadow-xs font-bold"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <TableIcon className="w-3.5 h-3.5" />
-            <span>{t("admin.contracts.view.table")}</span>
-          </button>
+
+          <div className="flex items-center gap-1 bg-card p-1 rounded-xl border border-border shadow-xs">
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${viewMode === "grid"
+                  ? "bg-secondary text-foreground shadow-xs font-bold"
+                  : "text-muted-foreground hover:text-foreground"
+                }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>{t("admin.contracts.view.agreements")}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("table")}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${viewMode === "table"
+                  ? "bg-secondary text-foreground shadow-xs font-bold"
+                  : "text-muted-foreground hover:text-foreground"
+                }`}
+            >
+              <TableIcon className="w-3.5 h-3.5" />
+              <span>{t("admin.contracts.view.table")}</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* ── 2. 4 KPI Summary Cards (deals.tsx & forecasting.tsx exact pattern) ── */}
+      {/* ── 2. 4 KPI Summary Cards (Click to cross-filter table) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-border bg-card shadow-xs">
+        <Card
+          onClick={() => setFilter("all")}
+          className={cn("border-border bg-card shadow-xs cursor-pointer transition hover:border-accent/40", filter === "all" && "ring-1 ring-accent/40")}
+        >
           <CardContent className="p-4">
             <div className="flex items-start justify-between">
               <div>
@@ -209,7 +225,10 @@ export function ContractsOversightClient({ initialContracts }: Props) {
           </CardContent>
         </Card>
 
-        <Card className="border-border bg-card shadow-xs">
+        <Card
+          onClick={() => setFilter("executed")}
+          className={cn("border-border bg-card shadow-xs cursor-pointer transition hover:border-emerald-500/40", filter === "executed" && "ring-1 ring-emerald-500/40")}
+        >
           <CardContent className="p-4">
             <div className="flex items-start justify-between">
               <div>
@@ -224,7 +243,10 @@ export function ContractsOversightClient({ initialContracts }: Props) {
           </CardContent>
         </Card>
 
-        <Card className="border-border bg-card shadow-xs">
+        <Card
+          onClick={() => setFilter("pending")}
+          className={cn("border-border bg-card shadow-xs cursor-pointer transition hover:border-amber-500/40", filter === "pending" && "ring-1 ring-amber-500/40")}
+        >
           <CardContent className="p-4">
             <div className="flex items-start justify-between">
               <div>
@@ -291,19 +313,17 @@ export function ContractsOversightClient({ initialContracts }: Props) {
                 key={item.id}
                 type="button"
                 onClick={() => setFilter(item.id as typeof filter)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 transition flex items-center gap-1.5 cursor-pointer ${
-                  isSelected
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium shrink-0 transition flex items-center gap-1.5 cursor-pointer ${isSelected
                     ? "bg-accent text-accent-foreground font-bold shadow-xs"
                     : "bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80"
-                }`}
+                  }`}
               >
                 <span>{item.label}</span>
                 <span
-                  className={`rounded-full px-1.5 py-0.2 text-[10px] font-mono ${
-                    isSelected
+                  className={`rounded-full px-1.5 py-0.2 text-[10px] font-mono ${isSelected
                       ? "bg-accent-foreground/20 text-accent-foreground"
                       : "bg-muted text-muted-foreground"
-                  }`}
+                    }`}
                 >
                   {item.count}
                 </span>
@@ -335,11 +355,10 @@ export function ContractsOversightClient({ initialContracts }: Props) {
                           #{c.id.slice(0, 8)}
                         </span>
                         <span
-                          className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                            isExecuted
+                          className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${isExecuted
                               ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
                               : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                          }`}
+                            }`}
                         >
                           {isExecuted ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
                           <span>
@@ -373,11 +392,10 @@ export function ContractsOversightClient({ initialContracts }: Props) {
                           <span className="text-[10px] text-muted-foreground">({t("admin.contracts.drawer.employer")})</span>
                         </div>
                         <span
-                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                            clientSigned
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${clientSigned
                               ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
                               : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                          }`}
+                            }`}
                         >
                           {clientSigned ? t("admin.contracts.signed") : t("admin.contracts.pending")}
                         </span>
@@ -390,11 +408,10 @@ export function ContractsOversightClient({ initialContracts }: Props) {
                           <span className="text-[10px] text-muted-foreground">({t("admin.contracts.drawer.artisan")})</span>
                         </div>
                         <span
-                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                            workerSigned
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${workerSigned
                               ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
                               : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                          }`}
+                            }`}
                         >
                           {workerSigned ? t("admin.contracts.signed") : t("admin.contracts.pending")}
                         </span>
@@ -489,11 +506,10 @@ export function ContractsOversightClient({ initialContracts }: Props) {
                         <div className="flex items-center gap-2">
                           <span className="text-foreground font-medium">{c.clientName}</span>
                           <span
-                            className={`text-[9px] font-semibold px-1.5 py-0.2 rounded border ${
-                              clientSigned
+                            className={`text-[9px] font-semibold px-1.5 py-0.2 rounded border ${clientSigned
                                 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
                                 : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                            }`}
+                              }`}
                           >
                             {clientSigned ? t("admin.contracts.signed") : t("admin.contracts.pending")}
                           </span>
@@ -504,11 +520,10 @@ export function ContractsOversightClient({ initialContracts }: Props) {
                         <div className="flex items-center gap-2">
                           <span className="text-foreground font-medium">{c.workerName}</span>
                           <span
-                            className={`text-[9px] font-semibold px-1.5 py-0.2 rounded border ${
-                              workerSigned
+                            className={`text-[9px] font-semibold px-1.5 py-0.2 rounded border ${workerSigned
                                 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
                                 : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                            }`}
+                              }`}
                           >
                             {workerSigned ? t("admin.contracts.signed") : t("admin.contracts.pending")}
                           </span>
@@ -521,11 +536,10 @@ export function ContractsOversightClient({ initialContracts }: Props) {
 
                       <td className="py-3 px-4">
                         <span
-                          className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                            isExecuted
+                          className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${isExecuted
                               ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
                               : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
-                          }`}
+                            }`}
                         >
                           <span>{isExecuted ? t("admin.contracts.signed") : t("admin.contracts.pending")}</span>
                         </span>

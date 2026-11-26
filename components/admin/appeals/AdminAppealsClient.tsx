@@ -17,11 +17,41 @@ interface AppealItem {
   created_at: string;
 }
 
-interface Props {
-  initialAppeals: AppealItem[];
+interface EscalatedDisputeItem {
+  id: string;
+  title: string | null;
+  job_title: string | null;
+  category: string | null;
+  status: string;
+  client_name: string | null;
+  worker_name: string | null;
+  updated_at: string;
 }
 
-export function AdminAppealsClient({ initialAppeals }: Props) {
+interface EscalatedSupportItem {
+  id: string;
+  reference: string;
+  subject: string;
+  category: string;
+  priority: string;
+  escalation_type: string | null;
+  escalation_reason: string | null;
+  linked_dispute_id: string | null;
+  owner_role: string;
+  updated_at: string;
+}
+
+interface Props {
+  initialAppeals: AppealItem[];
+  escalatedDisputes?: EscalatedDisputeItem[];
+  escalatedSupportTickets?: EscalatedSupportItem[];
+}
+
+export function AdminAppealsClient({
+  initialAppeals,
+  escalatedDisputes = [],
+  escalatedSupportTickets = [],
+}: Props) {
   const { t } = useLanguage();
   const [appeals] = useState<AppealItem[]>(initialAppeals);
   const [search, setSearch] = useState("");
@@ -151,11 +181,10 @@ export function AdminAppealsClient({ initialAppeals }: Props) {
                   key={tab.id}
                   type="button"
                   onClick={() => setFilter(tab.id as any)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
-                    isSelected
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${isSelected
                       ? "bg-accent text-accent-foreground font-semibold"
                       : "bg-secondary text-muted-foreground hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   <span>{tab.label}</span>
                   <span className="text-[10px] opacity-75 font-mono">({tab.count})</span>
@@ -251,6 +280,82 @@ export function AdminAppealsClient({ initialAppeals }: Props) {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* 5. Escalated Cases Queue (Disputes & Support Escalations) */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-base font-bold text-foreground">
+              Escalated Cases Queue ({escalatedDisputes.length + escalatedSupportTickets.length})
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Disputes and safety/dispute support tickets marked escalated for governance & senior review.
+            </p>
+          </div>
+          <Link
+            href="/admin/disputes"
+            className="text-xs font-semibold text-accent hover:underline"
+          >
+            Open Disputes Hub →
+          </Link>
+        </div>
+
+        {escalatedDisputes.length + escalatedSupportTickets.length === 0 ? (
+          <div className="rounded-xl border border-border bg-card p-6 text-center text-xs text-muted-foreground">
+            No escalated disputes or safety support tickets pending review.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {escalatedDisputes.map((d) => (
+              <Link
+                key={`disp-${d.id}`}
+                href={`/admin/disputes/${d.id}`}
+                className="rounded-xl border border-destructive/30 bg-card p-4 hover:border-destructive/60 transition flex items-start justify-between gap-3 shadow-xs"
+              >
+                <div className="space-y-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-destructive/10 text-destructive border border-destructive/20">
+                      Escalated Dispute
+                    </span>
+                    <span className="text-[11px] font-mono text-muted-foreground">
+                      {new Date(d.updated_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <p className="text-sm font-bold text-foreground truncate">
+                    {d.job_title || d.title || "Dispute Case"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {d.client_name} vs {d.worker_name} · {String(d.category || "other").replaceAll("_", " ")}
+                  </p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 mt-1" />
+              </Link>
+            ))}
+
+            {escalatedSupportTickets.map((st) => (
+              <Link
+                key={`sup-${st.id}`}
+                href={st.linked_dispute_id ? `/admin/disputes/${st.linked_dispute_id}` : `/admin/support/${st.id}`}
+                className="rounded-xl border border-amber-500/30 bg-card p-4 hover:border-amber-500/60 transition flex items-start justify-between gap-3 shadow-xs"
+              >
+                <div className="space-y-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                      Support · {st.escalation_type || "escalated"}
+                    </span>
+                    <span className="text-[11px] font-mono text-muted-foreground">{st.reference}</span>
+                  </div>
+                  <p className="text-sm font-bold text-foreground truncate">{st.subject}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-1">
+                    {st.escalation_reason || `${st.owner_role} · ${st.priority}`}
+                  </p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 mt-1" />
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

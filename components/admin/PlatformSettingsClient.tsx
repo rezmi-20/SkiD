@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { savePlatformGovernanceSettings, type PlatformGovernanceSettings } from "@/lib/actions/platform-settings";
+import { useFeedback } from "@/components/ui/feedback";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,10 +59,13 @@ interface StatsData {
   totalClients: number;
   totalJobs: number;
   totalPayments: number;
+  activeCategories?: number;
+  activeZones?: number;
 }
 
 interface Props {
   stats: StatsData;
+  initialGovernance?: PlatformGovernanceSettings;
 }
 
 interface IntegrationService {
@@ -146,8 +152,9 @@ const initialServices: IntegrationService[] = [
   },
 ];
 
-export function PlatformSettingsClient({ stats }: Props) {
+export function PlatformSettingsClient({ stats, initialGovernance }: Props) {
   const searchParams = useSearchParams();
+  const { toast } = useFeedback();
   const initialTab = searchParams.get("tab") || "general";
 
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -166,12 +173,14 @@ export function PlatformSettingsClient({ stats }: Props) {
   const [isSendingPing, setIsSendingPing] = useState(false);
   const [testWebhookResult, setTestWebhookResult] = useState<string | null>(null);
 
-  // Security & Governance states
-  const [strictFayda, setStrictFayda] = useState(true);
-  const [autoHold, setAutoHold] = useState(true);
-  const [mandatory2FA, setMandatory2FA] = useState(false);
-  const [auditLogging, setAuditLogging] = useState(true);
-  const [sessionTimeout, setSessionTimeout] = useState("30m");
+  // Security & Governance states (persisted in PostgreSQL platform_settings)
+  const [strictFayda, setStrictFayda] = useState(initialGovernance?.strictFayda ?? true);
+  const [maintenanceMode, setMaintenanceMode] = useState(initialGovernance?.maintenanceMode ?? false);
+  const [mandatory2FA, setMandatory2FA] = useState(initialGovernance?.mandatory2FA ?? false);
+  const [auditLogging, setAuditLogging] = useState(initialGovernance?.auditLogging ?? true);
+  const [sessionTimeout, setSessionTimeout] = useState<PlatformGovernanceSettings["sessionTimeout"]>(
+    initialGovernance?.sessionTimeout ?? "30m",
+  );
 
   // Save feedback state
   const [isSaving, setIsSaving] = useState(false);
@@ -201,6 +210,31 @@ export function PlatformSettingsClient({ stats }: Props) {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     }, 800);
+  };
+
+  const handleSaveGovernancePolicy = async () => {
+    setIsSaving(true);
+    setSaveSuccess(false);
+    try {
+      const res = await savePlatformGovernanceSettings({
+        strictFayda,
+        maintenanceMode,
+        mandatory2FA,
+        auditLogging,
+        sessionTimeout,
+      });
+      if (res.success) {
+        setSaveSuccess(true);
+        toast.success("Governance rules saved to PostgreSQL and logged.");
+        setTimeout(() => setSaveSuccess(false), 3000);
+      } else {
+        toast.error("Failed to persist governance settings.");
+      }
+    } catch {
+      toast.error("Failed to persist governance settings.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSyncService = (id: string) => {
@@ -290,6 +324,39 @@ export function PlatformSettingsClient({ stats }: Props) {
             <span>Platform settings saved</span>
           </div>
         )}
+      </div>
+
+      {/* ── Master Data Management Shortcuts (Super Admin) ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Link
+          href="/admin/settings/categories"
+          className="rounded-xl border border-border bg-card p-4 hover:border-accent/40 transition flex items-center justify-between gap-4 shadow-xs"
+        >
+          <div className="space-y-1">
+            <p className="text-sm font-bold text-foreground">Service Categories Master Data</p>
+            <p className="text-xs text-muted-foreground">
+              Manage skilled trades & localized EN/AM/OM labels ({stats.activeCategories ?? 0} active)
+            </p>
+          </div>
+          <span className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-accent">
+            Manage <ExternalLink className="w-3.5 h-3.5" />
+          </span>
+        </Link>
+
+        <Link
+          href="/admin/settings/zones"
+          className="rounded-xl border border-border bg-card p-4 hover:border-accent/40 transition flex items-center justify-between gap-4 shadow-xs"
+        >
+          <div className="space-y-1">
+            <p className="text-sm font-bold text-foreground">Dire Dawa Zones & Geolocation</p>
+            <p className="text-xs text-muted-foreground">
+              Manage neighborhood boundaries & search radii ({stats.activeZones ?? 0} active)
+            </p>
+          </div>
+          <span className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-accent">
+            Manage <ExternalLink className="w-3.5 h-3.5" />
+          </span>
+        </Link>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -769,18 +836,18 @@ export function PlatformSettingsClient({ stats }: Props) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg bg-secondary text-foreground flex items-center justify-center">
-                    <Scale className="w-4 h-4" />
+                    <AlertCircle className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="font-medium text-foreground text-sm">Automatic Escrow Freeze on Dispute Filing</p>
+                    <p className="font-medium text-foreground text-sm">Platform Maintenance Advisory Mode</p>
                     <p className="text-xs text-muted-foreground">
-                      Instantly freeze contract milestones in escrow as soon as a dispute claim is initiated
+                      Mark operational maintenance status for support & platform governance teams
                     </p>
                   </div>
                 </div>
                 <Switch
-                  checked={autoHold}
-                  onCheckedChange={setAutoHold}
+                  checked={maintenanceMode}
+                  onCheckedChange={setMaintenanceMode}
                 />
               </div>
 
@@ -832,7 +899,7 @@ export function PlatformSettingsClient({ stats }: Props) {
                     </p>
                   </div>
                 </div>
-                <Select value={sessionTimeout} onValueChange={setSessionTimeout}>
+                <Select value={sessionTimeout} onValueChange={(val) => setSessionTimeout(val as PlatformGovernanceSettings["sessionTimeout"])}>
                   <SelectTrigger className="w-[140px] bg-secondary border-border">
                     <SelectValue />
                   </SelectTrigger>
@@ -850,7 +917,7 @@ export function PlatformSettingsClient({ stats }: Props) {
           <div className="flex justify-end">
             <Button
               type="button"
-              onClick={handleSaveParameters}
+              onClick={handleSaveGovernancePolicy}
               className="bg-accent hover:bg-accent/90 text-accent-foreground"
               disabled={isSaving}
             >

@@ -283,6 +283,61 @@ export async function createOfficialAnnouncement(input: AnnouncementInput) {
   return { success: true, postId: post.id };
 }
 
+export async function broadcastOperationalNotification(input: {
+  audience: "all" | "client" | "worker";
+  title: string;
+  body: string;
+  linkHref?: string;
+}) {
+  const admin = await requireAdminPermission("content.moderate");
+  const title = input.title.trim().slice(0, 140);
+  const body = input.body.trim().slice(0, 600);
+  const audience = input.audience === "client" || input.audience === "worker" ? input.audience : "all";
+  const rawHref = (input.linkHref || "").trim();
+  const safeHref = rawHref.startsWith("/") && !rawHref.startsWith("//") ? rawHref : null;
+
+  if (title.length < 3 || body.length < 5) {
+    return { success: false, error: "Title (3+ chars) and message body (5+ chars) are required." };
+  }
+
+  const inserted =
+    audience === "all"
+      ? await sql`
+          INSERT INTO notifications (user_id, type, title, body, link_href)
+          SELECT u.id, 'system_announcement', ${title}, ${body}, ${safeHref}
+          FROM users u
+          WHERE u.role IN ('client', 'worker')
+            AND u.is_suspended = false
+          RETURNING id
+        `
+      : await sql`
+          INSERT INTO notifications (user_id, type, title, body, link_href)
+          SELECT u.id, 'system_announcement', ${title}, ${body}, ${safeHref}
+          FROM users u
+          WHERE u.role = ${audience}
+            AND u.is_suspended = false
+          RETURNING id
+        `;
+
+  await sql`
+    INSERT INTO audit_logs (admin_employee_id, actor_type, admin_role, action, module, target_type, details)
+    VALUES (
+      ${admin.id},
+      'admin_employee',
+      ${admin.role},
+      'operational_notification_broadcast',
+      'content',
+      'notifications',
+      ${JSON.stringify({ audience, title, recipientCount: inserted.length })}
+    )
+  `.catch(() => undefined);
+
+  revalidatePath("/client/notifications");
+  revalidatePath("/worker/notifications");
+  revalidatePath("/admin/community");
+  return { success: true, recipientCount: inserted.length };
+}
+
 // ─── Public Getters for Dynamic Landing Display ──────────────────────────────
 
 export async function getActiveLandingFaqs(lang: string = "EN") {

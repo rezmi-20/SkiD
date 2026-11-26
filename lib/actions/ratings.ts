@@ -305,7 +305,9 @@ export async function getWorkerRatings(workerId: string) {
       FROM ratings r
       JOIN jobs j ON r.job_id = j.id
       LEFT JOIN client_profiles cp ON r.rater_id = cp.user_id
-      WHERE r.rated_id = ${workerId} AND r.is_flagged = false
+      WHERE r.rated_id = ${workerId}
+        AND r.is_flagged = false
+        AND COALESCE(r.is_hidden, false) = false
       ORDER BY r.created_at DESC
     `;
     return rows;

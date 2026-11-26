@@ -47,9 +47,18 @@ export default async function WorkersPage() {
         wp.created_at AS "createdAt",
         u.email,
         u.phone,
-        u.is_suspended AS "isSuspended"
+        u.is_suspended AS "isSuspended",
+        reminder.last_reminder_at AS "lastReminderAt",
+        COALESCE(reminder.reminder_count, 0) AS "reminderCount"
       FROM worker_profiles wp
       JOIN users u ON wp.user_id = u.id
+      LEFT JOIN LATERAL (
+        SELECT MAX(created_at) AS last_reminder_at, COUNT(*)::int AS reminder_count
+        FROM notifications n
+        WHERE n.user_id = wp.user_id
+          AND n.type = 'identity_verification_required'
+          AND n.link_href = '/worker/pending-verification'
+      ) reminder ON true
       ORDER BY wp.created_at DESC
     `,
     sql`
@@ -65,7 +74,7 @@ export default async function WorkersPage() {
         COUNT(DISTINCT j.id)::int AS completed_jobs,
         COALESCE(SUM(p.amount), 0)::int AS total_earnings
       FROM worker_profiles wp
-      LEFT JOIN ratings r ON r.rated_id = wp.user_id
+      LEFT JOIN ratings r ON r.rated_id = wp.user_id AND COALESCE(r.is_hidden, false) = false
       LEFT JOIN jobs j ON j.worker_id = wp.user_id
       LEFT JOIN payments p ON p.job_id = j.id AND p.status = 'released'
       GROUP BY wp.id, wp.user_id, wp.full_name, wp.skills, wp.avatar_url, wp.district
@@ -95,6 +104,8 @@ export default async function WorkersPage() {
       isSuspended: w.isSuspended,
       identityComplete,
       hasDocument: w.hasDocument,
+      lastReminderAt: w.lastReminderAt ? String(w.lastReminderAt) : null,
+      reminderCount: Number(w.reminderCount || 0),
       createdAt: String(w.createdAt),
     };
   });

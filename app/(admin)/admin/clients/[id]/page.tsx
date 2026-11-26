@@ -12,6 +12,8 @@ export default async function ClientProfilePage({
 }) {
   const admin = await requireAdminPermission("verification.read");
   const canSuspendAccount = hasAdminPermission(admin, "admin_accounts.suspend");
+  const canSendReminder =
+    admin.role === "content_verification_admin" && hasAdminPermission(admin, "verification.review");
 
   const { id } = await params;
 
@@ -109,6 +111,7 @@ export default async function ClientProfilePage({
       client={client}
       jobs={jobs}
       canSuspendAccount={canSuspendAccount}
+      canSendReminder={canSendReminder}
     />
   );
 }

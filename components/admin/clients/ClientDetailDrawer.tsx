@@ -45,6 +45,7 @@ interface ClientDetailDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   canReview?: boolean;
+  canSendReminder?: boolean;
   canSuspend?: boolean;
   canReactivate?: boolean;
   onSendReminder?: (userId: string) => void;
@@ -59,6 +60,7 @@ export function ClientDetailDrawer({
   isOpen,
   onClose,
   canReview,
+  canSendReminder,
   canSuspend,
   canReactivate,
   onSendReminder,
@@ -90,9 +92,14 @@ export function ClientDetailDrawer({
 
   if (!isOpen || !client || !mounted) return null;
 
-  const isApproved = client.verificationStatus === "approved";
-  const isPending = client.verificationStatus === "pending";
+  const normalizedStatus = client.verificationStatus || "not_started";
+  const isApproved = normalizedStatus === "approved";
+  const isPending = normalizedStatus === "pending";
   const isSuspended = client.isSuspended;
+  const canRemindClient =
+    Boolean(canSendReminder) &&
+    !isSuspended &&
+    (normalizedStatus === "not_started" || normalizedStatus === "rejected" || normalizedStatus === "revoked");
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex justify-end">
@@ -235,10 +242,10 @@ export function ClientDetailDrawer({
               </Link>
             )}
 
-            {canReview && (
+            {canRemindClient && (
               <button
                 type="button"
-                onClick={() => onSendReminder && onSendReminder(client.userId)}
+                onClick={() => onSendReminder?.(client.userId)}
                 disabled={isCoolingDown || isPendingAction}
                 className="px-4 py-2 rounded-lg bg-secondary hover:bg-secondary/80 border border-border text-foreground text-xs font-semibold disabled:opacity-40 transition flex items-center gap-1.5"
                 title={isCoolingDown ? "Reminder cooling down" : "Send reminder"}

@@ -118,6 +118,7 @@ export default async function WorkerDashboardPage() {
           COUNT(*)::int AS count
         FROM ratings
         WHERE rated_id = ${session.user.id}
+          AND COALESCE(is_hidden, false) = false
       `,
       sql`
         SELECT 
@@ -130,6 +131,7 @@ export default async function WorkerDashboardPage() {
         FROM ratings r
         LEFT JOIN client_profiles cp ON r.rater_id = cp.user_id
         WHERE r.rated_id = ${session.user.id}
+          AND COALESCE(r.is_hidden, false) = false
         ORDER BY r.created_at DESC
         LIMIT 4
       `,

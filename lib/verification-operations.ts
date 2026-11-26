@@ -40,6 +40,13 @@ function cleanReason(value: unknown) {
   return typeof value === "string" ? value.trim().slice(0, 1000) : "";
 }
 
+function sanitizeFinAuditContext(value: unknown) {
+  return cleanReason(value)
+    .replace(/\b(?:\d[\s-]?){8,16}\b/g, "[REDACTED_ID]")
+    .replace(/https?:\/\/\S+/gi, "[REDACTED_URL]")
+    .slice(0, 300);
+}
+
 function toAttemptStatus(status: string | null | undefined, fallback: "pending" | "not_started" = "pending") {
   const normalized = status || fallback;
   if (normalized === "not_started" || normalized === "incomplete") return "pending";
@@ -59,7 +66,7 @@ function requiredPermissionForDecision(status: string): AdminPermission {
 
 function canActOnVerification(admin: Pick<AdminPrincipal, "role" | "status"> | null | undefined, status?: string) {
   if (!admin || admin.status !== "active") return false;
-  if (admin.role === "super_admin" || admin.role === "content_verification_admin") return true;
+  if (admin.role !== "content_verification_admin") return false;
   return (
     hasAdminPermission(admin, "verification.review") &&
     (status === "approved" ? hasAdminPermission(admin, "verification.approve") : true) &&
@@ -429,7 +436,7 @@ export async function revealVerificationFin(
   }
 
   const authorizedAdmin = admin;
-  const normalizedContext = cleanReason(context) || "Active verification review FIN comparison";
+  const normalizedContext = sanitizeFinAuditContext(context) || "Active verification review FIN comparison";
   let attemptId: string | null = null;
   let attemptNumber: number | null = null;
 
@@ -450,8 +457,8 @@ export async function revealVerificationFin(
   if (accountType !== "worker" && accountType !== "client") {
     return deny(400, "Invalid verification account type.");
   }
-  if (!hasAdminPermission(authorizedAdmin, "verification.review") || (authorizedAdmin.role !== "content_verification_admin" && authorizedAdmin.role !== "super_admin")) {
-    return deny(403, "Only verification administrators or super administrators may reveal FIN during active review.");
+  if (!hasAdminPermission(authorizedAdmin, "verification.review") || authorizedAdmin.role !== "content_verification_admin") {
+    return deny(403, "Only content verification administrators may reveal FIN during active review.");
   }
   if (authorizedAdmin.id === accountUserId) {
     return deny(403, "Administrators cannot review their own verification case.");
@@ -713,7 +720,7 @@ export async function recordVerificationDocumentView(accountType: VerificationAc
   const attempt = await ensureCurrentVerificationAttempt(accountType, accountUserId);
   if (
     !attempt ||
-    (admin.role !== "content_verification_admin" && admin.role !== "super_admin") ||
+    admin.role !== "content_verification_admin" ||
     !hasAdminPermission(admin, "verification.review") ||
     admin.id === accountUserId ||
     attempt.status !== "pending" ||

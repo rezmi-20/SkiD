@@ -93,6 +93,7 @@ export default async function ClientsPage() {
       initialClients={formattedClients}
       canOpenDetails={hasAdminPermission(admin, "verification.read")}
       canReview={hasAdminPermission(admin, "verification.review")}
+      canSendReminder={admin.role === "content_verification_admin" && hasAdminPermission(admin, "verification.review")}
       canSuspendAccount={hasAdminPermission(admin, "admin_accounts.suspend")}
       canReactivateAccount={hasAdminPermission(admin, "admin_accounts.reactivate")}
     />

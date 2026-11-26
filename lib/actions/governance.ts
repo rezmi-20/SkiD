@@ -630,6 +630,63 @@ export async function getAppealsForReview() {
   `;
 }
 
+export async function getEscalatedCasesForGovernance() {
+  const admin = await requireAdminPermission("appeals.read");
+  if (admin.role !== "super_admin") {
+    return { escalatedDisputes: [], escalatedSupportTickets: [] };
+  }
+
+  const [escalatedDisputes, escalatedSupportTickets] = await Promise.all([
+    sql`
+      SELECT
+        d.id,
+        d.title,
+        d.category,
+        d.status,
+        d.updated_at,
+        j.title AS job_title,
+        COALESCE(cp.full_name, 'Client') AS client_name,
+        COALESCE(wp.full_name, 'Worker') AS worker_name
+      FROM disputes d
+      JOIN jobs j ON j.id = d.job_id
+      LEFT JOIN client_profiles cp ON cp.user_id = d.client_id
+      LEFT JOIN worker_profiles wp ON wp.user_id = d.worker_id
+      WHERE d.status = 'escalated'
+      ORDER BY d.updated_at DESC
+      LIMIT 50
+    `,
+    sql`
+      SELECT
+        t.id,
+        t.reference,
+        t.subject,
+        t.category,
+        t.priority,
+        t.escalation_type,
+        t.escalation_reason,
+        t.linked_dispute_id,
+        t.updated_at,
+        t.owner_role
+      FROM support_tickets t
+      WHERE t.status = 'escalated'
+        AND t.escalation_type IN ('safety', 'dispute')
+      ORDER BY t.updated_at DESC
+      LIMIT 50
+    `,
+  ]);
+
+  return {
+    escalatedDisputes: (escalatedDisputes || []).map((d: any) => ({
+      ...d,
+      updated_at: String(d.updated_at),
+    })),
+    escalatedSupportTickets: (escalatedSupportTickets || []).map((t: any) => ({
+      ...t,
+      updated_at: String(t.updated_at),
+    })),
+  };
+}
+
 export async function getAppealDetails(appealId: string) {
   const admin = await requireAdminPermission("appeals.read");
   if (admin.role !== "super_admin") return null;

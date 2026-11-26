@@ -297,6 +297,11 @@ export const ratings = pgTable("ratings", {
   comment: text("comment"),
   photoUrls: text("photo_urls").array(),
   isFlagged: boolean("is_flagged").notNull().default(false),
+  flagReason: text("flag_reason"),
+  isHidden: boolean("is_hidden").notNull().default(false),
+  moderationReason: text("moderation_reason"),
+  moderatedBy: uuid("moderated_by"),
+  moderatedAt: timestamp("moderated_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => [
   index("rating_reviewee_idx").on(table.ratedId),
@@ -893,4 +898,46 @@ export const courtEvidenceRecords = pgTable("court_evidence_records", {
   index("court_evidence_case_idx").on(table.caseNumber),
   index("court_evidence_requester_idx").on(table.requestedByUserId, table.createdAt),
 ]);
+
+// ─── Master Data: Service Categories & Dire Dawa Zones ─────────────────────────
+export const serviceCategories = pgTable("service_categories", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  slug: varchar("slug", { length: 80 }).notNull().unique(),
+  nameEn: varchar("name_en", { length: 120 }).notNull(),
+  nameAm: varchar("name_am", { length: 120 }),
+  nameOm: varchar("name_om", { length: 120 }),
+  description: text("description"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  index("service_categories_active_order_idx").on(table.isActive, table.sortOrder),
+]);
+
+export const zones = pgTable("zones", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  slug: varchar("slug", { length: 80 }).notNull().unique(),
+  nameEn: varchar("name_en", { length: 120 }).notNull(),
+  nameAm: varchar("name_am", { length: 120 }),
+  nameOm: varchar("name_om", { length: 120 }),
+  city: varchar("city", { length: 80 }).notNull().default("Dire Dawa"),
+  centerLat: doublePrecision("center_lat"),
+  centerLng: doublePrecision("center_lng"),
+  radiusKm: doublePrecision("radius_km").notNull().default(3.0),
+  sortOrder: integer("sort_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => [
+  index("zones_active_order_idx").on(table.isActive, table.sortOrder),
+]);
+
+// ─── Platform Governance Settings (Non-Escrow Operational Config) ─────────────
+export const platformSettings = pgTable("platform_settings", {
+  key: varchar("key", { length: 100 }).primaryKey(),
+  value: json("value").notNull(),
+  updatedBy: uuid("updated_by").references(() => adminEmployees.id),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
 

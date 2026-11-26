@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -55,6 +55,7 @@ interface Props {
   initialClients: ClientData[];
   canOpenDetails: boolean;
   canReview: boolean;
+  canSendReminder?: boolean;
   canSuspendAccount: boolean;
   canReactivateAccount: boolean;
 }
@@ -63,12 +64,14 @@ export function ClientsManagementClient({
   initialClients,
   canOpenDetails,
   canReview,
+  canSendReminder = false,
   canSuspendAccount,
   canReactivateAccount,
 }: Props) {
   const { t } = useLanguage();
-  const { confirmDialog } = useFeedback();
+  const { confirmDialog, toast } = useFeedback();
   const router = useRouter();
+  const [clients, setClients] = useState<ClientData[]>(initialClients);
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [statusFilter, setStatusFilter] = useState<
@@ -79,6 +82,14 @@ export function ClientsManagementClient({
   const [drawerClient, setDrawerClient] = useState<ClientDrawerItem | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
+  useEffect(() => {
+    setClients(initialClients);
+    setDrawerClient((prev) => {
+      if (!prev) return null;
+      return initialClients.find((item) => item.userId === prev.userId) ?? prev;
+    });
+  }, [initialClients]);
+
   const query = search.trim().toLowerCase();
 
   const displayStatus = (client: ClientData) =>
@@ -86,13 +97,13 @@ export function ClientsManagementClient({
 
   const counts = useMemo(() => {
     return {
-      all: initialClients.length,
-      approved: initialClients.filter((c) => displayStatus(c) === "approved").length,
-      pending: initialClients.filter((c) => displayStatus(c) === "pending").length,
-      not_started: initialClients.filter((c) => displayStatus(c) === "not_started").length,
-      suspended: initialClients.filter((c) => c.isSuspended).length,
+      all: clients.length,
+      approved: clients.filter((c) => displayStatus(c) === "approved").length,
+      pending: clients.filter((c) => displayStatus(c) === "pending").length,
+      not_started: clients.filter((c) => displayStatus(c) === "not_started").length,
+      suspended: clients.filter((c) => c.isSuspended).length,
     };
-  }, [initialClients]);
+  }, [clients]);
 
   const verifiedPercent = counts.all > 0 ? Math.round((counts.approved / counts.all) * 100) : 0;
 
@@ -109,7 +120,7 @@ export function ClientsManagementClient({
 
   const filtered = useMemo(
     () =>
-      initialClients.filter((client) => {
+      clients.filter((client) => {
         const status = displayStatus(client);
         const matchesStatus = statusFilter === "all" || status === statusFilter;
         const matchesSearch =
@@ -119,7 +130,7 @@ export function ClientsManagementClient({
             .some((value) => String(value).toLowerCase().includes(query));
         return matchesStatus && matchesSearch;
       }),
-    [initialClients, query, statusFilter],
+    [clients, query, statusFilter],
   );
 
   const formatDate = (value: string | null) =>
@@ -128,15 +139,36 @@ export function ClientsManagementClient({
   const isReminderCoolingDown = (value: string | null) =>
     value ? Date.now() - new Date(value).getTime() < 86_400_000 : false;
 
+  const isReminderEligible = (status: string, isSuspended: boolean) =>
+    !isSuspended && (status === "not_started" || status === "rejected" || status === "revoked");
+
   const handleSendReminder = (clientUserId: string) => {
     setMessage(null);
     startTransition(async () => {
       const result = await sendClientVerificationReminder(clientUserId);
-      setMessage(
-        result.success
-          ? "Verification reminder notification sent successfully."
-          : result.error || "Failed to send reminder notification.",
-      );
+      if (result.success) {
+        const nowIso = new Date().toISOString();
+        setClients((prev) =>
+          prev.map((item) =>
+            item.userId === clientUserId
+              ? { ...item, lastReminderAt: nowIso, reminderCount: item.reminderCount + 1 }
+              : item,
+          ),
+        );
+        setDrawerClient((prev) =>
+          prev && prev.userId === clientUserId
+            ? { ...prev, lastReminderAt: nowIso, reminderCount: prev.reminderCount + 1 }
+            : prev,
+        );
+        const successMsg = "Verification reminder notification sent successfully.";
+        setMessage(successMsg);
+        toast.success(successMsg);
+        router.refresh();
+      } else {
+        const errMsg = result.error || "Failed to send reminder notification.";
+        setMessage(errMsg);
+        toast.error(errMsg);
+      }
     });
   };
 
@@ -448,7 +480,7 @@ export function ClientsManagementClient({
                   </div>
 
                   <div className="flex items-center gap-1">
-                    {canReview && (status === "not_started" || status === "rejected") && (
+                    {canSendReminder && isReminderEligible(status, client.isSuspended) && (
                       <button
                         type="button"
                         onClick={() => handleSendReminder(client.userId)}
@@ -601,8 +633,13 @@ export function ClientsManagementClient({
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         canReview={canReview}
+        canSendReminder={canSendReminder}
         canSuspend={canSuspendAccount}
         canReactivate={canReactivateAccount}
+        onSendReminder={handleSendReminder}
+        onToggleSuspension={handleSuspension}
+        isCoolingDown={drawerClient ? isReminderCoolingDown(drawerClient.lastReminderAt) : false}
+        isPendingAction={isPending}
         onStatusChanged={() => {
           setIsDrawerOpen(false);
           router.refresh();

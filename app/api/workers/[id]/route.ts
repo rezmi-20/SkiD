@@ -50,7 +50,7 @@ export async function GET(
           COUNT(r.id) AS total_ratings
         FROM users u
         JOIN worker_profiles wp ON u.id = wp.user_id
-        LEFT JOIN ratings r ON u.id = r.rated_id
+        LEFT JOIN ratings r ON u.id = r.rated_id AND COALESCE(r.is_hidden, false) = false
         WHERE (u.id = ${id} OR wp.id = ${id})
           AND u.role = 'worker'
           AND u.is_suspended = false
@@ -76,6 +76,7 @@ export async function GET(
         LEFT JOIN client_profiles cp ON r.rater_id = cp.user_id
         WHERE r.rated_id = ${id}
           AND r.is_flagged = false
+          AND COALESCE(r.is_hidden, false) = false
           AND j.status IN ('paid', 'closed')
         ORDER BY r.created_at DESC LIMIT 20`,
     ]);

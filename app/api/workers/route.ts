@@ -38,6 +38,7 @@ export async function GET(req: NextRequest) {
           AVG(score) as avg_rating, 
           COUNT(id) as total_ratings 
         FROM ratings 
+        WHERE COALESCE(is_hidden, false) = false
         GROUP BY rated_id
       )
       SELECT

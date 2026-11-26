@@ -57,12 +57,14 @@ interface Props {
   client: ClientData;
   jobs: ClientJobItem[];
   canSuspendAccount?: boolean;
+  canSendReminder?: boolean;
 }
 
 export function ClientProfileDossier({
   client,
   jobs,
   canSuspendAccount = true,
+  canSendReminder = false,
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -73,6 +75,15 @@ export function ClientProfileDossier({
     if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
     return name.slice(0, 2).toUpperCase();
   };
+
+  const isReminderCoolingDown = client.lastReminderAt
+    ? Date.now() - new Date(client.lastReminderAt).getTime() < 86_400_000
+    : false;
+  const isReminderEligible =
+    canSendReminder &&
+    !client.isVerified &&
+    !client.isSuspended &&
+    ["not_started", "rejected", "revoked", "incomplete"].includes(client.verificationStatus);
 
   const handleToggleSuspension = () => {
     setActionMessage(null);
@@ -166,15 +177,15 @@ export function ClientProfileDossier({
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          {!client.isVerified && (
+          {isReminderEligible && (
             <Button
               variant="outline"
               size="sm"
               onClick={handleSendReminder}
-              disabled={isPending}
+              disabled={isPending || isReminderCoolingDown}
             >
               <Bell className="w-3.5 h-3.5 mr-1.5" />
-              Send KYC Reminder
+              {isReminderCoolingDown ? "Reminder Sent Recently" : "Send KYC Reminder"}
             </Button>
           )}
 

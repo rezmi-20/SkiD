@@ -12,10 +12,11 @@ export default async function WorkerProfilePage({
 }) {
   const admin = await requireAdminPermission("verification.read");
   const canSuspendAccount = hasAdminPermission(admin, "admin_accounts.suspend");
+  const canSendReminder = hasAdminPermission(admin, "verification.review");
 
   const { id } = await params;
 
-  const [workerRows, metricsRows, contractsRows, ratingsRows] = await Promise.all([
+  const [workerRows, metricsRows, contractsRows, ratingsRows, reminderRows] = await Promise.all([
     sql`
       SELECT
         wp.user_id,
@@ -46,7 +47,7 @@ export default async function WorkerProfilePage({
       FROM worker_profiles wp
       LEFT JOIN jobs j ON j.worker_id = wp.user_id
       LEFT JOIN payments p ON p.job_id = j.id AND p.status = 'released'
-      LEFT JOIN ratings r ON r.rated_id = wp.user_id
+      LEFT JOIN ratings r ON r.rated_id = wp.user_id AND COALESCE(r.is_hidden, false) = false
       WHERE wp.user_id = ${id}
       GROUP BY wp.user_id
     `,
@@ -78,8 +79,16 @@ export default async function WorkerProfilePage({
       JOIN users u ON r.rater_id = u.id
       LEFT JOIN client_profiles cp ON cp.user_id = u.id
       WHERE r.rated_id = ${id}
+        AND COALESCE(r.is_hidden, false) = false
       ORDER BY r.created_at DESC
       LIMIT 5
+    `,
+    sql`
+      SELECT MAX(created_at) AS last_reminder_at, COUNT(*)::int AS reminder_count
+      FROM notifications
+      WHERE user_id = ${id}
+        AND type = 'identity_verification_required'
+        AND link_href = '/worker/pending-verification'
     `,
   ]);
 
@@ -111,6 +120,7 @@ export default async function WorkerProfilePage({
     totalJobs: Number(metrics.total_jobs || 0),
     avgRating: Number(metrics.avg_rating || 5.0),
     ratingCount: Number(metrics.rating_count || 0),
+    lastReminderAt: reminderRows[0]?.last_reminder_at ? String(reminderRows[0].last_reminder_at) : null,
   };
 
   const contracts = (contractsRows || []).map((c: any) => ({
@@ -137,6 +147,7 @@ export default async function WorkerProfilePage({
       contracts={contracts}
       ratings={ratings}
       canSuspendAccount={canSuspendAccount}
+      canSendReminder={canSendReminder}
     />
   );
 }

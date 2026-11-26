@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import { useFeedback } from "@/components/ui/feedback";
+import { triggerCsvDownload } from "@/lib/admin-analytics";
 import {
   ShieldCheck,
   Search,
@@ -152,6 +153,24 @@ export function AdminAuditClient({
     }
   };
 
+  const handleExportAuditCsv = () => {
+    triggerCsvDownload(
+      `DireSkill_Audit_Logs_${new Date().toISOString().slice(0, 10)}.csv`,
+      ["Log ID", "Timestamp", "Employee ID", "Role", "Module", "Action", "Target Type", "Target ID", "Reason"],
+      entries.map((e) => [
+        e.id,
+        e.created_at ? new Date(String(e.created_at)).toISOString() : "",
+        e.actor_employee_id || e.actor_name || "",
+        e.actor_role || e.actor_type || "",
+        e.module || "",
+        e.action,
+        e.target_type || "",
+        e.target_id || "",
+        e.reason || "",
+      ]),
+    );
+  };
+
   return (
     <div className="space-y-6 w-full pb-24">
       {/* 1. Header with Title & Work Report PDF Export Action */}
@@ -175,6 +194,16 @@ export function AdminAuditClient({
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-center">
+          <button
+            type="button"
+            onClick={handleExportAuditCsv}
+            disabled={entries.length === 0}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-border bg-card hover:bg-secondary text-foreground text-xs font-semibold transition shadow-xs disabled:opacity-40 cursor-pointer"
+          >
+            <Download className="h-4 w-4" />
+            <span>Export CSV</span>
+          </button>
+
           <button
             type="button"
             onClick={exportWorkReportWithLogs}

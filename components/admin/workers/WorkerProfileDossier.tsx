@@ -67,6 +67,7 @@ interface WorkerData {
   totalJobs: number;
   avgRating: number;
   ratingCount: number;
+  lastReminderAt?: string | null;
 }
 
 interface Props {
@@ -74,6 +75,7 @@ interface Props {
   contracts: ContractItem[];
   ratings: RatingItem[];
   canSuspendAccount?: boolean;
+  canSendReminder?: boolean;
 }
 
 export function WorkerProfileDossier({
@@ -81,11 +83,16 @@ export function WorkerProfileDossier({
   contracts,
   ratings,
   canSuspendAccount = true,
+  canSendReminder = false,
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const isReminderCoolingDown = worker.lastReminderAt
+    ? Date.now() - new Date(worker.lastReminderAt).getTime() < 86_400_000
+    : false;
+  const isReminderEligible = canSendReminder && !worker.isVerified && !worker.isSuspended;
 
   const getInitials = (name: string) => {
     const parts = name.trim().split(" ");
@@ -190,15 +197,15 @@ export function WorkerProfileDossier({
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          {!worker.isVerified && (
+          {isReminderEligible && (
             <Button
               variant="outline"
               size="sm"
               onClick={handleSendReminder}
-              disabled={isPending}
+              disabled={isPending || isReminderCoolingDown}
             >
               <Bell className="w-3.5 h-3.5 mr-1.5" />
-              Send KYC Reminder
+              {isReminderCoolingDown ? "Reminder Sent Recently" : "Send KYC Reminder"}
             </Button>
           )}
 

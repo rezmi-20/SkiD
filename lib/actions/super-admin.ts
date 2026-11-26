@@ -28,6 +28,21 @@ async function writeAdminAudit(adminId: string, action: string, details: Record<
   }
 }
 
+async function isLastActiveSuperAdmin(targetAdminId: string) {
+  const rows = await sql`
+    SELECT
+      id,
+      admin_role,
+      admin_status,
+      admin_activation_required
+    FROM admin_employees
+    WHERE admin_role = 'super_admin'
+      AND admin_status = 'active'
+      AND admin_activation_required = false
+  `;
+  return rows.length <= 1 && rows.some((row: any) => String(row.id) === String(targetAdminId));
+}
+
 // ─── Fetch All Users ──────────────────────────────────────────────────────────
 export async function getAllUsers() {
   await requireSuperAdmin();
@@ -163,8 +178,14 @@ export async function setSuspendedStatus(userId: string, isSuspended: boolean) {
       LIMIT 1
     `;
     if (employeeRows.length > 0) {
-      if (employeeRows[0].admin_role === "super_admin") {
-        return { success: false, error: "The owner super admin account cannot be suspended here." };
+      if (isSuspended && employeeRows[0].admin_role === "super_admin") {
+        if (await isLastActiveSuperAdmin(userId)) {
+          return {
+            success: false,
+            error: "Cannot suspend or deactivate the last remaining active super admin.",
+          };
+        }
+        return { success: false, error: "Owner super admin accounts cannot be suspended here." };
       }
       const rows = await sql`
         UPDATE admin_employees
@@ -317,13 +338,54 @@ export async function setUserRole(userId: string, role: "client" | "worker" | "a
 }
 
 export async function setAdminAccountRole(userId: string, adminRole: AdminRole) {
-  await requireAdminPermission("admin_accounts.assign_role");
-  void userId;
-  void adminRole;
-  return {
-    success: false,
-    error: "Administrator employee role changes must use the separate employee-admin governance flow.",
-  };
+  const admin = await requireAdminPermission("admin_accounts.assign_role");
+  assertCanModifyAdminAccount(admin, userId, "assign_role");
+
+  const rows = await sql`
+    SELECT id, admin_employee_id, admin_role, admin_status, admin_activation_required
+    FROM admin_employees
+    WHERE id = ${userId}
+    LIMIT 1
+  `;
+  const target = rows[0];
+  if (!target) {
+    return { success: false, error: "Administrator employee account not found." };
+  }
+
+  if (target.admin_role === "super_admin" && adminRole !== "super_admin") {
+    if (await isLastActiveSuperAdmin(userId)) {
+      return {
+        success: false,
+        error: "Cannot change the role of the last remaining active super admin.",
+      };
+    }
+  }
+
+  if (target.admin_role === "super_admin" || adminRole === "super_admin") {
+    return {
+      success: false,
+      error: "Super admin role transitions must use the dedicated owner conversion governance flow.",
+    };
+  }
+
+  await sql`
+    UPDATE admin_employees
+    SET admin_role = ${adminRole},
+        session_version = session_version + 1,
+        updated_at = NOW()
+    WHERE id = ${userId}
+  `;
+
+  await writeAdminAudit(admin.id, "admin_employee_role_changed", {
+    targetAdminEmployeeId: userId,
+    targetEmployeeId: target.admin_employee_id,
+    oldRole: target.admin_role,
+    newRole: adminRole,
+    timestamp: new Date().toISOString(),
+  });
+
+  revalidatePath("/admin/users");
+  return { success: true };
 }
 
 // ─── Create Admin Account ─────────────────────────────────────────────────────

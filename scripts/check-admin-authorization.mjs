@@ -41,6 +41,7 @@ const matrix = {
     "admin_misconduct.review",
     "verification.read",
     "content.read",
+    "reviews.read",
     "disputes.read",
     "payment_cases.read",
     "support.read",
@@ -54,6 +55,8 @@ const matrix = {
     "verification.revoke",
     "content.read",
     "content.moderate",
+    "reviews.read",
+    "reviews.moderate",
   ],
   dispute_payment_admin: [
     "disputes.read",
@@ -63,6 +66,7 @@ const matrix = {
     "disputes.escalate",
     "payment_cases.read",
     "payment_cases.review",
+    "reviews.read",
   ],
   user_support_admin: [
     "support.read",
@@ -134,5 +138,7 @@ check("dispute loaders/actions require permissions", disputes.includes("disputes
 check("worker verification API requires permission", workersVerifyApi.includes("requireAdminPermission"));
 check("client verification API requires permission", clientsVerifyApi.includes("requireAdminPermission"));
 check("court copy API requires active admin", courtCopyApi.includes("requireAdmin()") && courtCopyApi.includes("AdminAuthorizationError"));
+check("hasAdminPermission has no super_admin blanket bypass", !adminAuth.includes('if (admin.role === "super_admin") return true'));
+check("last super_admin protection exists", superAdminActions.includes("isLastActiveSuperAdmin"));
 
 process.exit(failed ? 1 : 0);

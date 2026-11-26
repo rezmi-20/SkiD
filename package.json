@@ -43,6 +43,7 @@
     "db:migrate:support-workflow": "node scripts/migrate-support-workflow.mjs",
     "check:support-workflow": "node scripts/check-support-workflow.mjs",
     "db:migrate:governance-controls": "node scripts/migrate-governance-controls.mjs",
+    "db:migrate:reviews-master-data": "node scripts/migrate-reviews-and-master-data.mjs",
     "check:governance-controls": "node scripts/check-governance-controls.mjs",
     "check:verification-query-performance": "node scripts/check-verification-query-performance.mjs",
     "check:env:production": "node scripts/check-production-env.mjs",

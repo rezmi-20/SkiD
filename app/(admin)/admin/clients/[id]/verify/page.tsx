@@ -34,13 +34,15 @@ export default async function ClientVerificationReviewPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ error?: string }>;
+  searchParams?: Promise<{ error?: string; reminder?: string }>;
 }) {
   const admin = await requireAdminPermission("verification.read");
   const queryParams = searchParams ? await searchParams : {};
   const errorMessage = queryParams.error ? decodeURIComponent(queryParams.error) : null;
+  const reminderSent = queryParams.reminder === "sent";
   const capabilities = {
     canReview: hasAdminPermission(admin, "verification.review"),
+    canSendReminder: admin.role === "content_verification_admin" && hasAdminPermission(admin, "verification.review"),
     canApprove: hasAdminPermission(admin, "verification.approve"),
     canReject: hasAdminPermission(admin, "verification.reject"),
     canRequestResubmission: hasAdminPermission(admin, "verification.request_resubmission"),
@@ -105,8 +107,8 @@ export default async function ClientVerificationReviewPage({
   const displayStatus = client.is_suspended ? "suspended" : invalidApproved ? "not_started" : rawDisplayStatus;
   const shouldEnsureAttempt = Boolean(
     client.profile_user_id &&
-      !invalidApproved &&
-      (displayStatus !== "not_started" || client.fin_last4 || client.fayda_doc_url),
+    !invalidApproved &&
+    (displayStatus !== "not_started" || client.fin_last4 || client.fayda_doc_url),
   );
   const attempt = shouldEnsureAttempt ? await ensureCurrentVerificationAttempt("client", client.user_id) : null;
   const reminderSummary = await getClientVerificationReminderSummary(client.user_id);
@@ -117,19 +119,19 @@ export default async function ClientVerificationReviewPage({
   const activeReviewStatus = String(attempt?.status || "pending") === "pending" || profileReviewStatus === "pending";
   const canRevealFin = Boolean(
     capabilities.canReview &&
-      attempt?.id &&
-      activeReviewStatus &&
-      ["pending", "rejected", "resubmission_requested"].includes(String(client.verification_status || "pending")),
+    attempt?.id &&
+    activeReviewStatus &&
+    ["pending", "rejected", "resubmission_requested"].includes(String(client.verification_status || "pending")),
   );
   const canRevealDocument = Boolean(
     capabilities.canReview &&
-      (admin.role === "content_verification_admin" || admin.role === "super_admin") &&
-      attempt?.id &&
-      attempt.status === "pending" &&
-      activeReviewStatus &&
-      displayStatus === "pending" &&
-      !client.is_suspended &&
-      !client.is_verified
+    admin.role === "content_verification_admin" &&
+    attempt?.id &&
+    attempt.status === "pending" &&
+    activeReviewStatus &&
+    displayStatus === "pending" &&
+    !client.is_suspended &&
+    !client.is_verified
   );
 
   async function approveClient() {
@@ -159,15 +161,19 @@ export default async function ClientVerificationReviewPage({
   async function sendReminder() {
     "use server";
     const result = await sendClientVerificationReminder(id);
-    if (!result.success) throw new Error(result.error || "Failed to send reminder.");
-    redirect(`/admin/clients/${id}/verify`);
+    if (!result.success) {
+      redirect(`/admin/clients/${id}/verify?error=${encodeURIComponent(result.error || "Failed to send reminder.")}`);
+    }
+    redirect(`/admin/clients/${id}/verify?reminder=sent`);
   }
 
   async function setClientSuspension(formData: FormData) {
     "use server";
     const suspended = formData.get("suspended") === "true";
     const result = await setSuspendedStatus(id, suspended);
-    if (!result.success) throw new Error(result.error || "Failed to update suspension status.");
+    if (!result.success) {
+      redirect(`/admin/clients/${id}/verify?error=${encodeURIComponent(result.error || "Failed to update suspension status.")}`);
+    }
     redirect(`/admin/clients/${id}/verify`);
   }
 
@@ -175,6 +181,18 @@ export default async function ClientVerificationReviewPage({
   if (displayStatus === "not_started") {
     return (
       <div className="space-y-6 pb-24">
+        {errorMessage && (
+          <div className="p-4 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+        {reminderSent && (
+          <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-xs font-semibold flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 shrink-0" />
+            <span>Verification reminder sent to client.</span>
+          </div>
+        )}
         {/* Flush Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
           <div className="space-y-1.5">
@@ -241,7 +259,7 @@ export default async function ClientVerificationReviewPage({
           )}
 
           <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-black/[0.04] dark:border-white/[0.05]">
-            {capabilities.canReview && (
+            {capabilities.canSendReminder && !client.is_suspended && (
               <form action={sendReminder}>
                 <button
                   type="submit"
@@ -294,6 +312,12 @@ export default async function ClientVerificationReviewPage({
           <span>{errorMessage}</span>
         </div>
       )}
+      {reminderSent && (
+        <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-xs font-semibold flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
+          <span>Verification reminder sent to client.</span>
+        </div>
+      )}
       {/* 1. Flush, Unboxed Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1 pb-2">
         <div className="space-y-2">
@@ -325,13 +349,12 @@ export default async function ClientVerificationReviewPage({
                   {client.full_name}
                 </h1>
                 <span
-                  className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${
-                    displayStatus === "approved"
+                  className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${displayStatus === "approved"
                       ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
                       : displayStatus === "pending"
-                      ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
-                      : "bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"
-                  }`}
+                        ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                        : "bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"
+                    }`}
                 >
                   {displayStatus}
                 </span>
@@ -558,7 +581,7 @@ export default async function ClientVerificationReviewPage({
                   </button>
                 )}
               </form>
-            ) : (
+            ) : capabilities.canSendReminder && !client.is_suspended && ["rejected", "revoked"].includes(displayStatus) ? (
               <div className="space-y-2">
                 <form action={sendReminder}>
                   <button
@@ -567,11 +590,11 @@ export default async function ClientVerificationReviewPage({
                     className="w-full h-9 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition"
                   >
                     <Bell className="h-3.5 w-3.5" />
-                    <span>Send Resubmission Reminder</span>
+                    <span>{reminderCoolingDown ? "Reminder Sent Recently" : "Send Resubmission Reminder"}</span>
                   </button>
                 </form>
               </div>
-            )}
+            ) : null}
           </div>
 
           {/* Audit History Timeline */}

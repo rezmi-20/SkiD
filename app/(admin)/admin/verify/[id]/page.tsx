@@ -78,7 +78,7 @@ export default async function WorkerVerificationPage({
   const history = await getVerificationHistory("worker", worker.user_id);
   const canRevealDocument = Boolean(
     capabilities.canReview &&
-      (admin.role === "content_verification_admin" || admin.role === "super_admin") &&
+      admin.role === "content_verification_admin" &&
       attempt?.id &&
       attempt.status === "pending" &&
       displayStatus === "pending" &&

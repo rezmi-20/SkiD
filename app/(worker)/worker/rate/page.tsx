@@ -34,6 +34,7 @@ export default async function WorkerRateIndexPage() {
     JOIN users cu ON r.rater_id = cu.id
     LEFT JOIN client_profiles cp ON cu.id = cp.user_id
     WHERE r.rated_id = ${userId}
+      AND COALESCE(r.is_hidden, false) = false
     ORDER BY r.created_at DESC
     LIMIT 50
   `;
@@ -70,6 +71,7 @@ export default async function WorkerRateIndexPage() {
       COUNT(CASE WHEN score = 1 THEN 1 END)::int as star_1
     FROM ratings
     WHERE rated_id = ${userId}
+      AND COALESCE(is_hidden, false) = false
   `;
 
   const stats = statsRows[0] || {

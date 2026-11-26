@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { AdminMetricCard } from "./dashboard/AdminMetricCard";
 import { EscrowVolumeChart, MonthlyVolumePoint } from "./dashboard/EscrowVolumeChart";
 import { TradePipelineDistribution, TradeStageItem } from "./dashboard/TradePipelineDistribution";
@@ -50,6 +51,7 @@ export function AdminDashboardClient({
   verificationCapabilities,
 }: Props) {
   const { t } = useLanguage();
+  const [selectedTrade, setSelectedTrade] = useState("All");
   const verifiedPercentage =
     workerCount > 0 ? Math.round((verifiedWorkerCount / workerCount) * 100) : 100;
 
@@ -100,6 +102,8 @@ export function AdminDashboardClient({
         <TradePipelineDistribution
           stages={tradeStages}
           totalActiveVolume={contractsVolumeDisplay}
+          selectedTrade={selectedTrade}
+          onSelectTrade={setSelectedTrade}
         />
       </div>
 
@@ -117,6 +121,8 @@ export function AdminDashboardClient({
             canReview={verificationCapabilities.canReview}
             canApprove={verificationCapabilities.canApprove}
             canReject={verificationCapabilities.canReject}
+            selectedTrade={selectedTrade}
+            onTradeChange={setSelectedTrade}
           />
         </div>
       )}

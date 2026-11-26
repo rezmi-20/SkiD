@@ -190,7 +190,11 @@ export default function LoginPage() {
       });
 
       if (signInError) {
-        console.error("[LOGIN_SIGNIN_ERROR]", signInError);
+        const isInvalidCreds =
+          signInError.status === 401 ||
+          signInError.code === "INVALID_CREDENTIALS" ||
+          signInError.code === "INVALID_EMAIL_OR_PASSWORD";
+
         // Handle Email Not Verified
         if (
           signInError.message?.toLowerCase().includes("verify") ||
@@ -205,13 +209,20 @@ export default function LoginPage() {
           return;
         }
         if (signInError.status === 502 || signInError.message?.toLowerCase().includes("bad gateway")) {
+          console.error("[LOGIN_SIGNIN_ERROR]", signInError);
           setError(t("auth.login.errServiceUnavailable"));
           return;
         }
         if (signInError.message?.toLowerCase().includes("origin")) {
+          console.error("[LOGIN_SIGNIN_ERROR]", signInError);
           setError("Domain configuration error: unauthorized origin. Please contact support.");
           return;
         }
+        if (isInvalidCreds) {
+          setError(t("auth.login.errInvalidCredentials"));
+          return;
+        }
+        console.error("[LOGIN_SIGNIN_ERROR]", signInError);
         setError(signInError.message || t("auth.login.errInvalidCredentials"));
       } else {
         const sessionResult = await waitForUsableSession();

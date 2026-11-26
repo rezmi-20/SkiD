@@ -763,6 +763,7 @@ export async function escalateSupportSafety(ticketId: string, reason: string) {
   });
   await notifyUser(ticket.owner_id, "Safety support escalated", "Your safety concern was escalated for authorized review.", `/${ticket.owner_role}/support/${ticketId}`);
   revalidatePath(`/admin/support/${ticketId}`);
+  revalidatePath("/admin/appeals");
   return { success: true, status: 200 };
 }
 
@@ -826,7 +827,7 @@ export async function escalateSupportToDispute(ticketId: string, reason: string)
         ${ticket.related_contract_id ?? null},
         ${ticket.related_payment_id ?? null},
         ${`Support ticket ${ticket.reference} was escalated for dispute review. ${text}`},
-        'open',
+        'escalated',
         ${JSON.stringify({ supportTicketId: ticket.id, supportReference: ticket.reference, jobStatusAtEscalation: job.status })},
         true
       )
@@ -865,6 +866,7 @@ export async function escalateSupportToDispute(ticketId: string, reason: string)
   await notifyUser(ticket.owner_id, "Support ticket escalated", "Your ticket was escalated to the dispute workflow for authorized review.", `/${ticket.owner_role}/support/${ticketId}`);
   revalidatePath(`/admin/support/${ticketId}`);
   revalidatePath("/admin/disputes");
+  revalidatePath("/admin/appeals");
   return { success: true, status: 200, disputeId: linkedDisputeId };
 }
 

@@ -13,7 +13,7 @@ import {
   FileText, DollarSign, Scale, Megaphone,
   BarChart2, Gavel, ChevronLeft, ChevronRight, ChevronDown, LogOut, Crown,
   LifeBuoy, ClipboardList, AlertTriangle, FileCheck, Sun, Moon,
-  Settings, FolderKanban
+  Settings, FolderKanban, Star
 } from "lucide-react";
 import type { AdminPermission, AdminRole } from "@/lib/admin-authorization";
 
@@ -167,6 +167,12 @@ export function Sidebar({ userEmail, adminName, adminRole, permissions }: Sideba
           icon: <Megaphone className="w-4 h-4" />,
           label: t("admin.sidebar.community" as any) || "Community Moderation",
           visible: can("content.read"),
+        },
+        {
+          href: "/admin/reviews",
+          icon: <Star className="w-4 h-4" />,
+          label: "Reviews & Ratings",
+          visible: can("reviews.read"),
         },
       ],
     },

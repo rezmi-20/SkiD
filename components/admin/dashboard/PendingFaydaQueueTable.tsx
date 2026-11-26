@@ -21,6 +21,8 @@ interface PendingFaydaQueueTableProps {
   canReview?: boolean;
   canApprove?: boolean;
   canReject?: boolean;
+  selectedTrade?: string;
+  onTradeChange?: (trade: string) => void;
 }
 
 function timeAgo(dateStr?: string) {
@@ -38,12 +40,16 @@ export function PendingFaydaQueueTable({
   canReview = true,
   canApprove = true,
   canReject = true,
+  selectedTrade: controlledTrade,
+  onTradeChange,
 }: PendingFaydaQueueTableProps) {
   const router = useRouter();
   const { toast, promptDialog } = useFeedback();
   const [workers, setWorkers] = useState<WorkerQueueItem[]>(initialWorkers);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedTrade, setSelectedTrade] = useState("All");
+  const [internalTrade, setInternalTrade] = useState("All");
+  const selectedTrade = controlledTrade ?? internalTrade;
+  const setSelectedTrade = onTradeChange ?? setInternalTrade;
   const [selectedWorker, setSelectedWorker] = useState<WorkerQueueItem | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isPending, startTransition] = useTransition();

@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
+  Bell,
   Search,
   ExternalLink,
   Award,
@@ -35,7 +37,9 @@ import {
 import { useLanguage } from "@/context/LanguageContext";
 import FadeContent from "@/components/ui/fade-content";
 import { toWorkerDisplayStatus } from "@/lib/worker-verification";
+import { sendWorkerVerificationReminder } from "@/lib/worker-verification-reminders";
 import { WorkerReviewDrawer, WorkerQueueItem } from "./dashboard/WorkerReviewDrawer";
+import { useFeedback } from "@/components/ui/feedback";
 
 export interface WorkerData {
   userId: string;
@@ -51,6 +55,8 @@ export interface WorkerData {
   isSuspended?: boolean | null;
   identityComplete?: boolean | null;
   hasDocument: boolean;
+  lastReminderAt?: string | null;
+  reminderCount?: number;
   createdAt: string;
 }
 
@@ -82,12 +88,46 @@ export function WorkersManagementClient({
   verificationCapabilities,
 }: Props) {
   const { t } = useLanguage();
+  const { toast } = useFeedback();
+  const router = useRouter();
+  const [workers, setWorkers] = useState<WorkerData[]>(initialWorkers);
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [statusFilter, setStatusFilter] = useState<"all" | "approved" | "pending">("all");
   const [skillFilter, setSkillFilter] = useState<string>("all");
   const [drawerWorker, setDrawerWorker] = useState<WorkerQueueItem | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isReminderPending, startReminderTransition] = useTransition();
+
+  useEffect(() => {
+    setWorkers(initialWorkers);
+  }, [initialWorkers]);
+
+  const isReminderCoolingDown = (value?: string | null) =>
+    value ? Date.now() - new Date(value).getTime() < 86_400_000 : false;
+
+  const handleSendReminder = (workerUserId: string) => {
+    startReminderTransition(async () => {
+      const result = await sendWorkerVerificationReminder(workerUserId);
+      if (result.success) {
+        const nowIso = new Date().toISOString();
+        setWorkers((prev) =>
+          prev.map((w) =>
+            w.userId === workerUserId
+              ? { ...w, lastReminderAt: nowIso, reminderCount: (w.reminderCount || 0) + 1 }
+              : w,
+          ),
+        );
+        setDrawerWorker((prev) =>
+          prev && prev.user_id === workerUserId ? { ...prev, last_reminder_at: nowIso } : prev,
+        );
+        toast.success("KYC verification reminder dispatched to artisan.");
+        router.refresh();
+      } else {
+        toast.error(result.error || "Failed to send reminder.");
+      }
+    });
+  };
 
   const displayStatus = (worker: WorkerData) =>
     toWorkerDisplayStatus(
@@ -99,16 +139,16 @@ export function WorkersManagementClient({
 
   const counts = useMemo(() => {
     return {
-      all: initialWorkers.length,
-      approved: initialWorkers.filter((w) => displayStatus(w) === "approved").length,
-      pending: initialWorkers.filter((w) => displayStatus(w) !== "approved").length,
+      all: workers.length,
+      approved: workers.filter((w) => displayStatus(w) === "approved").length,
+      pending: workers.filter((w) => displayStatus(w) !== "approved").length,
     };
-  }, [initialWorkers]);
+  }, [workers]);
 
   // Aggregate all unique skills
   const allSkills = useMemo(() => {
     const set = new Set<string>();
-    for (const w of initialWorkers) {
+    for (const w of workers) {
       if (Array.isArray(w.skills)) {
         for (const s of w.skills) {
           if (s) set.add(s);
@@ -116,7 +156,7 @@ export function WorkersManagementClient({
       }
     }
     return Array.from(set);
-  }, [initialWorkers]);
+  }, [workers]);
 
   // Performance chart data from topPerformers
   const chartData = useMemo(() => {
@@ -130,7 +170,7 @@ export function WorkersManagementClient({
 
   const filtered = useMemo(() => {
     const query = search.toLowerCase().trim();
-    return initialWorkers.filter((w) => {
+    return workers.filter((w) => {
       const status = displayStatus(w);
       const matchesSearch =
         !query ||
@@ -151,7 +191,7 @@ export function WorkersManagementClient({
 
       return matchesSearch && matchesStatus && matchesSkill;
     });
-  }, [initialWorkers, search, statusFilter, skillFilter]);
+  }, [workers, search, statusFilter, skillFilter]);
 
   const handleOpenDrawer = (w: WorkerData) => {
     setDrawerWorker({
@@ -164,6 +204,7 @@ export function WorkersManagementClient({
       verification_status: displayStatus(w),
       is_verified: w.isVerified,
       is_suspended: Boolean(w.isSuspended),
+      last_reminder_at: w.lastReminderAt ?? null,
       created_at: w.createdAt,
     });
     setIsDrawerOpen(true);
@@ -414,11 +455,29 @@ export function WorkersManagementClient({
                     </Link>
                   </div>
 
-                  {worker.phone && (
-                    <span className="text-[11px] font-mono text-muted-foreground">
-                      +251 {worker.phone}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {verificationCapabilities.canReview && !isApproved && !worker.isSuspended && (
+                      <button
+                        type="button"
+                        onClick={() => handleSendReminder(worker.userId)}
+                        disabled={isReminderCoolingDown(worker.lastReminderAt) || isReminderPending}
+                        title={
+                          isReminderCoolingDown(worker.lastReminderAt)
+                            ? "Reminder sent recently"
+                            : "Send KYC verification reminder"
+                        }
+                        className="p-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-secondary disabled:opacity-40 transition"
+                      >
+                        <Bell className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+
+                    {worker.phone && (
+                      <span className="text-[11px] font-mono text-muted-foreground">
+                        +251 {worker.phone}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             );
@@ -534,6 +593,9 @@ export function WorkersManagementClient({
         canReview={verificationCapabilities.canReview}
         canApprove={verificationCapabilities.canApprove}
         canReject={verificationCapabilities.canReject}
+        onSendReminder={handleSendReminder}
+        isReminderCoolingDown={drawerWorker ? isReminderCoolingDown(drawerWorker.last_reminder_at) : false}
+        isReminderPending={isReminderPending}
         onStatusChanged={() => {
           setIsDrawerOpen(false);
         }}

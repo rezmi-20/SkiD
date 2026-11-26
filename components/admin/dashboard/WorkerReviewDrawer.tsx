@@ -8,6 +8,7 @@ import {
   X,
   Phone,
   Mail,
+  Bell,
   CheckCircle2,
   XCircle,
   ExternalLink,
@@ -19,6 +20,7 @@ import {
   Briefcase,
 } from "lucide-react";
 import { toggleWorkerVerification } from "@/lib/actions/admin";
+import { sendWorkerVerificationReminder } from "@/lib/worker-verification-reminders";
 
 export interface WorkerQueueItem {
   user_id: string;
@@ -32,6 +34,7 @@ export interface WorkerQueueItem {
   verification_status?: string | null;
   is_verified?: boolean;
   is_suspended?: boolean;
+  last_reminder_at?: string | null;
   created_at?: string;
 }
 
@@ -42,6 +45,9 @@ interface WorkerReviewDrawerProps {
   canReview?: boolean;
   canApprove?: boolean;
   canReject?: boolean;
+  onSendReminder?: (userId: string) => void;
+  isReminderCoolingDown?: boolean;
+  isReminderPending?: boolean;
   onStatusChanged?: (userId: string, approved: boolean) => void;
 }
 
@@ -52,6 +58,9 @@ export function WorkerReviewDrawer({
   canReview = true,
   canApprove = true,
   canReject = true,
+  onSendReminder,
+  isReminderCoolingDown = false,
+  isReminderPending = false,
   onStatusChanged,
 }: WorkerReviewDrawerProps) {
   const router = useRouter();
@@ -60,6 +69,14 @@ export function WorkerReviewDrawer({
   const [rejectReason, setRejectReason] = useState("");
   const [showRejectInput, setShowRejectInput] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [reminderSuccess, setReminderSuccess] = useState<string | null>(null);
+  const [localCoolingDown, setLocalCoolingDown] = useState(false);
+
+  useEffect(() => {
+    setErrorMsg(null);
+    setReminderSuccess(null);
+    setLocalCoolingDown(false);
+  }, [worker?.user_id, isOpen]);
 
   useEffect(() => {
     setMounted(true);
@@ -107,6 +124,33 @@ export function WorkerReviewDrawer({
       }
     });
   };
+
+  const handleSendReminderClick = () => {
+    setErrorMsg(null);
+    setReminderSuccess(null);
+    if (onSendReminder) {
+      onSendReminder(worker.user_id);
+      return;
+    }
+    startTransition(async () => {
+      const res = await sendWorkerVerificationReminder(worker.user_id);
+      if (res.success) {
+        setLocalCoolingDown(true);
+        setReminderSuccess("KYC verification reminder dispatched to artisan.");
+        router.refresh();
+      } else {
+        setErrorMsg(res.error || "Failed to send verification reminder.");
+      }
+    });
+  };
+
+  const reminderDisabled =
+    isPending ||
+    isReminderPending ||
+    isReminderCoolingDown ||
+    localCoolingDown ||
+    Boolean(worker.last_reminder_at && Date.now() - new Date(worker.last_reminder_at).getTime() < 86_400_000);
+  const canRemindWorker = canReview && !worker.is_verified && !worker.is_suspended && worker.verification_status !== "approved";
 
   return createPortal(
     <div className="fixed inset-0 z-50 overflow-hidden">
@@ -160,6 +204,12 @@ export function WorkerReviewDrawer({
               <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{errorMsg}</span>
+              </div>
+            )}
+            {reminderSuccess && (
+              <div className="p-3 rounded-lg bg-success/10 border border-success/20 text-success text-xs flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>{reminderSuccess}</span>
               </div>
             )}
 
@@ -269,7 +319,18 @@ export function WorkerReviewDrawer({
           </div>
 
           {/* Sticky Action Footer */}
-          <div className="p-4 border-t border-border bg-secondary/30 flex-col gap-2">
+          <div className="p-4 border-t border-border bg-secondary/30 flex flex-col gap-2">
+            {canRemindWorker && (
+              <button
+                type="button"
+                onClick={handleSendReminderClick}
+                disabled={reminderDisabled}
+                className="w-full py-2 px-3 rounded-lg border border-border bg-secondary hover:bg-secondary/80 text-foreground text-xs font-semibold disabled:opacity-40 transition flex items-center justify-center gap-1.5"
+              >
+                <Bell className="w-3.5 h-3.5 text-accent" />
+                <span>{reminderDisabled && !isPending && !isReminderPending ? "Reminder Sent Recently" : "Send Verification Reminder"}</span>
+              </button>
+            )}
             {canReview && (
               <div className="flex items-center gap-2 w-full">
                 {!showRejectInput ? (

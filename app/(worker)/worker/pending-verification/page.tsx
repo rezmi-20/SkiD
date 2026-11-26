@@ -6,6 +6,7 @@ import Link from "next/link";
 import AppShell from "@/components/shell/AppShell";
 import VerificationResubmitForm from "@/components/worker/VerificationResubmitForm";
 import { getProfileData } from "@/lib/actions/profile";
+import { getNotifications } from "@/lib/actions/notifications";
 import { useLanguage } from "@/context/LanguageContext";
 import { handleAppSignOut } from "@/lib/auth/sign-out-client";
 import {
@@ -58,6 +59,7 @@ export default function PendingVerificationPage() {
   const [worker, setWorker] = useState<any>(null);
   const [loading, setLoading] = useState(!isDemo);
   const [simulatedStatus, setSimulatedStatus] = useState<string>("pending");
+  const [reminderNotice, setReminderNotice] = useState<{ title: string; body: string } | null>(null);
 
   useEffect(() => {
     if (isDemo) {
@@ -89,6 +91,16 @@ export default function PendingVerificationPage() {
           setWorker(data);
           setSimulatedStatus(data.is_suspended ? "suspended" : data.verification_status || "pending");
           setLoading(false);
+          getNotifications()
+            .then((rows: any[]) => {
+              const latest = (rows || []).find(
+                (n) => n?.type === "identity_verification_required" && !n?.is_read,
+              );
+              if (latest) {
+                setReminderNotice({ title: String(latest.title), body: String(latest.body) });
+              }
+            })
+            .catch(() => undefined);
         }
       })
       .catch((err) => {
@@ -161,6 +173,21 @@ export default function PendingVerificationPage() {
         </div>
 
         {/* ── Main Verification Card ── */}
+        {reminderNotice && !isApproved && (
+          <div className="rounded-3xl border border-accent-500/30 bg-accent-500/10 p-4 flex items-start justify-between gap-3">
+            <div className="space-y-0.5 text-start">
+              <p className="text-caption-1-semibold text-text-primary">{reminderNotice.title}</p>
+              <p className="text-caption-2 text-text-secondary">{reminderNotice.body}</p>
+            </div>
+            <Link
+              href="/worker/notifications"
+              className="shrink-0 rounded-full border border-border-button-default bg-background-primary-default px-3 py-1.5 text-caption-2-semibold text-text-primary hover:bg-background-secondary-hover transition"
+            >
+              View
+            </Link>
+          </div>
+        )}
+
         <div className="rounded-3xl border border-border-button-default bg-background-primary-default p-7 sm:p-9 shadow-xs space-y-6 text-center">
           <div className="flex flex-col items-center space-y-4">
             <div

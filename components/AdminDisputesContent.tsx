@@ -262,7 +262,11 @@ export default function AdminDisputesContent({ initialDisputes }: { initialDispu
           </div>
         </div>
 
-        <div className="bg-card border border-border rounded-xl p-4 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => setQueue("escalated")}
+          className="bg-card border border-border rounded-xl p-4 flex items-center justify-between text-left hover:border-destructive/40 transition cursor-pointer"
+        >
           <div>
             <p className="text-xs text-muted-foreground font-medium">{t("admin.disputes.kpi.escalated")}</p>
             <p className="text-xl font-bold text-foreground mt-1 tabular-nums">{counts.escalated}</p>
@@ -271,7 +275,7 @@ export default function AdminDisputesContent({ initialDisputes }: { initialDispu
           <div className="w-9 h-9 rounded-lg bg-destructive/10 text-destructive flex items-center justify-center">
             <AlertTriangle className="w-4 h-4" />
           </div>
-        </div>
+        </button>
 
         <div className="bg-card border border-border rounded-xl p-4 flex items-center justify-between">
           <div>
@@ -312,6 +316,7 @@ export default function AdminDisputesContent({ initialDisputes }: { initialDispu
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
           {[
             { id: "all", label: t("admin.disputes.filter.all") },
+            { id: "escalated", label: `Escalated Cases (${counts.escalated})` },
             { id: "open", label: t("admin.disputes.filter.open") },
             { id: "under_review", label: t("admin.disputes.filter.under_review") },
             { id: "evidence_review", label: t("admin.disputes.filter.evidence_review") },

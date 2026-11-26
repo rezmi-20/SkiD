@@ -160,7 +160,7 @@ export default async function AdminDashboardPage() {
       COUNT(DISTINCT j.id)::int AS completed_jobs,
       COALESCE(SUM(p.amount), 0)::int AS total_earnings
     FROM worker_profiles wp
-    LEFT JOIN ratings r ON r.rated_id = wp.user_id
+    LEFT JOIN ratings r ON r.rated_id = wp.user_id AND COALESCE(r.is_hidden, false) = false
     LEFT JOIN jobs j ON j.worker_id = wp.user_id
     LEFT JOIN payments p ON p.job_id = j.id AND p.status = 'released'
     GROUP BY wp.id, wp.user_id, wp.full_name, wp.skills, wp.avatar_url
